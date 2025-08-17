@@ -21,18 +21,29 @@ export function Stars({ v=0 }: { v?: number }) {
 }
 
 export function Drawer({ open, onClose, children, side="right" }: { open:boolean; onClose:()=>void; children:ReactNode; side?: "right"|"left"|"bottom" }) {
-  const cls = side==="right"
-    ? "top-0 right-0 h-full w-full max-w-sm translate-x-full"
-    : side==="left"
-      ? "top-0 left-0 h-full w-full max-w-sm -translate-x-full"
-      : "left-0 bottom-0 w-full rounded-t-2xl translate-y-full";
-  const openCls = side==="bottom" ? "translate-y-0" : "translate-x-0";
+  if (!open) return null;
+  
+  const sideStyles = {
+    right: "top-0 right-0 h-full w-80",
+    left: "top-0 left-0 h-full w-80",
+    bottom: "bottom-0 left-0 w-full h-96"
+  };
+  
   return (
-    <>
-      <div className={`fixed inset-0 z-40 bg-black/30 transition-opacity ${open?"opacity-100":"pointer-events-none opacity-0"}`} onClick={onClose}/>
-      <div className={`fixed z-50 bg-white shadow-xl transition-transform ${cls} ${open?openCls:""}`}>
+    <div className="fixed inset-0 z-50 flex">
+      {/* Background overlay */}
+      <div 
+        className="absolute inset-0 bg-black bg-opacity-50" 
+        onClick={onClose}
+      />
+      
+      {/* Drawer content */}
+      <div 
+        className={`absolute bg-white shadow-xl ${sideStyles[side]} z-10`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {children}
       </div>
-    </>
+    </div>
   );
 }
