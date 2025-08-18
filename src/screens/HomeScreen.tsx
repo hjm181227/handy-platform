@@ -14,7 +14,9 @@ const HomeScreen: React.FC = () => {
   
   // 개발 환경에서는 로컬 웹서버, 프로덕션에서는 실제 웹사이트 URL
   const webURL = __DEV__ 
-    ? 'http://localhost:3000' // Vite 개발 서버
+    ? Platform.OS === 'android' 
+      ? 'http://10.0.2.2:3000' // Android 에뮬레이터용 IP:포트
+      : 'http://localhost:3000' // iOS 시뮬레이터용
     : 'https://your-shopping-website.com'; // 실제 쇼핑몰 웹사이트
 
   const handleNavigationStateChange = (navState: any) => {

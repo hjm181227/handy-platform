@@ -1,11 +1,6 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, PermissionsAndroid, Permission } from 'react-native';
-import SplashScreen from 'react-native-splash-screen';
 import HomeScreen from './src/screens/HomeScreen';
-
-const Stack = createNativeStackNavigator();
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -20,10 +15,10 @@ const App: React.FC = () => {
         await requestAndroidPermissions();
       }
       
-      // 스플래시 스크린 숨기기
-      setTimeout(() => {
-        SplashScreen.hide();
-      }, 1000);
+      // 스플래시 스크린 숨기기 (if splash screen package is available)
+      // setTimeout(() => {
+      //   SplashScreen.hide();
+      // }, 1000);
     } catch (error) {
       console.error('App initialization error:', error);
     }
@@ -43,16 +38,7 @@ const App: React.FC = () => {
     }
   };
 
-  return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  return <HomeScreen />;
 };
 
 export default App;
