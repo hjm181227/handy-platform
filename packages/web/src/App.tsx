@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
 import { products } from './data';
+import { webTokenManager } from './services/api';
+import type { User } from '@handy-platform/shared';
 
 // Layout Components
 import { TopDarkNav } from './components/layout/TopDarkNav';
@@ -17,16 +19,37 @@ import { Detail } from './components/product/Detail';
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
 import { BrandsPage } from './components/pages/BrandsPage';
 import { LoginPage } from './components/pages/LoginPage';
+import { SignupPage } from './components/pages/SignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 
 export default function App() {
   const { path, nav } = useMiniRouter();
 
+  // Auth state
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
   // Cart
   const [cart, setCart] = useState<{id:string; qty:number}[]>([]);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+
+  // Native에서 토큰 초기화 (WebView 환경에서만)
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        await webTokenManager.initializeFromNative();
+        console.log('✅ Native 토큰 동기화 완료');
+      } catch (error) {
+        console.warn('⚠️ Native 토큰 동기화 실패:', error);
+      }
+    };
+
+    // WebView 환경에서만 실행
+    if ((window as any).ReactNativeWebView) {
+      initializeAuth();
+    }
+  }, []);
 
   const add = (id:string) => setCart(prev=>{
     const i = prev.findIndex(x=>x.id===id);
@@ -106,6 +129,8 @@ export default function App() {
     screen = <MyPage onGo={nav} onOpen={openProduct} />;
   } else if (pathname.startsWith("/login")) {
     screen = <LoginPage onGo={nav} />;
+  } else if (pathname.startsWith("/signup")) {
+    screen = <SignupPage onGo={nav} />;
   } else {
     // Home
     screen = (
@@ -125,7 +150,12 @@ export default function App() {
         <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
       </div>
       <div data-apphide="true">
-        <MainHeader cartCount={count} onCart={() => setDrawer(true)} onGo={nav} />
+        <MainHeader 
+          cartCount={count} 
+          onCart={() => setDrawer(true)} 
+          onGo={nav}
+          onAuthStateChange={setCurrentUser}
+        />
       </div>
 
       {/* 본문은 절대 숨김 래퍼 안에 넣지 않기 */}

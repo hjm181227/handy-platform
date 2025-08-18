@@ -1,7 +1,35 @@
 
+import { useState, useEffect } from 'react';
+import { webApiService } from '../../services/api';
+
 export function TopDarkNav({ onOpenCategories, onGo }:{
   onOpenCategories: ()=>void; onGo:(to:string)=>void;
 }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const authenticated = await webApiService.isAuthenticated();
+      setIsLoggedIn(authenticated);
+    };
+
+    checkAuthStatus();
+
+    // 로그인 상태 변경 감지 (여러 이벤트 타입 지원)
+    const handleAuthChange = () => {
+      console.log('TopDarkNav: Auth state change detected');
+      checkAuthStatus();
+    };
+
+    // 여러 이벤트명 지원 (호환성)
+    window.addEventListener('authStateChanged', handleAuthChange);
+    window.addEventListener('auth-state-changed', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthChange);
+      window.removeEventListener('auth-state-changed', handleAuthChange);
+    };
+  }, []);
   const items: {label:string; to:string}[] = [
     {label:"BRANDS", to:"/brands"},
     {label:"SNAP", to:"/snap"},
@@ -32,8 +60,12 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
           <a href="/help"  onClick={(e)=>{e.preventDefault(); onGo("/help");}}  className="hover:text-white">Help</a>
           <a href="/my"    onClick={(e)=>{e.preventDefault(); onGo("/my");}}    className="hover:text-white">My</a>
           <a href="/likes" onClick={(e)=>{e.preventDefault(); onGo("/likes");}} className="hover:text-white">Likes</a>
-          <a href="/login" onClick={(e)=>{e.preventDefault(); onGo("/login");}} className="hover:text-white">Login</a>
-          <a href="/signup"onClick={(e)=>{e.preventDefault(); onGo("/signup");}}className="hover:text-white">Sign up</a>
+          {!isLoggedIn && (
+            <>
+              <a href="/login" onClick={(e)=>{e.preventDefault(); onGo("/login");}} className="hover:text-white">Login</a>
+              <a href="/signup"onClick={(e)=>{e.preventDefault(); onGo("/signup");}}className="hover:text-white">Sign up</a>
+            </>
+          )}
         </div>
       </div>
     </div>

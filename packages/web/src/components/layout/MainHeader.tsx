@@ -1,8 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toQ } from '../../utils';
+import { webApiService } from '../../services/api';
+import type { User } from '@handy-platform/shared';
 
-export function MainHeader({ cartCount, onCart, onGo }: { cartCount:number; onCart:()=>void; onGo:(to:string)=>void }) {
+export function MainHeader({ 
+  cartCount, 
+  onCart, 
+  onGo,
+  onAuthStateChange 
+}: { 
+  cartCount:number; 
+  onCart:()=>void; 
+  onGo:(to:string)=>void;
+  onAuthStateChange?: (user: User | null) => void;
+}) {
   const [q,setQ]=useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const gnb = [
     {label:"랭킹", to:"/ranking"},
     {label:"세일", to:"/sale"},
@@ -11,8 +27,90 @@ export function MainHeader({ cartCount, onCart, onGo }: { cartCount:number; onCa
     {label:"신상", to:"/new"},
     {label:"트렌드", to:"/trend"},
   ];
+  // 로그인 상태 확인
+  const checkAuthStatus = async () => {
+    try {
+      const currentUser = await webApiService.getCurrentUser();
+      setUser(currentUser);
+      onAuthStateChange?.(currentUser);
+    } catch (error) {
+      console.error('사용자 정보 조회 실패:', error);
+      setUser(null);
+      onAuthStateChange?.(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  // 전역에서 인증 상태 변경을 감지하는 이벤트 리스너
+  useEffect(() => {
+    const handleAuthChange = () => {
+      console.log('MainHeader: Auth state change detected');
+      checkAuthStatus();
+    };
+
+    // 커스텀 이벤트로 로그인/로그아웃 상태 변경 감지 (여러 이벤트명 지원)
+    window.addEventListener('authStateChanged', handleAuthChange);
+    window.addEventListener('auth-state-changed', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthChange);
+      window.removeEventListener('auth-state-changed', handleAuthChange);
+    };
+  }, []);
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   const submitSearch = () => {
     onGo("/search" + toQ({ q }));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await webApiService.logout();
+      setUser(null);
+      setShowUserMenu(false);
+      onAuthStateChange?.(null);
+      // 인증 상태 변경 이벤트 발생
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+      // 홈으로 이동
+      onGo('/');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+      // 로그아웃 실패해도 로컬 상태는 초기화
+      setUser(null);
+      setShowUserMenu(false);
+      onAuthStateChange?.(null);
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+    }
+  };
+
+  const handleLogin = () => {
+    onGo('/login');
+  };
+
+  const handleMyPage = () => {
+    setShowUserMenu(false);
+    onGo('/my');
   };
 
   return (
@@ -38,9 +136,85 @@ export function MainHeader({ cartCount, onCart, onGo }: { cartCount:number; onCa
           </div>
         </div>
 
-        <div className="justify-self-end">
-          <button onClick={onCart} className="rounded-full border px-3 py-1.5 text-sm">
-            장바구니 ({cartCount})
+        <div className="justify-self-end flex items-center gap-3">
+          {isLoading ? (
+            // 로딩 상태
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-500">인증 확인 중...</span>
+            </div>
+          ) : user ? (
+            // 로그인 상태
+            <div className="flex items-center gap-3">
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                    {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </div>
+                  <span className="hidden sm:inline">{user.name || user.email}</span>
+                  <svg 
+                    className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <button
+                      onClick={handleMyPage}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      마이페이지
+                    </button>
+                    <hr className="my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-red-600 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      로그아웃
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // 비로그인 상태
+            <button
+              onClick={handleLogin}
+              className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
+            >
+              로그인/회원가입
+            </button>
+          )}
+          
+          <button 
+            onClick={onCart} 
+            className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors relative"
+          >
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h8a2 2 0 002-2v-8" />
+              </svg>
+              <span className="hidden sm:inline">장바구니</span>
+              {cartCount > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </span>
           </button>
         </div>
       </div>

@@ -7,17 +7,27 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
+import { getCurrentEnvironment } from '@handy-platform/shared';
 import WebViewBridge from '../components/WebViewBridge';
 
 const HomeScreen: React.FC = () => {
   const [canGoBack, setCanGoBack] = useState(false);
   
-  // 개발 환경에서는 로컬 웹서버, 프로덕션에서는 실제 웹사이트 URL
-  const webURL = __DEV__ 
-    ? Platform.OS === 'android' 
-      ? 'http://10.0.2.2:3001' // Android 에뮬레이터용 IP:포트
-      : 'http://localhost:3001' // iOS 시뮬레이터용
-    : 'https://your-shopping-website.com'; // 실제 쇼핑몰 웹사이트
+  // 환경별 웹 URL 설정
+  const getWebURL = () => {
+    const env = getCurrentEnvironment();
+    
+    if (env === 'development') {
+      return Platform.OS === 'android' 
+        ? 'http://10.0.2.2:3001' // Android 에뮬레이터용 IP:포트
+        : 'http://localhost:3001'; // iOS 시뮬레이터용
+    } else {
+      // 프로덕션 환경 - 실제 배포된 웹사이트 URL
+      return 'https://your-production-website.com';
+    }
+  };
+
+  const webURL = getWebURL();
 
   const handleNavigationStateChange = (navState: any) => {
     setCanGoBack(navState.canGoBack);

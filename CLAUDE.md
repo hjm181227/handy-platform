@@ -9,36 +9,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 ```
-handy-platform/
-├── src/                        # React Native 소스 코드
-│   ├── components/             # 재사용 컴포넌트
-│   │   ├── WebViewBridge.tsx   # WebView-Native 브릿지 (모바일)
-│   │   └── WebViewBridge.web.tsx # WebView-Native 브릿지 (웹)
-│   ├── screens/                # 화면 컴포넌트
-│   │   └── HomeScreen.tsx      # 메인 홈 화면
-│   ├── services/               # API 및 서비스
-│   │   ├── api.ts              # 백엔드 API 서비스
-│   │   ├── cameraService.ts    # 카메라 및 QR 스캔 서비스
-│   │   └── notificationService.ts # 푸시 알림 서비스
-│   ├── types/                  # TypeScript 타입 정의
-│   │   └── index.ts            # 전체 타입 정의
-│   └── utils/                  # 유틸리티 함수
-│       ├── apiHelpers.ts       # API 헬퍼 함수
-│       ├── permissions.ts      # 권한 관리
-│       └── tokenUtils.ts       # JWT 토큰 유틸리티
-├── web/                        # 웹 애플리케이션 (WebView 내용)
-│   ├── index.html              # 메인 HTML 파일
-│   ├── styles.css              # 스타일시트
-│   └── app.js                  # 쇼핑몰 웹 앱 로직
-├── android/                    # Android 네이티브 코드
-├── ios/                        # iOS 네이티브 코드
-├── App.tsx                     # React Native 앱 진입점
-├── index.js                    # React Native 메인 진입점
-├── index.web.js                # 웹 진입점
-├── package.json                # 의존성 관리
+handy-platform/ (모노레포 구조)
+├── packages/
+│   ├── mobile/                 # React Native 앱
+│   │   ├── src/
+│   │   │   ├── components/     # WebViewBridge.tsx 등
+│   │   │   ├── screens/        # HomeScreen.tsx 등
+│   │   │   ├── services/       # api.ts, cameraService.ts 등
+│   │   │   └── utils/          # tokenUtils.ts 등
+│   │   ├── android/            # Android 네이티브 코드
+│   │   ├── ios/                # iOS 네이티브 코드
+│   │   ├── App.tsx
+│   │   ├── index.js
+│   │   └── package.json
+│   ├── web/                    # React 웹 앱 (Vite)
+│   │   ├── src/
+│   │   │   ├── components/     # 웹 컴포넌트
+│   │   │   ├── services/       # api.ts (웹용)
+│   │   │   └── ...
+│   │   ├── .env.development    # 개발환경 설정
+│   │   ├── .env.production     # 프로덕션환경 설정
+│   │   ├── index.html
+│   │   ├── vite.config.ts
+│   │   └── package.json
+│   └── shared/                 # 공통 타입 및 유틸리티
+│       ├── src/
+│       │   ├── types/          # 공통 타입 정의
+│       │   ├── utils/          # 공통 유틸리티
+│       │   └── config/         # API 환경 설정
+│       └── package.json
+├── package.json                # 워크스페이스 루트 설정
 ├── tsconfig.json               # TypeScript 설정
-├── vite.config.ts              # Vite 웹 빌드 설정
-├── metro.config.js             # Metro 번들러 설정
 └── CLAUDE.md                   # 프로젝트 가이드
 ```
 
@@ -62,20 +63,41 @@ npm install
 
 #### 🌐 웹 버전 실행
 ```bash
-# 웹 개발 서버 시작 (Vite) - http://localhost:3000
+# 개발 환경 (로컬 서버 연동) - http://localhost:3001
+npm run web:dev
+
+# 프로덕션 환경 (실제 서버 연동) - http://localhost:3001  
+npm run web:prod
+
+# 기본 실행 (개발 환경과 동일)
 npm run web
 ```
 
 #### 📱 모바일 앱 실행
 ```bash
+# 개발 환경 실행
 # 1. Metro 서버 시작 (React Native)
-npm start
+npm run start:dev
 
 # 2. iOS 시뮬레이터에서 실행 (터미널 새 창에서)
-npm run ios
+npm run ios:dev
 
 # 3. Android 에뮬레이터에서 실행 (터미널 새 창에서)
-npm run android
+npm run android:dev
+
+# 프로덕션 환경 실행
+# 1. Metro 서버 시작 (React Native)
+npm run start:prod
+
+# 2. iOS 시뮬레이터에서 실행 (터미널 새 창에서)
+npm run ios:prod
+
+# 3. Android 에뮬레이터에서 실행 (터미널 새 창에서)
+npm run android:prod
+
+# 전체 시스템 동시 실행
+npm run dev:all        # 개발 환경
+npm run dev:all:prod   # 프로덕션 환경
 ```
 
 #### 🏗️ 빌드 & 정리
@@ -190,6 +212,56 @@ window.ReactNativeWebView.requestPermission('camera');
 - API 호출 시 try-catch 필수
 - 사용자 친화적 에러 메시지 표시
 - 권한 거부 시 적절한 안내
+
+## API 환경 설정
+
+### 환경별 서버 URL
+- **개발 환경**: `http://localhost:5000` (로컬 서버)
+- **프로덕션 환경**: `http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com`
+
+### 테스트 계정
+```javascript
+// 일반 사용자 1
+const testUser1 = {
+  email: "user@test.com",
+  password: "password123"
+}
+
+// 일반 사용자 2
+const testUser2 = {
+  email: "testuser@example.com",
+  password: "testpass123"
+}
+
+// 관리자 (전체 시스템 관리)
+const adminUser = {
+  email: "admin@handy-server.com", 
+  password: "admin123456"
+}
+
+// 판매자 (상품 등록/관리, 주문 처리)
+const sellerUser = {
+  email: "seller@handy-server.com",
+  password: "seller123456"
+}
+```
+
+### API 사용 예시
+```javascript
+// 모바일 앱에서
+import { apiService } from '@handy-platform/mobile/src/services/api';
+
+// 웹 앱에서  
+import { webApiService } from '@handy-platform/web/src/services/api';
+
+// 공통 타입 사용
+import { Product, Cart, User } from '@handy-platform/shared';
+```
+
+### 환경 설정 파일
+- `packages/web/.env.development` - 웹 개발환경 설정
+- `packages/web/.env.production` - 웹 프로덕션환경 설정
+- `packages/shared/src/config/api.ts` - 공통 API 설정
 
 ## Backend API Documentation
 

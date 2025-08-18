@@ -1,17 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { webApiService } from '../../services/api';
 
 export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
-  const [id, setId] = useState("");
-  const [pw, setPw] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [auto, setAuto] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const submit = (e?: React.FormEvent<HTMLFormElement>) => {
+  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      const isAuthenticated = await webApiService.isAuthenticated();
+      if (isAuthenticated) {
+        onGo("/");
+      }
+    };
+    checkAuthAndRedirect();
+  }, [onGo]);
+
+  const submit = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
-    if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
-    // TODO: 실제 인증 연동
-    alert(`로그인(데모): ${id}${auto ? " (자동로그인)" : ""}`);
-    onGo("/");
+    if (!email || !password) {
+      setError("이메일과 비밀번호를 입력하세요.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await webApiService.login({ email, password });
+      
+      if (auto) {
+        // 자동 로그인 설정 저장 (로컬 스토리지에 플래그만 저장)
+        localStorage.setItem('autoLogin', 'true');
+      }
+      
+      console.log('로그인 성공:', response);
+      
+      // 인증 상태 변경 이벤트 발생
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+      
+      alert(`로그인 성공! 환영합니다, ${response.user?.name || email}님!`);
+      onGo("/");
+    } catch (error: any) {
+      console.error('로그인 실패:', error);
+      setError(error.message || '로그인에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const oauth = (provider: "kakao" | "apple" | "google" | "naver") => {
@@ -63,26 +102,36 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       </div>
 
       <form onSubmit={submit} className="mt-4 space-y-3">
+        {error && (
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+        
         <input
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          placeholder="아이디"
-          className="w-full rounded-lg border px-4 py-3 text-sm outline-none"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="이메일 주소"
+          className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-500"
+          disabled={loading}
         />
 
         <div className="relative">
           <input
             type={showPw ? "text" : "password"}
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호"
-            className="w-full rounded-lg border px-4 py-3 pr-10 text-sm outline-none"
+            className="w-full rounded-lg border px-4 py-3 pr-10 text-sm outline-none focus:border-blue-500"
+            disabled={loading}
           />
           <button
             type="button"
             onClick={() => setShowPw((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             aria-label="비밀번호 표시 전환"
+            disabled={loading}
           >
             {showPw ? "🙈" : "👁️"}
           </button>
@@ -90,9 +139,10 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white"
+          disabled={loading}
+          className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          로그인
+          {loading ? "로그인 중..." : "로그인"}
         </button>
 
         <div className="flex items-center justify-between text-sm text-gray-600">

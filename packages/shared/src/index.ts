@@ -5,6 +5,9 @@ export * from './types';
 export * from './utils/tokenUtils';
 export * from './utils/apiHelpers';
 
+// Config
+export * from './config/api';
+
 // Re-export commonly used types
 export type {
   User,

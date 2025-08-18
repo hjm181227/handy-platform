@@ -105,13 +105,45 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       switch (data.action) {
         case 'login':
           result = await apiService.login({ email: data.email, password: data.password });
+          // Native에 토큰과 유저 정보 저장
           await AsyncStorage.setItem('auth_token', (result as any).token);
+          if ((result as any).user) {
+            await AsyncStorage.setItem('user_info', JSON.stringify((result as any).user));
+          }
           break;
         case 'register':
           result = await apiService.register(data);
+          // 회원가입 성공 시에도 토큰 저장
+          if ((result as any).token) {
+            await AsyncStorage.setItem('auth_token', (result as any).token);
+            if ((result as any).user) {
+              await AsyncStorage.setItem('user_info', JSON.stringify((result as any).user));
+            }
+          }
           break;
         case 'logout':
           await AsyncStorage.removeItem('auth_token');
+          await AsyncStorage.removeItem('user_info');
+          result = { success: true };
+          break;
+        case 'getStoredAuth':
+          // WebView에서 저장된 인증 정보 요청 시
+          const storedToken = await AsyncStorage.getItem('auth_token');
+          const storedUser = await AsyncStorage.getItem('user_info');
+          result = {
+            token: storedToken,
+            user: storedUser ? JSON.parse(storedUser) : null,
+            requestId: data.requestId
+          };
+          break;
+        case 'syncToken':
+          // WebView에서 토큰 동기화 요청 시
+          if (data.token) {
+            await AsyncStorage.setItem('auth_token', data.token);
+            if (data.user) {
+              await AsyncStorage.setItem('user_info', JSON.stringify(data.user));
+            }
+          }
           result = { success: true };
           break;
         default:
@@ -439,11 +471,39 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
         }));
       },
       
-      // 인증 헬퍼
+      // 인증 헬퍼 (확장)
       auth: function(action, data = {}) {
         this.postMessage(JSON.stringify({
           type: 'AUTH',
           data: { action, ...data }
+        }));
+      },
+      
+      // Native에서 저장된 인증 정보 가져오기
+      getStoredAuth: function() {
+        return new Promise((resolve) => {
+          const requestId = 'auth_' + Date.now();
+          const handler = (event) => {
+            const message = event.detail;
+            if (message.type === 'AUTH_RESPONSE' && message.data.requestId === requestId) {
+              window.removeEventListener('nativeMessage', handler);
+              resolve(message.data.result);
+            }
+          };
+          window.addEventListener('nativeMessage', handler);
+          
+          this.postMessage(JSON.stringify({
+            type: 'AUTH',
+            data: { action: 'getStoredAuth', requestId }
+          }));
+        });
+      },
+      
+      // Native에 토큰 동기화
+      syncToken: function(token, user) {
+        this.postMessage(JSON.stringify({
+          type: 'AUTH',
+          data: { action: 'syncToken', token, user }
         }));
       },
       

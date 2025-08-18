@@ -4,8 +4,14 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "android:dev": "REACT_NATIVE_ENV=development react-native run-android",
+    "android:prod": "REACT_NATIVE_ENV=production react-native run-android",
     "ios": "react-native run-ios", 
+    "ios:dev": "REACT_NATIVE_ENV=development react-native run-ios",
+    "ios:prod": "REACT_NATIVE_ENV=production react-native run-ios",
     "start": "react-native start",
+    "start:dev": "REACT_NATIVE_ENV=development react-native start",
+    "start:prod": "REACT_NATIVE_ENV=production react-native start",
     "clean": "react-native clean",
     "build:android": "cd android && ./gradlew assembleRelease",
     "build:android:bundle": "cd android && ./gradlew bundleRelease"

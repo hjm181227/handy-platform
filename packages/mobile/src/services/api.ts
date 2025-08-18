@@ -20,18 +20,30 @@ import {
   parseApiError,
   safeJsonParse,
   isTokenExpired,
+  getApiConfig,
+  getDebugConfig,
+  API_ENDPOINTS,
 } from '@handy-platform/shared';
 import { tokenManager } from '../utils/tokenUtils';
 
-const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:5000' 
-  : 'http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com';
-
 class ApiService {
   private baseURL: string;
+  private timeout: number;
+  private debugConfig: any;
 
   constructor() {
-    this.baseURL = API_BASE_URL;
+    const config = getApiConfig();
+    this.baseURL = config.baseURL;
+    this.timeout = config.timeout;
+    this.debugConfig = getDebugConfig();
+    
+    if (this.debugConfig.enableApiLogs) {
+      console.log('🚀 API Service initialized with config:', {
+        baseURL: this.baseURL,
+        timeout: this.timeout,
+        environment: process.env.REACT_NATIVE_ENV || 'development'
+      });
+    }
   }
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
@@ -53,7 +65,7 @@ class ApiService {
 
       // Create timeout controller
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
       try {
         const response = await fetch(url, {
@@ -133,7 +145,7 @@ class ApiService {
   // ======================
 
   async login(credentials: LoginForm): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/api/auth/login', {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, {
       method: 'POST',
       body: JSON.stringify(credentials),
     }, false); // Don't retry login attempts
@@ -152,7 +164,7 @@ class ApiService {
   }
 
   async register(userData: RegisterForm): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/api/auth/register', {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, {
       method: 'POST',
       body: JSON.stringify(userData),
     }, false); // Don't retry registration attempts
