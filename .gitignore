@@ -44,6 +44,7 @@ yarn-error.log
 
 # CocoaPods
 /ios/Pods/
+packages/mobile/ios/Pods/
 
 # Temporary files created by Metro to check the health of the file watcher
 .metro-health-check*
@@ -70,8 +71,6 @@ dist/
 .vscode/
 .idea/
 
-# Metro health check
-.metro-health-check*
 
 # React Native
 ios/.xcode.env.local
@@ -82,3 +81,18 @@ logs
 
 # Cache
 .cache/
+
+# Monorepo specific
+packages/*/node_modules/
+packages/*/dist/
+packages/*/build/
+packages/*/.cache/
+packages/*/.vite/
+packages/web/dist/
+packages/mobile/android/app/build/
+packages/mobile/ios/build/
+
+# Legacy directories (to be removed)
+web/
+android/
+ios/
