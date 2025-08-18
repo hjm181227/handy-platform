@@ -13,6 +13,7 @@
   "dependencies": {
     "@handy-platform/shared": "*",
     "@react-native-async-storage/async-storage": "^1.24.0",
+    "@babel/runtime": "^7.20.0",
     "react": "18.2.0",
     "react-native": "0.73.6",
     "react-native-image-picker": "^7.1.2",
@@ -22,7 +23,8 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.20.0",
+    "@react-native-community/cli": "^12.3.6",
+    "@react-native-community/cli-platform-android": "^12.3.6",
     "@react-native/metro-config": "^0.73.5",
     "@types/react": "^18.2.6",
     "metro-react-native-babel-preset": "^0.77.0",
