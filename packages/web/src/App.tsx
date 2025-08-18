@@ -44,6 +44,18 @@ import {
   PromoPage 
 } from './components/pages/SupportPages';
 
+// Footer Components
+import {
+  AboutCompanyPage,
+  AboutBusinessPage,
+  AboutNewsroomPage,
+  AboutCareersPage,
+  AboutNoticePage,
+  PartnerInquiryPage,
+  PolicyPage,
+  SnsPage
+} from './components/pages/FooterPages';
+
 export default function App() {
   const { path, nav } = useMiniRouter();
 
@@ -78,6 +90,12 @@ export default function App() {
     return [...prev, {id, qty:1}];
   });
   const remove = (id:string) => setCart(prev=>prev.filter(x=>x.id!==id));
+  const updateQuantity = (id:string, qty:number) => setCart(prev=>{
+    if(qty <= 0) return prev.filter(x=>x.id!==id);
+    const i = prev.findIndex(x=>x.id===id);
+    if(i>=0){ const next=[...prev]; next[i]={...next[i], qty}; return next; }
+    return prev;
+  });
   const count = cart.reduce((a,c)=>a+c.qty,0);
   const checkout = (total:number)=>{
     try{ (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout", total})); }catch{};
@@ -172,6 +190,25 @@ export default function App() {
     screen = <FaqPage onGo={nav} />;
   } else if (pathname === "/promo/plus") {
     screen = <PromoPage onGo={nav} />;
+  } else if (pathname === "/about/회사 소개") {
+    screen = <AboutCompanyPage onGo={nav} />;
+  } else if (pathname === "/about/비즈니스 소개") {
+    screen = <AboutBusinessPage onGo={nav} />;
+  } else if (pathname === "/about/뉴스룸") {
+    screen = <AboutNewsroomPage onGo={nav} />;
+  } else if (pathname === "/about/채용 정보") {
+    screen = <AboutCareersPage onGo={nav} />;
+  } else if (pathname === "/about/공지사항") {
+    screen = <AboutNoticePage onGo={nav} />;
+  } else if (pathname.startsWith("/partner/")) {
+    const type = decodeURIComponent(pathname.split("/").pop() || "");
+    screen = <PartnerInquiryPage onGo={nav} type={type} />;
+  } else if (pathname.startsWith("/policy/")) {
+    const policyType = pathname.split("/").pop() || "";
+    screen = <PolicyPage onGo={nav} type={policyType} />;
+  } else if (pathname.startsWith("/sns/")) {
+    const platform = pathname.split("/").pop() || "";
+    screen = <SnsPage onGo={nav} platform={platform} />;
   } else if (pathname.startsWith("/my")) {
     screen = <MyPage onGo={nav} onOpen={openProduct} />;
   } else if (pathname.startsWith("/login")) {
@@ -214,6 +251,7 @@ export default function App() {
         onClose={() => setDrawer(false)}
         items={cart}
         onRemove={remove}
+        onUpdateQuantity={updateQuantity}
         onCheckout={checkout}
       />
       <CategoryDrawer

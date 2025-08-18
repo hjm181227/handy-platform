@@ -91,3 +91,4 @@ packages/*/.vite/
 packages/web/dist/
 packages/mobile/android/app/build/
 packages/mobile/ios/build/
+.vercel

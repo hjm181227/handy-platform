@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/api';
+import { TermsOfService, PrivacyPolicy, PersonalDataConsent } from './PolicyPages';
 
 export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
   const [formData, setFormData] = useState({
@@ -16,8 +17,10 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
   const [agree, setAgree] = useState({
     terms: false,
     privacy: false,
+    personalData: false,
     marketing: false
   });
+  const [showPolicy, setShowPolicy] = useState<'terms' | 'privacy' | 'personalData' | null>(null);
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트
   useEffect(() => {
@@ -56,8 +59,8 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
       return false;
     }
 
-    if (!agree.terms || !agree.privacy) {
-      setError("이용약관과 개인정보처리방침에 동의해주세요.");
+    if (!agree.terms || !agree.privacy || !agree.personalData) {
+      setError("필수 약관에 모두 동의해주세요.");
       return false;
     }
 
@@ -106,6 +109,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
     setAgree({
       terms: true,
       privacy: true,
+      personalData: true,
       marketing: false
     });
   };
@@ -204,41 +208,111 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 약관 동의 */}
-        <div className="space-y-2 rounded-lg border bg-gray-50 px-4 py-3">
-          <div className="text-sm font-medium text-gray-700">약관 동의</div>
+        <div className="space-y-3 rounded-lg border bg-gray-50 px-4 py-4">
+          <div className="text-sm font-semibold text-gray-800">약관 동의</div>
           
-          <label className="flex items-center gap-2 text-sm">
+          {/* 전체 동의 */}
+          <label className="flex items-center gap-2 text-sm border-b pb-2">
             <input
               type="checkbox"
-              checked={agree.terms}
-              onChange={(e) => setAgree(prev => ({ ...prev, terms: e.target.checked }))}
+              checked={agree.terms && agree.privacy && agree.personalData && agree.marketing}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+                setAgree({
+                  terms: isChecked,
+                  privacy: isChecked,
+                  personalData: isChecked,
+                  marketing: isChecked
+                });
+              }}
               disabled={loading}
               className="rounded"
             />
-            <span>이용약관에 동의합니다 (필수)</span>
+            <span className="font-medium">전체 동의</span>
           </label>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={agree.privacy}
-              onChange={(e) => setAgree(prev => ({ ...prev, privacy: e.target.checked }))}
-              disabled={loading}
-              className="rounded"
-            />
-            <span>개인정보처리방침에 동의합니다 (필수)</span>
+          {/* 이용약관 */}
+          <label className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={agree.terms}
+                onChange={(e) => setAgree(prev => ({ ...prev, terms: e.target.checked }))}
+                disabled={loading}
+                className="rounded"
+              />
+              <span>서비스 이용약관 동의 <span className="text-red-500">(필수)</span></span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPolicy('terms')}
+              className="text-blue-600 hover:text-blue-800 text-xs underline"
+            >
+              전문보기
+            </button>
           </label>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={agree.marketing}
-              onChange={(e) => setAgree(prev => ({ ...prev, marketing: e.target.checked }))}
-              disabled={loading}
-              className="rounded"
-            />
-            <span>마케팅 정보 수신에 동의합니다 (선택)</span>
+          {/* 개인정보처리방침 */}
+          <label className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={agree.privacy}
+                onChange={(e) => setAgree(prev => ({ ...prev, privacy: e.target.checked }))}
+                disabled={loading}
+                className="rounded"
+              />
+              <span>개인정보처리방침 동의 <span className="text-red-500">(필수)</span></span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPolicy('privacy')}
+              className="text-blue-600 hover:text-blue-800 text-xs underline"
+            >
+              전문보기
+            </button>
           </label>
+
+          {/* 개인정보수집동의서 */}
+          <label className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={agree.personalData}
+                onChange={(e) => setAgree(prev => ({ ...prev, personalData: e.target.checked }))}
+                disabled={loading}
+                className="rounded"
+              />
+              <span>개인정보 수집 및 이용 동의 <span className="text-red-500">(필수)</span></span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPolicy('personalData')}
+              className="text-blue-600 hover:text-blue-800 text-xs underline"
+            >
+              전문보기
+            </button>
+          </label>
+
+          {/* 마케팅 정보 수신 동의 */}
+          <label className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={agree.marketing}
+                onChange={(e) => setAgree(prev => ({ ...prev, marketing: e.target.checked }))}
+                disabled={loading}
+                className="rounded"
+              />
+              <span>마케팅 정보 수신 동의 <span className="text-gray-500">(선택)</span></span>
+            </div>
+            <div className="text-xs text-gray-500">SMS, 이메일</div>
+          </label>
+
+          {/* 필수 약관 안내 */}
+          <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+            💡 필수 약관에 동의하지 않으시면 회원가입이 제한됩니다.
+          </div>
         </div>
 
         <button
@@ -260,6 +334,11 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
           로그인하기
         </button>
       </div>
+
+      {/* Policy Modals */}
+      {showPolicy === 'terms' && <TermsOfService onClose={() => setShowPolicy(null)} />}
+      {showPolicy === 'privacy' && <PrivacyPolicy onClose={() => setShowPolicy(null)} />}
+      {showPolicy === 'personalData' && <PersonalDataConsent onClose={() => setShowPolicy(null)} />}
     </div>
   );
 }

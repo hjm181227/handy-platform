@@ -8,12 +8,14 @@ export function CartDrawer({
   onClose,
   items,
   onRemove,
+  onUpdateQuantity,
   onCheckout,
 }: {
   open: boolean;
   onClose: () => void;
   items: {id: string; qty: number}[];
   onRemove: (id: string) => void;
+  onUpdateQuantity?: (id: string, qty: number) => void;
   onCheckout: (total: number) => void;
 }) {
   const cartItems = items.map(item => {
@@ -33,8 +35,14 @@ export function CartDrawer({
       <div className="flex h-full flex-col">
         <div className="border-b p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">장바구니</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+            <h2 id="drawer-title" className="text-lg font-semibold">장바구니</h2>
+            <button 
+              onClick={onClose} 
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 hover:bg-gray-100 rounded-full"
+              aria-label="장바구니 닫기"
+            >
+              ✕
+            </button>
           </div>
         </div>
         
@@ -50,23 +58,45 @@ export function CartDrawer({
                   ? Math.round(item.product.price * (100 - item.product.sale) / 100)
                   : item.product.price;
                 return (
-                  <div key={item.id} className="flex gap-3 border-b pb-4">
-                    <img src={item.product.image} className="h-16 w-16 rounded object-cover" />
+                  <div key={item.id} className="flex gap-3 border-b pb-4 transition-all duration-200 hover:bg-gray-50 p-2 rounded-lg -m-2">
+                    <img src={item.product.image} className="h-16 w-16 rounded object-cover transition-transform duration-200 hover:scale-105" />
                     <div className="flex-1">
                       <h3 className="text-sm font-medium">{item.product.name}</h3>
                       <p className="text-xs text-gray-500">{item.product.brand}</p>
-                      <div className="mt-1 flex items-center justify-between">
+                      <div className="mt-2 flex items-center justify-between">
                         <span className="text-sm font-semibold">{money(salePrice)}원</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">수량: {item.qty}</span>
-                          <button 
-                            onClick={() => onRemove(item.id)}
-                            className="text-xs text-red-500 hover:underline"
-                          >
-                            삭제
-                          </button>
-                        </div>
+                        <button 
+                          onClick={() => onRemove(item.id)}
+                          className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-all duration-200"
+                        >
+                          삭제
+                        </button>
                       </div>
+                      {onUpdateQuantity && (
+                        <div className="mt-2 flex items-center justify-center">
+                          <div className="flex items-center border rounded-lg">
+                            <button
+                              onClick={() => onUpdateQuantity(item.id, Math.max(1, item.qty - 1))}
+                              disabled={item.qty <= 1}
+                              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                              aria-label="수량 감소"
+                            >
+                              −
+                            </button>
+                            <span className="w-12 text-center text-sm font-medium border-x py-1">
+                              {item.qty}
+                            </span>
+                            <button
+                              onClick={() => onUpdateQuantity(item.id, Math.min(99, item.qty + 1))}
+                              disabled={item.qty >= 99}
+                              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                              aria-label="수량 증가"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -83,7 +113,7 @@ export function CartDrawer({
             </div>
             <button 
               onClick={() => onCheckout(total)}
-              className="w-full rounded-lg bg-black py-3 text-white font-medium"
+              className="w-full rounded-lg bg-black py-3 text-white font-medium transition-all duration-200 hover:bg-gray-800 active:scale-95 shadow-lg hover:shadow-xl"
             >
               주문하기
             </button>
@@ -116,8 +146,14 @@ export function CategoryDrawer({
       <div className="flex h-full flex-col">
         <div className="border-b p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">카테고리</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+            <h2 id="drawer-title" className="text-lg font-semibold">카테고리</h2>
+            <button 
+              onClick={onClose} 
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 hover:bg-gray-100 rounded-full"
+              aria-label="카테고리 닫기"
+            >
+              ✕
+            </button>
           </div>
         </div>
         
@@ -134,7 +170,7 @@ export function CategoryDrawer({
                         onGo(`/cat/${encodeURIComponent(category.name)}/${encodeURIComponent(item)}`);
                         onClose();
                       }}
-                      className="block w-full text-left py-2 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                      className="block w-full text-left py-2 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded transition-all duration-200 hover:translate-x-1 hover:text-gray-800"
                     >
                       {item}
                     </button>

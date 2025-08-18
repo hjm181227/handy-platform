@@ -1,63 +1,64 @@
 
-export function FooterMega({ onGo }: { onGo: (to: string) => void }) {
+/* ---------------- Mega Footer (링크도 라우팅) ---------------- */
+export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
+  const cols = [
+    { h: "어바웃 HANDY", items: ["회사 소개", "비즈니스 소개", "뉴스룸", "채용 정보", "공지사항"], base:"/about" },
+    { h: "파트너 지원", items: ["입점 문의", "광고/제휴 문의", "협찬 문의", "공동/대량 구매 문의", "제조/생산 문의", "이미지/저작권 문의"], base:"/partner" },
+    { h: "고객 지원", items: ["1:1 문의하기", "FAQ 자주 묻는 질문", "고객센터 9611-1711", "운영시간: 평일 09:00 ~ 18:00 (12:00~13:00 제외)", "cs@handy.com"], base:"/support" },
+  ];
+  const policy = [
+    {label:"개인정보처리방침", to:"/policy/privacy"},
+    {label:"이용약관", to:"/policy/terms"},
+    {label:"결제대행 위탁사", to:"/policy/pg"},
+    {label:"분쟁해결기준", to:"/policy/dispute"},
+    {label:"영상정보처리기기 운영·관리방침", to:"/policy/cctv"},
+  ];
+
   return (
-    <footer className="mt-20 bg-gray-50 border-t">
-      <div className="mx-auto max-w-7xl px-4 py-12">
-        <div className="grid gap-8 md:grid-cols-4">
-          <div>
-            <h3 className="font-semibold text-lg mb-4">HANDY</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              네일아트의 새로운 기준을 제시하는 핸디와 함께 
-              나만의 스타일을 완성하세요.
-            </p>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">쇼핑</h4>
-            <div className="space-y-2 text-sm">
-              <a href="/brands" onClick={(e) => {e.preventDefault(); onGo("/brands");}} className="block text-gray-600 hover:text-black">브랜드</a>
-              <a href="/new" onClick={(e) => {e.preventDefault(); onGo("/new");}} className="block text-gray-600 hover:text-black">신상품</a>
-              <a href="/sale" onClick={(e) => {e.preventDefault(); onGo("/sale");}} className="block text-gray-600 hover:text-black">세일</a>
-              <a href="/ranking" onClick={(e) => {e.preventDefault(); onGo("/ranking");}} className="block text-gray-600 hover:text-black">랭킹</a>
+    <footer className="mt-10 bg-[#f5f5f5] text-[#666]">
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="grid gap-8 md:grid-cols-5">
+          {cols.map((c) => (
+            <div key={c.h}>
+              <div className="mb-2 text-sm font-semibold text-[#333]">{c.h}</div>
+              <ul className="space-y-1 text-[13px]">
+                {c.items.map((it) => (
+                  <li key={it}>
+                    <a href={`${c.base}/${encodeURIComponent(it)}`} onClick={(e)=>{e.preventDefault(); onGo(`${c.base}/${encodeURIComponent(it)}`);}} className="hover:underline">{it}</a>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">고객지원</h4>
-            <div className="space-y-2 text-sm">
-              <a href="/help" onClick={(e) => {e.preventDefault(); onGo("/help");}} className="block text-gray-600 hover:text-black">고객센터</a>
-              <a href="/help" onClick={(e) => {e.preventDefault(); onGo("/help");}} className="block text-gray-600 hover:text-black">FAQ</a>
-              <a href="tel:1544-7199" className="block text-gray-600 hover:text-black">1544-7199</a>
-              <a href="mailto:cs@handy.com" className="block text-gray-600 hover:text-black">cs@handy.com</a>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">소식</h4>
-            <div className="space-y-2 text-sm">
-              <a href="/news" onClick={(e) => {e.preventDefault(); onGo("/news");}} className="block text-gray-600 hover:text-black">뉴스</a>
-              <a href="/snap" onClick={(e) => {e.preventDefault(); onGo("/snap");}} className="block text-gray-600 hover:text-black">SNAP</a>
-              <div className="pt-2">
-                <p className="text-gray-500 text-xs mb-2">팔로우</p>
-                <div className="flex gap-2">
-                  <a href="#" className="text-gray-400 hover:text-gray-600">Instagram</a>
-                  <a href="#" className="text-gray-400 hover:text-gray-600">YouTube</a>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-        
-        <div className="mt-8 pt-8 border-t border-gray-200 text-xs text-gray-500">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <p>© 2025 HANDY. All rights reserved.</p>
-              <p>사업자등록번호: 000-00-00000 | 통신판매업신고: 제2025-서울-0000호</p>
-            </div>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-gray-700">이용약관</a>
-              <a href="#" className="hover:text-gray-700">개인정보처리방침</a>
-            </div>
+
+        <div className="my-6 h-px bg-[#e5e5e5]" />
+
+        <div className="text-[12px] leading-6 text-[#777]">
+          <div className="text-[#444] font-medium">© HANDY ALL RIGHTS RESERVED</div>
+          <p className="mt-2">
+            에르모세아르 | 대표자: 김동현 | 주소: 경기도 용인시 기흥구 공세로 150-29, B01-G160호 | 통신판매업 신고번호: 2024-용인기흥-2437 |
+            사업자등록번호: 106-16-34319(사업자정보확인)
+          </p>
+    
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+            {policy.map((p)=>(
+              <a key={p.label} href={p.to} onClick={(e)=>{e.preventDefault(); onGo(p.to);}} className="underline">{p.label}</a>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-3 text-[#888]">
+            {["윤리·준법경영 국제 표준 통합 인증","안전보건경영시스템 국제 인증","정보보호 관리체계 ISMS 인증"].map((c)=>(
+              <span key={c} className="inline-flex items-center gap-2 rounded-full border px-2 py-1">
+                <span className="h-4 w-4 rounded-full bg-[#ddd]" /> {c}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-4 flex items-center gap-8 text-[#888]">
+            {["YT","IG","X","TikTok","Blog"].map((k)=>(
+              <a key={k} href={`/sns/${k.toLowerCase()}`} onClick={(e)=>{e.preventDefault(); onGo(`/sns/${k.toLowerCase()}`);}} className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#ddd] text-[10px]">{k}</a>
+            ))}
           </div>
         </div>
       </div>

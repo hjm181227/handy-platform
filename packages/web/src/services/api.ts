@@ -27,7 +27,14 @@ import {
 // 웹 환경에서 Vite 환경변수를 통해 환경 설정
 const setViteEnvironment = () => {
   // Vite의 환경변수를 window 객체에 설정
-  (window as any).__VITE_ENV__ = import.meta.env.MODE === 'production' ? 'production' : 'development';
+  let viteEnv = 'development';
+  try {
+    // @ts-ignore
+    viteEnv = import.meta.env ? import.meta.env.MODE : 'development';
+  } catch {
+    viteEnv = 'development';
+  }
+  (window as any).__VITE_ENV__ = viteEnv === 'production' ? 'production' : 'development';
 };
 
 // 하이브리드 토큰 관리 (웹/앱 통합)
@@ -165,7 +172,14 @@ class WebApiService {
       console.log('🚀 Web API Service initialized with config:', {
         baseURL: this.baseURL,
         timeout: this.timeout,
-        environment: import.meta.env.MODE || 'development'
+        environment: (() => { 
+          try { 
+            // @ts-ignore
+            return import.meta.env ? import.meta.env.MODE : 'development';
+          } catch { 
+            return 'development';
+          }
+        })()
       });
     }
   }
