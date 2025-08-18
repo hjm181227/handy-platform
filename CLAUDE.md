@@ -46,15 +46,75 @@ handy-platform/ (모노레포 구조)
 ## Development Setup
 
 ### Prerequisites
-- Node.js 16+
-- React Native CLI
-- Android Studio (Android 개발)
-- Xcode (iOS 개발, macOS만)
+
+#### 필수 프로그램 설치
+1. **Node.js 16+** 
+   ```bash
+   # nvm 사용 권장
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
+   nvm install 18
+   nvm use 18
+   ```
+
+2. **React Native CLI**
+   ```bash
+   npm install -g react-native-cli
+   # 또는
+   npm install -g @react-native-community/cli
+   ```
+
+3. **Android 개발 환경**
+   - **Java 8 또는 11**: `brew install openjdk@11`
+   - **Android Studio**: https://developer.android.com/studio 다운로드
+   - **Android SDK**: Android Studio 설치 시 자동 설치
+   - **Android Emulator**: Android Studio > AVD Manager에서 설정
+
+4. **iOS 개발 환경** (macOS만)
+   - **Xcode**: App Store에서 설치
+   - **iOS Simulator**: Xcode 설치 시 포함
+   - **CocoaPods**: `sudo gem install cocoapods`
+
+#### 환경 변수 설정
+```bash
+# ~/.zshrc 또는 ~/.bash_profile에 추가
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+# Java 설정 (Android Studio 설치 후)
+export JAVA_HOME=$(/usr/libexec/java_home -v 11)
+```
 
 ### Installation
+
+#### 1. 프로젝트 클론 및 설치
 ```bash
-# 프로젝트 루트에서
+# 저장소 클론
+git clone <repository-url>
+cd handy-platform
+
+# 워크스페이스 의존성 설치
 npm install
+
+# 공유 패키지 빌드 (필수!)
+npm run build:shared
+```
+
+#### 2. Android 설정
+```bash
+# Android 에뮬레이터 생성 (Android Studio GUI 사용 권장)
+# 또는 CLI로:
+avdmanager create avd -n Pixel_4a_API_33 -k "system-images;android-33;google_apis;arm64-v8a"
+```
+
+#### 3. iOS 설정 (macOS만)
+```bash
+# iOS 의존성 설치
+cd packages/mobile/ios
+pod install
+cd ../../..
 ```
 
 ## Common Commands
@@ -212,6 +272,98 @@ window.ReactNativeWebView.requestPermission('camera');
 - API 호출 시 try-catch 필수
 - 사용자 친화적 에러 메시지 표시
 - 권한 거부 시 적절한 안내
+
+## Troubleshooting
+
+### 일반적인 문제 해결
+
+#### 1. 설치 오류
+```bash
+# npm 캐시 정리
+npm cache clean --force
+
+# node_modules 재설치
+rm -rf node_modules package-lock.json
+npm install
+
+# 공유 패키지 재빌드
+npm run build:shared
+```
+
+#### 2. Android 빌드 오류
+```bash
+# Android 프로젝트 정리
+cd packages/mobile/android
+./gradlew clean
+
+# React Native 캐시 정리
+npx react-native start --reset-cache
+
+# Metro 캐시 정리
+rm -rf /tmp/metro-*
+rm -rf node_modules/.cache
+```
+
+#### 3. iOS 빌드 오류 (macOS)
+```bash
+# CocoaPods 재설치
+cd packages/mobile/ios
+rm -rf Pods Podfile.lock
+pod deintegrate
+pod install
+
+# Xcode 파생 데이터 정리
+rm -rf ~/Library/Developer/Xcode/DerivedData
+```
+
+#### 4. TypeScript 오류
+```bash
+# TypeScript 타입 재생성
+npm run build:shared
+
+# tsconfig 확인
+npx tsc --noEmit --project packages/web
+npx tsc --noEmit --project packages/mobile
+```
+
+#### 5. WebView 연결 오류
+```bash
+# 웹 서버가 실행 중인지 확인
+lsof -i :3001
+
+# 웹 서버 시작
+npm run web:dev  # 개발환경
+npm run web:prod # 프로덕션환경
+
+# Android 에뮬레이터에서 localhost 접근 확인
+# 10.0.2.2:3001 = localhost:3001 (에뮬레이터 전용)
+```
+
+### VSCode 설정 권장사항
+
+#### 확장 프로그램
+- React Native Tools
+- TypeScript Importer
+- Prettier - Code formatter
+- ESLint
+- Auto Rename Tag
+- Bracket Pair Colorizer
+
+#### VSCode settings.json
+```json
+{
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.suggest.autoImports": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  }
+}
+```
 
 ## API 환경 설정
 

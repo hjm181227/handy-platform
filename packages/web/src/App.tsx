@@ -23,6 +23,27 @@ import { SignupPage } from './components/pages/SignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 
+// MyPage Components
+import { 
+  OrdersPage, 
+  ShippingPage, 
+  ClaimsPage, 
+  CancelPage, 
+  ReviewsPage, 
+  CouponsPage, 
+  PointsPage, 
+  PaymentsPage 
+} from './components/pages/MyPages';
+
+// Support Components
+import { 
+  ContactPage, 
+  FaqPage, 
+  NotificationsPage, 
+  SettingsPage,
+  PromoPage 
+} from './components/pages/SupportPages';
+
 export default function App() {
   const { path, nav } = useMiniRouter();
 
@@ -125,6 +146,32 @@ export default function App() {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
     screen = <LikesPage onGo={nav} onOpen={openProduct} />;
+  } else if (pathname === "/my/orders") {
+    screen = <OrdersPage onGo={nav} />;
+  } else if (pathname === "/my/shipping") {
+    screen = <ShippingPage onGo={nav} />;
+  } else if (pathname === "/my/claims") {
+    screen = <ClaimsPage onGo={nav} />;
+  } else if (pathname === "/my/cancel") {
+    screen = <CancelPage onGo={nav} />;
+  } else if (pathname === "/my/reviews") {
+    screen = <ReviewsPage onGo={nav} />;
+  } else if (pathname === "/my/coupons") {
+    screen = <CouponsPage onGo={nav} />;
+  } else if (pathname === "/my/points") {
+    screen = <PointsPage onGo={nav} />;
+  } else if (pathname === "/my/payments") {
+    screen = <PaymentsPage onGo={nav} />;
+  } else if (pathname === "/my/notifications") {
+    screen = <NotificationsPage onGo={nav} />;
+  } else if (pathname === "/my/settings") {
+    screen = <SettingsPage onGo={nav} />;
+  } else if (pathname === "/support/contact") {
+    screen = <ContactPage onGo={nav} />;
+  } else if (pathname === "/support/faq") {
+    screen = <FaqPage onGo={nav} />;
+  } else if (pathname === "/promo/plus") {
+    screen = <PromoPage onGo={nav} />;
   } else if (pathname.startsWith("/my")) {
     screen = <MyPage onGo={nav} onOpen={openProduct} />;
   } else if (pathname.startsWith("/login")) {
