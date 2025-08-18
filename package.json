@@ -6,16 +6,17 @@
     "packages/*"
   ],
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
+    "android": "npm run android --workspace=packages/mobile",
+    "ios": "npm run ios --workspace=packages/mobile", 
+    "start": "npm run start --workspace=packages/mobile",
     "web": "npm run dev --workspace=packages/web",
     "web:build": "npm run build --workspace=packages/web",
-    "clean": "npx react-native clean",
+    "mobile:clean": "npm run clean --workspace=packages/mobile",
     "build:shared": "npm run build --workspace=packages/shared",
     "dev:shared": "npm run dev --workspace=packages/shared",
-    "dev:all": "npm run dev:shared & npm run web",
+    "dev:all": "npm run dev:shared & npm run web & npm run start",
     "build:all": "npm run build:shared && npm run web:build",
+    "build:mobile": "npm run build:android --workspace=packages/mobile",
     "workspace:install": "npm install --workspaces",
     "workspace:clean": "npm run clean --workspaces --if-present"
   },
