@@ -2,13 +2,22 @@
   "name": "handy-platform",
   "version": "0.0.1",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "web": "vite",
-    "web:build": "vite build",
-    "clean": "npx react-native clean"
+    "web": "npm run dev --workspace=packages/web",
+    "web:build": "npm run build --workspace=packages/web",
+    "clean": "npx react-native clean",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "dev:shared": "npm run dev --workspace=packages/shared",
+    "dev:all": "npm run dev:shared & npm run web",
+    "build:all": "npm run build:shared && npm run web:build",
+    "workspace:install": "npm install --workspaces",
+    "workspace:clean": "npm run clean --workspaces --if-present"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",
