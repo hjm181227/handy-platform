@@ -1,14 +1,151 @@
 import { Product, NewsPost, NewsCategory, Faq } from '../types';
 
 export const products: Product[] = [
-  { id: "1", brand: "HANDY MADE", name: "Glossy Almond Tip – Milk Beige", image: "https://picsum.photos/id/1060/800/800", price: 19000, sale: 25, isNew: true, tag: "HOT", rating: 4.7, reviews: 214 },
-  { id: "2", brand: "HANDY MADE", name: "Square Short – Cocoa", image: "https://picsum.photos/id/1059/800/800", price: 16000, sale: 10, tag: "SALE", rating: 4.3, reviews: 88 },
-  { id: "3", brand: "HANDY LAB",  name: "Gel Press – Clear Fit", image: "https://picsum.photos/id/1070/800/800", price: 12000, isNew: true, tag: "NEW", rating: 4.5, reviews: 61 },
-  { id: "4", brand: "HANDY MADE", name: "Oval Short – Mauve", image: "https://picsum.photos/id/1080/800/800", price: 21000, sale: 30, tag: "BEST", rating: 4.8, reviews: 302 },
-  { id: "5", brand: "HANDY CARE", name: "Cuticle Oil – Rose", image: "https://picsum.photos/id/1084/800/800", price: 9000, rating: 4.2, reviews: 41 },
-  { id: "6", brand: "HANDY MADE", name: "French Line – Ivory", image: "https://picsum.photos/id/1062/800/800", price: 18000, sale: 15, rating: 4.4, reviews: 77 },
-  { id: "7", brand: "HANDY LAB",  name: "Sizer Card v2", image: "https://picsum.photos/id/1056/800/800", price: 3000, tag: "BEST", rating: 4.0, reviews: 19 },
-  { id: "8", brand: "HANDY MADE", name: "Matte Coffin – Black", image: "https://picsum.photos/id/1050/800/800", price: 17000, sale: 35, tag: "SALE", rating: 4.6, reviews: 139 },
+  { 
+    id: "1", 
+    brand: "HANDY MADE", 
+    name: "Glossy Almond Tip – Milk Beige", 
+    image: "https://picsum.photos/id/1060/800/800", 
+    price: 19000, 
+    sale: 25, 
+    isNew: true, 
+    tag: "HOT", 
+    rating: 4.7, 
+    reviews: 214,
+    nailCategories: {
+      style: ["신상", "심플"],
+      color: ["뉴트럴", "핑크 계열"],
+      texture: ["젤"],
+      shape: "아몬드",
+      length: "Short",
+      tpo: ["데일리", "파티"],
+      nation: "K네일"
+    }
+  },
+  { 
+    id: "2", 
+    brand: "HANDY MADE", 
+    name: "Square Short – Cocoa", 
+    image: "https://picsum.photos/id/1059/800/800", 
+    price: 16000, 
+    sale: 10, 
+    tag: "SALE", 
+    rating: 4.3, 
+    reviews: 88,
+    nailCategories: {
+      style: ["심플", "네츄럴"],
+      color: ["뉴트럴"],
+      texture: ["매트"],
+      shape: "스퀘어",
+      length: "Short",
+      tpo: ["데일리"],
+      nation: "K네일"
+    }
+  },
+  { 
+    id: "3", 
+    brand: "HANDY LAB", 
+    name: "Gel Press – Clear Fit", 
+    image: "https://picsum.photos/id/1070/800/800", 
+    price: 12000, 
+    isNew: true, 
+    tag: "NEW", 
+    rating: 4.5, 
+    reviews: 61,
+    nailCategories: {
+      style: ["신상"],
+      texture: ["젤"],
+      tpo: ["데일리"],
+      ab: "브랜드"
+    }
+  },
+  { 
+    id: "4", 
+    brand: "HANDY MADE", 
+    name: "Oval Short – Mauve", 
+    image: "https://picsum.photos/id/1080/800/800", 
+    price: 21000, 
+    sale: 30, 
+    tag: "BEST", 
+    rating: 4.8, 
+    reviews: 302,
+    nailCategories: {
+      style: ["클래식", "심플"],
+      color: ["핑크 계열"],
+      texture: ["매트"],
+      shape: "오벌",
+      length: "Short",
+      tpo: ["데일리", "웨딩"],
+      nation: "K네일"
+    }
+  },
+  { 
+    id: "5", 
+    brand: "HANDY CARE", 
+    name: "Cuticle Oil – Rose", 
+    image: "https://picsum.photos/id/1084/800/800", 
+    price: 9000, 
+    rating: 4.2, 
+    reviews: 41,
+    nailCategories: {
+      style: ["네츄럴"],
+      tpo: ["데일리"],
+      ab: "브랜드"
+    }
+  },
+  { 
+    id: "6", 
+    brand: "HANDY MADE", 
+    name: "French Line – Ivory", 
+    image: "https://picsum.photos/id/1062/800/800", 
+    price: 18000, 
+    sale: 15, 
+    rating: 4.4, 
+    reviews: 77,
+    nailCategories: {
+      style: ["클래식"],
+      color: ["블랙/화이트"],
+      texture: ["젤"],
+      shape: "라운드",
+      length: "Medium",
+      tpo: ["웨딩", "공연"],
+      nation: "K네일"
+    }
+  },
+  { 
+    id: "7", 
+    brand: "HANDY LAB", 
+    name: "Sizer Card v2", 
+    image: "https://picsum.photos/id/1056/800/800", 
+    price: 3000, 
+    tag: "BEST", 
+    rating: 4.0, 
+    reviews: 19,
+    nailCategories: {
+      tpo: ["데일리"],
+      ab: "브랜드"
+    }
+  },
+  { 
+    id: "8", 
+    brand: "HANDY MADE", 
+    name: "Matte Coffin – Black", 
+    image: "https://picsum.photos/id/1050/800/800", 
+    price: 17000, 
+    sale: 35, 
+    tag: "SALE", 
+    rating: 4.6, 
+    reviews: 139,
+    nailCategories: {
+      style: ["화려", "키치"],
+      color: ["블랙/화이트"],
+      texture: ["매트"],
+      shape: "코핀",
+      length: "Long",
+      tpo: ["파티", "공연"],
+      nation: "K네일"
+    }
+  },
 ];
 
 export const newsPosts: NewsPost[] = [

@@ -56,6 +56,17 @@ import {
   SnsPage
 } from './components/pages/FooterPages';
 
+// Seller Components
+import {
+  SellerDashboard,
+  SellerProducts,
+  SellerProductForm,
+  SellerOrders,
+  SellerAnalytics,
+  SellerSettlement,
+  SellerReviews
+} from './components/pages/SellerPages';
+
 export default function App() {
   const { path, nav } = useMiniRouter();
 
@@ -209,6 +220,26 @@ export default function App() {
   } else if (pathname.startsWith("/sns/")) {
     const platform = pathname.split("/").pop() || "";
     screen = <SnsPage onGo={nav} platform={platform} />;
+  
+  // 판매자 센터 라우팅
+  } else if (pathname === "/seller") {
+    screen = <SellerDashboard onGo={nav} />;
+  } else if (pathname === "/seller/products") {
+    screen = <SellerProducts onGo={nav} />;
+  } else if (pathname === "/seller/products/new") {
+    screen = <SellerProductForm onGo={nav} />;
+  } else if (pathname.match(/^\/seller\/products\/(.+)\/edit$/)) {
+    const productId = pathname.split("/")[3];
+    screen = <SellerProductForm onGo={nav} productId={productId} />;
+  } else if (pathname === "/seller/orders") {
+    screen = <SellerOrders onGo={nav} />;
+  } else if (pathname === "/seller/reviews") {
+    screen = <SellerReviews onGo={nav} />;
+  } else if (pathname === "/seller/analytics") {
+    screen = <SellerAnalytics onGo={nav} />;
+  } else if (pathname === "/seller/settlement") {
+    screen = <SellerSettlement onGo={nav} />;
+    
   } else if (pathname.startsWith("/my")) {
     screen = <MyPage onGo={nav} onOpen={openProduct} />;
   } else if (pathname.startsWith("/login")) {
@@ -227,38 +258,51 @@ export default function App() {
     );
   }
 
+  // 판매자 센터 페이지인지 확인
+  const isSellerPage = pathname.startsWith("/seller");
+
   return (
     <>
-      {/* 앱(WebView)에서만 숨길 요소 */}
-      <div data-apphide="true">
-        <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
-      </div>
-      <div data-apphide="true">
-        <MainHeader 
-          cartCount={count} 
-          onCart={() => setDrawer(true)} 
-          onGo={nav}
-          onAuthStateChange={setCurrentUser}
-        />
-      </div>
+      {/* 판매자 센터가 아닐 때만 헤더 표시 */}
+      {!isSellerPage && (
+        <>
+          {/* 앱(WebView)에서만 숨길 요소 */}
+          <div data-apphide="true">
+            <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
+          </div>
+          <div data-apphide="true">
+            <MainHeader 
+              cartCount={count} 
+              onCart={() => setDrawer(true)} 
+              onGo={nav}
+              onAuthStateChange={setCurrentUser}
+            />
+          </div>
+        </>
+      )}
 
       {/* 본문은 절대 숨김 래퍼 안에 넣지 않기 */}
       {screen}
 
-      <FooterMega onGo={nav} />
-      <CartDrawer
-        open={drawer}
-        onClose={() => setDrawer(false)}
-        items={cart}
-        onRemove={remove}
-        onUpdateQuantity={updateQuantity}
-        onCheckout={checkout}
-      />
-      <CategoryDrawer
-        open={catOpen}
-        onClose={() => setCatOpen(false)}
-        onGo={nav}
-      />
+      {/* 판매자 센터가 아닐 때만 푸터와 드로어 표시 */}
+      {!isSellerPage && (
+        <>
+          <FooterMega onGo={nav} />
+          <CartDrawer
+            open={drawer}
+            onClose={() => setDrawer(false)}
+            items={cart}
+            onRemove={remove}
+            onUpdateQuantity={updateQuantity}
+            onCheckout={checkout}
+          />
+          <CategoryDrawer
+            open={catOpen}
+            onClose={() => setCatOpen(false)}
+            onGo={nav}
+          />
+        </>
+      )}
     </>
   );
 }

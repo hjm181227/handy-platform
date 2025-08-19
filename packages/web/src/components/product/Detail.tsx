@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { products } from '../../data';
 import { money } from '../../utils';
+import { CategoryDisplay } from './CategoryDisplay';
 
 export function Detail({
   id,
@@ -206,6 +207,17 @@ export function Detail({
             <li>구성품: 네일 팁 세트, 접착 젤, 파일, 프렙 패드</li>
             <li>제조국: KR</li>
           </ul>
+
+          {/* 네일 카테고리 */}
+          {p.nailCategories && (
+            <CategoryDisplay 
+              categories={p.nailCategories}
+              onCategoryClick={(key, value) => {
+                // 카테고리 클릭 시 해당 카테고리로 이동
+                window.location.href = `/cat/${key}/${encodeURIComponent(value)}`;
+              }}
+            />
+          )}
         </div>
       </div>
 

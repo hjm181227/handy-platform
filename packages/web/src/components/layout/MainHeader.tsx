@@ -26,6 +26,7 @@ export function MainHeader({
     {label:"추천", to:"/recommend"},
     {label:"신상", to:"/new"},
     {label:"트렌드", to:"/trend"},
+    {label:"판매자센터", to:"/seller"},
   ];
   // 로그인 상태 확인
   const checkAuthStatus = async () => {

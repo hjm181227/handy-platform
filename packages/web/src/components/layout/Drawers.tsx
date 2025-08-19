@@ -134,11 +134,75 @@ export function CategoryDrawer({
   onClose: () => void;
   onGo: (to: string) => void;
 }) {
+  const G = {
+    style: [
+      { label: "신상", icon: "✨" },
+      { label: "심플", icon: "🤍" },
+      { label: "화려", icon: "💎" },
+      { label: "아트", icon: "🎨" },
+      { label: "트렌디", icon: "🔥" },
+      { label: "클래식", icon: "👑" },
+      { label: "시즌", icon: "🌸" },
+      { label: "테마", icon: "🎭" },
+      { label: "키치", icon: "🌈" },
+      { label: "네츄럴", icon: "🌿" },
+    ],
+    color: [
+      { label: "레드 계열", icon: "🔴" },
+      { label: "핑크 계열", icon: "🩷" },
+      { label: "블루 계열", icon: "🔵" },
+      { label: "그린 계열", icon: "🟢" },
+      { label: "뉴트럴", icon: "🤎" },
+      { label: "블랙/화이트", icon: "⚫" },
+    ],
+    texture: [
+      { label: "글리터", icon: "✨" },
+      { label: "크롬/메탈", icon: "🪙" },
+      { label: "매트", icon: "🎯" },
+      { label: "벨벳", icon: "🧸" },
+      { label: "젤", icon: "💧" },
+      { label: "자석", icon: "🧲" },
+    ],
+    shape: [
+      { label: "라운드", icon: "⭕" },
+      { label: "아몬드", icon: "🥜" },
+      { label: "오벌", icon: "🥚" },
+      { label: "스틸레토", icon: "📍" },
+      { label: "스퀘어", icon: "⬜" },
+      { label: "코핀", icon: "⚰️" },
+    ],
+    length: [
+      { label: "Long", icon: "📏" },
+      { label: "Medium", icon: "📐" },
+      { label: "Short", icon: "📌" },
+    ],
+    tpo: [
+      { label: "데일리", icon: "☀️" },
+      { label: "파티", icon: "🎉" },
+      { label: "웨딩", icon: "💒" },
+      { label: "공연", icon: "🎪" },
+      { label: "Special day", icon: "🎁" },
+    ],
+    ab: [
+      { label: "아티스트", icon: "👨‍🎨" },
+      { label: "브랜드", icon: "🏷️" },
+    ],
+    nation: [
+      { label: "K네일", icon: "🇰🇷" },
+      { label: "J네일", icon: "🇯🇵" },
+      { label: "A네일", icon: "🇺🇸" },
+    ],
+  } as const;
+
   const categories = [
-    { name: "네일 팁", items: ["아몬드", "스퀘어", "오벌", "코핀"] },
-    { name: "네일 젤", items: ["클리어", "컬러", "글리터", "매트"] },
-    { name: "케어 제품", items: ["큐티클 오일", "핸드크림", "네일 파일"] },
-    { name: "도구", items: ["사이징 카드", "LED 램프", "브러시"] },
+    { name: "스타일", key: "style", items: G.style },
+    { name: "컬러", key: "color", items: G.color },
+    { name: "텍스쳐", key: "texture", items: G.texture },
+    { name: "모양", key: "shape", items: G.shape },
+    { name: "길이", key: "length", items: G.length },
+    { name: "TPO", key: "tpo", items: G.tpo },
+    { name: "아티스트/브랜드", key: "ab", items: G.ab },
+    { name: "국가별", key: "nation", items: G.nation },
   ];
 
   return (
@@ -161,18 +225,23 @@ export function CategoryDrawer({
           <div className="space-y-6">
             {categories.map(category => (
               <div key={category.name}>
-                <h3 className="font-semibold text-sm text-gray-800 mb-2">{category.name}</h3>
-                <div className="space-y-1">
+                <h3 className="font-semibold text-base text-gray-800 mb-4">{category.name}</h3>
+                <div className="grid grid-cols-3 gap-4">
                   {category.items.map(item => (
                     <button
-                      key={item}
+                      key={item.label}
                       onClick={() => {
-                        onGo(`/cat/${encodeURIComponent(category.name)}/${encodeURIComponent(item)}`);
+                        onGo(`/cat/${encodeURIComponent(category.key)}/${encodeURIComponent(item.label)}`);
                         onClose();
                       }}
-                      className="block w-full text-left py-2 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded transition-all duration-200 hover:translate-x-1 hover:text-gray-800"
+                      className="flex flex-col items-center gap-2 p-3 hover:bg-gray-50 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
                     >
-                      {item}
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                        {item.icon}
+                      </div>
+                      <span className="text-xs text-gray-700 font-medium text-center leading-tight">
+                        {item.label}
+                      </span>
                     </button>
                   ))}
                 </div>

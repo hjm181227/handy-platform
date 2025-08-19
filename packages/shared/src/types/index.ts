@@ -90,6 +90,18 @@ export interface Seller {
   };
 }
 
+// Nail Category Types
+export interface NailCategories {
+  style: string[];  // 최대 3개
+  color: string[];  // 최대 3개  
+  texture: string[]; // 최대 3개
+  shape: string;     // 1개만
+  length: string;    // 1개만
+  tpo: string[];     // 최대 3개
+  ab: string;        // 1개만
+  nation: string;    // 1개만
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -109,6 +121,7 @@ export interface Product {
   featured: boolean;
   isActive: boolean;
   tags?: string[];
+  nailCategories?: Partial<NailCategories>; // 네일 전용 카테고리
   createdAt: string;
 }
 
