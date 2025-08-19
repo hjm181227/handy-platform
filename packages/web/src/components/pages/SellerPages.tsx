@@ -2,7 +2,11 @@ import { useState, useMemo } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
-import type { NailCategories } from '../../types';
+import type {
+  NailCategories,
+  NailShape,
+  NailLength
+} from '../../types';
 
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
@@ -414,9 +418,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   );
 }
 
-// 네일 상품 타입 정의
-type NailShape = 'ROUND' | 'ALMOND' | 'OVAL' | 'STILETTO' | 'SQUARE' | 'COFFIN';
-type NailLength = 'SHORT' | 'MEDIUM' | 'LONG';
+// 웹 전용 타입 정의 (shared 타입 사용)
 
 interface DetailImage {
   file?: File;

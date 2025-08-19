@@ -1,28 +1,17 @@
-export interface NailCategories {
-  style: string[];  // 최대 3개
-  color: string[];  // 최대 3개  
-  texture: string[]; // 최대 3개
-  shape: string;     // 1개만
-  length: string;    // 1개만
-  tpo: string[];     // 최대 3개
-  ab: string;        // 1개만
-  nation: string;    // 1개만
-}
+// 공유 타입들을 가져오기 (실제로 export된 것들만)
+export type {
+  Product,
+  ProductImage,
+  ProductSpecifications,
+  ProductRating,
+  ProductReview,
+  Seller,
+  User,
+  ApiResponse,
+  PaginationInfo
+} from '@handy-platform/shared';
 
-export type Product = {
-  id: string;
-  brand: string;
-  name: string;
-  image: string;
-  price: number;
-  sale?: number;
-  isNew?: boolean;
-  tag?: "HOT" | "BEST" | "NEW" | "SALE";
-  rating?: number;
-  reviews?: number;
-  nailCategories?: Partial<NailCategories>; // 네일 전용 카테고리
-};
-
+// 웹 전용 타입들
 export type NewsCategory = "event" | "nail" | "handy" | "update";
 
 export type NewsPost = {
