@@ -19,8 +19,8 @@ const HomeScreen: React.FC = () => {
     
     if (env === 'development') {
       return Platform.OS === 'android' 
-        ? 'http://10.0.2.2:3001' // Android 에뮬레이터용 IP:포트
-        : 'http://localhost:3001'; // iOS 시뮬레이터용
+        ? 'http://10.0.2.2:3004' // Android 에뮬레이터용 IP:포트
+        : 'http://localhost:3004'; // iOS 시뮬레이터용
     } else {
       // 프로덕션 환경 - 임시로 로컬 서버 사용 (포트 3002)
       return Platform.OS === 'android' 

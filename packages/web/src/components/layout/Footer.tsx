@@ -22,11 +22,31 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
             <div key={c.h}>
               <div className="mb-2 text-sm font-semibold text-[#333]">{c.h}</div>
               <ul className="space-y-1 text-[13px]">
-                {c.items.map((it) => (
-                  <li key={it}>
-                    <a href={`${c.base}/${encodeURIComponent(it)}`} onClick={(e)=>{e.preventDefault(); onGo(`${c.base}/${encodeURIComponent(it)}`);}} className="hover:underline">{it}</a>
-                  </li>
-                ))}
+                {c.items.map((it) => {
+                  let linkPath = `${c.base}/${encodeURIComponent(it)}`;
+                  // 특별한 링크들을 직접 매핑
+                  if (it === "1:1 문의하기") {
+                    linkPath = "/contact-inquiry";
+                  } else if (it === "FAQ 자주 묻는 질문") {
+                    linkPath = "/footer-faq";
+                  } else if (it === "회사 소개") {
+                    linkPath = "/about-company";
+                  } else if (it === "비즈니스 소개") {
+                    linkPath = "/about-business";
+                  } else if (it === "뉴스룸") {
+                    linkPath = "/about-newsroom";
+                  } else if (it === "채용 정보") {
+                    linkPath = "/about-careers";
+                  } else if (it === "공지사항") {
+                    linkPath = "/about-notice";
+                  }
+                  
+                  return (
+                    <li key={it}>
+                      <a href={linkPath} onClick={(e)=>{e.preventDefault(); onGo(linkPath);}} className="hover:underline">{it}</a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

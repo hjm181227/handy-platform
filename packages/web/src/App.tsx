@@ -56,6 +56,17 @@ import {
   SnsPage
 } from './components/pages/FooterPages';
 
+// Mega Footer Pages
+import {
+  ContactInquiryPageSimple,
+  FaqPageSimple,
+  AboutCompanyPageSimple,
+  AboutBusinessPageSimple,
+  AboutNewsroomPageSimple,
+  AboutCareersPageSimple,
+  AboutNoticePageSimple
+} from './components/pages/MegaFooterPages';
+
 // Seller Components
 import {
   SellerDashboard,
@@ -127,6 +138,9 @@ export default function App() {
   const addProduct = (id:string)=> add(id);
 
   let screen: React.ReactNode;
+  
+  // DEBUG: 현재 pathname 확인
+  console.log("Current pathname:", pathname);
 
   // Product detail
   const mDetail = pathname.match(/^\/p\/(.+)$/);
@@ -195,10 +209,6 @@ export default function App() {
     screen = <NotificationsPage onGo={nav} />;
   } else if (pathname === "/my/settings") {
     screen = <SettingsPage onGo={nav} />;
-  } else if (pathname === "/support/contact") {
-    screen = <ContactPage onGo={nav} />;
-  } else if (pathname === "/support/faq") {
-    screen = <FaqPage onGo={nav} />;
   } else if (pathname === "/promo/plus") {
     screen = <PromoPage onGo={nav} />;
   } else if (pathname === "/about/회사 소개") {
@@ -211,6 +221,20 @@ export default function App() {
     screen = <AboutCareersPage onGo={nav} />;
   } else if (pathname === "/about/공지사항") {
     screen = <AboutNoticePage onGo={nav} />;
+  } else if (pathname === "/contact-inquiry") {
+    screen = <ContactInquiryPageSimple onGo={nav} />;
+  } else if (pathname === "/footer-faq") {
+    screen = <FaqPageSimple onGo={nav} />;
+  } else if (pathname === "/about-company") {
+    screen = <AboutCompanyPageSimple onGo={nav} />;
+  } else if (pathname === "/about-business") {
+    screen = <AboutBusinessPageSimple onGo={nav} />;
+  } else if (pathname === "/about-newsroom") {
+    screen = <AboutNewsroomPageSimple onGo={nav} />;
+  } else if (pathname === "/about-careers") {
+    screen = <AboutCareersPageSimple onGo={nav} />;
+  } else if (pathname === "/about-notice") {
+    screen = <AboutNoticePageSimple onGo={nav} />;
   } else if (pathname.startsWith("/partner/")) {
     const type = decodeURIComponent(pathname.split("/").pop() || "");
     screen = <PartnerInquiryPage onGo={nav} type={type} />;
