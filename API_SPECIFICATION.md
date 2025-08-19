@@ -201,7 +201,6 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  category: ProductCategory;
   brand: string;
   sku?: string;
   
