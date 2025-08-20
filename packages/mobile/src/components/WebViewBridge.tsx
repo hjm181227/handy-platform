@@ -9,11 +9,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface WebViewBridgeProps {
   url: string;
   onNavigationStateChange?: (navState: any) => void;
+  additionalJavaScript?: string;
 }
 
 const WebViewBridge: React.FC<WebViewBridgeProps> = ({
   url,
   onNavigationStateChange,
+  additionalJavaScript = '',
 }) => {
   const webViewRef = useRef<WebView>(null);
 
@@ -501,6 +503,8 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
         window.dispatchEvent(new CustomEvent('nativeMessage', { detail: message }));
       }
     });
+    
+    ${additionalJavaScript}
     
     true;
   `;
