@@ -110,8 +110,34 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   // 최근 본 상품(샘플 데이터 사용)
   const recent = products.slice(0, 6);
 
+  // WebView 환경인지 확인
+  const isWebViewEnvironment = () => {
+    return !!(window as any).ReactNativeWebView;
+  };
+
+  // 앱 기능 보기로 돌아가기
+  const goToNativeApp = () => {
+    if (isWebViewEnvironment()) {
+      // 특별한 URL로 이동해서 네이티브에서 감지하도록 함
+      window.location.href = 'about:blank?action=goToNative';
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-5">
+      {/* 앱 기능 보기 버튼 (WebView에서만 표시) */}
+      {isWebViewEnvironment() && (
+        <div className="mb-4">
+          <button
+            onClick={goToNativeApp}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <span>📏</span>
+            <span>사이즈 측정</span>
+          </button>
+        </div>
+      )}
+
       {/* 상단 요약 바 */}
       <div className="rounded-lg border bg-white p-4">
         <div className="flex items-center justify-between">

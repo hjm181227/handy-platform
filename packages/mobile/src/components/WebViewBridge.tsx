@@ -10,14 +10,17 @@ interface WebViewBridgeProps {
   url: string;
   onNavigationStateChange?: (navState: any) => void;
   additionalJavaScript?: string;
+  onShowNativeFeatures?: () => void;
 }
 
-const WebViewBridge: React.FC<WebViewBridgeProps> = ({
-  url,
-  onNavigationStateChange,
-  additionalJavaScript = '',
-}) => {
+const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
+  { url, onNavigationStateChange, additionalJavaScript = '', onShowNativeFeatures },
+  ref
+) => {
   const webViewRef = useRef<WebView>(null);
+  
+  // forwardRef로 전달받은 ref를 내부 ref와 동기화
+  React.useImperativeHandle(ref, () => webViewRef.current as WebView);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -56,6 +59,11 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
           break;
         case 'PERMISSIONS':
           await handlePermissions(message.data);
+          break;
+        case 'SHOW_NATIVE_FEATURES':
+          if (onShowNativeFeatures) {
+            onShowNativeFeatures();
+          }
           break;
         default:
           console.log('Unknown message type:', message.type);
@@ -430,6 +438,16 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
   };
 
   const injectedJavaScript = `
+    // 네이티브로 돌아가기 함수 (전역으로 노출)
+    window.goToNativeApp = function() {
+      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'SHOW_NATIVE_FEATURES',
+          data: {}
+        }));
+      }
+    };
+    
     window.ReactNativeWebView = {
       postMessage: window.ReactNativeWebView.postMessage,
       
@@ -515,7 +533,19 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       source={{ uri: url }}
       onMessage={handleMessage}
       injectedJavaScript={injectedJavaScript}
-      onNavigationStateChange={onNavigationStateChange}
+      onNavigationStateChange={(navState) => {
+        // 특별한 URL 감지
+        if (navState.url.includes('action=goToNative')) {
+          if (onShowNativeFeatures) {
+            onShowNativeFeatures();
+          }
+          return; // 실제 페이지 이동은 하지 않음
+        }
+        
+        if (onNavigationStateChange) {
+          onNavigationStateChange(navState);
+        }
+      }}
       javaScriptEnabled={true}
       domStorageEnabled={true}
       startInLoadingState={true}
@@ -523,6 +553,7 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       allowsBackForwardNavigationGestures={Platform.OS === 'ios'}
     />
   );
-};
+});
+WebViewBridge.displayName = 'WebViewBridge';
 
 export default WebViewBridge;

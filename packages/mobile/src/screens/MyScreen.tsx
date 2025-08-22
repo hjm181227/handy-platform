@@ -80,15 +80,10 @@ const MyScreen: React.FC = () => {
   if (showWebView) {
     return (
       <View style={styles.container}>
-        <View style={styles.webViewHeader}>
-          <TouchableOpacity
-            style={styles.backToNativeButton}
-            onPress={() => setShowWebView(false)}
-          >
-            <Text style={styles.backToNativeButtonText}>📱 앱 기능 보기</Text>
-          </TouchableOpacity>
-        </View>
-        <WebViewBridge url={getWebURL()} />
+        <WebViewBridge 
+          url={getWebURL()} 
+          onShowNativeFeatures={() => setShowWebView(false)}
+        />
       </View>
     );
   }
@@ -98,7 +93,7 @@ const MyScreen: React.FC = () => {
       <ScrollView style={styles.scrollView}>
         {/* 헤더 */}
         <View style={styles.header}>
-          <Text style={styles.title}>마이페이지</Text>
+          <Text style={styles.title}>사이즈 측정</Text>
           <TouchableOpacity
             style={styles.webViewButton}
             onPress={() => setShowWebView(true)}
@@ -107,116 +102,146 @@ const MyScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 네일 사이즈 기능 섹션 */}
+        {/* 환영 메시지 */}
+        <View style={styles.welcomeSection}>
+          <View style={styles.welcomeHeader}>
+            <Text style={styles.welcomeTitle}>네일 사이즈 측정</Text>
+            <Text style={styles.welcomeSubtitle}>정확한 측정으로 완벽한 핏을 찾아보세요</Text>
+          </View>
+          <View style={styles.welcomeIcon}>
+            <Text style={styles.welcomeEmoji}>💅✨</Text>
+          </View>
+        </View>
+
+        {/* 측정 통계 카드 */}
+        <View style={styles.statsSection}>
+          <Text style={styles.statsTitle}>측정 통계</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{recentMeasurements.length}</Text>
+              <Text style={styles.statLabel}>총 측정</Text>
+              <Text style={styles.statIcon}>📏</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>
+                {recentMeasurements.length > 0 ? 
+                  new Date(recentMeasurements[0]?.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : 
+                  '--'
+                }
+              </Text>
+              <Text style={styles.statLabel}>최근 측정</Text>
+              <Text style={styles.statIcon}>⏰</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>
+                {recentMeasurements.length > 0 ? 
+                  `${Math.round(recentMeasurements.reduce((sum, m) => sum + m.width, 0) / recentMeasurements.length)}mm` : 
+                  '--'
+                }
+              </Text>
+              <Text style={styles.statLabel}>평균 크기</Text>
+              <Text style={styles.statIcon}>📊</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 측정 기능 섹션 */}
         {showNailFeatures && (
           <View style={styles.nailSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📏 네일 사이즈 측정</Text>
-              <Text style={styles.sectionSubtitle}>AR 카메라로 정확한 네일 사이즈를 측정하세요</Text>
-            </View>
+            <Text style={styles.sectionTitle}>측정 시작하기</Text>
             
-            <View style={styles.buttonRow}>
+            <View style={styles.buttonColumn}>
               <TouchableOpacity
                 style={[styles.actionButton, styles.primaryButton]}
                 onPress={() => setShowARCamera(true)}
               >
-                <Text style={styles.buttonIcon}>📱</Text>
-                <Text style={[styles.buttonText, styles.primaryButtonText]}>AR 측정하기</Text>
-                <Text style={[styles.buttonSubtext, styles.primaryButtonSubtext]}>카메라로 측정</Text>
+                <View style={styles.buttonIconWrapper}>
+                  <Text style={styles.buttonIcon}>📱</Text>
+                </View>
+                <View style={styles.buttonContent}>
+                  <Text style={[styles.buttonText, styles.primaryButtonText]}>AR 측정하기</Text>
+                  <Text style={[styles.buttonSubtext, styles.primaryButtonSubtext]}>카메라로 정확한 측정</Text>
+                </View>
+                <View style={styles.buttonArrow}>
+                  <Text style={styles.arrowText}>→</Text>
+                </View>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => setShowNailSizes(true)}
               >
-                <Text style={styles.buttonIcon}>📊</Text>
-                <Text style={[styles.buttonText, styles.secondaryButtonText]}>측정 기록</Text>
-                <Text style={[styles.buttonSubtext, styles.secondaryButtonSubtext]}>
-                  {recentMeasurements.length}개 기록
-                </Text>
+                <View style={styles.buttonIconWrapper}>
+                  <Text style={styles.buttonIcon}>📊</Text>
+                </View>
+                <View style={styles.buttonContent}>
+                  <Text style={[styles.buttonText, styles.secondaryButtonText]}>측정 기록</Text>
+                  <Text style={[styles.buttonSubtext, styles.secondaryButtonSubtext]}>
+                    {recentMeasurements.length}개의 기록 보기
+                  </Text>
+                </View>
+                <View style={styles.buttonArrow}>
+                  <Text style={styles.arrowText}>→</Text>
+                </View>
               </TouchableOpacity>
             </View>
 
-            {/* 최근 측정 결과 미리보기 */}
+            {/* 최근 측정 결과 카드 */}
             {recentMeasurements.length > 0 && (
               <View style={styles.recentMeasurements}>
-                <Text style={styles.recentTitle}>최근 측정 결과</Text>
-                {recentMeasurements.map((measurement, index) => (
-                  <View key={measurement.id} style={styles.recentItem}>
-                    <Text style={styles.recentFinger}>
-                      {getFingerEmoji(measurement.fingerName)} {measurement.fingerName}
-                    </Text>
-                    <Text style={styles.recentSize}>
-                      {measurement.width}×{measurement.length}mm
-                    </Text>
-                    <Text style={styles.recentDate}>
-                      {formatDate(measurement.timestamp)}
-                    </Text>
+                <View style={styles.recentHeader}>
+                  <Text style={styles.recentTitle}>최근 측정 결과</Text>
+                  <TouchableOpacity 
+                    style={styles.viewAllMiniButton}
+                    onPress={() => setShowNailSizes(true)}
+                  >
+                    <Text style={styles.viewAllMiniButtonText}>전체보기</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {recentMeasurements.slice(0, 3).map((measurement, index) => (
+                  <View key={measurement.id} style={styles.recentCard}>
+                    <View style={styles.recentCardLeft}>
+                      <View style={styles.fingerInfo}>
+                        <Text style={styles.fingerEmoji}>{getFingerEmoji(measurement.fingerName)}</Text>
+                        <Text style={styles.fingerName}>{measurement.fingerName}</Text>
+                      </View>
+                      <Text style={styles.recentDate}>{formatDate(measurement.timestamp)}</Text>
+                    </View>
+                    <View style={styles.recentCardRight}>
+                      <Text style={styles.sizeValue}>{measurement.width}×{measurement.length}</Text>
+                      <Text style={styles.sizeUnit}>mm</Text>
+                    </View>
                   </View>
                 ))}
+                
                 <TouchableOpacity
                   style={styles.viewAllButton}
                   onPress={() => setShowNailSizes(true)}
                 >
-                  <Text style={styles.viewAllButtonText}>전체 기록 보기 →</Text>
+                  <Text style={styles.viewAllButtonText}>모든 기록 보기</Text>
+                  <Text style={styles.viewAllButtonIcon}>📋</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {/* 측정이 없을 때 안내 */}
+            {recentMeasurements.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyIcon}>📏</Text>
+                <Text style={styles.emptyTitle}>아직 측정 기록이 없어요</Text>
+                <Text style={styles.emptySubtitle}>AR 측정을 시작해서 정확한 네일 사이즈를 알아보세요!</Text>
+                <TouchableOpacity
+                  style={styles.emptyButton}
+                  onPress={() => setShowARCamera(true)}
+                >
+                  <Text style={styles.emptyButtonText}>첫 측정하기 🚀</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
         )}
 
-        {/* 다른 마이페이지 기능들 */}
-        <View style={styles.otherSection}>
-          <Text style={styles.sectionTitle}>기타 기능</Text>
-          
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setShowWebView(true)}
-          >
-            <Text style={styles.menuIcon}>🛍️</Text>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>주문 내역</Text>
-              <Text style={styles.menuSubtitle}>주문 상품과 배송 현황을 확인하세요</Text>
-            </View>
-            <Text style={styles.menuArrow}>→</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setShowWebView(true)}
-          >
-            <Text style={styles.menuIcon}>💳</Text>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>결제 수단</Text>
-              <Text style={styles.menuSubtitle}>카드 정보와 결제 내역 관리</Text>
-            </View>
-            <Text style={styles.menuArrow}>→</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setShowWebView(true)}
-          >
-            <Text style={styles.menuIcon}>🎁</Text>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>쿠폰 및 적립금</Text>
-              <Text style={styles.menuSubtitle}>할인 혜택을 확인하세요</Text>
-            </View>
-            <Text style={styles.menuArrow}>→</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setShowWebView(true)}
-          >
-            <Text style={styles.menuIcon}>⚙️</Text>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>설정</Text>
-              <Text style={styles.menuSubtitle}>알림, 계정 정보 설정</Text>
-            </View>
-            <Text style={styles.menuArrow}>→</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
 
       {/* AR 카메라 Modal */}
@@ -340,13 +365,21 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
   },
+  buttonColumn: {
+    marginBottom: 20,
+  },
   actionButton: {
-    flex: 1,
-    padding: 20,
-    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 100,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 12,
+    minHeight: 80,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   primaryButton: {
     backgroundColor: '#007AFF',
@@ -466,6 +499,230 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     fontWeight: 'bold',
+  },
+  
+  // 새로운 UI 스타일들
+  welcomeSection: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 15,
+    borderRadius: 20,
+    padding: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  welcomeHeader: {
+    flex: 1,
+  },
+  welcomeTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 6,
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    lineHeight: 22,
+  },
+  welcomeIcon: {
+    marginLeft: 16,
+  },
+  welcomeEmoji: {
+    fontSize: 48,
+  },
+  
+  // 통계 섹션
+  statsSection: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 15,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  statsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#f8f9ff',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  statIcon: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    fontSize: 16,
+    opacity: 0.3,
+  },
+  
+  // 개선된 버튼 스타일
+  buttonIconWrapper: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  buttonContent: {
+    flex: 1,
+  },
+  buttonArrow: {
+    marginLeft: 12,
+  },
+  arrowText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  
+  // 최근 측정 결과 개선
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewAllMiniButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  viewAllMiniButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  recentCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  recentCardLeft: {
+    flex: 1,
+  },
+  fingerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  fingerEmoji: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  fingerName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  recentCardRight: {
+    alignItems: 'flex-end',
+  },
+  sizeValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  sizeUnit: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginTop: 8,
+  },
+  viewAllButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  viewAllButtonIcon: {
+    fontSize: 16,
+  },
+  
+  // 빈 상태 스타일
+  emptyState: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

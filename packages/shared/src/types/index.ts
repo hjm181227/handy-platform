@@ -227,6 +227,7 @@ export type WebViewMessageType =
   | 'CAMERA'
   | 'PAYMENT'
   | 'PERMISSIONS'
+  | 'SHOW_NATIVE_FEATURES'
   | 'API_RESPONSE' 
   | 'AUTH_RESPONSE' 
   | 'CART_RESPONSE'
