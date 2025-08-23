@@ -22,6 +22,38 @@ import {
   API_ENDPOINTS,
   getApiConfig,
   getDebugConfig,
+  // 추가된 타입들
+  PaginationInfo,
+  DetailedReview,
+  ReviewsResponse,
+  UserCoupon,
+  Coupon,
+  UserPointsInfo,
+  PointTransaction,
+  PresignedUrlRequest,
+  PresignedUrlResponse,
+  ImageUploadConfig,
+  LinkedAccountsResponse,
+  ImageUploadManager,
+  // 새로운 서비스들
+  BaseSellerService,
+  SellerServiceFactory,
+  BaseUserManagementService,
+  UserManagementServiceFactory,
+  BaseQRService,
+  QRServiceFactory,
+  BasePaymentService,
+  PaymentServiceFactory,
+  BaseComprehensiveLoyaltyService,
+  ComprehensiveLoyaltyServiceFactory,
+  // 새로운 타입들
+  SellerProfile,
+  SellerDashboard,
+  ShippingAddress,
+  QRCodeData,
+  QRCodeResponse,
+  BulkProductOperation,
+  BulkOperationResult,
 } from '@handy-platform/shared';
 
 // 웹 환경에서 Vite 환경변수를 통해 환경 설정
@@ -405,6 +437,227 @@ class WebApiService {
   }
 
   // ======================
+  // Orders
+  // ======================
+
+  async getOrders(filters: { page?: number; limit?: number; status?: string } = {}): Promise<OrdersResponse> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString ? `${API_ENDPOINTS.ORDERS.LIST}?${queryString}` : API_ENDPOINTS.ORDERS.LIST;
+    return this.request<OrdersResponse>(endpoint);
+  }
+
+  async getOrder(id: string): Promise<ApiResponse<{ order: Order }>> {
+    return this.request<ApiResponse<{ order: Order }>>(API_ENDPOINTS.ORDERS.DETAIL(id));
+  }
+
+  async createOrder(orderData: {
+    items: Array<{ productId: string; quantity: number; options?: Record<string, string> }>;
+    shippingAddress: Address;
+    paymentMethod: PaymentMethod;
+    couponCode?: string;
+    pointsToUse?: number;
+  }): Promise<ApiResponse<{ order: Order }>> {
+    return this.request<ApiResponse<{ order: Order }>>(API_ENDPOINTS.ORDERS.CREATE, {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
+  }
+
+  async cancelOrder(id: string, reason?: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.ORDERS.CANCEL(id), {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async reorderFromOrder(id: string): Promise<ApiResponse<{ cart: Cart }>> {
+    return this.request<ApiResponse<{ cart: Cart }>>(API_ENDPOINTS.ORDERS.REORDER(id), {
+      method: 'POST',
+    });
+  }
+
+  // ======================
+  // Reviews
+  // ======================
+
+  async getProductReviews(
+    productId: string, 
+    filters: { page?: number; rating?: number; sortBy?: string; verifiedOnly?: boolean } = {}
+  ): Promise<ReviewsResponse> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString ? `${API_ENDPOINTS.PRODUCTS.REVIEWS(productId)}?${queryString}` : API_ENDPOINTS.PRODUCTS.REVIEWS(productId);
+    return this.request<ReviewsResponse>(endpoint);
+  }
+
+  async createReview(productId: string, reviewData: ReviewForm & { images?: string[] }): Promise<ApiResponse<{ review: DetailedReview }>> {
+    return this.request<ApiResponse<{ review: DetailedReview }>>(API_ENDPOINTS.PRODUCTS.REVIEW_CREATE(productId), {
+      method: 'POST',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async updateReview(productId: string, reviewId: string, reviewData: Partial<ReviewForm>): Promise<ApiResponse<{ review: DetailedReview }>> {
+    return this.request<ApiResponse<{ review: DetailedReview }>>(API_ENDPOINTS.PRODUCTS.REVIEW_UPDATE(productId, reviewId), {
+      method: 'PUT',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async deleteReview(productId: string, reviewId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.PRODUCTS.REVIEW_DELETE(productId, reviewId), {
+      method: 'DELETE',
+    });
+  }
+
+  async markReviewHelpful(productId: string, reviewId: string, helpful: boolean): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.PRODUCTS.REVIEW_HELPFUL(productId, reviewId), {
+      method: 'POST',
+      body: JSON.stringify({ helpful }),
+    });
+  }
+
+  // ======================
+  // Coupons
+  // ======================
+
+  async getUserCoupons(): Promise<ApiResponse<{ coupons: UserCoupon[] }>> {
+    return this.request<ApiResponse<{ coupons: UserCoupon[] }>>(API_ENDPOINTS.COUPONS.USER_COUPONS);
+  }
+
+  async getAvailableCoupons(): Promise<ApiResponse<{ coupons: Coupon[] }>> {
+    return this.request<ApiResponse<{ coupons: Coupon[] }>>(API_ENDPOINTS.COUPONS.AVAILABLE);
+  }
+
+  async downloadCoupon(couponId: string): Promise<ApiResponse<{ coupon: UserCoupon }>> {
+    return this.request<ApiResponse<{ coupon: UserCoupon }>>(API_ENDPOINTS.COUPONS.DOWNLOAD(couponId), {
+      method: 'POST',
+    });
+  }
+
+  async redeemCoupon(code: string): Promise<ApiResponse<{ coupon: UserCoupon }>> {
+    return this.request<ApiResponse<{ coupon: UserCoupon }>>(API_ENDPOINTS.COUPONS.REDEEM, {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  // ======================
+  // Points
+  // ======================
+
+  async getPointsBalance(): Promise<ApiResponse<{ points: UserPointsInfo }>> {
+    return this.request<ApiResponse<{ points: UserPointsInfo }>>(API_ENDPOINTS.POINTS.BALANCE);
+  }
+
+  async getPointsHistory(filters: { page?: number; limit?: number; type?: string } = {}): Promise<ApiResponse<{ transactions: PointTransaction[]; pagination: PaginationInfo }>> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString ? `${API_ENDPOINTS.POINTS.HISTORY}?${queryString}` : API_ENDPOINTS.POINTS.HISTORY;
+    return this.request<ApiResponse<{ transactions: PointTransaction[]; pagination: PaginationInfo }>>(endpoint);
+  }
+
+  async usePoints(orderId: string, amount: number): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.POINTS.USE, {
+      method: 'POST',
+      body: JSON.stringify({ orderId, amount }),
+    });
+  }
+
+  // ======================
+  // Image Upload
+  // ======================
+
+  async getPresignedUrl(request: PresignedUrlRequest): Promise<PresignedUrlResponse> {
+    return this.request<PresignedUrlResponse>(API_ENDPOINTS.UPLOAD.PRESIGNED_URL, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async getUploadConfig(): Promise<ImageUploadConfig> {
+    return this.request<ImageUploadConfig>(API_ENDPOINTS.UPLOAD.CONFIG);
+  }
+
+  async notifyUploadComplete(images: string[], targetPath?: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/api/upload/complete', {
+      method: 'POST',
+      body: JSON.stringify({ images, targetPath }),
+    });
+  }
+
+  // ======================
+  // OAuth
+  // ======================
+
+  async getLinkedAccounts(): Promise<LinkedAccountsResponse> {
+    return this.request<LinkedAccountsResponse>(API_ENDPOINTS.OAUTH.LINKED);
+  }
+
+  async linkOAuthAccount(provider: string, authCode: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.LINK(provider), {
+      method: 'POST',
+      body: JSON.stringify({ authCode }),
+    });
+  }
+
+  async unlinkOAuthAccount(provider: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.UNLINK(provider), {
+      method: 'DELETE',
+    });
+  }
+
+  // ======================
+  // Wishlist
+  // ======================
+
+  async addToWishlist(productId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.WISHLIST_ADD(productId), {
+      method: 'POST',
+    });
+  }
+
+  async removeFromWishlist(productId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.WISHLIST_REMOVE(productId), {
+      method: 'DELETE',
+    });
+  }
+
+  // ======================
+  // Shipping
+  // ======================
+
+  async getShippingMethods(): Promise<ApiResponse<{ methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>> {
+    return this.request<ApiResponse<{ methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>>(API_ENDPOINTS.SHIPPING.METHODS);
+  }
+
+  async calculateShipping(data: {
+    items: Array<{ productId: string; quantity: number }>;
+    address: Address;
+  }): Promise<ApiResponse<{ cost: number; methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>> {
+    return this.request<ApiResponse<{ cost: number; methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>>(API_ENDPOINTS.SHIPPING.CALCULATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // ======================
+  // Payments
+  // ======================
+
+  async processPayment(orderId: string, paymentData: {
+    paymentMethod: PaymentMethod;
+    paymentDetails?: Record<string, any>;
+  }): Promise<ApiResponse<{ transactionId: string; status: string }>> {
+    return this.request<ApiResponse<{ transactionId: string; status: string }>>(API_ENDPOINTS.PAYMENTS.PROCESS(orderId), {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async getPaymentMethods(): Promise<ApiResponse<{ methods: PaymentMethod[] }>> {
+    return this.request<ApiResponse<{ methods: PaymentMethod[] }>>(API_ENDPOINTS.PAYMENTS.METHODS);
+  }
+
+  // ======================
   // Utility Methods
   // ======================
 
@@ -415,6 +668,51 @@ class WebApiService {
 
   async getCurrentUser(): Promise<User | null> {
     return await webTokenManager.getUser();
+  }
+
+  // Image upload helper using shared ImageUploadManager
+  createImageUploadManager(): ImageUploadManager {
+    return new ImageUploadManager(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // Seller Service Integration
+  // ======================
+
+  createSellerService(): BaseSellerService {
+    return SellerServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // User Management Service Integration
+  // ======================
+
+  createUserManagementService(): BaseUserManagementService {
+    return UserManagementServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // QR Service Integration
+  // ======================
+
+  createQRService(): BaseQRService {
+    return QRServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // Payment Service Integration (Enhanced)
+  // ======================
+
+  createPaymentService(): BasePaymentService {
+    return PaymentServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // Comprehensive Loyalty Service Integration
+  // ======================
+
+  createLoyaltyService(): BaseComprehensiveLoyaltyService {
+    return ComprehensiveLoyaltyServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
   }
 }
 

@@ -23,6 +23,40 @@ import {
   getApiConfig,
   getDebugConfig,
   API_ENDPOINTS,
+  // 추가된 타입들
+  PaginationInfo,
+  DetailedReview,
+  ReviewsResponse,
+  UserCoupon,
+  Coupon,
+  UserPointsInfo,
+  PointTransaction,
+  PresignedUrlRequest,
+  PresignedUrlResponse,
+  ImageUploadConfig,
+  LinkedAccountsResponse,
+  ImageUploadManager,
+  HybridTokenManager,
+  AsyncStorageAdapter,
+  // 새로운 서비스들
+  BaseSellerService,
+  SellerServiceFactory,
+  BaseUserManagementService,
+  UserManagementServiceFactory,
+  BaseQRService,
+  QRServiceFactory,
+  BasePaymentService,
+  PaymentServiceFactory,
+  BaseComprehensiveLoyaltyService,
+  ComprehensiveLoyaltyServiceFactory,
+  // 새로운 타입들
+  SellerProfile,
+  SellerDashboard,
+  ShippingAddress,
+  QRCodeData,
+  QRCodeResponse,
+  BulkProductOperation,
+  BulkOperationResult,
 } from '@handy-platform/shared';
 import { tokenManager } from '../utils/tokenUtils';
 
@@ -519,10 +553,253 @@ class ApiService {
     return !!token;
   }
 
+  // ======================
+  // Reviews (확장)
+  // ======================
+
+  async getProductReviews(
+    productId: string, 
+    filters: { page?: number; rating?: number; sortBy?: string; verifiedOnly?: boolean } = {}
+  ): Promise<ReviewsResponse> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString ? `${API_ENDPOINTS.PRODUCTS.REVIEWS(productId)}?${queryString}` : API_ENDPOINTS.PRODUCTS.REVIEWS(productId);
+    return this.request<ReviewsResponse>(endpoint);
+  }
+
+  async createReview(productId: string, reviewData: ReviewForm & { images?: string[] }): Promise<ApiResponse<{ review: DetailedReview }>> {
+    return this.request<ApiResponse<{ review: DetailedReview }>>(API_ENDPOINTS.PRODUCTS.REVIEW_CREATE(productId), {
+      method: 'POST',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async markReviewHelpful(productId: string, reviewId: string, helpful: boolean): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.PRODUCTS.REVIEW_HELPFUL(productId, reviewId), {
+      method: 'POST',
+      body: JSON.stringify({ helpful }),
+    });
+  }
+
+  // ======================
+  // Coupons
+  // ======================
+
+  async getUserCoupons(): Promise<ApiResponse<{ coupons: UserCoupon[] }>> {
+    return this.request<ApiResponse<{ coupons: UserCoupon[] }>>(API_ENDPOINTS.COUPONS.USER_COUPONS);
+  }
+
+  async getAvailableCoupons(): Promise<ApiResponse<{ coupons: Coupon[] }>> {
+    return this.request<ApiResponse<{ coupons: Coupon[] }>>(API_ENDPOINTS.COUPONS.AVAILABLE);
+  }
+
+  async downloadCoupon(couponId: string): Promise<ApiResponse<{ coupon: UserCoupon }>> {
+    return this.request<ApiResponse<{ coupon: UserCoupon }>>(API_ENDPOINTS.COUPONS.DOWNLOAD(couponId), {
+      method: 'POST',
+    });
+  }
+
+  async redeemCoupon(code: string): Promise<ApiResponse<{ coupon: UserCoupon }>> {
+    return this.request<ApiResponse<{ coupon: UserCoupon }>>(API_ENDPOINTS.COUPONS.REDEEM, {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  // ======================
+  // Points
+  // ======================
+
+  async getPointsBalance(): Promise<ApiResponse<{ points: UserPointsInfo }>> {
+    return this.request<ApiResponse<{ points: UserPointsInfo }>>(API_ENDPOINTS.POINTS.BALANCE);
+  }
+
+  async getPointsHistory(filters: { page?: number; limit?: number; type?: string } = {}): Promise<ApiResponse<{ transactions: PointTransaction[]; pagination: PaginationInfo }>> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString ? `${API_ENDPOINTS.POINTS.HISTORY}?${queryString}` : API_ENDPOINTS.POINTS.HISTORY;
+    return this.request<ApiResponse<{ transactions: PointTransaction[]; pagination: PaginationInfo }>>(endpoint);
+  }
+
+  async usePoints(orderId: string, amount: number): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.POINTS.USE, {
+      method: 'POST',
+      body: JSON.stringify({ orderId, amount }),
+    });
+  }
+
+  // ======================
+  // OAuth
+  // ======================
+
+  async getLinkedAccounts(): Promise<LinkedAccountsResponse> {
+    return this.request<LinkedAccountsResponse>(API_ENDPOINTS.OAUTH.LINKED);
+  }
+
+  async linkOAuthAccount(provider: string, authCode: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.LINK(provider), {
+      method: 'POST',
+      body: JSON.stringify({ authCode }),
+    });
+  }
+
+  async unlinkOAuthAccount(provider: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.UNLINK(provider), {
+      method: 'DELETE',
+    });
+  }
+
+  // OAuth 로그인 (Native 환경에서 사용)
+  async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', authCode: string): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.OAUTH[provider.toUpperCase() as keyof typeof API_ENDPOINTS.OAUTH] as string, {
+      method: 'POST',
+      body: JSON.stringify({ authCode }),
+    }, false);
+    
+    // Automatically store token on successful OAuth login
+    if (response.token) {
+      await tokenManager.setTokenInfo({
+        accessToken: response.token,
+        user: response.user,
+      });
+    }
+    
+    return response;
+  }
+
+  // ======================
+  // Shipping
+  // ======================
+
+  async getShippingMethods(): Promise<ApiResponse<{ methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>> {
+    return this.request<ApiResponse<{ methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>>(API_ENDPOINTS.SHIPPING.METHODS);
+  }
+
+  async calculateShipping(data: {
+    items: Array<{ productId: string; quantity: number }>;
+    address: Address;
+  }): Promise<ApiResponse<{ cost: number; methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>> {
+    return this.request<ApiResponse<{ cost: number; methods: Array<{ id: string; name: string; cost: number; estimatedDays: number }> }>>(API_ENDPOINTS.SHIPPING.CALCULATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // ======================
+  // Enhanced Image Upload
+  // ======================
+
+  async getPresignedUrlEnhanced(request: PresignedUrlRequest): Promise<PresignedUrlResponse> {
+    return this.request<PresignedUrlResponse>(API_ENDPOINTS.UPLOAD.PRESIGNED_URL, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async getUploadConfigEnhanced(): Promise<ImageUploadConfig> {
+    return this.request<ImageUploadConfig>(API_ENDPOINTS.UPLOAD.CONFIG);
+  }
+
+  async notifyUploadComplete(images: string[], targetPath?: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/api/upload/complete', {
+      method: 'POST',
+      body: JSON.stringify({ images, targetPath }),
+    });
+  }
+
+  // ======================
+  // Native-specific features
+  // ======================
+
+  // Camera 및 갤러리 접근을 위한 권한 체크 (별도 파일에서 구현된 기능과 연동)
+  async requestCameraPermission(): Promise<boolean> {
+    // 이 기능은 별도의 permissions.ts에서 구현됨
+    return true;
+  }
+
+  // 푸시 알림 토큰 등록
+  async registerPushToken(token: string, platform: 'ios' | 'android'): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/api/notifications/register', {
+      method: 'POST',
+      body: JSON.stringify({ token, platform }),
+    });
+  }
+
+  // QR 코드 생성
+  async generateQRCode(data: string, options?: { size?: number; errorCorrectionLevel?: string }): Promise<ApiResponse<{ qrCodeUrl: string }>> {
+    return this.request<ApiResponse<{ qrCodeUrl: string }>>(API_ENDPOINTS.QR.GENERATE, {
+      method: 'POST',
+      body: JSON.stringify({ data, options }),
+    });
+  }
+
+  // ======================
+  // Utility Methods (확장)
+  // ======================
+
   // Token refresh method that can be called manually
   async refreshTokenIfNeeded(): Promise<boolean> {
     const token = await tokenManager.getValidToken();
     return !!token;
+  }
+
+  // 현재 사용자 정보 가져오기
+  async getCurrentUser(): Promise<User | null> {
+    return await tokenManager.getUser();
+  }
+
+  // Image upload helper using shared ImageUploadManager
+  createImageUploadManager(): ImageUploadManager {
+    return new ImageUploadManager(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // Seller Service Integration
+  // ======================
+
+  createSellerService(): BaseSellerService {
+    return SellerServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // User Management Service Integration
+  // ======================
+
+  createUserManagementService(): BaseUserManagementService {
+    return UserManagementServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // QR Service Integration
+  // ======================
+
+  createQRService(): BaseQRService {
+    return QRServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // Payment Service Integration (Enhanced)
+  // ======================
+
+  createPaymentService(): BasePaymentService {
+    return PaymentServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // ======================
+  // Comprehensive Loyalty Service Integration
+  // ======================
+
+  createLoyaltyService(): BaseComprehensiveLoyaltyService {
+    return ComprehensiveLoyaltyServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
+  }
+
+  // 환경 정보 가져오기
+  getEnvironmentInfo() {
+    return {
+      platform: 'react-native',
+      baseURL: this.baseURL,
+      timeout: this.timeout,
+      debugEnabled: this.debugConfig.enableApiLogs,
+      tokenManager: tokenManager.getEnvironmentInfo(),
+    };
   }
 }
 

@@ -49,29 +49,56 @@ export const getApiConfig = (): ApiConfig => {
   return API_CONFIG[env] || API_CONFIG.development;
 };
 
-// API 엔드포인트 구성
+// API 엔드포인트 구성 (서버 스펙에 맞게 확장)
 export const API_ENDPOINTS = {
   // 인증
   AUTH: {
     LOGIN: '/api/auth/login',
     REGISTER: '/api/auth/register',
     PROFILE: '/api/auth/profile',
+    UPDATE_PROFILE: '/api/auth/profile',
     LOGOUT: '/api/auth/logout',
     CHANGE_PASSWORD: '/api/auth/change-password',
-    WISHLIST: '/api/auth/wishlist',
+    WISHLIST_ADD: (productId: string) => `/api/auth/wishlist/${productId}`,
+    WISHLIST_REMOVE: (productId: string) => `/api/auth/wishlist/${productId}`,
+  },
+  
+  // OAuth
+  OAUTH: {
+    KAKAO: '/api/auth/oauth/kakao',
+    GOOGLE: '/api/auth/oauth/google',
+    APPLE: '/api/auth/oauth/apple',
+    NAVER: '/api/auth/oauth/naver',
+    LINK: (provider: string) => `/api/auth/oauth/link/${provider}`,
+    UNLINK: (provider: string) => `/api/auth/oauth/unlink/${provider}`,
+    LINKED: '/api/auth/oauth/linked',
   },
   
   // 상품
   PRODUCTS: {
     LIST: '/api/products',
     DETAIL: (id: string) => `/api/products/${id}`,
+    CREATE: '/api/products',
+    UPDATE: (id: string) => `/api/products/${id}`,
+    DELETE: (id: string) => `/api/products/${id}`,
     CATEGORIES: '/api/products/categories',
     BRANDS: '/api/products/brands',
     FEATURED: '/api/products/featured',
     SEARCH_SUGGESTIONS: '/api/products/search/suggestions',
+    
+    // 리뷰
     REVIEWS: (id: string) => `/api/products/${id}/reviews`,
-    REVIEW_DETAIL: (productId: string, reviewId: string) => 
+    REVIEW_CREATE: (id: string) => `/api/products/${id}/reviews`,
+    REVIEW_UPDATE: (productId: string, reviewId: string) => 
       `/api/products/${productId}/reviews/${reviewId}`,
+    REVIEW_DELETE: (productId: string, reviewId: string) => 
+      `/api/products/${productId}/reviews/${reviewId}`,
+    REVIEW_HELPFUL: (productId: string, reviewId: string) => 
+      `/api/products/${productId}/reviews/${reviewId}/helpful`,
+    REVIEW_REPORT: (productId: string, reviewId: string) => 
+      `/api/products/${productId}/reviews/${reviewId}/report`,
+    REVIEW_REPLY: (productId: string, reviewId: string) => 
+      `/api/products/${productId}/reviews/${reviewId}/reply`,
   },
   
   // 장바구니
@@ -92,6 +119,14 @@ export const API_ENDPOINTS = {
     CANCEL: (id: string) => `/api/orders/${id}/cancel`,
     TRACK: (id: string) => `/api/orders/${id}/track`,
     REORDER: (id: string) => `/api/orders/${id}/reorder`,
+    REVIEW_REMINDER: (id: string) => `/api/orders/${id}/review-reminder`,
+  },
+  
+  // 배송
+  SHIPPING: {
+    METHODS: '/api/shipping/methods',
+    CALCULATE: '/api/shipping/calculate',
+    CARRIERS: '/api/shipping/carriers',
   },
   
   // 결제
@@ -102,24 +137,149 @@ export const API_ENDPOINTS = {
     METHODS: '/api/payments/methods',
   },
   
+  // 쿠폰
+  COUPONS: {
+    USER_COUPONS: '/api/user/coupons',
+    DOWNLOAD: (couponId: string) => `/api/coupons/${couponId}/download`,
+    REDEEM: '/api/coupons/redeem',
+    AVAILABLE: '/api/coupons/available',
+    PUBLIC: '/api/coupons/public',
+  },
+  
+  // 포인트
+  POINTS: {
+    BALANCE: '/api/user/points',
+    HISTORY: '/api/user/points/history',
+    USE: '/api/user/points/use',
+    EXPIRING: '/api/user/points/expiring',
+    TIER: '/api/user/tier',
+    POLICY: '/api/policy',
+  },
+  
   // 이미지 업로드
   UPLOAD: {
     PRESIGNED_URL: '/api/upload/presigned-url',
     CONFIG: '/api/upload/config',
+    METADATA: '/api/upload/metadata',
+    METADATA_DETAIL: (imageId: string) => `/api/upload/metadata/${imageId}`,
+    TRANSFORM: '/api/upload/transform',
+    STATS: '/api/upload/stats',
+    DELETE: (imageId: string) => `/api/upload/metadata/${imageId}`,
+  },
+  
+  // 사용자 리뷰
+  USER: {
+    REVIEWS: '/api/user/reviews',
   },
   
   // 관리자
   ADMIN: {
     DASHBOARD: '/api/admin/dashboard',
+    
+    // 사용자 관리
     USERS: '/api/admin/users',
     USER_STATUS: (id: string) => `/api/admin/users/${id}/status`,
+    
+    // 주문 관리
     ORDERS: '/api/admin/orders',
     ORDER_STATUS: (id: string) => `/api/admin/orders/${id}/status`,
+    
+    // 상품 관리
     PRODUCTS: '/api/admin/products',
     PRODUCT_STOCK: (id: string) => `/api/admin/products/${id}/stock`,
     PRODUCT_FEATURED: (id: string) => `/api/admin/products/${id}/featured`,
+    
+    // 분석
     ANALYTICS_SALES: '/api/admin/analytics/sales',
     ANALYTICS_PRODUCTS: '/api/admin/analytics/products',
+    
+    // 쿠폰 관리
+    COUPONS: '/api/admin/coupons',
+    COUPON_DETAIL: (id: string) => `/api/admin/coupons/${id}`,
+    COUPON_CREATE: '/api/admin/coupons',
+    COUPON_UPDATE: (id: string) => `/api/admin/coupons/${id}`,
+    COUPON_DELETE: (id: string) => `/api/admin/coupons/${id}`,
+    COUPON_STATS: '/api/admin/coupons/stats/overview',
+    
+    // 이미지 관리
+    IMAGE_HEALTH: '/api/upload/health',
+    IMAGE_CLEANUP: '/api/upload/cleanup',
+    IMAGE_MANUAL_CLEANUP: '/api/upload/manual-cleanup',
+    IMAGE_METADATA: '/api/upload/admin/metadata',
+    
+    // 판매자 관리
+    SELLERS: '/api/admin/sellers',
+    SELLER_VERIFY: (id: string) => `/api/admin/sellers/${id}/verify`,
+    SELLER_DETAIL: (id: string) => `/api/admin/sellers/${id}`,
+  },
+  
+  // 판매자 센터
+  SELLER: {
+    REGISTER: '/api/seller/register',
+    PROFILE: '/api/seller/profile',
+    UPDATE_PROFILE: '/api/seller/profile',
+    DASHBOARD: '/api/seller/dashboard',
+    
+    // 상품 관리
+    PRODUCTS: '/api/seller/products',
+    PRODUCT_CREATE: '/api/seller/products',
+    PRODUCT_UPDATE: (id: string) => `/api/seller/products/${id}`,
+    PRODUCT_DELETE: (id: string) => `/api/seller/products/${id}`,
+    PRODUCT_STOCK: (id: string) => `/api/seller/products/${id}/stock`,
+    PRODUCT_STATUS: (id: string) => `/api/seller/products/${id}/status`,
+    PRODUCT_ANALYTICS: '/api/seller/products/analytics/overview',
+    
+    // 주문 관리
+    ORDERS: '/api/seller/orders',
+    ORDER_STATUS: (id: string) => `/api/seller/orders/${id}/status`,
+    ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',
+    
+    // 정산 관리
+    SETTLEMENTS: '/api/seller/settlement',
+    SETTLEMENT_REQUEST: '/api/seller/settlement/request',
+    SETTLEMENT_SUMMARY: '/api/seller/settlement/summary/overview',
+    SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',
+  },
+  
+  // QR 코드
+  QR: {
+    GENERATE: '/api/qr/generate',
+    PROCESS: '/api/qr/process',
+  },
+
+  // 사용자 관리 (배송지, 위시리스트 등)
+  USER_MANAGEMENT: {
+    ADDRESSES: '/api/user/addresses',
+    ADDRESS_CREATE: '/api/user/addresses',
+    ADDRESS_UPDATE: (id: string) => `/api/user/addresses/${id}`,
+    ADDRESS_DELETE: (id: string) => `/api/user/addresses/${id}`,
+    ADDRESS_DEFAULT: (id: string) => `/api/user/addresses/${id}/default`,
+    WISHLIST: '/api/user/wishlist',
+    WISHLIST_ADD: (productId: string) => `/api/user/wishlist/${productId}`,
+    WISHLIST_REMOVE: (productId: string) => `/api/user/wishlist/${productId}`,
+  },
+
+  // 대량 상품 작업
+  BULK_PRODUCTS: {
+    OPERATION: '/api/seller/products/bulk',
+    STATUS: (operationId: string) => `/api/seller/products/bulk/${operationId}/status`,
+  },
+
+  // 리뷰 관리 (판매자용)
+  SELLER_REVIEWS: {
+    LIST: '/api/seller/reviews',
+    REPLY: (reviewId: string) => `/api/seller/reviews/${reviewId}/reply`,
+    UPDATE_REPLY: (reviewId: string) => `/api/seller/reviews/${reviewId}/reply`,
+    DELETE_REPLY: (reviewId: string) => `/api/seller/reviews/${reviewId}/reply`,
+  },
+
+  // 결제 처리 (확장)
+  PAYMENT_PROCESSING: {
+    INITIALIZE: '/api/payments/initialize',
+    CONFIRM: '/api/payments/confirm',
+    CANCEL: (paymentId: string) => `/api/payments/${paymentId}/cancel`,
+    REFUND_PARTIAL: (paymentId: string) => `/api/payments/${paymentId}/refund/partial`,
+    WEBHOOK: '/api/payments/webhook',
   },
 };
 
