@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
-import { webApiService } from '../../services/api';
+import { webApiService } from '../../services/apiService';
 import type {
   NailCategories,
   NailShape,

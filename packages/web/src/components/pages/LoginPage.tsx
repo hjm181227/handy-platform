@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { webApiService } from '../../services/api';
+import { webApiService } from '../../services/apiService';
+import { getErrorMessageFromApiError } from '@handy-platform/shared';
 
 export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [email, setEmail] = useState("");
@@ -8,6 +9,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorAction, setErrorAction] = useState("");
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트
   useEffect(() => {
@@ -31,7 +33,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
     setError("");
 
     try {
-      const response = await webApiService.login({ email, password });
+      const response = await webApiService.loginAndStoreToken({ email, password });
       
       if (auto) {
         // 자동 로그인 설정 저장 (로컬 스토리지에 플래그만 저장)
@@ -43,11 +45,18 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       // 인증 상태 변경 이벤트 발생
       window.dispatchEvent(new CustomEvent('authStateChanged'));
       
-      alert(`로그인 성공! 환영합니다, ${response.user?.name || email}님!`);
       onGo("/");
     } catch (error: any) {
       console.error('로그인 실패:', error);
-      setError(error.message || '로그인에 실패했습니다.');
+      
+      const errorMessage = getErrorMessageFromApiError(error);
+      setError(errorMessage.message);
+      setErrorAction(errorMessage.action || "");
+      
+      // USER_NOT_FOUND 에러인 경우 회원가입 페이지로 이동 버튼 표시
+      if (error?.code === 'USER_NOT_FOUND' || error?.response?.data?.code === 'USER_NOT_FOUND') {
+        setErrorAction("회원가입하기");
+      }
     } finally {
       setLoading(false);
     }
@@ -103,15 +112,35 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
       <form onSubmit={submit} className="mt-4 space-y-3">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-            {error}
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm">
+            <div className="text-red-600 mb-2">{error}</div>
+            {errorAction && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (errorAction === "회원가입하기") {
+                    onGo("/signup");
+                  } else {
+                    setError("");
+                    setErrorAction("");
+                  }
+                }}
+                className="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
+                {errorAction}
+              </button>
+            )}
           </div>
         )}
         
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+            setErrorAction("");
+          }}
           placeholder="이메일 주소"
           className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-500"
           disabled={loading}
@@ -121,7 +150,11 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           <input
             type={showPw ? "text" : "password"}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError("");
+              setErrorAction("");
+            }}
             placeholder="비밀번호"
             className="w-full rounded-lg border px-4 py-3 pr-10 text-sm outline-none focus:border-blue-500"
             disabled={loading}

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
 import { products } from './data';
-import { webTokenManager } from './services/api';
+import { webApiService } from './services/apiService';
 import type { User } from '@handy-platform/shared';
 
 // Layout Components
@@ -93,7 +93,7 @@ export default function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        await webTokenManager.initializeFromNative();
+        await webApiService.initializeFromNative();
         console.log('✅ Native 토큰 동기화 완료');
       } catch (error) {
         console.warn('⚠️ Native 토큰 동기화 실패:', error);

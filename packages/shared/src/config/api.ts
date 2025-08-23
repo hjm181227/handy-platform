@@ -9,13 +9,13 @@ export interface ApiConfig {
 // 환경별 API 설정
 export const API_CONFIG: Record<string, ApiConfig> = {
   development: {
-    baseURL: 'http://localhost:5000',
+    baseURL: 'http://15.165.5.64:3001',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   production: {
-    baseURL: 'http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com',
+    baseURL: 'http://15.165.5.64:3000',
     timeout: 15000,
     retryAttempts: 5,
     retryDelay: 2000,
@@ -28,26 +28,45 @@ export const getCurrentEnvironment = (): string => {
   if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
     return process.env.REACT_NATIVE_ENV;
   }
-  
+
   // Vite 환경 (웹)
   if (typeof window !== 'undefined' && (window as any).__VITE_ENV__) {
     return (window as any).__VITE_ENV__;
   }
-  
+
   // Node.js 환경
   if (typeof process !== 'undefined' && process.env?.NODE_ENV) {
     return process.env.NODE_ENV;
   }
-  
+
   // 기본값
   return 'development';
+};
+
+// 웹 환경에서 프록시 사용 여부 감지
+export const shouldUseProxy = (): boolean => {
+  // 웹 환경이고 개발 모드일 때 프록시 사용
+  return typeof window !== 'undefined' && getCurrentEnvironment() === 'development';
 };
 
 // 현재 환경의 API 설정 가져오기
 export const getApiConfig = (): ApiConfig => {
   const env = getCurrentEnvironment();
-  return API_CONFIG[env] || API_CONFIG.development;
+  const config = API_CONFIG[env] || API_CONFIG.development;
+  
+  // 웹 개발 환경에서 프록시 사용 시 baseURL을 빈 문자열로 설정
+  if (shouldUseProxy()) {
+    return {
+      ...config,
+      baseURL: '' // Vite 프록시가 /api 경로를 처리
+    };
+  }
+  
+  return config;
 };
+
+// API Base URL (편의용)
+export const API_BASE_URL = getApiConfig().baseURL;
 
 // API 엔드포인트 구성 (서버 스펙에 맞게 확장)
 export const API_ENDPOINTS = {
@@ -62,7 +81,7 @@ export const API_ENDPOINTS = {
     WISHLIST_ADD: (productId: string) => `/api/auth/wishlist/${productId}`,
     WISHLIST_REMOVE: (productId: string) => `/api/auth/wishlist/${productId}`,
   },
-  
+
   // OAuth
   OAUTH: {
     KAKAO: '/api/auth/oauth/kakao',
@@ -73,7 +92,7 @@ export const API_ENDPOINTS = {
     UNLINK: (provider: string) => `/api/auth/oauth/unlink/${provider}`,
     LINKED: '/api/auth/oauth/linked',
   },
-  
+
   // 상품
   PRODUCTS: {
     LIST: '/api/products',
@@ -85,22 +104,22 @@ export const API_ENDPOINTS = {
     BRANDS: '/api/products/brands',
     FEATURED: '/api/products/featured',
     SEARCH_SUGGESTIONS: '/api/products/search/suggestions',
-    
+
     // 리뷰
     REVIEWS: (id: string) => `/api/products/${id}/reviews`,
     REVIEW_CREATE: (id: string) => `/api/products/${id}/reviews`,
-    REVIEW_UPDATE: (productId: string, reviewId: string) => 
+    REVIEW_UPDATE: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}`,
-    REVIEW_DELETE: (productId: string, reviewId: string) => 
+    REVIEW_DELETE: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}`,
-    REVIEW_HELPFUL: (productId: string, reviewId: string) => 
+    REVIEW_HELPFUL: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}/helpful`,
-    REVIEW_REPORT: (productId: string, reviewId: string) => 
+    REVIEW_REPORT: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}/report`,
-    REVIEW_REPLY: (productId: string, reviewId: string) => 
+    REVIEW_REPLY: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}/reply`,
   },
-  
+
   // 장바구니
   CART: {
     GET: '/api/cart',
@@ -110,7 +129,7 @@ export const API_ENDPOINTS = {
     COUNT: '/api/cart/count',
     SYNC: '/api/cart/sync',
   },
-  
+
   // 주문
   ORDERS: {
     LIST: '/api/orders',
@@ -121,14 +140,14 @@ export const API_ENDPOINTS = {
     REORDER: (id: string) => `/api/orders/${id}/reorder`,
     REVIEW_REMINDER: (id: string) => `/api/orders/${id}/review-reminder`,
   },
-  
+
   // 배송
   SHIPPING: {
     METHODS: '/api/shipping/methods',
     CALCULATE: '/api/shipping/calculate',
     CARRIERS: '/api/shipping/carriers',
   },
-  
+
   // 결제
   PAYMENTS: {
     PROCESS: (orderId: string) => `/api/payments/process/${orderId}`,
@@ -136,7 +155,7 @@ export const API_ENDPOINTS = {
     REFUND: (orderId: string) => `/api/payments/refund/${orderId}`,
     METHODS: '/api/payments/methods',
   },
-  
+
   // 쿠폰
   COUPONS: {
     USER_COUPONS: '/api/user/coupons',
@@ -145,7 +164,7 @@ export const API_ENDPOINTS = {
     AVAILABLE: '/api/coupons/available',
     PUBLIC: '/api/coupons/public',
   },
-  
+
   // 포인트
   POINTS: {
     BALANCE: '/api/user/points',
@@ -153,9 +172,9 @@ export const API_ENDPOINTS = {
     USE: '/api/user/points/use',
     EXPIRING: '/api/user/points/expiring',
     TIER: '/api/user/tier',
-    POLICY: '/api/policy',
+    POLICY: '/api/points/policy',
   },
-  
+
   // 이미지 업로드
   UPLOAD: {
     PRESIGNED_URL: '/api/upload/presigned-url',
@@ -166,33 +185,33 @@ export const API_ENDPOINTS = {
     STATS: '/api/upload/stats',
     DELETE: (imageId: string) => `/api/upload/metadata/${imageId}`,
   },
-  
+
   // 사용자 리뷰
   USER: {
     REVIEWS: '/api/user/reviews',
   },
-  
+
   // 관리자
   ADMIN: {
     DASHBOARD: '/api/admin/dashboard',
-    
+
     // 사용자 관리
     USERS: '/api/admin/users',
     USER_STATUS: (id: string) => `/api/admin/users/${id}/status`,
-    
+
     // 주문 관리
     ORDERS: '/api/admin/orders',
     ORDER_STATUS: (id: string) => `/api/admin/orders/${id}/status`,
-    
+
     // 상품 관리
     PRODUCTS: '/api/admin/products',
     PRODUCT_STOCK: (id: string) => `/api/admin/products/${id}/stock`,
     PRODUCT_FEATURED: (id: string) => `/api/admin/products/${id}/featured`,
-    
+
     // 분석
     ANALYTICS_SALES: '/api/admin/analytics/sales',
     ANALYTICS_PRODUCTS: '/api/admin/analytics/products',
-    
+
     // 쿠폰 관리
     COUPONS: '/api/admin/coupons',
     COUPON_DETAIL: (id: string) => `/api/admin/coupons/${id}`,
@@ -200,26 +219,26 @@ export const API_ENDPOINTS = {
     COUPON_UPDATE: (id: string) => `/api/admin/coupons/${id}`,
     COUPON_DELETE: (id: string) => `/api/admin/coupons/${id}`,
     COUPON_STATS: '/api/admin/coupons/stats/overview',
-    
+
     // 이미지 관리
     IMAGE_HEALTH: '/api/upload/health',
     IMAGE_CLEANUP: '/api/upload/cleanup',
     IMAGE_MANUAL_CLEANUP: '/api/upload/manual-cleanup',
     IMAGE_METADATA: '/api/upload/admin/metadata',
-    
+
     // 판매자 관리
     SELLERS: '/api/admin/sellers',
     SELLER_VERIFY: (id: string) => `/api/admin/sellers/${id}/verify`,
     SELLER_DETAIL: (id: string) => `/api/admin/sellers/${id}`,
   },
-  
+
   // 판매자 센터
   SELLER: {
     REGISTER: '/api/seller/register',
     PROFILE: '/api/seller/profile',
     UPDATE_PROFILE: '/api/seller/profile',
     DASHBOARD: '/api/seller/dashboard',
-    
+
     // 상품 관리
     PRODUCTS: '/api/seller/products',
     PRODUCT_CREATE: '/api/seller/products',
@@ -228,19 +247,19 @@ export const API_ENDPOINTS = {
     PRODUCT_STOCK: (id: string) => `/api/seller/products/${id}/stock`,
     PRODUCT_STATUS: (id: string) => `/api/seller/products/${id}/status`,
     PRODUCT_ANALYTICS: '/api/seller/products/analytics/overview',
-    
+
     // 주문 관리
     ORDERS: '/api/seller/orders',
     ORDER_STATUS: (id: string) => `/api/seller/orders/${id}/status`,
     ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',
-    
+
     // 정산 관리
     SETTLEMENTS: '/api/seller/settlement',
     SETTLEMENT_REQUEST: '/api/seller/settlement/request',
     SETTLEMENT_SUMMARY: '/api/seller/settlement/summary/overview',
     SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',
   },
-  
+
   // QR 코드
   QR: {
     GENERATE: '/api/qr/generate',

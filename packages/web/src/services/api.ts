@@ -35,17 +35,6 @@ import {
   ImageUploadConfig,
   LinkedAccountsResponse,
   ImageUploadManager,
-  // 새로운 서비스들
-  BaseSellerService,
-  SellerServiceFactory,
-  BaseUserManagementService,
-  UserManagementServiceFactory,
-  BaseQRService,
-  QRServiceFactory,
-  BasePaymentService,
-  PaymentServiceFactory,
-  BaseComprehensiveLoyaltyService,
-  ComprehensiveLoyaltyServiceFactory,
   // 새로운 타입들
   SellerProfile,
   SellerDashboard,
@@ -675,45 +664,6 @@ class WebApiService {
     return new ImageUploadManager(this.baseURL, () => this.getAuthHeaders());
   }
 
-  // ======================
-  // Seller Service Integration
-  // ======================
-
-  createSellerService(): BaseSellerService {
-    return SellerServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
-  }
-
-  // ======================
-  // User Management Service Integration
-  // ======================
-
-  createUserManagementService(): BaseUserManagementService {
-    return UserManagementServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
-  }
-
-  // ======================
-  // QR Service Integration
-  // ======================
-
-  createQRService(): BaseQRService {
-    return QRServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
-  }
-
-  // ======================
-  // Payment Service Integration (Enhanced)
-  // ======================
-
-  createPaymentService(): BasePaymentService {
-    return PaymentServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
-  }
-
-  // ======================
-  // Comprehensive Loyalty Service Integration
-  // ======================
-
-  createLoyaltyService(): BaseComprehensiveLoyaltyService {
-    return ComprehensiveLoyaltyServiceFactory.create(this.baseURL, () => this.getAuthHeaders());
-  }
 }
 
 export const webApiService = new WebApiService();
