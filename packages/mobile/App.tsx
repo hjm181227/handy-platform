@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Platform, PermissionsAndroid, Permission } from 'react-native';
-import HomeScreen from './src/screens/HomeScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import BottomTabNavigator from './src/components/BottomTabNavigator';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -38,7 +39,11 @@ const App: React.FC = () => {
     }
   };
 
-  return <HomeScreen />;
+  return (
+    <NavigationContainer>
+      <BottomTabNavigator />
+    </NavigationContainer>
+  );
 };
 
 export default App;
