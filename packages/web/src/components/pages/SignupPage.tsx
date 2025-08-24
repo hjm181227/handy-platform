@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { webApiService } from '../../services/api';
+import { webApiService } from '../../services/apiService';
+import { getErrorMessageFromApiError } from '@handy-platform/shared';
 import { TermsOfService, PrivacyPolicy, PersonalDataConsent } from './PolicyPages';
 
 export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
@@ -14,6 +15,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorAction, setErrorAction] = useState("");
   const [agree, setAgree] = useState({
     terms: false,
     privacy: false,
@@ -36,6 +38,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(""); // 입력 시 에러 메시지 초기화
+    setErrorAction("");
   };
 
   const validateForm = () => {
@@ -76,12 +79,15 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
     setError("");
 
     try {
-      const response = await webApiService.register({
+      const response = await webApiService.auth.register({
         email: formData.email,
         password: formData.password,
         name: formData.name,
         phone: formData.phone || undefined
       });
+      
+      // 회원가입 성공 시 자동으로 토큰 저장
+      await webApiService.auth.setAuthToken(response.token, response.user);
       
       console.log('회원가입 성공:', response);
       
@@ -92,7 +98,15 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
       onGo("/");
     } catch (error: any) {
       console.error('회원가입 실패:', error);
-      setError(error.message || '회원가입에 실패했습니다.');
+      
+      const errorMessage = getErrorMessageFromApiError(error);
+      setError(errorMessage.message);
+      setErrorAction(errorMessage.action || "");
+      
+      // USER_ALREADY_EXISTS 에러인 경우 로그인 페이지로 이동 버튼 표시
+      if (error?.code === 'USER_ALREADY_EXISTS' || error?.response?.data?.code === 'USER_ALREADY_EXISTS') {
+        setErrorAction("로그인하기");
+      }
     } finally {
       setLoading(false);
     }
@@ -122,8 +136,24 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
 
       <form onSubmit={submit} className="mt-4 space-y-3">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-            {error}
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm">
+            <div className="text-red-600 mb-2">{error}</div>
+            {errorAction && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (errorAction === "로그인하기") {
+                    onGo("/login");
+                  } else {
+                    setError("");
+                    setErrorAction("");
+                  }
+                }}
+                className="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
+                {errorAction}
+              </button>
+            )}
           </div>
         )}
 
