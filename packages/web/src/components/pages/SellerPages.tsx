@@ -1,38 +1,152 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
-import type { NailCategories } from '../../types';
+import { imageService, productService, sellerService } from '../../services/apiService';
+import type { CreateProductRequest, NailCategories, NailLength, NailShape, ProductCategory } from '../../types';
 
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
-  // 대시보드 데이터 (실제로는 API에서 가져옴)
-  const dashboardData = {
+  const [ dashboardData, setDashboardData ] = useState({
     sales: {
-      today: 1250000,
-      month: 45800000,
-      lastMonth: 38200000
+      today: 0,
+      month: 0,
+      lastMonth: 0,
+      growth: 0
     },
     orders: {
-      pending: 12,
-      processing: 8,
-      shipped: 45,
-      delivered: 128
+      pending: 0,
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
     },
     products: {
-      total: 67,
-      active: 58,
-      inactive: 9,
-      outOfStock: 5
+      total: 0,
+      active: 0,
+      inactive: 0,
+      outOfStock: 0
     },
     reviews: {
-      total: 234,
-      unread: 3,
-      averageRating: 4.7
+      total: 0,
+      unread: 0,
+      averageRating: 0,
+      pending: 0
     }
-  };
+  });
+  const [ isLoading, setIsLoading ] = useState(true);
+  const [ error, setError ] = useState<string | null>(null);
 
-  const salesGrowth = ((dashboardData.sales.month - dashboardData.sales.lastMonth) / dashboardData.sales.lastMonth * 100).toFixed(1);
+  // 대시보드 데이터 로드
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // API 호출 시도 (구현되지 않은 경우 샘플 데이터 사용)
+        try {
+          const response = await fetch('/api/seller/dashboard', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setDashboardData(data.dashboard);
+          } else {
+            throw new Error('API not implemented');
+          }
+        } catch (apiError) {
+          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
+          console.warn('Seller dashboard API not implemented, using sample data');
+          setDashboardData({
+            sales: {
+              today: 1250000,
+              month: 45800000,
+              lastMonth: 38200000,
+              growth: 19.9
+            },
+            orders: {
+              pending: 12,
+              processing: 8,
+              shipped: 45,
+              delivered: 128,
+              cancelled: 3
+            },
+            products: {
+              total: 67,
+              active: 58,
+              inactive: 9,
+              outOfStock: 5
+            },
+            reviews: {
+              total: 234,
+              unread: 3,
+              averageRating: 4.7,
+              pending: 12
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard:', error);
+        setError('대시보드 데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const salesGrowth = dashboardData.sales.growth ||
+    ((dashboardData.sales.month - dashboardData.sales.lastMonth) / dashboardData.sales.lastMonth * 100);
+
+  if (isLoading) {
+    return (
+      <SellerLayout title="판매자 센터" onGo={onGo}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div
+                className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">대시보드 데이터를 불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <SellerLayout title="판매자 센터" onGo={onGo}>
+        <div className="space-y-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+              <div>
+                <h3 className="text-red-800 font-medium">오류 발생</h3>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-red-600 underline text-sm mt-2 hover:text-red-800"
+                >
+                  페이지 새로고침
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
 
   return (
     <SellerLayout title="판매자 센터" onGo={onGo}>
@@ -47,7 +161,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                 </svg>
               </div>
             </div>
@@ -64,7 +179,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                 </svg>
               </div>
             </div>
@@ -78,7 +194,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
               </div>
             </div>
@@ -93,7 +210,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </div>
             </div>
@@ -109,7 +227,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
               <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
               <span className="text-sm font-medium">상품 등록</span>
             </button>
@@ -119,7 +237,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
             >
               <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
               <span className="text-sm font-medium">주문 관리</span>
             </button>
@@ -129,7 +248,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
             >
               <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
               <span className="text-sm font-medium">매출 분석</span>
             </button>
@@ -139,7 +259,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
             >
               <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
               <span className="text-sm font-medium">정산 관리</span>
             </button>
@@ -214,54 +335,95 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
 // 상품 관리 페이지
 export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
-  const [filter, setFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [ filter, setFilter ] = useState('all');
+  const [ searchQuery, setSearchQuery ] = useState('');
+  const [ products, setProducts ] = useState<any[]>([]);
+  const [ isLoading, setIsLoading ] = useState(true);
+  const [ error, setError ] = useState<string | null>(null);
 
-  // 샘플 상품 데이터
-  const products = [
-    {
-      id: '1',
-      name: 'Glossy Almond Tip – Milk Beige',
-      category: '네일 팁',
-      price: 18000,
-      stock: 245,
-      status: 'active',
-      sales: 1234,
-      views: 5678,
-      image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d46?w=100&h=100&fit=crop',
-      createdAt: '2024-08-15'
-    },
-    {
-      id: '2',
-      name: 'Square Short – Cocoa',
-      category: '네일 팁',
-      price: 16500,
-      stock: 0,
-      status: 'outOfStock',
-      sales: 987,
-      views: 3456,
-      image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=100&h=100&fit=crop',
-      createdAt: '2024-08-12'
-    },
-    {
-      id: '3',
-      name: 'Gel Polish - Rose Gold',
-      category: '네일 젤',
-      price: 22000,
-      stock: 156,
-      status: 'inactive',
-      sales: 567,
-      views: 2134,
-      image: 'https://images.unsplash.com/photo-1599948128020-9e50de75f17a?w=100&h=100&fit=crop',
-      createdAt: '2024-08-10'
-    }
-  ];
+  // 상품 목록 로드
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  const filteredProducts = products.filter(product => {
-    if (filter !== 'all' && product.status !== filter) return false;
-    if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+        // API 호출
+        try {
+          const response = await sellerService.getSellerProducts({
+            page: 1,
+            limit: 50,
+            search: searchQuery.trim() || undefined,
+            // 필터에 따른 상태 처리
+            ...(filter !== 'all' && { isActive: filter === 'active' })
+          });
+
+          console.log('Seller products API response:', response);
+          console.log('Products data:', response.products);
+          // 첫 번째 상품의 구조 확인
+          if (response.products && response.products.length > 0) {
+            console.log('First product structure:', response.products[0]);
+          }
+          setProducts(response.products || []);
+        } catch (apiError) {
+          console.error('Failed to load seller products:', apiError);
+          // API 오류 시 사용자에게 알림
+          setError('상품 목록을 불러오는데 실패했습니다.');
+
+          // 개발 중에는 샘플 데이터 사용
+          console.warn('Using sample data for development');
+          setProducts([
+            {
+              id: '1',
+              name: 'Glossy Almond Tip – Milk Beige',
+              category: '네일 팁',
+              price: 18000,
+              stock: 245,
+              status: 'active',
+              sales: 1234,
+              views: 5678,
+              image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d46?w=100&h=100&fit=crop',
+              createdAt: '2024-08-15'
+            },
+            {
+              id: '2',
+              name: 'Square Short – Cocoa',
+              category: '네일 팁',
+              price: 16500,
+              stock: 0,
+              status: 'outOfStock',
+              sales: 987,
+              views: 3456,
+              image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=100&h=100&fit=crop',
+              createdAt: '2024-08-12'
+            },
+            {
+              id: '3',
+              name: 'Gel Polish - Rose Gold',
+              category: '네일 젤',
+              price: 22000,
+              stock: 156,
+              status: 'inactive',
+              sales: 567,
+              views: 2134,
+              image: 'https://images.unsplash.com/photo-1599948128020-9e50de75f17a?w=100&h=100&fit=crop',
+              createdAt: '2024-08-10'
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setError('상품 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [ filter, searchQuery ]); // filter나 searchQuery가 변경될 때마다 재로드
+
+  // API에서 이미 필터링된 데이터가 오므로 추가 필터링 불필요
+  const filteredProducts = products;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -290,8 +452,10 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </div>
 
@@ -307,116 +471,185 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             </select>
           </div>
 
-          <button
-            onClick={() => onGo('/seller/products/new')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            상품 등록
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              disabled={isLoading}
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 flex items-center gap-2"
+              title="새로고침"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              새로고침
+            </button>
+
+            <button
+              onClick={() => onGo('/seller/products/new')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              상품 등록
+            </button>
+          </div>
         </div>
 
         {/* 상품 목록 */}
         <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가격</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">재고</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">판매량</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">조회수</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <img className="h-12 w-12 rounded-lg object-cover" src={product.image} alt={product.name} />
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500">등록일: {product.createdAt}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {product.category}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {money(product.price)}원
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className={product.stock === 0 ? 'text-red-600 font-medium' : ''}>
-                        {product.stock}개
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(product.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {product.sales}개
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {product.views.toLocaleString()}회
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => onGo(`/seller/products/${product.id}/edit`)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          수정
-                        </button>
-                        <button
-                          onClick={() => onGo(`/seller/products/${product.id}/analytics`)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          분석
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          {/* 로딩 상태 */}
+          {isLoading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="text-gray-600">상품 목록을 불러오는 중...</span>
+              </div>
+            </div>
+          )}
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">상품이 없습니다</h3>
-            <p className="mt-1 text-sm text-gray-500">새 상품을 등록해보세요.</p>
-            <div className="mt-6">
-              <button
-                onClick={() => onGo('/seller/products/new')}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          {/* 에러 상태 */}
+          {error && !isLoading && (
+            <div className="flex flex-col justify-center items-center py-12 gap-4">
+              <div className="text-red-600 text-center">
+                <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                상품 등록
+                <p className="text-lg font-medium">오류가 발생했습니다</p>
+                <p className="text-sm text-gray-600 mt-1">{error}</p>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                다시 시도
               </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* 상품 목록 테이블 */}
+          {!isLoading && !error && (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가격
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">재고
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">판매량
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">조회수
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션
+                    </th>
+                  </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredProducts.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <img 
+                            className="h-12 w-12 rounded-lg object-cover bg-gray-100" 
+                            src={product.mainImage?.url || product.image || product.imageUrl || 'https://via.placeholder.com/48x48?text=No+Image'} 
+                            alt={product.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/48x48?text=No+Image';
+                            }}
+                          />
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                            <div className="text-sm text-gray-500">업데이트: {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : product.createdAt}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {product.brand || product.category || '네일 제품'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {money(product.price)}원
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <span className={(product.stock || 0) === 0 ? 'text-red-600 font-medium' : ''}>
+                        {(product.stock || 0)}개
+                      </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(product.isActive ? 'active' : 'inactive')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {(product.sales || 0)}개
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {(product.views || 0).toLocaleString()}회
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => onGo(`/seller/products/${product.id}/edit`)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => onGo(`/seller/products/${product.id}/analytics`)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            분석
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 빈 상태 표시 */}
+              {filteredProducts.length === 0 && (
+                <div className="text-center py-12 bg-white rounded-lg border">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">상품이 없습니다</h3>
+                  <p className="mt-1 text-sm text-gray-500">새 상품을 등록해보세요.</p>
+                  <div className="mt-6">
+                    <button
+                      onClick={() => onGo('/seller/products/new')}
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                      </svg>
+                      상품 등록
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </SellerLayout>
   );
 }
 
-// 네일 상품 타입 정의
-type NailShape = 'ROUND' | 'ALMOND' | 'OVAL' | 'STILETTO' | 'SQUARE' | 'COFFIN';
-type NailLength = 'SHORT' | 'MEDIUM' | 'LONG';
+// 웹 전용 타입 정의 (shared 타입 사용)
 
 interface DetailImage {
   file?: File;
@@ -427,7 +660,7 @@ interface DetailImage {
 // 상품 등록/수정 페이지
 export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => void; productId?: string }) {
   const isEdit = !!productId;
-  const [formData, setFormData] = useState({
+  const [ formData, setFormData ] = useState({
     name: '',
     category: '네일 팁',
     description: '',
@@ -447,77 +680,345 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
   });
 
   // 네일 카테고리 상태
-  const [nailCategories, setNailCategories] = useState<Partial<NailCategories>>({});
+  const [ nailCategories, setNailCategories ] = useState<Partial<NailCategories>>({});
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ isSubmitting, setIsSubmitting ] = useState(false);
+  const [ error, setError ] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      // 상품 데이터 구성
-      const productData = {
-        ...formData,
-        nailCategories,
-        // 이미지 업로드는 별도 처리 필요
+      // 1. 입력 데이터 검증
+      if (!formData.name || formData.name.length < 2) {
+        throw new Error('상품명은 2자 이상 입력해주세요.');
+      }
+      if (!formData.description || formData.description.length < 10) {
+        throw new Error('상품 설명은 10자 이상 입력해주세요.');
+      }
+      if (!formData.price || parseInt(formData.price) <= 0) {
+        throw new Error('가격을 올바르게 입력해주세요.');
+      }
+      if (!formData.mainImage && !formData.mainImageUrl) {
+        throw new Error('대표 이미지를 등록해주세요.');
+      }
+
+      // 2. 이미지 처리 (이미 업로드된 이미지는 URL만 사용)
+      let mainImageData = null;
+      let detailImagesData = [];
+
+      // 대표 이미지 처리
+      if (formData.mainImage && formData.mainImageUrl) {
+        // 이미 S3에 업로드된 경우 URL만 사용
+        if (formData.mainImageUrl.startsWith('http')) {
+          console.log('Using already uploaded main image:', formData.mainImageUrl);
+          mainImageData = {
+            imageUrl: formData.mainImageUrl,
+            filename: formData.mainImage.name
+          };
+        } else {
+          // 로컬 미리보기인 경우 새로 업로드
+          console.log('Uploading main image to S3...');
+          const presignedResponse = await imageService.getPresignedUrl({
+            filename: formData.mainImage.name,
+            contentType: formData.mainImage.type,
+            uploadType: 'product-main'
+          });
+
+          const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+            method: 'PUT',
+            body: formData.mainImage,
+            // headers: {
+            //   'Content-Type': formData.mainImage.type
+            // }
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('대표 이미지 업로드에 실패했습니다.');
+          }
+
+          mainImageData = {
+            imageUrl: presignedResponse.imageUrl,
+            filename: formData.mainImage.name
+          };
+        }
+      }
+
+      // 상세 이미지 처리
+      for (const detailImage of formData.detailImages) {
+        if (detailImage.url.startsWith('http')) {
+          // 이미 S3에 업로드된 경우
+          console.log('Using already uploaded detail image:', detailImage.url);
+          detailImagesData.push({
+            imageUrl: detailImage.url,
+            filename: detailImage.file?.name || 'detail-image.jpg',
+            description: detailImage.description
+          });
+        } else if (detailImage.file) {
+          // 로컬 미리보기인 경우 새로 업로드
+          console.log('Uploading detail image to S3...');
+          const presignedResponse = await imageService.getPresignedUrl({
+            filename: detailImage.file.name,
+            contentType: detailImage.file.type,
+            uploadType: 'product-detail'
+          });
+
+          const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+            method: 'PUT',
+            body: detailImage.file
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error(`상세 이미지 업로드에 실패했습니다: ${detailImage.file.name}`);
+          }
+
+          detailImagesData.push({
+            imageUrl: presignedResponse.imageUrl,
+            filename: detailImage.file.name,
+            description: detailImage.description
+          });
+        }
+      }
+
+      // 3. 상품 데이터 구성 (백엔드 API 스펙에 맞게)
+      const productData: CreateProductRequest = {
+        name: formData.name,
+        description: formData.description,
+        price: parseInt(formData.price),
+        category: 'other' as ProductCategory, // 네일 카테고리는 기본값으로 설정
+        brand: '네일아트', // 기본 브랜드
+        stock: 999, // 기본 재고
+        sku: `NAIL-${Date.now()}`, // 임시 SKU 생성
+        mainImage: mainImageData || {
+          imageUrl: formData.mainImageUrl,
+          filename: 'default-image.jpg'
+        },
+        detailImages: detailImagesData,
+        specifications: {
+          nailShape: formData.shape,
+          nailLength: formData.length,
+          processingDays: parseInt(formData.productionDays) || 3
+        },
+        tags: [ formData.category, formData.shape, formData.length ]
       };
 
       console.log('등록할 상품 데이터:', productData);
 
-      // 실제로는 API 호출
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 4. API 호출
+      const response = await productService.createProduct(productData);
 
-      alert(isEdit ? '상품이 수정되었습니다.' : '상품이 등록되었습니다.');
+      // 5. 성공 처리
+      console.log('상품 등록 성공:', response);
+      alert('상품이 성공적으로 등록되었습니다.');
       onGo('/seller/products');
+
     } catch (error) {
+      // 6. 에러 처리
+      const errorMessage = error instanceof Error ? error.message : '상품 등록에 실패했습니다.';
+      setError(errorMessage);
       console.error('상품 등록 실패:', error);
-      alert('상품 등록에 실패했습니다.');
+
+      // 사용자에게 에러 표시
+      alert(errorMessage);
+
     } finally {
+      // 7. 로딩 종료
       setIsSubmitting(false);
     }
   };
 
-  // 대표 이미지 업로드
-  const handleMainImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 대표 이미지 업로드 상태
+  const [ mainImageUploading, setMainImageUploading ] = useState(false);
+
+  // 대표 이미지 업로드 (즉시 S3 업로드)
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData({...formData, mainImage: file, mainImageUrl: URL.createObjectURL(file)});
+    if (!file) return;
+
+    setMainImageUploading(true);
+    try {
+      // 1. presigned URL 요청
+      console.log('Requesting presigned URL for main image...');
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'product-main'
+      });
+      console.log('Presigned URL received:', presignedResponse);
+
+      // 2. S3에 이미지 업로드
+      console.log('Uploading to S3...');
+      const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+      }
+
+      console.log('Image uploaded successfully to S3');
+
+      // 3. 폼 상태 업데이트
+      setFormData({
+        ...formData,
+        mainImage: file,
+        mainImageUrl: presignedResponse.imageUrl // S3 URL 사용
+      });
+
+    } catch (error) {
+      console.error('Main image upload failed:', error);
+      // 실패해도 로컬 미리보기는 보여줌
+      setFormData({
+        ...formData,
+        mainImage: file,
+        mainImageUrl: URL.createObjectURL(file) // 로컬 미리보기
+      });
+      alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setMainImageUploading(false);
     }
   };
 
-  // 상세 이미지 추가
-  const addDetailImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 상세 이미지 업로드 상태
+  const [ detailImageUploading, setDetailImageUploading ] = useState(false);
+  const [ failedImages, setFailedImages ] = useState<Set<number>>(new Set());
+
+  // 상세 이미지 추가 (즉시 S3 업로드)
+  const addDetailImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && formData.detailImages.length < 10) {
+    if (!file || formData.detailImages.length >= 10) return;
+
+    setDetailImageUploading(true);
+    try {
+      // 1. presigned URL 요청
+      console.log('Requesting presigned URL for detail image...');
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'product-detail'
+      });
+      console.log('Presigned URL received for detail image:', presignedResponse);
+
+      // 2. S3에 이미지 업로드
+      console.log('Uploading detail image to S3...');
+      const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Detail image upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+      }
+
+      console.log('Detail image uploaded successfully to S3');
+
+      // 3. 새 이미지 추가
       const newImage: DetailImage = {
         file,
-        url: URL.createObjectURL(file),
+        url: presignedResponse.imageUrl, // S3 URL 사용
         description: ''
       };
+
       setFormData({
         ...formData,
-        detailImages: [...formData.detailImages, newImage]
+        detailImages: [ ...formData.detailImages, newImage ]
       });
+
+    } catch (error) {
+      console.error('Detail image upload failed:', error);
+
+      // 실패해도 로컬 미리보기는 추가
+      const newImage: DetailImage = {
+        file,
+        url: URL.createObjectURL(file), // 로컬 미리보기
+        description: ''
+      };
+      const newImages = [ ...formData.detailImages, newImage ];
+      setFormData({
+        ...formData,
+        detailImages: newImages
+      });
+
+      // 실패한 이미지 인덱스를 기록
+      const newFailedImages = new Set(failedImages);
+      newFailedImages.add(newImages.length - 1);
+      setFailedImages(newFailedImages);
+
+      alert('상세 이미지 업로드에 실패했습니다. 나중에 재시도할 수 있습니다.');
+    } finally {
+      setDetailImageUploading(false);
     }
   };
 
   // 상세 이미지 설명 업데이트
   const updateDetailImageDescription = (index: number, description: string) => {
-    const updatedImages = [...formData.detailImages];
+    const updatedImages = [ ...formData.detailImages ];
     updatedImages[index].description = description;
-    setFormData({...formData, detailImages: updatedImages});
+    setFormData({ ...formData, detailImages: updatedImages });
   };
 
   // 상세 이미지 삭제
   const removeDetailImage = (index: number) => {
     const updatedImages = formData.detailImages.filter((_, i) => i !== index);
-    setFormData({...formData, detailImages: updatedImages});
+    setFormData({ ...formData, detailImages: updatedImages });
+
+    // 실패 목록에서도 제거
+    const newFailedImages = new Set(failedImages);
+    newFailedImages.delete(index);
+    setFailedImages(newFailedImages);
+  };
+
+  // 이미지 재업로드
+  const retryImageUpload = async (index: number) => {
+    const detailImage = formData.detailImages[index];
+    if (!detailImage?.file) return;
+
+    setDetailImageUploading(true);
+    try {
+      console.log(`Retrying upload for image ${index}...`);
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: detailImage.file.name,
+        contentType: detailImage.file.type,
+        uploadType: 'product-detail'
+      });
+
+      const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: detailImage.file
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Retry upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+      }
+
+      console.log(`Image ${index} retry upload successful`);
+
+      // 성공 시 URL 업데이트 및 실패 목록에서 제거
+      const updatedImages = [ ...formData.detailImages ];
+      updatedImages[index] = {
+        ...updatedImages[index],
+        url: presignedResponse.imageUrl
+      };
+      setFormData({ ...formData, detailImages: updatedImages });
+
+      const newFailedImages = new Set(failedImages);
+      newFailedImages.delete(index);
+      setFailedImages(newFailedImages);
+
+    } catch (error) {
+      console.error(`Retry upload failed for image ${index}:`, error);
+      alert('이미지 재업로드에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setDetailImageUploading(false);
+    }
   };
 
   // 드래그 앤 드롭 상태
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [ draggedIndex, setDraggedIndex ] = useState<number | null>(null);
+  const [ dragOverIndex, setDragOverIndex ] = useState<number | null>(null);
 
   // 드래그 시작
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -547,7 +1048,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
       return;
     }
 
-    const updatedImages = [...formData.detailImages];
+    const updatedImages = [ ...formData.detailImages ];
     const draggedItem = updatedImages[draggedIndex];
 
     // 드래그된 아이템 제거
@@ -557,7 +1058,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
     const targetIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
     updatedImages.splice(targetIndex, 0, draggedItem);
 
-    setFormData({...formData, detailImages: updatedImages});
+    setFormData({ ...formData, detailImages: updatedImages });
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -569,8 +1070,8 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
   };
 
   // 터치 이벤트 상태
-  const [touchStartIndex, setTouchStartIndex] = useState<number | null>(null);
-  const [touchPosition, setTouchPosition] = useState<{ x: number; y: number } | null>(null);
+  const [ touchStartIndex, setTouchStartIndex ] = useState<number | null>(null);
+  const [ touchPosition, setTouchPosition ] = useState<{ x: number; y: number } | null>(null);
 
   // 터치 시작
   const handleTouchStart = (e: React.TouchEvent, index: number) => {
@@ -613,7 +1114,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
     // 드롭 로직 실행
     if (touchStartIndex !== dragOverIndex) {
-      const updatedImages = [...formData.detailImages];
+      const updatedImages = [ ...formData.detailImages ];
       const draggedItem = updatedImages[touchStartIndex];
 
       // 드래그된 아이템 제거
@@ -623,7 +1124,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
       const targetIndex = touchStartIndex < dragOverIndex ? dragOverIndex - 1 : dragOverIndex;
       updatedImages.splice(targetIndex, 0, draggedItem);
 
-      setFormData({...formData, detailImages: updatedImages});
+      setFormData({ ...formData, detailImages: updatedImages });
     }
 
     // 상태 초기화
@@ -636,6 +1137,21 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
   return (
     <SellerLayout title={isEdit ? "상품 수정" : "상품 등록"} onGo={onGo}>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+              <div>
+                <h3 className="text-red-800 font-medium">오류가 발생했습니다</h3>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
         {/* 기본 정보 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
@@ -649,7 +1165,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="네일 팁 상품명을 입력하세요"
               />
@@ -664,7 +1180,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                 required
                 min="0"
                 value={formData.price}
-                onChange={(e) => setFormData({...formData, price: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="가격을 입력하세요"
               />
@@ -676,7 +1192,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               </label>
               <select
                 value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="active">판매중</option>
@@ -691,7 +1207,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               <textarea
                 rows={4}
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="네일 팁에 대한 상세한 설명을 입력하세요"
               />
@@ -711,7 +1227,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               <select
                 required
                 value={formData.length}
-                onChange={(e) => setFormData({...formData, length: e.target.value as NailLength})}
+                onChange={(e) => setFormData({ ...formData, length: e.target.value as NailLength })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="SHORT">숏 (Short)</option>
@@ -727,7 +1243,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               <select
                 required
                 value={formData.shape}
-                onChange={(e) => setFormData({...formData, shape: e.target.value as NailShape})}
+                onChange={(e) => setFormData({ ...formData, shape: e.target.value as NailShape })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="ROUND">라운드 (Round)</option>
@@ -753,12 +1269,12 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                 onChange={(e) => {
                   // 숫자만 입력 가능하도록 필터링
                   const value = e.target.value.replace(/[^0-9]/g, '');
-                  setFormData({...formData, productionDays: value});
+                  setFormData({ ...formData, productionDays: value });
                 }}
                 onKeyDown={(e) => {
                   // 숫자, 백스페이스, 델리트, 화살표 키만 허용
                   if (!/[0-9]/.test(e.key) &&
-                      !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    ![ 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab' ].includes(e.key)) {
                     e.preventDefault();
                   }
                 }}
@@ -779,7 +1295,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                   <input
                     type="checkbox"
                     checked={formData.lengthCustomizable}
-                    onChange={(e) => setFormData({...formData, lengthCustomizable: e.target.checked})}
+                    onChange={(e) => setFormData({ ...formData, lengthCustomizable: e.target.checked })}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">길이 변경 가능</span>
@@ -789,7 +1305,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                   <input
                     type="checkbox"
                     checked={formData.shapeCustomizable}
-                    onChange={(e) => setFormData({...formData, shapeCustomizable: e.target.checked})}
+                    onChange={(e) => setFormData({ ...formData, shapeCustomizable: e.target.checked })}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">쉐잎 변경 가능</span>
@@ -799,7 +1315,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                   <input
                     type="checkbox"
                     checked={formData.designCustomizable}
-                    onChange={(e) => setFormData({...formData, designCustomizable: e.target.checked})}
+                    onChange={(e) => setFormData({ ...formData, designCustomizable: e.target.checked })}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">디자인 커스텀 가능</span>
@@ -831,24 +1347,39 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                 />
                 <button
                   type="button"
-                  onClick={() => setFormData({...formData, mainImage: null, mainImageUrl: ''})}
+                  onClick={() => setFormData({ ...formData, mainImage: null, mainImageUrl: '' })}
                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
                 >
                   ×
                 </button>
               </div>
             ) : (
-              <label className="w-48 h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
+              <label
+                className={`w-48 h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center transition-colors cursor-pointer ${
+                  mainImageUploading ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
+                }`}>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleMainImageUpload}
+                  disabled={mainImageUploading}
                   className="hidden"
                 />
-                <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <span className="text-sm text-gray-500">대표 이미지 업로드</span>
+                {mainImageUploading ? (
+                  <>
+                    <div
+                      className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <span className="text-sm text-blue-600">업로드 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    <span className="text-sm text-gray-500">대표 이미지 업로드</span>
+                  </>
+                )}
               </label>
             )}
           </div>
@@ -877,26 +1408,49 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                 onTouchMove={(e) => handleTouchMove(e)}
                 onTouchEnd={(e) => handleTouchEnd(e)}
                 className={`border rounded-lg p-4 transition-all duration-200 cursor-move select-none ${
-                  draggedIndex === index 
-                    ? 'opacity-50 scale-95 rotate-2' 
-                    : dragOverIndex === index 
-                      ? 'border-blue-500 bg-blue-50 scale-105' 
+                  draggedIndex === index
+                    ? 'opacity-50 scale-95 rotate-2'
+                    : dragOverIndex === index
+                      ? 'border-blue-500 bg-blue-50 scale-105'
                       : 'hover:border-gray-400 hover:shadow-md'
                 }`}
               >
                 {/* 순서 번호와 드래그 핸들 */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    <div
+                      className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
                     <span className="text-sm text-gray-500">번째 이미지</span>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* 업로드 실패 표시 */}
+                    {failedImages.has(index) && (
+                      <div className="flex items-center gap-1">
+                        <div
+                          className="w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">!
+                        </div>
+                        <span className="text-xs text-red-600">업로드 실패</span>
+                      </div>
+                    )}
+
+                    {/* 재시도 버튼 */}
+                    {failedImages.has(index) && (
+                      <button
+                        type="button"
+                        onClick={() => retryImageUpload(index)}
+                        disabled={detailImageUploading}
+                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                      >
+                        재시도
+                      </button>
+                    )}
+
                     {/* 드래그 핸들 */}
                     <div className="cursor-move text-gray-400 hover:text-gray-600">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/>
                       </svg>
                     </div>
                     {/* 삭제 버튼 */}
@@ -938,23 +1492,38 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
             {/* 이미지 추가 버튼 */}
             {formData.detailImages.length < 10 && (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center hover:border-blue-500 hover:bg-blue-50 transition-colors">
+              <div
+                className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center transition-colors ${
+                  detailImageUploading ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
+                }`}>
                 <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={addDetailImage}
+                    disabled={detailImageUploading}
                     className="hidden"
                   />
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                    <span className="text-sm font-bold text-gray-500">{formData.detailImages.length + 1}</span>
-                  </div>
-                  <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="text-sm text-gray-500 text-center">
-                    {formData.detailImages.length + 1}번째<br />상세 이미지 추가
-                  </span>
+                  {detailImageUploading ? (
+                    <>
+                      <div
+                        className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                      <span className="text-sm text-blue-600">업로드 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                        <span className="text-sm font-bold text-gray-500">{formData.detailImages.length + 1}</span>
+                      </div>
+                      <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                      </svg>
+                      <span className="text-sm text-gray-500 text-center">
+                        {formData.detailImages.length + 1}번째<br/>상세 이미지 추가
+                      </span>
+                    </>
+                  )}
                 </label>
               </div>
             )}
@@ -964,7 +1533,8 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 text-blue-500 mt-0.5">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
               <div className="text-sm text-blue-700">
@@ -1002,55 +1572,102 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
 // 주문 관리 페이지
 export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('week');
+  const [ statusFilter, setStatusFilter ] = useState('all');
+  const [ dateFilter, setDateFilter ] = useState('week');
+  const [ orders, setOrders ] = useState<any[]>([]);
+  const [ isLoading, setIsLoading ] = useState(true);
+  const [ error, setError ] = useState<string | null>(null);
 
-  // 샘플 주문 데이터
-  const orders = [
-    {
-      id: 'ORD-20240818-001',
-      customerName: '김민지',
-      customerEmail: 'minji@example.com',
-      products: [
-        { name: 'Glossy Almond Tip – Milk Beige', quantity: 2, price: 18000 },
-        { name: 'Square Short – Cocoa', quantity: 1, price: 16500 }
-      ],
-      total: 52500,
-      status: 'pending',
-      paymentStatus: 'paid',
-      orderDate: '2024-08-18 14:30',
-      shippingAddress: '서울시 강남구 테헤란로 123',
-      trackingNumber: null
-    },
-    {
-      id: 'ORD-20240818-002',
-      customerName: '이수진',
-      customerEmail: 'sujin@example.com',
-      products: [
-        { name: 'Gel Polish - Rose Gold', quantity: 3, price: 22000 }
-      ],
-      total: 66000,
-      status: 'processing',
-      paymentStatus: 'paid',
-      orderDate: '2024-08-18 11:15',
-      shippingAddress: '부산시 해운대구 센텀동로 456',
-      trackingNumber: null
-    },
-    {
-      id: 'ORD-20240817-003',
-      customerName: '박지영',
-      customerEmail: 'jiyoung@example.com',
-      products: [
-        { name: 'Glossy Almond Tip – Milk Beige', quantity: 1, price: 18000 }
-      ],
-      total: 18000,
-      status: 'shipped',
-      paymentStatus: 'paid',
-      orderDate: '2024-08-17 16:45',
-      shippingAddress: '대구시 중구 동성로 789',
-      trackingNumber: '1234567890123'
-    }
-  ];
+  // 주문 목록 로드
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // API 호출 시도
+        try {
+          const params = new URLSearchParams({
+            page: '1',
+            limit: '50',
+            ...(statusFilter !== 'all' && { status: statusFilter }),
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+          });
+
+          const response = await fetch(`/api/seller/orders?${params}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setOrders(data.orders || []);
+          } else {
+            throw new Error('API not implemented');
+          }
+        } catch (apiError) {
+          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
+          console.warn('Seller orders API not implemented, using sample data');
+          setOrders([
+            {
+              id: 'ORD-20240818-001',
+              customerName: '김민지',
+              customerEmail: 'minji@example.com',
+              products: [
+                { name: 'Glossy Almond Tip – Milk Beige', quantity: 2, price: 18000 },
+                { name: 'Square Short – Cocoa', quantity: 1, price: 16500 }
+              ],
+              total: 52500,
+              status: 'pending',
+              paymentStatus: 'paid',
+              orderDate: '2024-08-18 14:30',
+              shippingAddress: '서울시 강남구 테헤란로 123',
+              trackingNumber: null
+            },
+            {
+              id: 'ORD-20240818-002',
+              customerName: '이수진',
+              customerEmail: 'sujin@example.com',
+              products: [
+                { name: 'Gel Polish - Rose Gold', quantity: 3, price: 22000 }
+              ],
+              total: 66000,
+              status: 'processing',
+              paymentStatus: 'paid',
+              orderDate: '2024-08-18 11:15',
+              shippingAddress: '부산시 해운대구 센텀동로 456',
+              trackingNumber: null
+            },
+            {
+              id: 'ORD-20240817-003',
+              customerName: '박지영',
+              customerEmail: 'jiyoung@example.com',
+              products: [
+                { name: 'Glossy Almond Tip – Milk Beige', quantity: 1, price: 18000 }
+              ],
+              total: 18000,
+              status: 'shipped',
+              paymentStatus: 'paid',
+              orderDate: '2024-08-17 16:45',
+              shippingAddress: '대구시 중구 동성로 789',
+              trackingNumber: '1234567890123'
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+        setError('주문 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [ statusFilter, dateFilter ]);
 
   const filteredOrders = orders.filter(order => {
     if (statusFilter !== 'all' && order.status !== statusFilter) return false;
@@ -1115,7 +1732,8 @@ export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
               Excel 내보내기
             </button>
@@ -1179,7 +1797,8 @@ export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
                   <p className="text-sm text-gray-600 mb-2">주문 상품</p>
                   <div className="space-y-2">
                     {order.products.map((product, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                      <div key={index}
+                           className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-gray-500">수량: {product.quantity}개</p>
@@ -1231,7 +1850,8 @@ export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
         {filteredOrders.length === 0 && (
           <div className="text-center py-12 bg-white rounded-lg border">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">주문이 없습니다</h3>
             <p className="mt-1 text-sm text-gray-500">새로운 주문을 기다리고 있습니다.</p>
@@ -1244,36 +1864,95 @@ export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
 
 // 매출 분석 페이지
 export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
-  const [period, setPeriod] = useState('month');
-
-  // 샘플 분석 데이터
-  const analyticsData = {
+  const [ period, setPeriod ] = useState('month');
+  const [ analyticsData, setAnalyticsData ] = useState({
     revenue: {
-      total: 45800000,
-      growth: 19.5,
-      chart: [
-        { date: '08-01', amount: 1200000 },
-        { date: '08-02', amount: 1400000 },
-        { date: '08-03', amount: 1800000 },
-        { date: '08-04', amount: 1600000 },
-        { date: '08-05', amount: 2100000 },
-        { date: '08-06', amount: 1900000 },
-        { date: '08-07', amount: 2300000 }
-      ]
+      total: 0,
+      growth: 0,
+      chart: [] as any[]
     },
     products: {
-      topSelling: [
-        { name: 'Glossy Almond Tip – Milk Beige', sales: 1234, revenue: 22212000 },
-        { name: 'Square Short – Cocoa', sales: 987, revenue: 16285500 },
-        { name: 'Gel Polish - Rose Gold', sales: 567, revenue: 12474000 }
-      ]
+      topSelling: [] as any[]
     },
     customers: {
-      newCustomers: 156,
-      returningCustomers: 89,
-      averageOrderValue: 45600
+      newCustomers: 0,
+      returningCustomers: 0,
+      averageOrderValue: 0
     }
-  };
+  });
+  const [ isLoading, setIsLoading ] = useState(true);
+  const [ error, setError ] = useState<string | null>(null);
+
+  // 분석 데이터 로드
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // API 호출 시도
+        try {
+          const params = new URLSearchParams({
+            period,
+            startDate: '', // 계산된 시작일
+            endDate: '' // 계산된 종료일
+          });
+
+          const response = await fetch(`/api/seller/analytics?${params}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setAnalyticsData(data.analytics);
+          } else {
+            throw new Error('API not implemented');
+          }
+        } catch (apiError) {
+          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
+          console.warn('Seller analytics API not implemented, using sample data');
+          setAnalyticsData({
+            revenue: {
+              total: 45800000,
+              growth: 19.5,
+              chart: [
+                { date: '08-01', amount: 1200000 },
+                { date: '08-02', amount: 1400000 },
+                { date: '08-03', amount: 1800000 },
+                { date: '08-04', amount: 1600000 },
+                { date: '08-05', amount: 2100000 },
+                { date: '08-06', amount: 1900000 },
+                { date: '08-07', amount: 2300000 }
+              ]
+            },
+            products: {
+              topSelling: [
+                { name: 'Glossy Almond Tip – Milk Beige', sales: 1234, revenue: 22212000 },
+                { name: 'Square Short – Cocoa', sales: 987, revenue: 16285500 },
+                { name: 'Gel Polish - Rose Gold', sales: 567, revenue: 12474000 }
+              ]
+            },
+            customers: {
+              newCustomers: 156,
+              returningCustomers: 89,
+              averageOrderValue: 45600
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load analytics:', error);
+        setError('분석 데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAnalytics();
+  }, [ period ]);
 
   return (
     <SellerLayout title="매출 분석" onGo={onGo}>
@@ -1306,7 +1985,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                 </svg>
               </div>
             </div>
@@ -1321,7 +2001,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
               </div>
             </div>
@@ -1335,7 +2016,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                 </svg>
               </div>
             </div>
@@ -1394,47 +2076,101 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
 
 // 정산 관리 페이지
 export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
-  const [period, setPeriod] = useState('month');
-
-  // 샘플 정산 데이터
-  const settlementData = {
+  const [ period, setPeriod ] = useState('month');
+  const [ settlementData, setSettlementData ] = useState({
     summary: {
-      totalSales: 45800000,
-      finalAmount: 41220000
+      totalSales: 0,
+      finalAmount: 0
     },
-    history: [
-      {
-        id: 'SET-202408-001',
-        period: '2024년 8월 1주차',
-        totalSales: 12500000,
-        netAmount: 11250000,
-        status: 'completed',
-        paidDate: '2024-08-08',
-        bank: '국민은행',
-        account: '123-456-789012'
-      },
-      {
-        id: 'SET-202407-004',
-        period: '2024년 7월 4주차',
-        totalSales: 8900000,
-        netAmount: 8010000,
-        status: 'completed',
-        paidDate: '2024-08-01',
-        bank: '국민은행',
-        account: '123-456-789012'
-      },
-      {
-        id: 'SET-202408-002',
-        period: '2024년 8월 2주차',
-        totalSales: 15600000,
-        netAmount: 14040000,
-        status: 'pending',
-        paidDate: null,
-        bank: '국민은행',
-        account: '123-456-789012'
+    history: [] as any[]
+  });
+  const [ isLoading, setIsLoading ] = useState(true);
+  const [ error, setError ] = useState<string | null>(null);
+
+  // 정산 데이터 로드
+  useEffect(() => {
+    const loadSettlements = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // API 호출 시도
+        try {
+          const params = new URLSearchParams({
+            page: '1',
+            limit: '20',
+            ...(period !== 'month' && { period }),
+          });
+
+          const response = await fetch(`/api/seller/settlements?${params}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setSettlementData({
+              summary: data.summary || { totalSales: 0, finalAmount: 0 },
+              history: data.settlements || []
+            });
+          } else {
+            throw new Error('API not implemented');
+          }
+        } catch (apiError) {
+          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
+          console.warn('Seller settlements API not implemented, using sample data');
+          setSettlementData({
+            summary: {
+              totalSales: 45800000,
+              finalAmount: 41220000
+            },
+            history: [
+              {
+                id: 'SET-202408-001',
+                period: '2024년 8월 1주차',
+                totalSales: 12500000,
+                netAmount: 11250000,
+                status: 'completed',
+                paidDate: '2024-08-08',
+                bank: '국민은행',
+                account: '123-456-789012'
+              },
+              {
+                id: 'SET-202407-004',
+                period: '2024년 7월 4주차',
+                totalSales: 8900000,
+                netAmount: 8010000,
+                status: 'completed',
+                paidDate: '2024-08-01',
+                bank: '국민은행',
+                account: '123-456-789012'
+              },
+              {
+                id: 'SET-202408-002',
+                period: '2024년 8월 2주차',
+                totalSales: 15600000,
+                netAmount: 14040000,
+                status: 'pending',
+                paidDate: null,
+                bank: '국민은행',
+                account: '123-456-789012'
+              }
+            ]
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load settlements:', error);
+        setError('정산 데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
       }
-    ]
-  };
+    };
+
+    loadSettlements();
+  }, [ period ]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -1493,7 +2229,8 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 Excel 내보내기
               </button>
@@ -1503,38 +2240,40 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">정산 ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">기간</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">총 매출</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">실 정산액</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">지급일</th>
-                </tr>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">정산 ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">기간</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">총 매출</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">실 정산액
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">지급일</th>
+              </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {settlementData.history.map((settlement) => (
-                  <tr key={settlement.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {settlement.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {settlement.period}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {money(settlement.totalSales)}원
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
-                      {money(settlement.netAmount)}원
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(settlement.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {settlement.paidDate || '-'}
-                    </td>
-                  </tr>
-                ))}
+              {settlementData.history.map((settlement) => (
+                <tr key={settlement.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {settlement.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {settlement.period}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    {money(settlement.totalSales)}원
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
+                    {money(settlement.netAmount)}원
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(settlement.status)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {settlement.paidDate || '-'}
+                  </td>
+                </tr>
+              ))}
               </tbody>
             </table>
           </div>
@@ -1588,8 +2327,8 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
 
 // 리뷰 관리 페이지
 export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
-  const [filter, setFilter] = useState<'all' | 'unread' | 'replied' | 'pending'>('all');
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [ filter, setFilter ] = useState<'all' | 'unread' | 'replied' | 'pending'>('all');
+  const [ selectedRating, setSelectedRating ] = useState<number | null>(null);
 
   // 샘플 리뷰 데이터 (실제로는 API에서 가져옴)
   const reviews = [
@@ -1603,7 +2342,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
       date: "2025-08-18",
       isRead: false,
       hasReply: false,
-      images: ["https://picsum.photos/seed/review1/200/200", "https://picsum.photos/seed/review2/200/200"]
+      images: [ "https://picsum.photos/seed/review1/200/200", "https://picsum.photos/seed/review2/200/200" ]
     },
     {
       id: "2",
@@ -1666,7 +2405,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     }
 
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [filter, selectedRating]);
+  }, [ filter, selectedRating ]);
 
   const stats = useMemo(() => {
     const total = reviews.length;
@@ -1727,8 +2466,8 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'all' 
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  filter === 'all'
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -1737,8 +2476,8 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
               <button
                 onClick={() => setFilter('unread')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'unread' 
-                    ? 'bg-orange-100 text-orange-700 border border-orange-200' 
+                  filter === 'unread'
+                    ? 'bg-orange-100 text-orange-700 border border-orange-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -1747,8 +2486,8 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
               <button
                 onClick={() => setFilter('replied')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'replied' 
-                    ? 'bg-green-100 text-green-700 border border-green-200' 
+                  filter === 'replied'
+                    ? 'bg-green-100 text-green-700 border border-green-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -1757,8 +2496,8 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
               <button
                 onClick={() => setFilter('pending')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'pending' 
-                    ? 'bg-red-100 text-red-700 border border-red-200' 
+                  filter === 'pending'
+                    ? 'bg-red-100 text-red-700 border border-red-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -1769,7 +2508,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">평점:</span>
               <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map(rating => (
+                {[ 1, 2, 3, 4, 5 ].map(rating => (
                   <button
                     key={rating}
                     onClick={() => setSelectedRating(selectedRating === rating ? null : rating)}
@@ -1816,7 +2555,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       {/* 리뷰 헤더 */}
                       <div className="flex items-center gap-3 mb-3">
                         <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
+                          {[ ...Array(5) ].map((_, i) => (
                             <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
                               ⭐
                             </span>

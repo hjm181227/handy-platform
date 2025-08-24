@@ -3,7 +3,7 @@ import { Alert, BackHandler, Platform, PermissionsAndroid, Linking } from 'react
 import { WebView } from 'react-native-webview';
 import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
-import { apiService } from '../services/api';
+import { mobileApiService } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface WebViewBridgeProps {
@@ -70,16 +70,16 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       let result;
       switch (data.endpoint) {
         case 'getProducts':
-          result = await apiService.getProducts({ page: data.page, limit: data.limit });
+          result = await mobileApiService.product.getProducts({ page: data.page, limit: data.limit });
           break;
         case 'getProduct':
-          result = await apiService.getProduct(data.id);
+          result = await mobileApiService.product.getProduct(data.id);
           break;
         case 'getCart':
-          result = await apiService.getCart();
+          result = await mobileApiService.cart.getCart();
           break;
         case 'getOrders':
-          result = await apiService.getOrders();
+          result = await mobileApiService.order.getOrders();
           break;
         default:
           throw new Error(`Unknown API endpoint: ${data.endpoint}`);
@@ -106,14 +106,13 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       let result;
       switch (data.action) {
         case 'login':
-          result = await apiService.login({ email: data.email, password: data.password });
-          await AsyncStorage.setItem('auth_token', (result as any).token);
+          result = await mobileApiService.loginAndStoreToken({ email: data.email, password: data.password });
           break;
         case 'register':
-          result = await apiService.register(data);
+          result = await mobileApiService.registerAndStoreToken(data);
           break;
         case 'logout':
-          await AsyncStorage.removeItem('auth_token');
+          await mobileApiService.logoutAndClearToken();
           result = { success: true };
           break;
         default:
@@ -140,10 +139,10 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       let result;
       switch (data.action) {
         case 'add':
-          result = await apiService.addToCart(data.productId, data.quantity);
+          result = await mobileApiService.cart.addToCart(data.productId, data.quantity);
           break;
         case 'createOrder':
-          result = await apiService.createOrder({
+          result = await mobileApiService.order.createOrder({
             shippingAddress: data.shippingAddress,
             paymentMethod: data.paymentMethod,
             items: data.items,

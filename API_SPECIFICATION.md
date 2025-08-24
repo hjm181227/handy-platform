@@ -164,45 +164,121 @@
 
 ## 📦 2. 상품 (Products) API
 
+### 2.0 상품 데이터 타입 구조
+
+#### 2.0.1 기본 타입 정의
+```typescript
+type ProductCategory = '네일 팁' | '젤 네일' | '네일 아트' | '케어 용품' | '도구' | '액세서리';
+type NailShape = 'ROUND' | 'ALMOND' | 'OVAL' | 'STILETTO' | 'SQUARE' | 'COFFIN';
+type NailLength = 'SHORT' | 'MEDIUM' | 'LONG';
+type ProductStatus = 'active' | 'inactive' | 'draft' | 'out_of_stock';
+```
+
+#### 2.0.2 네일 카테고리 구조
+```typescript
+interface NailCategories {
+  style: string[];   // 최대 3개 (신상, 심플, 화려, 클래식, 키치, 네츄럴)
+  color: string[];   // 최대 3개 (레드 계열, 핑크 계열, 뉴트럴, 블랙/화이트)
+  texture: string[]; // 최대 3개 (젤, 매트, 글리터)
+  shape: string;     // 1개만 (라운드, 아몬드, 오벌, 스퀘어, 코핀)
+  length: string;    // 1개만 (Short, Medium, Long)
+  tpo: string[];     // 최대 3개 (데일리, 파티, 웨딩, 공연)
+  ab: string;        // 1개만 (A/B or 브랜드)
+  nation: string;    // 1개만 (K네일, J네일, 기타)
+}
+
+interface NailProductOptions {
+  lengthCustomizable: boolean;    // 길이 커스텀 가능 여부
+  shapeCustomizable: boolean;     // 모양 커스텀 가능 여부
+  designCustomizable: boolean;    // 디자인 커스텀 가능 여부
+}
+```
+
+#### 2.0.3 완전한 상품 구조 (s3Key 제거됨)
+```typescript
+interface Product {
+  // 기본 정보
+  id: string;
+  name: string;
+  description: string;
+  brand: string;
+  sku?: string;
+  
+  // 가격 정보
+  price: number;
+  originalPrice?: number;      // 원가 (할인 전 가격)
+  salePercentage?: number;     // 할인율
+  
+  // 상태 및 메타
+  status: ProductStatus;
+  isActive: boolean;
+  featured: boolean;
+  isNew?: boolean;
+  tags?: string[];
+  
+  // 이미지
+  mainImage: ProductImage;
+  detailImages: ProductImage[];
+  
+  // 네일 전용 정보
+  nailCategories?: Partial<NailCategories>;
+  nailShape?: NailShape;
+  nailLength?: NailLength;
+  nailOptions?: NailProductOptions;
+  
+  // 재고 및 배송
+  stock: number;
+  inventory?: {
+    stockQuantity: number;
+    lowStockThreshold: number;
+    isUnlimitedStock: boolean;
+  };
+  shipping?: {
+    processingDays: number;      // 제작 소요시간 (필수)
+    weight?: number;
+    isFreeShipping: boolean;
+    shippingCost: number;
+    estimatedDeliveryDays: number;
+  };
+  
+  // 리뷰 및 평점
+  rating: {
+    average: number;
+    count: number;
+  };
+  
+  // 판매자 정보
+  seller: {
+    id: string;
+    name: string;
+    businessNumber?: string;
+  };
+  
+  // 시간 정보
+  createdAt: string;
+  updatedAt?: string;
+  publishedAt?: string;
+}
+```
+
 ### 2.1 상품 목록 조회
 - **엔드포인트**: `GET /api/products`
 - **파일 위치**: `packages/web/src/App.tsx` (카테고리별, 검색별 상품 표시)
 - **구현 상태**: ❌ 미구현
 - **쿼리 파라미터**:
   ```
-  page=1&limit=20&category=beauty&brand=handy&search=네일&sort=newest&minPrice=10000&maxPrice=50000
+  page=1&limit=20
+  &category=네일 팁
+  &brand=handy
+  &search=네일
+  &sortBy=newest&sortOrder=desc
+  &minPrice=10000&maxPrice=50000
+  &nailShape=ALMOND
+  &nailLength=SHORT
+  &status=active
+  &sellerId=seller123
   ```
-- **응답 데이터**:
-  ```json
-  {
-    "success": true,
-    "products": [
-      {
-        "id": "prod123",
-        "name": "Glossy Almond Tip – Milk Beige",
-        "brand": "Handy",
-        "price": 29000,
-        "salePrice": 23200,
-        "discountRate": 20,
-        "image": "https://example.com/product1.jpg",
-        "images": ["url1.jpg", "url2.jpg"],
-        "rating": 4.5,
-        "reviewCount": 128,
-        "category": "네일팁",
-        "tags": ["신상", "베스트"],
-        "stock": 50,
-        "isNew": true
-      }
-    ],
-    "pagination": {
-      "currentPage": 1,
-      "totalPages": 10,
-      "totalItems": 200,
-      "hasNext": true,
-      "hasPrevious": false
-    }
-  }
-  ```
+- **응답 데이터**: 위의 Product 타입 구조 사용
 
 ### 2.2 상품 상세 조회
 - **엔드포인트**: `GET /api/products/{id}`
@@ -282,6 +358,105 @@
   {
     "success": true,
     "brands": ["Handy", "OHORA", "DASHING DIVA", "KISS"]
+  }
+  ```
+
+### 2.6 상품 생성 (판매자용)
+- **엔드포인트**: `POST /api/seller/products`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerProductForm)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **요청 데이터**:
+  ```json
+  {
+    "name": "Glossy Almond Tip – Milk Beige",
+    "description": "상품 상세 설명",
+    "category": "네일 팁",
+    "brand": "Handy",
+    "price": 29000,
+    "originalPrice": 35000,
+    "status": "active",
+    "nailCategories": {
+      "style": ["신상", "심플"],
+      "color": ["뉴트럴", "핑크 계열"],
+      "texture": ["젤"],
+      "shape": "아몬드",
+      "length": "Short",
+      "tpo": ["데일리", "파티"],
+      "nation": "K네일"
+    },
+    "nailShape": "ALMOND",
+    "nailLength": "SHORT",
+    "nailOptions": {
+      "lengthCustomizable": false,
+      "shapeCustomizable": false,
+      "designCustomizable": false
+    },
+    "stockQuantity": 100,
+    "lowStockThreshold": 10,
+    "isUnlimitedStock": false,
+    "shipping": {
+      "processingDays": 3,
+      "weight": 50,
+      "isFreeShipping": true,
+      "shippingCost": 0,
+      "estimatedDeliveryDays": 2
+    },
+    "specifications": {
+      "재질": "ABS, UV Gel",
+      "텍스쳐": "매트/글로시"
+    },
+    "tags": ["신상", "베스트"]
+  }
+  ```
+
+### 2.7 상품 수정 (판매자용)
+- **엔드포인트**: `PUT /api/seller/products/{id}`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerProductForm)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **요청 데이터**: 상품 생성과 동일 (부분 업데이트 지원)
+
+### 2.8 상품 삭제 (판매자용)
+- **엔드포인트**: `DELETE /api/seller/products/{id}`
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+
+### 2.9 판매자 상품 목록 조회
+- **엔드포인트**: `GET /api/seller/products`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerProducts)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **쿼리 파라미터**: 
+  ```
+  page=1&limit=20&status=active&search=네일&sortBy=createdAt&sortOrder=desc
+  ```
+
+### 2.10 상품 이미지 업로드 (판매자용)
+- **엔드포인트**: `POST /api/seller/products/{id}/images`
+- **파일 위치**: 상품 등록 페이지 이미지 업로드
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **Content-Type**: `multipart/form-data`
+- **요청 데이터**:
+  ```
+  files: File[]
+  descriptions: string[] (선택사항)
+  isMainImage: boolean[] (메인 이미지 여부)
+  ```
+
+### 2.11 상품 대량 업데이트 (판매자용)
+- **엔드포인트**: `PUT /api/seller/products/bulk`
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **요청 데이터**:
+  ```json
+  {
+    "productIds": ["prod1", "prod2", "prod3"],
+    "updates": {
+      "status": "inactive",
+      "tags": ["세일"]
+    }
   }
   ```
 
@@ -621,7 +796,302 @@
 
 ---
 
-## 🎁 7. 쿠폰/포인트 API
+## 🏪 7. 판매자 센터 (Seller Center) API
+
+### 7.1 판매자 대시보드 데이터
+- **엔드포인트**: `GET /api/seller/dashboard`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerDashboard)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **응답 데이터**:
+  ```json
+  {
+    "success": true,
+    "dashboard": {
+      "sales": {
+        "today": 1250000,
+        "month": 45800000,
+        "lastMonth": 38200000,
+        "growth": 19.9
+      },
+      "orders": {
+        "pending": 12,
+        "processing": 8,
+        "shipped": 45,
+        "delivered": 128,
+        "cancelled": 3
+      },
+      "products": {
+        "total": 67,
+        "active": 58,
+        "inactive": 9,
+        "outOfStock": 5
+      },
+      "reviews": {
+        "total": 234,
+        "unread": 3,
+        "averageRating": 4.7,
+        "pending": 12
+      }
+    }
+  }
+  ```
+
+### 7.2 판매자 주문 관리
+- **엔드포인트**: `GET /api/seller/orders`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerOrders)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **쿼리 파라미터**:
+  ```
+  page=1&limit=20&status=pending&search=주문번호&sortBy=createdAt&sortOrder=desc
+  ```
+- **응답 데이터**:
+  ```json
+  {
+    "success": true,
+    "orders": [
+      {
+        "id": "order123",
+        "orderNumber": "2024081801",
+        "status": "pending",
+        "customer": {
+          "name": "김**",
+          "email": "ki***@email.com"
+        },
+        "items": [
+          {
+            "productId": "prod123",
+            "name": "Glossy Almond Tip – Milk Beige",
+            "quantity": 2,
+            "price": 29000,
+            "subtotal": 58000
+          }
+        ],
+        "totalAmount": 58000,
+        "paymentStatus": "paid",
+        "createdAt": "2024-08-18T10:00:00Z",
+        "shippingAddress": {
+          "recipient": "김길동",
+          "phone": "010-****-5678",
+          "address": "서울시 강남구 ***"
+        }
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 10,
+      "totalItems": 200
+    }
+  }
+  ```
+
+### 7.3 주문 상태 업데이트
+- **엔드포인트**: `PUT /api/seller/orders/{id}/status`
+- **파일 위치**: 판매자 주문 관리 페이지
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **요청 데이터**:
+  ```json
+  {
+    "status": "processing",
+    "trackingNumber": "123456789",
+    "courier": "한진택배",
+    "notes": "오늘 출고 예정입니다."
+  }
+  ```
+
+### 7.4 판매자 리뷰 관리
+- **엔드포인트**: `GET /api/seller/reviews`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerReviews)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **쿼리 파라미터**:
+  ```
+  page=1&limit=20&status=unread&rating=5&productId=prod123
+  ```
+- **응답 데이터**:
+  ```json
+  {
+    "success": true,
+    "reviews": [
+      {
+        "id": "review123",
+        "productId": "prod123",
+        "productName": "Glossy Almond Tip – Milk Beige",
+        "customer": {
+          "name": "김**",
+          "maskedEmail": "ki***@email.com"
+        },
+        "rating": 5,
+        "content": "색감이 정말 예쁘고 착용감도 좋아요!",
+        "images": ["review1.jpg", "review2.jpg"],
+        "isRead": false,
+        "hasReply": false,
+        "reply": null,
+        "createdAt": "2024-08-18T10:00:00Z"
+      }
+    ],
+    "stats": {
+      "total": 234,
+      "unread": 12,
+      "replied": 180,
+      "pending": 42,
+      "averageRating": 4.7
+    }
+  }
+  ```
+
+### 7.5 리뷰 답글 작성/수정
+- **엔드포인트**: `POST /api/seller/reviews/{id}/reply`
+- **파일 위치**: 판매자 리뷰 관리 페이지
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **요청 데이터**:
+  ```json
+  {
+    "content": "귀중한 리뷰 감사합니다. 앞으로도 좋은 제품으로 보답하겠습니다."
+  }
+  ```
+
+### 7.6 리뷰 읽음 처리
+- **엔드포인트**: `PUT /api/seller/reviews/{id}/read`
+- **파일 위치**: 판매자 리뷰 관리 페이지
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+
+### 7.7 판매자 분석 데이터
+- **엔드포인트**: `GET /api/seller/analytics`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerAnalytics)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **쿼리 파라미터**:
+  ```
+  period=30d&startDate=2024-07-01&endDate=2024-08-01
+  ```
+- **응답 데이터**:
+  ```json
+  {
+    "success": true,
+    "analytics": {
+      "salesTrend": [
+        {
+          "date": "2024-08-01",
+          "sales": 1200000,
+          "orders": 45,
+          "visitors": 320
+        }
+      ],
+      "topProducts": [
+        {
+          "productId": "prod123",
+          "name": "Glossy Almond Tip – Milk Beige",
+          "sales": 890000,
+          "quantity": 35,
+          "views": 1250
+        }
+      ],
+      "customerAnalytics": {
+        "newCustomers": 23,
+        "returningCustomers": 67,
+        "averageOrderValue": 45600
+      },
+      "conversionRate": 3.2,
+      "refundRate": 1.8
+    }
+  }
+  ```
+
+### 7.8 정산 내역 조회
+- **엔드포인트**: `GET /api/seller/settlements`
+- **파일 위치**: `packages/web/src/components/pages/SellerPages.tsx` (SellerSettlement)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **쿼리 파라미터**:
+  ```
+  page=1&limit=20&status=pending&year=2024&month=8
+  ```
+- **응답 데이터**:
+  ```json
+  {
+    "success": true,
+    "settlements": [
+      {
+        "id": "settlement123",
+        "period": "2024-08",
+        "totalSales": 12500000,
+        "commission": 1250000,
+        "settlementAmount": 11250000,
+        "status": "pending",
+        "requestedAt": "2024-08-31T10:00:00Z",
+        "processedAt": null,
+        "details": {
+          "orderCount": 456,
+          "refundAmount": 340000,
+          "shippingFee": 120000
+        }
+      }
+    ],
+    "summary": {
+      "currentBalance": 2340000,
+      "pendingSettlement": 11250000,
+      "totalEarnings": 45600000
+    }
+  }
+  ```
+
+### 7.9 정산 요청
+- **엔드포인트**: `POST /api/seller/settlements/request`
+- **파일 위치**: 판매자 정산 관리 페이지
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **요청 데이터**:
+  ```json
+  {
+    "amount": 2340000,
+    "bankAccount": {
+      "bank": "국민은행",
+      "accountNumber": "123-456-789012",
+      "accountHolder": "홍길동"
+    }
+  }
+  ```
+
+### 7.10 판매자 정보 조회/수정
+- **엔드포인트**: 
+  - `GET /api/seller/profile` (조회)
+  - `PUT /api/seller/profile` (수정)
+- **구현 상태**: ❌ 미구현
+- **헤더**: `Authorization: Bearer {seller_token}`
+- **응답 데이터** (조회):
+  ```json
+  {
+    "success": true,
+    "seller": {
+      "id": "seller123",
+      "email": "seller@handy-server.com",
+      "name": "홍길동",
+      "businessInfo": {
+        "businessName": "한디 네일 스튜디오",
+        "businessNumber": "123-45-67890",
+        "representative": "홍길동",
+        "phone": "010-1234-5678",
+        "address": "서울시 강남구 테헤란로 123"
+      },
+      "bankAccount": {
+        "bank": "국민은행",
+        "accountNumber": "123-456-789012",
+        "accountHolder": "홍길동"
+      },
+      "status": "active",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+
+---
+
+## 🎁 8. 쿠폰/포인트 API
 
 ### 7.1 쿠폰 조회
 - **엔드포인트**: `GET /api/user/coupons`
@@ -840,42 +1310,58 @@
 
 ---
 
-## 📊 14. API 구현 현황
+## 📊 15. API 구현 현황
 
-### 14.1 구현 우선순위 (Phase 1)
+### 15.1 구현 우선순위 (Phase 1) - 기본 쇼핑몰
 1. **인증 API** (로그인, 회원가입, 프로필) - 🔴 필수
-2. **상품 API** (목록, 상세, 카테고리) - 🔴 필수
+2. **상품 API** (목록, 상세, 카테고리, 검색) - 🔴 필수
 3. **장바구니 API** (조회, 추가, 삭제) - 🔴 필수
-4. **주문 API** (생성, 조회) - 🟡 중요
+4. **주문 API** (생성, 조회) - 🔴 필수
 
-### 14.2 구현 우선순위 (Phase 2)
-1. **결제 API** - 🟡 중요
-2. **리뷰 API** - 🟡 중요
-3. **소셜 로그인** - 🟡 중요
-4. **이미지 업로드** - 🟢 선택
+### 15.2 구현 우선순위 (Phase 2) - 판매자 센터
+1. **판매자 인증 API** - 🔴 필수
+2. **상품 관리 API** (생성, 수정, 삭제, 이미지 업로드) - 🔴 필수
+3. **판매자 주문 관리 API** - 🔴 필수
+4. **판매자 대시보드 API** - 🟡 중요
+5. **판매자 리뷰 관리 API** - 🟡 중요
 
-### 14.3 구현 우선순위 (Phase 3)
+### 15.3 구현 우선순위 (Phase 3) - 고급 기능
+1. **결제 API** (카드, 간편결제) - 🟡 중요
+2. **판매자 분석 API** - 🟡 중요
+3. **정산 관리 API** - 🟡 중요
+4. **리뷰 API** (일반 사용자용) - 🟡 중요
+5. **소셜 로그인** - 🟡 중요
+
+### 15.4 구현 우선순위 (Phase 4) - 부가 기능
 1. **쿠폰/포인트** - 🟢 선택
 2. **QR 코드** - 🟢 선택
-3. **고급 기능** (추천, 검색) - 🟢 선택
+3. **이미지 업로드 (S3)** - 🟢 선택
+4. **고급 검색/필터링** - 🟢 선택
+
+### 15.5 새로 추가된 API (v1.1)
+- **상품 데이터 타입 구조 완전 정의** (네일 전용 카테고리 포함)
+- **판매자 센터 전용 API 10개** (대시보드, 상품 관리, 주문 관리, 리뷰 관리, 분석, 정산 등)
+- **네일 카테고리 시스템** (최대 선택 개수 제한 포함)
+- **상품 이미지 관리 API** (메인/상세 이미지 구분)
+- **제작 소요시간 필드** 추가 (네일 상품 특성 반영)
 
 ---
 
-## 🧪 15. 테스트 계정 정보
+## 🧪 16. 테스트 계정 정보
 
-### 15.1 일반 사용자
+### 16.1 일반 사용자
 ```
 이메일: user@test.com
 비밀번호: password123
 ```
 
-### 15.2 관리자
+### 16.2 관리자
 ```
 이메일: admin@handy-server.com
 비밀번호: admin123456
 ```
 
-### 15.3 판매자
+### 16.3 판매자
 ```
 이메일: seller@handy-server.com
 비밀번호: seller123456
@@ -883,7 +1369,7 @@
 
 ---
 
-## 📞 16. 문의 및 지원
+## 📞 17. 문의 및 지원
 
 - **프론트엔드 팀**: frontend-team@handy.com
 - **백엔드 팀**: backend-team@handy.com
@@ -892,5 +1378,5 @@
 
 ---
 
-**마지막 업데이트**: 2024-08-18  
-**다음 리뷰 예정**: 2024-08-25
+**마지막 업데이트**: 2025-08-19 (v1.1 - Product 타입 구조 및 판매자 센터 API 추가)  
+**다음 리뷰 예정**: 2025-08-26
