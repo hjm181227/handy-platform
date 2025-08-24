@@ -8,7 +8,19 @@ export interface ApiConfig {
 
 // 환경별 API 설정
 export const API_CONFIG: Record<string, ApiConfig> = {
+  local: {
+    baseURL: 'http://localhost:11000',
+    timeout: 10000,
+    retryAttempts: 3,
+    retryDelay: 1000,
+  },
   development: {
+    baseURL: 'http://15.165.5.64:3001',
+    timeout: 10000,
+    retryAttempts: 3,
+    retryDelay: 1000,
+  },
+  stage: {
     baseURL: 'http://15.165.5.64:3001',
     timeout: 10000,
     retryAttempts: 3,
@@ -24,29 +36,64 @@ export const API_CONFIG: Record<string, ApiConfig> = {
 
 // 현재 환경 감지
 export const getCurrentEnvironment = (): string => {
+  // 명시적 로컬 환경 설정
+  if (typeof process !== 'undefined' && process.env?.API_ENV === 'local') {
+    return 'local';
+  }
+  if (typeof window !== 'undefined' && (window as any).__API_ENV__ === 'local') {
+    return 'local';
+  }
+
   // React Native 환경
   if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
     return process.env.REACT_NATIVE_ENV;
   }
 
-  // Vite 환경 (웹)
-  if (typeof window !== 'undefined' && (window as any).__VITE_ENV__) {
-    return (window as any).__VITE_ENV__;
+  // Vite 환경 (웹) - 전역 변수 사용
+  if (typeof window !== 'undefined') {
+    // Vite에서 설정한 환경 변수 확인
+    const viteMode = (window as any).__VITE_MODE__ || (globalThis as any).__VITE_MODE__;
+    if (viteMode) {
+      if (viteMode === 'local') return 'local';
+      if (viteMode === 'development') return 'development';
+      if (viteMode === 'stage') return 'stage';
+      if (viteMode === 'production') return 'production';
+    }
+  }
+
+  // 웹에서 전역 변수 확인
+  if (typeof window !== 'undefined') {
+    const windowEnv = (window as any).__VITE_ENV__ || (window as any).__APP_ENV__;
+    if (windowEnv) return windowEnv;
   }
 
   // Node.js 환경
   if (typeof process !== 'undefined' && process.env?.NODE_ENV) {
+    // 로컬 개발 환경 자동 감지 (localhost 포트 체크)
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+      if (window.location?.hostname === 'localhost' || window.location?.hostname === '127.0.0.1') {
+        return 'local';
+      }
+    }
     return process.env.NODE_ENV;
+  }
+
+  // 웹 환경에서 hostname 기반 자동 감지
+  if (typeof window !== 'undefined') {
+    const hostname = window.location?.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'local';
+    }
   }
 
   // 기본값
   return 'development';
 };
 
-// 웹 환경에서 프록시 사용 여부 감지
+// 웹 환경에서 프록시 사용 여부 감지 (프록시는 사용하지 않음)
 export const shouldUseProxy = (): boolean => {
-  // 웹 환경이고 개발 모드일 때 프록시 사용
-  return typeof window !== 'undefined' && getCurrentEnvironment() === 'development';
+  // 프록시를 사용하지 않고 직접 서버 URL로 연결
+  return false;
 };
 
 // 현재 환경의 API 설정 가져오기
@@ -54,14 +101,7 @@ export const getApiConfig = (): ApiConfig => {
   const env = getCurrentEnvironment();
   const config = API_CONFIG[env] || API_CONFIG.development;
   
-  // 웹 개발 환경에서 프록시 사용 시 baseURL을 빈 문자열로 설정
-  if (shouldUseProxy()) {
-    return {
-      ...config,
-      baseURL: '' // Vite 프록시가 /api 경로를 처리
-    };
-  }
-  
+  // 항상 실제 서버 URL 사용
   return config;
 };
 
@@ -305,6 +345,11 @@ export const API_ENDPOINTS = {
 // 환경별 디버그 설정
 export const DEBUG_CONFIG = {
   development: {
+    enableApiLogs: true,
+    enableNetworkLogs: true,
+    enableErrorLogs: true,
+  },
+  stage: {
     enableApiLogs: true,
     enableNetworkLogs: true,
     enableErrorLogs: true,

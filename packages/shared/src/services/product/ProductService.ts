@@ -4,7 +4,8 @@ import {
   Product, 
   ProductsResponse, 
   ProductFilters, 
-  ProductCategory 
+  ProductCategory,
+  CreateProductRequest
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -53,6 +54,20 @@ export abstract class BaseProductService extends BaseApiService {
       ...filters,
       search: query
     });
+  }
+
+  // 판매자 상품 등록 (판매자만 사용 가능)
+  async createProduct(productData: CreateProductRequest): Promise<ApiResponse<{ product: Product }>> {
+    return this.request<ApiResponse<{ product: Product }>>(
+      API_ENDPOINTS.SELLER.PRODUCT_CREATE,
+      {
+        method: 'POST',
+        body: JSON.stringify(productData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
 }
 

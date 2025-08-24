@@ -126,6 +126,9 @@ cd ../../..
 # 개발 환경 (로컬 서버 연동) - http://localhost:3001
 npm run web:dev
 
+# 스테이지 환경 (개발 서버 연동, 스테이지 DB) - http://localhost:3001
+npm run web:stage
+
 # 프로덕션 환경 (실제 서버 연동) - http://localhost:3001  
 npm run web:prod
 
@@ -157,13 +160,17 @@ npm run android:prod
 
 # 전체 시스템 동시 실행
 npm run dev:all        # 개발 환경
+npm run dev:all:stage  # 스테이지 환경
 npm run dev:all:prod   # 프로덕션 환경
 ```
 
 #### 🏗️ 빌드 & 정리
 ```bash
 # 웹 빌드
-npm run web:build
+npm run web:build        # 기본 빌드
+npm run web:build:dev    # 개발 환경용 빌드
+npm run web:build:stage  # 스테이지 환경용 빌드
+npm run web:build:prod   # 프로덕션 환경용 빌드
 
 # 프로젝트 클린업
 npm run clean
@@ -368,8 +375,9 @@ npm run web:prod # 프로덕션환경
 ## API 환경 설정
 
 ### 환경별 서버 URL
-- **개발 환경**: `http://localhost:5000` (로컬 서버)
-- **프로덕션 환경**: `http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com`
+- **개발 환경**: `http://15.165.5.64:3001` (개발 서버)
+- **스테이지 환경**: `http://15.165.5.64:3001` (개발 서버와 동일, 스테이지 DB)
+- **프로덕션 환경**: `http://15.165.5.64:3000` (프로덕션 서버)
 
 ### 테스트 계정
 ```javascript
@@ -396,6 +404,12 @@ const sellerUser = {
   email: "seller@handy-server.com",
   password: "seller123456"
 }
+
+// 스테이지 환경 판매자 계정
+const stageSeller = {
+  email: "seller@stage.handy-server.com", 
+  password: "password123"
+}
 ```
 
 ### API 사용 예시
@@ -412,6 +426,7 @@ import { Product, Cart, User } from '@handy-platform/shared';
 
 ### 환경 설정 파일
 - `packages/web/.env.development` - 웹 개발환경 설정
+- `packages/web/.env.stage` - 웹 스테이지환경 설정
 - `packages/web/.env.production` - 웹 프로덕션환경 설정
 - `packages/shared/src/config/api.ts` - 공통 API 설정
 

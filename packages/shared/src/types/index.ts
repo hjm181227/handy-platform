@@ -188,48 +188,38 @@ export interface ProductsResponse {
   pagination: PaginationInfo;
 }
 
-// 상품 생성 요청 인터페이스 (클라이언트 -> 서버)
+// 상품 생성 요청 인터페이스 (백엔드 API 스펙에 맞게 수정)
 export interface CreateProductRequest {
   // 기본 정보
   name: string;
-  description: string;
-  category: string;  // 네일 팁, 젤 네일, 네일 아트 등
-  brand?: string;
-  
-  // 가격 정보
+  description: string;  // 최소 10자
   price: number;
-  originalPrice?: number;
+  category: ProductCategory;
+  brand: string;
+  stock: number;
+  sku: string;  // 고유 SKU
   
-  // 상태
-  status: ProductStatus;
+  // 이미지 (임시 S3 URL에서 실제 저장소로 이동됨)
+  mainImage: {
+    imageUrl: string;  // 임시 S3 URL
+    filename: string;
+  };
+  detailImages?: Array<{
+    imageUrl: string;  // 임시 S3 URL
+    filename: string;
+    description?: string;
+  }>;
   
-  // 네일 전용 정보
-  nailCategories?: Partial<NailCategories>;
-  nailShape?: NailShape;
-  nailLength?: NailLength;
-  nailOptions?: NailProductOptions;
-  
-  // 재고 정보
-  stockQuantity?: number;
-  lowStockThreshold?: number;
-  isUnlimitedStock?: boolean;
-  
-  // 배송 정보
-  weight?: number;
-  isFreeShipping?: boolean;
-  shippingCost?: number;
-  processingDays: number;  // 제작 소요시간 (필수)
-  estimatedDeliveryDays?: number;
-  
-  // SEO (선택사항)
-  metaTitle?: string;
-  metaDescription?: string;
-  keywords?: string[];
-  slug?: string;
-  
-  // 기타
+  // 선택적 정보
   specifications?: ProductSpecifications;
   tags?: string[];
+  
+  // 할인 정보
+  discount?: {
+    percentage: number;
+    startDate: string;  // YYYY-MM-DD
+    endDate: string;    // YYYY-MM-DD
+  };
 }
 
 // 상품 업데이트 요청 인터페이스
