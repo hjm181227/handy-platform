@@ -133,21 +133,18 @@ export const API_ENDPOINTS = {
     LINKED: '/api/auth/oauth/linked',
   },
 
-  // 상품
+  // 상품 (서버 API 스펙에 완전 일치)
   PRODUCTS: {
-    LIST: '/api/products',
-    DETAIL: (id: string) => `/api/products/${id}`,
-    CREATE: '/api/products',
-    UPDATE: (id: string) => `/api/products/${id}`,
-    DELETE: (id: string) => `/api/products/${id}`,
-    CATEGORIES: '/api/products/categories',
-    BRANDS: '/api/products/brands',
-    FEATURED: '/api/products/featured',
-    SEARCH_SUGGESTIONS: '/api/products/search/suggestions',
+    LIST: '/api/products',                                    // GET / - 상품 목록 조회
+    DETAIL: (productId: string) => `/api/products/${productId}`,  // GET /:productId - 상품 상세
+    SELLER_PRODUCTS: (sellerId: string) => `/api/products/seller/${sellerId}`, // GET /seller/:sellerId
+    CREATE: '/api/products',                                 // POST / - 상품 생성 (판매자/관리자)
+    UPDATE: (productId: string) => `/api/products/${productId}`,     // PUT /:productId - 상품 수정
+    DELETE: (productId: string) => `/api/products/${productId}`,     // DELETE /:productId - 상품 삭제
 
-    // 리뷰
-    REVIEWS: (id: string) => `/api/products/${id}/reviews`,
-    REVIEW_CREATE: (id: string) => `/api/products/${id}/reviews`,
+    // 리뷰 시스템
+    REVIEWS: (productId: string) => `/api/products/${productId}/reviews`,
+    REVIEW_CREATE: (productId: string) => `/api/products/${productId}/reviews`,
     REVIEW_UPDATE: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}`,
     REVIEW_DELETE: (productId: string, reviewId: string) =>
@@ -272,32 +269,31 @@ export const API_ENDPOINTS = {
     SELLER_DETAIL: (id: string) => `/api/admin/sellers/${id}`,
   },
 
-  // 판매자 센터
+  // 판매자 센터 (서버 API 스펙에 완전 일치)
   SELLER: {
-    REGISTER: '/api/seller/register',
-    PROFILE: '/api/seller/profile',
-    UPDATE_PROFILE: '/api/seller/profile',
-    DASHBOARD: '/api/seller/dashboard',
+    // 판매자 등록 및 프로필
+    REGISTER: '/api/seller/register',              // POST /register
+    PROFILE: '/api/seller/profile',                // GET /profile
+    UPDATE_PROFILE: '/api/seller/profile',         // PUT /profile
+    DASHBOARD: '/api/seller/dashboard',            // GET /dashboard
 
-    // 상품 관리
-    PRODUCTS: '/api/seller/products',
-    PRODUCT_CREATE: '/api/seller/products',
-    PRODUCT_UPDATE: (id: string) => `/api/seller/products/${id}`,
-    PRODUCT_DELETE: (id: string) => `/api/seller/products/${id}`,
-    PRODUCT_STOCK: (id: string) => `/api/seller/products/${id}/stock`,
-    PRODUCT_STATUS: (id: string) => `/api/seller/products/${id}/status`,
-    PRODUCT_ANALYTICS: '/api/seller/products/analytics/overview',
+    // 상품 관리 (판매자 전용)
+    PRODUCTS: '/api/seller/products',                                    // GET / - 판매자 상품 목록
+    PRODUCT_DETAIL: (productId: string) => `/api/seller/products/${productId}`,  // GET /:id
+    PRODUCT_STOCK: (productId: string) => `/api/seller/products/${productId}/stock`,     // PATCH /:id/stock
+    PRODUCT_STATUS: (productId: string) => `/api/seller/products/${productId}/status`,   // PATCH /:id/status
+    PRODUCT_ANALYTICS: '/api/seller/products/analytics/overview',        // GET /analytics/overview
 
     // 주문 관리
-    ORDERS: '/api/seller/orders',
-    ORDER_STATUS: (id: string) => `/api/seller/orders/${id}/status`,
-    ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',
+    ORDERS: '/api/seller/orders',                                        // GET /
+    ORDER_STATUS: (orderId: string) => `/api/seller/orders/${orderId}/status`,    // PATCH /:id/status
+    ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',           // GET /analytics/overview
 
     // 정산 관리
-    SETTLEMENTS: '/api/seller/settlement',
-    SETTLEMENT_REQUEST: '/api/seller/settlement/request',
-    SETTLEMENT_SUMMARY: '/api/seller/settlement/summary/overview',
-    SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',
+    SETTLEMENTS: '/api/seller/settlement',                               // GET /
+    SETTLEMENT_REQUEST: '/api/seller/settlement/request',                // POST /request
+    SETTLEMENT_SUMMARY: '/api/seller/settlement/summary/overview',       // GET /summary/overview
+    SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',     // GET /available/amount
   },
 
   // QR 코드

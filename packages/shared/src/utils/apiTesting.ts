@@ -106,14 +106,10 @@ export class ApiTester {
     // 상품 목록 조회
     tests.push(await this.testEndpoint(API_ENDPOINTS.PRODUCTS.LIST, 'GET'));
     
-    // 카테고리 목록 조회
-    tests.push(await this.testEndpoint(API_ENDPOINTS.PRODUCTS.CATEGORIES, 'GET'));
+    // 상품 목록 조회
+    tests.push(await this.testEndpoint(API_ENDPOINTS.PRODUCTS.LIST, 'GET'));
     
-    // 브랜드 목록 조회
-    tests.push(await this.testEndpoint(API_ENDPOINTS.PRODUCTS.BRANDS, 'GET'));
     
-    // 추천 상품 조회
-    tests.push(await this.testEndpoint(API_ENDPOINTS.PRODUCTS.FEATURED, 'GET'));
     
     // 업로드 설정 조회
     tests.push(await this.testEndpoint(API_ENDPOINTS.UPLOAD.CONFIG, 'GET'));

@@ -3,7 +3,7 @@ import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
 import { imageService, productService, sellerService } from '../../services/apiService';
-import type { CreateProductRequest, NailCategories, NailLength, NailShape, ProductCategory } from '../../types';
+import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions } from '../../types';
 
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
@@ -340,6 +340,11 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   const [ products, setProducts ] = useState<any[]>([]);
   const [ isLoading, setIsLoading ] = useState(true);
   const [ error, setError ] = useState<string | null>(null);
+  
+  // 삭제 관련 상태
+  const [ showDeleteModal, setShowDeleteModal ] = useState(false);
+  const [ productToDelete, setProductToDelete ] = useState<any | null>(null);
+  const [ isDeleting, setIsDeleting ] = useState(false);
 
   // 상품 목록 로드
   useEffect(() => {
@@ -363,6 +368,11 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           // 첫 번째 상품의 구조 확인
           if (response.products && response.products.length > 0) {
             console.log('First product structure:', response.products[0]);
+            console.log('Product ID fields:', {
+              _id: response.products[0]._id,
+              id: response.products[0].id,
+              productId: response.products[0].productId
+            });
           }
           setProducts(response.products || []);
         } catch (apiError) {
@@ -432,10 +442,52 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       case 'inactive':
         return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">비활성</span>;
       case 'outOfStock':
-        return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">품절</span>;
+        return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">주문 중단</span>;
       default:
-        return null;
+        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">알 수 없음</span>;
     }
+  };
+
+  // 삭제 관련 함수들
+  const handleDeleteClick = (product: any) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      console.log('Deleting product:', productToDelete.productId);
+
+      // API 호출
+      await sellerService.deleteProduct(productToDelete.productId);
+
+      // 성공 시 목록에서 제거
+      setProducts(prevProducts => 
+        prevProducts.filter(p => p.productId !== productToDelete.productId)
+      );
+
+      // 모달 닫기
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+
+      // 성공 메시지
+      alert('상품이 성공적으로 삭제되었습니다.');
+
+    } catch (error) {
+      console.error('Product delete failed:', error);
+      const errorMessage = error instanceof Error ? error.message : '상품 삭제에 실패했습니다.';
+      alert(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setProductToDelete(null);
   };
 
   return (
@@ -538,12 +590,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품
                     </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리
-                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가격
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">재고
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태
                     </th>
@@ -557,12 +604,12 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                   {filteredProducts.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
+                    <tr key={product.productId} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <img 
-                            className="h-12 w-12 rounded-lg object-cover bg-gray-100" 
-                            src={product.mainImage?.url || product.image || product.imageUrl || 'https://via.placeholder.com/48x48?text=No+Image'} 
+                          <img
+                            className="h-12 w-12 rounded-lg object-cover bg-gray-100"
+                            src={product.mainImageUrl || ''}
                             alt={product.name}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -575,39 +622,37 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {product.brand || product.category || '네일 제품'}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {money(product.price)}원
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className={(product.stock || 0) === 0 ? 'text-red-600 font-medium' : ''}>
-                        {(product.stock || 0)}개
-                      </span>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(product.isActive ? 'active' : 'inactive')}
+                        {getStatusBadge(product.status || (product.isActive ? 'active' : 'inactive'))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {(product.sales || 0)}개
+                        {(product.stats?.ordersCount || 0)}개
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {(product.views || 0).toLocaleString()}회
+                        {(product.stats?.viewsCount || 0).toLocaleString()}회
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => onGo(`/seller/products/${product.id}/edit`)}
+                            onClick={() => onGo(`/seller/products/${product.productId}/edit`)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             수정
                           </button>
                           <button
-                            onClick={() => onGo(`/seller/products/${product.id}/analytics`)}
+                            onClick={() => onGo(`/seller/products/${product.productId}/analytics`)}
                             className="text-green-600 hover:text-green-900"
                           >
                             분석
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(product)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            삭제
                           </button>
                         </div>
                       </td>
@@ -645,6 +690,61 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           )}
         </div>
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && productToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">상품 삭제</h3>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-500">
+                상품을 삭제하시겠습니까?
+              </p>
+              <p className="text-sm font-medium text-gray-900 mt-2">
+                "{productToDelete.name}"
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                이 작업은 되돌릴 수 없습니다.
+              </p>
+            </div>
+
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    삭제 중...
+                  </div>
+                ) : (
+                  '삭제'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SellerLayout>
   );
 }
@@ -657,33 +757,119 @@ interface DetailImage {
   description: string;
 }
 
-// 상품 등록/수정 페이지
+// 네일팁 전용 상품 등록/수정 페이지 (서버 API 스펙 완전 일치)
 export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => void; productId?: string }) {
   const isEdit = !!productId;
   const [ formData, setFormData ] = useState({
+    // 기본 정보
     name: '',
-    category: '네일 팁',
     description: '',
+    shortDescription: '',
+    brand: '네일 제품',
+    sku: '',
     price: '',
+    salePrice: '',
+    discountRate: '',
+    stockQuantity: '100',
+    processingDays: '3',
     status: 'active',
-    // 네일 관련 정보
-    length: 'MEDIUM' as NailLength,
-    shape: 'ALMOND' as NailShape,
-    productionDays: '',
+
+    // 네일 전용 필드
+    nailShape: 'ROUND' as NailShape,
+    nailLength: 'MEDIUM' as NailLength,
     lengthCustomizable: false,
     shapeCustomizable: false,
     designCustomizable: false,
-    // 이미지
-    mainImage: null as File | null,
-    mainImageUrl: '',
-    detailImages: [] as DetailImage[]
-  });
 
-  // 네일 카테고리 상태
-  const [ nailCategories, setNailCategories ] = useState<Partial<NailCategories>>({});
+    // 네일 카테고리
+    nailCategories: {
+      style: [] as string[],
+      color: [] as string[],
+      texture: [] as string[],
+      tpo: [] as string[],
+      nation: 'K네일' as string
+    } as NailCategories,
+
+    // 이미지
+    mainImageUrl: '',
+    detailImages: [] as Array<{
+      url: string;
+      description?: string;
+      order: number;
+    }>,
+
+    // 상품 옵션
+    isFeatured: false,
+    isNewProduct: true,
+    tags: [] as string[]
+  });
 
   const [ isSubmitting, setIsSubmitting ] = useState(false);
   const [ error, setError ] = useState<string | null>(null);
+  const [ isLoading, setIsLoading ] = useState(false);
+
+  // 상품 수정 모드일 때 기존 상품 정보 불러오기
+  useEffect(() => {
+    if (productId && isEdit) {
+      const loadProductData = async () => {
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          console.log('Loading product data for ID:', productId);
+          const response = await sellerService.getSellerProduct(productId);
+          const product = response.product; // 판매자용 API 사용
+
+          console.log('Loaded product data:', product);
+
+          // 폼 데이터 업데이트 (새로운 타입에 맞게)
+          setFormData({
+            name: product.name || '',
+            description: product.description || '',
+            shortDescription: product.shortDescription || '',
+            brand: product.brand || '네일 제품',
+            sku: product.sku || '',
+            price: product.price?.toString() || '',
+            salePrice: product.salePrice?.toString() || '',
+            discountRate: product.discountRate?.toString() || '',
+            stockQuantity: product.stockQuantity?.toString() || '100',
+            processingDays: product.processingDays?.toString() || '3',
+
+            // 네일 전용 필드
+            nailShape: product.nailShape || 'ROUND',
+            nailLength: product.nailLength || 'MEDIUM',
+            lengthCustomizable: product.nailOptions?.lengthCustomizable || false,
+            shapeCustomizable: product.nailOptions?.shapeCustomizable || false,
+            designCustomizable: product.nailOptions?.designCustomizable || false,
+            nailCategories: product.nailCategories || {
+              style: [],
+              color: [],
+              texture: [],
+              tpo: [],
+              nation: 'K네일'
+            },
+
+            // 이미지
+            mainImageUrl: product.mainImageUrl || '',
+            detailImages: product.detailImages || [],
+
+            // 상품 옵션
+            isFeatured: product.isFeatured || false,
+            isNewProduct: product.isNewProduct || false,
+            tags: product.tags || []
+          });
+
+        } catch (error) {
+          console.error('Failed to load product data:', error);
+          setError('상품 정보를 불러오는데 실패했습니다.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadProductData();
+    }
+  }, [productId, isEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -691,140 +877,90 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
     setError(null);
 
     try {
-      // 1. 입력 데이터 검증
-      if (!formData.name || formData.name.length < 2) {
-        throw new Error('상품명은 2자 이상 입력해주세요.');
+      // 1. 입력 데이터 검증 (서버 API 스펙에 맞게)
+      if (!formData.name || formData.name.length < 2 || formData.name.length > 200) {
+        throw new Error('상품명은 2~200자 이내로 입력해주세요.');
       }
-      if (!formData.description || formData.description.length < 10) {
-        throw new Error('상품 설명은 10자 이상 입력해주세요.');
+      if (!formData.description || formData.description.length < 10 || formData.description.length > 2000) {
+        throw new Error('상품 설명은 10~2000자 이내로 입력해주세요.');
       }
       if (!formData.price || parseInt(formData.price) <= 0) {
         throw new Error('가격을 올바르게 입력해주세요.');
       }
-      if (!formData.mainImage && !formData.mainImageUrl) {
+      if (!formData.mainImageUrl) {
         throw new Error('대표 이미지를 등록해주세요.');
       }
-
-      // 2. 이미지 처리 (이미 업로드된 이미지는 URL만 사용)
-      let mainImageData = null;
-      let detailImagesData = [];
-
-      // 대표 이미지 처리
-      if (formData.mainImage && formData.mainImageUrl) {
-        // 이미 S3에 업로드된 경우 URL만 사용
-        if (formData.mainImageUrl.startsWith('http')) {
-          console.log('Using already uploaded main image:', formData.mainImageUrl);
-          mainImageData = {
-            imageUrl: formData.mainImageUrl,
-            filename: formData.mainImage.name
-          };
-        } else {
-          // 로컬 미리보기인 경우 새로 업로드
-          console.log('Uploading main image to S3...');
-          const presignedResponse = await imageService.getPresignedUrl({
-            filename: formData.mainImage.name,
-            contentType: formData.mainImage.type,
-            uploadType: 'product-main'
-          });
-
-          const uploadResponse = await fetch(presignedResponse.presignedUrl, {
-            method: 'PUT',
-            body: formData.mainImage,
-            // headers: {
-            //   'Content-Type': formData.mainImage.type
-            // }
-          });
-
-          if (!uploadResponse.ok) {
-            throw new Error('대표 이미지 업로드에 실패했습니다.');
-          }
-
-          mainImageData = {
-            imageUrl: presignedResponse.imageUrl,
-            filename: formData.mainImage.name
-          };
-        }
+      if (parseInt(formData.processingDays) < 0 || parseInt(formData.processingDays) > 365) {
+        throw new Error('제작 소요일은 0~365일 이내로 입력해주세요.');
       }
 
-      // 상세 이미지 처리
-      for (const detailImage of formData.detailImages) {
-        if (detailImage.url.startsWith('http')) {
-          // 이미 S3에 업로드된 경우
-          console.log('Using already uploaded detail image:', detailImage.url);
-          detailImagesData.push({
-            imageUrl: detailImage.url,
-            filename: detailImage.file?.name || 'detail-image.jpg',
-            description: detailImage.description
-          });
-        } else if (detailImage.file) {
-          // 로컬 미리보기인 경우 새로 업로드
-          console.log('Uploading detail image to S3...');
-          const presignedResponse = await imageService.getPresignedUrl({
-            filename: detailImage.file.name,
-            contentType: detailImage.file.type,
-            uploadType: 'product-detail'
-          });
-
-          const uploadResponse = await fetch(presignedResponse.presignedUrl, {
-            method: 'PUT',
-            body: detailImage.file
-          });
-
-          if (!uploadResponse.ok) {
-            throw new Error(`상세 이미지 업로드에 실패했습니다: ${detailImage.file.name}`);
-          }
-
-          detailImagesData.push({
-            imageUrl: presignedResponse.imageUrl,
-            filename: detailImage.file.name,
-            description: detailImage.description
-          });
-        }
+      // 네일 카테고리 검증
+      if (formData.nailCategories.style.length > 3) {
+        throw new Error('스타일은 최대 3개까지 선택할 수 있습니다.');
+      }
+      if (formData.nailCategories.color.length > 3) {
+        throw new Error('색상은 최대 3개까지 선택할 수 있습니다.');
+      }
+      if (formData.tags.length > 20) {
+        throw new Error('태그는 최대 20개까지 등록할 수 있습니다.');
       }
 
-      // 3. 상품 데이터 구성 (백엔드 API 스펙에 맞게)
+      // 2. 상품 데이터 구성 (서버 API 스펙에 완전 일치)
       const productData: CreateProductRequest = {
         name: formData.name,
         description: formData.description,
+        shortDescription: formData.shortDescription || formData.description.substring(0, 100),
+        brand: formData.brand || '네일아트',
+        sku: formData.sku || `NAIL-${Date.now()}`,
         price: parseInt(formData.price),
-        category: 'other' as ProductCategory, // 네일 카테고리는 기본값으로 설정
-        brand: '네일아트', // 기본 브랜드
-        stock: 999, // 기본 재고
-        sku: `NAIL-${Date.now()}`, // 임시 SKU 생성
-        mainImage: mainImageData || {
-          imageUrl: formData.mainImageUrl,
-          filename: 'default-image.jpg'
+        salePrice: formData.salePrice ? parseInt(formData.salePrice) : undefined,
+        discountRate: formData.discountRate ? parseInt(formData.discountRate) : null,
+        mainImageUrl: formData.mainImageUrl,
+        detailImages: formData.detailImages.map((img, index) => ({
+          url: img.url,
+          description: img.description,
+          order: img.order || index + 1
+        })),
+        stockQuantity: parseInt(formData.stockQuantity),
+        processingDays: parseInt(formData.processingDays),
+        nailCategories: formData.nailCategories,
+        nailShape: formData.nailShape,
+        nailLength: formData.nailLength,
+        nailOptions: {
+          lengthCustomizable: formData.lengthCustomizable,
+          shapeCustomizable: formData.shapeCustomizable,
+          designCustomizable: formData.designCustomizable
         },
-        detailImages: detailImagesData,
-        specifications: {
-          nailShape: formData.shape,
-          nailLength: formData.length,
-          processingDays: parseInt(formData.productionDays) || 3
-        },
-        tags: [ formData.category, formData.shape, formData.length ]
+        isFeatured: formData.isFeatured,
+        isNewProduct: formData.isNewProduct,
+        tags: formData.tags
       };
 
-      console.log('등록할 상품 데이터:', productData);
+      console.log(isEdit ? '수정할 상품 데이터:' : '등록할 상품 데이터:', productData);
 
-      // 4. API 호출
-      const response = await productService.createProduct(productData);
+      // 3. API 호출 (등록 vs 수정)
+      let response;
+      if (isEdit && productId) {
+        const updateData: UpdateProductRequest = { ...productData, productId };
+        response = await productService.updateProduct(productId, updateData);
+      } else {
+        response = await productService.createProduct(productData);
+      }
 
-      // 5. 성공 처리
-      console.log('상품 등록 성공:', response);
-      alert('상품이 성공적으로 등록되었습니다.');
+      // 4. 성공 처리
+      console.log(isEdit ? '상품 수정 성공:' : '상품 등록 성공:', response);
+      alert(isEdit ? '상품이 성공적으로 수정되었습니다.' : '상품이 성공적으로 등록되었습니다.');
       onGo('/seller/products');
 
     } catch (error) {
-      // 6. 에러 처리
-      const errorMessage = error instanceof Error ? error.message : '상품 등록에 실패했습니다.';
+      // 5. 에러 처리
+      const errorMessage = error instanceof Error ? error.message : (isEdit ? '상품 수정에 실패했습니다.' : '상품 등록에 실패했습니다.');
       setError(errorMessage);
-      console.error('상품 등록 실패:', error);
-
-      // 사용자에게 에러 표시
+      console.error(isEdit ? '상품 수정 실패:' : '상품 등록 실패:', error);
       alert(errorMessage);
 
     } finally {
-      // 7. 로딩 종료
+      // 6. 로딩 종료
       setIsSubmitting(false);
     }
   };
@@ -1136,9 +1272,20 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
   return (
     <SellerLayout title={isEdit ? "상품 수정" : "상품 등록"} onGo={onGo}>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 에러 메시지 표시 */}
-        {error && (
+      {/* 로딩 상태 */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600">상품 정보를 불러오는 중...</span>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 에러 메시지 표시 */}
+          {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center">
               <svg className="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1215,9 +1362,9 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           </div>
         </div>
 
-        {/* 네일 정보 */}
+        {/* 네일 전용 설정 - 서버 API 스펙에 맞게 완전 재구성 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">네일 정보</h3>
+          <h3 className="text-lg font-semibold mb-4">네일 전용 설정</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -1226,8 +1373,8 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               </label>
               <select
                 required
-                value={formData.length}
-                onChange={(e) => setFormData({ ...formData, length: e.target.value as NailLength })}
+                value={formData.nailLength}
+                onChange={(e) => setFormData({ ...formData, nailLength: e.target.value as NailLength })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="SHORT">숏 (Short)</option>
@@ -1242,8 +1389,8 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               </label>
               <select
                 required
-                value={formData.shape}
-                onChange={(e) => setFormData({ ...formData, shape: e.target.value as NailShape })}
+                value={formData.nailShape}
+                onChange={(e) => setFormData({ ...formData, nailShape: e.target.value as NailShape })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="ROUND">라운드 (Round)</option>
@@ -1265,11 +1412,11 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
                 min="1"
                 max="30"
                 step="1"
-                value={formData.productionDays}
+                value={formData.processingDays}
                 onChange={(e) => {
                   // 숫자만 입력 가능하도록 필터링
                   const value = e.target.value.replace(/[^0-9]/g, '');
-                  setFormData({ ...formData, productionDays: value });
+                  setFormData({ ...formData, processingDays: value });
                 }}
                 onKeyDown={(e) => {
                   // 숫자, 백스페이스, 델리트, 화살표 키만 허용
@@ -1325,12 +1472,174 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           </div>
         </div>
 
-        {/* 네일 카테고리 */}
+        {/* 네일 카테고리 - 서버 API 스펙에 맞게 재구성 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <CategorySelector
-            value={nailCategories}
-            onChange={setNailCategories}
-          />
+          <h3 className="text-lg font-semibold mb-4">네일 카테고리</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 스타일 카테고리 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                스타일 <span className="text-xs text-gray-500">(최대 3개)</span>
+              </label>
+              <div className="space-y-2">
+                {['신상', '심플', '화려', '클래식', '키치', '내추럴'].map(style => (
+                  <label key={style} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.nailCategories.style.includes(style)}
+                      onChange={(e) => {
+                        const styles = formData.nailCategories.style;
+                        const newStyles = e.target.checked
+                          ? [...styles, style].slice(0, 3) // 최대 3개
+                          : styles.filter(s => s !== style);
+                        setFormData({
+                          ...formData,
+                          nailCategories: {
+                            ...formData.nailCategories,
+                            style: newStyles
+                          }
+                        });
+                      }}
+                      disabled={!formData.nailCategories.style.includes(style) && formData.nailCategories.style.length >= 3}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{style}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* 색상 카테고리 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                색상 <span className="text-xs text-gray-500">(최대 3개)</span>
+              </label>
+              <div className="space-y-2">
+                {['레드 계열', '핑크 계열', '뉴트럴', '블랙/화이트'].map(color => (
+                  <label key={color} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.nailCategories.color.includes(color)}
+                      onChange={(e) => {
+                        const colors = formData.nailCategories.color;
+                        const newColors = e.target.checked
+                          ? [...colors, color].slice(0, 3) // 최대 3개
+                          : colors.filter(c => c !== color);
+                        setFormData({
+                          ...formData,
+                          nailCategories: {
+                            ...formData.nailCategories,
+                            color: newColors
+                          }
+                        });
+                      }}
+                      disabled={!formData.nailCategories.color.includes(color) && formData.nailCategories.color.length >= 3}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{color}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* 텍스처 카테고리 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                텍스처 <span className="text-xs text-gray-500">(최대 3개)</span>
+              </label>
+              <div className="space-y-2">
+                {['젤', '매트', '글리터'].map(texture => (
+                  <label key={texture} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.nailCategories.texture.includes(texture)}
+                      onChange={(e) => {
+                        const textures = formData.nailCategories.texture;
+                        const newTextures = e.target.checked
+                          ? [...textures, texture].slice(0, 3) // 최대 3개
+                          : textures.filter(t => t !== texture);
+                        setFormData({
+                          ...formData,
+                          nailCategories: {
+                            ...formData.nailCategories,
+                            texture: newTextures
+                          }
+                        });
+                      }}
+                      disabled={!formData.nailCategories.texture.includes(texture) && formData.nailCategories.texture.length >= 3}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{texture}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* TPO 카테고리 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                TPO (착용 상황) <span className="text-xs text-gray-500">(최대 3개)</span>
+              </label>
+              <div className="space-y-2">
+                {['데일리', '파티', '웨딩', '공연'].map(tpo => (
+                  <label key={tpo} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.nailCategories.tpo.includes(tpo)}
+                      onChange={(e) => {
+                        const tpos = formData.nailCategories.tpo;
+                        const newTpos = e.target.checked
+                          ? [...tpos, tpo].slice(0, 3) // 최대 3개
+                          : tpos.filter(t => t !== tpo);
+                        setFormData({
+                          ...formData,
+                          nailCategories: {
+                            ...formData.nailCategories,
+                            tpo: newTpos
+                          }
+                        });
+                      }}
+                      disabled={!formData.nailCategories.tpo.includes(tpo) && formData.nailCategories.tpo.length >= 3}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{tpo}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* 국가별 스타일 */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                국가별 스타일 <span className="text-xs text-gray-500">(1개만 선택)</span>
+              </label>
+              <div className="flex space-x-4">
+                {['K네일', 'J네일', '기타'].map(nation => (
+                  <label key={nation} className="flex items-center">
+                    <input
+                      type="radio"
+                      name="nation"
+                      checked={formData.nailCategories.nation === nation}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            nailCategories: {
+                              ...formData.nailCategories,
+                              nation: nation
+                            }
+                          });
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{nation}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 대표 이미지 */}
@@ -1549,6 +1858,101 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           </div>
         </div>
 
+        {/* 상품 태그 */}
+        <div className="bg-white rounded-lg p-6 border shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">상품 태그</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                태그 추가 <span className="text-xs text-gray-500">(최대 20개, 엔터 또는 쉽표로 구분)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="태그를 입력하고 엔터를 누르세요"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const value = e.currentTarget.value.trim();
+                    if (value && !formData.tags.includes(value) && formData.tags.length < 20) {
+                      setFormData({
+                        ...formData,
+                        tags: [...formData.tags, value]
+                      });
+                      e.currentTarget.value = '';
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {/* 태그 목록 */}
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newTags = formData.tags.filter((_, i) => i !== index);
+                        setFormData({ ...formData, tags: newTags });
+                      }}
+                      className="ml-2 text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500">
+              상품의 특징, 색상, 스타일 등을 태그로 추가하면 검색에서 찾기 쉬워집니다.
+            </p>
+          </div>
+        </div>
+
+        {/* 상품 옵션 */}
+        <div className="bg-white rounded-lg p-6 border shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">상품 옵션</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <div className="ml-3">
+                  <span className="text-sm font-medium text-gray-900">추천 상품 설정</span>
+                  <p className="text-xs text-gray-500">메인 페이지 추천 영역에 노출</p>
+                </div>
+              </label>
+            </div>
+
+            <div className="space-y-4">
+              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  checked={formData.isNewProduct}
+                  onChange={(e) => setFormData({ ...formData, isNewProduct: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <div className="ml-3">
+                  <span className="text-sm font-medium text-gray-900">신상품 설정</span>
+                  <p className="text-xs text-gray-500">상품에 'NEW' 배지 표시</p>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* 제출 버튼 */}
         <div className="flex justify-end space-x-4">
           <button
             type="button"
@@ -1565,7 +1969,8 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
             {isSubmitting ? '저장 중...' : isEdit ? '수정 완료' : '등록 완료'}
           </button>
         </div>
-      </form>
+        </form>
+      )}
     </SellerLayout>
   );
 }

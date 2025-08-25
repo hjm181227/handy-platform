@@ -1,4 +1,4 @@
-import { PresignedUrlRequest, PresignedUrlResponse, ProductImage } from '../types';
+import { PresignedUrlRequest, PresignedUrlResponse } from '../types';
 import { ApiError } from './apiHelpers';
 
 export interface ImageUploadOptions {
@@ -296,7 +296,7 @@ export function fileToBase64(file: File): Promise<string> {
 /**
  * ProductImage 배열에서 temp URL을 실제 URL로 업데이트
  */
-export function updateImageUrls(images: ProductImage[], uploadResults: ImageUploadResult[]): ProductImage[] {
+export function updateImageUrls(images: any[], uploadResults: ImageUploadResult[]): any[] {
   return images.map(image => {
     const result = uploadResults.find(r => r.filename === image.filename);
     if (result && result.success) {

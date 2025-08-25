@@ -66,6 +66,10 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<{ products: Product[]; pagination: any }>>(endpoint);
   }
 
+  async getSellerProduct(id: string): Promise<ApiResponse<{ product: Product }>> {
+    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.SELLER.PRODUCT_DETAIL(id));
+  }
+
   async createProduct(productData: {
     name: string;
     description: string;
@@ -91,21 +95,21 @@ export abstract class BaseSellerService extends BaseApiService {
       endDate: string;
     };
   }): Promise<ApiResponse<{ product: Product }>> {
-    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.SELLER.PRODUCT_CREATE, {
+    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.PRODUCTS.CREATE, {
       method: 'POST',
       body: JSON.stringify(productData),
     });
   }
 
   async updateProduct(id: string, updates: any): Promise<ApiResponse<{ product: Product }>> {
-    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.SELLER.PRODUCT_UPDATE(id), {
+    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.PRODUCTS.UPDATE(id), {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
   }
 
   async deleteProduct(id: string): Promise<ApiResponse> {
-    return this.request<ApiResponse>(API_ENDPOINTS.SELLER.PRODUCT_DELETE(id), {
+    return this.request<ApiResponse>(API_ENDPOINTS.PRODUCTS.DELETE(id), {
       method: 'DELETE',
     });
   }

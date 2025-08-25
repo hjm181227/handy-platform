@@ -82,23 +82,15 @@ export class ApiConnectionTester {
 
       // 상품 목록 (인증 불필요)
       this.runTest('product', 'getProducts', async () => {
-        return await this.apiService.product.getProducts({ limit: 1 });
+        return await this.apiService.product.getProducts({ limit: '1' });
       }),
 
-      // 카테고리 조회 (인증 불필요)
-      this.runTest('product', 'getCategories', async () => {
-        return await this.apiService.product.getCategories();
+      // 상품 검색 (인증 불필요)
+      this.runTest('product', 'searchProducts', async () => {
+        return await this.apiService.product.searchProducts('네일');
       }),
 
-      // 브랜드 조회 (인증 불필요)
-      this.runTest('product', 'getBrands', async () => {
-        return await this.apiService.product.getBrands();
-      }),
 
-      // 추천 상품 (인증 불필요)
-      this.runTest('product', 'getFeaturedProducts', async () => {
-        return await this.apiService.product.getFeaturedProducts(5);
-      }),
 
       // 배송 방법 조회
       this.runTest('shipping', 'getShippingMethods', async () => {

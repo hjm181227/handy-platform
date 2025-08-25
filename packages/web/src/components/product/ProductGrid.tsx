@@ -1,4 +1,4 @@
-import { Product } from '../../types';
+import { Product } from '@handy-platform/shared';
 import { ProductCard } from './ProductCard';
 
 export function SectionRow({ title, items, onOpen, onAdd }:{
@@ -11,7 +11,7 @@ export function SectionRow({ title, items, onOpen, onAdd }:{
         <a href="#" onClick={(e)=>e.preventDefault()} className="text-xs text-gray-500">더보기</a>
       </div>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2">
-        {items.map(p=> <div key={p.id} className="snap-start"><ProductCard p={p} onOpen={onOpen} onAdd={onAdd}/></div>)}
+        {items.map(p=> <div key={p.productId} className="snap-start"><ProductCard p={p} onOpen={onOpen} onAdd={onAdd}/></div>)}
       </div>
     </section>
   );
@@ -25,7 +25,7 @@ export function ProductGrid({ title, items, onOpen, onAdd }:{
       <h2 className="text-base md:text-lg font-semibold mb-3">{title}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {items.map(p=>(
-          <div key={p.id}>
+          <div key={p.productId}>
             <ProductCard p={p} onOpen={onOpen} onAdd={onAdd}/>
           </div>
         ))}

@@ -12,20 +12,20 @@ export function Detail({
   onBack: () => void;
   onAdd: (id: string) => void;
 }) {
-  const p = products.find((x) => x.id === id);
+  const p = products.find((x) => x.productId === id);
   if (!p) return <div className="p-6">Not found</div>;
 
-  const salePrice = p.sale ? Math.round(p.price * (100 - p.sale) / 100) : p.price;
+  const salePrice = p.salePrice || p.price;
 
   // 이미지 갤러리(썸네일)
   const images = useMemo(
     () => [
-      p.image,
+      p.mainImageUrl,
+      ...(p.detailImages?.map(img => img.url) || []),
       `https://picsum.photos/seed/${id}-1/800/800`,
       `https://picsum.photos/seed/${id}-2/800/800`,
-      `https://picsum.photos/seed/${id}-3/800/800`,
     ],
-    [id, p.image]
+    [id, p.mainImageUrl, p.detailImages]
   );
   const [imgIdx, setImgIdx] = useState(0);
 
@@ -34,7 +34,7 @@ export function Detail({
   const [length, setLength] = useState<string>("Short");
   const [qty, setQty] = useState<number>(1);
   const addToCart = () => {
-    for (let i = 0; i < qty; i++) onAdd(p.id);
+    for (let i = 0; i < qty; i++) onAdd(p.productId);
   };
 
   // 좋아요/공유
@@ -116,19 +116,19 @@ export function Detail({
 
           <div className="flex items-end gap-2">
             <div className="text-2xl font-bold">{money(salePrice)}원</div>
-            {p.sale ? (
+            {p.salePrice && p.salePrice < p.price ? (
               <>
                 <div className="text-sm text-gray-400 line-through">{money(p.price)}원</div>
-                <span className="rounded bg-red-500 px-2 py-0.5 text-xs text-white">{p.sale}%</span>
+                <span className="rounded bg-red-500 px-2 py-0.5 text-xs text-white">할인</span>
               </>
             ) : null}
           </div>
 
           {/* 간단 메타 */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>⭐ {(p.rating ?? 4.5).toFixed(1)}</span>
+            <span>⭐ {p.stats.rating.average.toFixed(1)}</span>
             <span className="text-gray-400">|</span>
-            <span>리뷰 {(p.reviews ?? 0).toLocaleString()}개</span>
+            <span>리뷰 {p.stats.rating.count.toLocaleString()}개</span>
             <span className="text-gray-400">|</span>
             <span>무료배송</span>
           </div>
@@ -180,7 +180,7 @@ export function Detail({
             <button onClick={addToCart} className="rounded-lg border py-2">장바구니 담기</button>
             <button
               onClick={() => {
-                try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "checkout", id: p.id, qty })); } catch {}
+                try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "checkout", id: p.productId, qty })); } catch {}
                 alert("바로구매(데모)");
               }}
               className="rounded-lg bg-black py-2 text-white"
@@ -194,7 +194,7 @@ export function Detail({
             <button onClick={() => setLiked((v) => !v)} className="underline">{liked ? "♥ 찜됨" : "♡ 찜하기"}</button>
             <button onClick={share} className="underline">공유</button>
             <button
-              onClick={() => { try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "open-sizing", productId: p.id })); } catch {} }}
+              onClick={() => { try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "open-sizing", productId: p.productId })); } catch {} }}
               className="underline"
             >
               사이징(앱)
@@ -294,7 +294,7 @@ export function Detail({
             <button onClick={addToCart} className="rounded-lg border px-4 py-2 text-sm">장바구니</button>
             <button
               onClick={() => {
-                try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "checkout", id: p.id, qty })); } catch {}
+                try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "checkout", id: p.productId, qty })); } catch {}
                 alert("바로구매(데모)");
               }}
               className="rounded-lg bg-black px-4 py-2 text-sm text-white"

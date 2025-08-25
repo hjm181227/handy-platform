@@ -85,7 +85,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Cart
-  const [cart, setCart] = useState<{id:string; qty:number}[]>([]);
+  const [cart, setCart] = useState<{productId:string; qty:number}[]>([]);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
 
@@ -107,14 +107,14 @@ export default function App() {
   }, []);
 
   const add = (id:string) => setCart(prev=>{
-    const i = prev.findIndex(x=>x.id===id);
+    const i = prev.findIndex(x=>x.productId===id);
     if(i>=0){ const next=[...prev]; next[i]={...next[i], qty: next[i].qty+1}; return next; }
-    return [...prev, {id, qty:1}];
+    return [...prev, {productId: id, qty:1}];
   });
-  const remove = (id:string) => setCart(prev=>prev.filter(x=>x.id!==id));
+  const remove = (id:string) => setCart(prev=>prev.filter(x=>x.productId!==id));
   const updateQuantity = (id:string, qty:number) => setCart(prev=>{
-    if(qty <= 0) return prev.filter(x=>x.id!==id);
-    const i = prev.findIndex(x=>x.id===id);
+    if(qty <= 0) return prev.filter(x=>x.productId!==id);
+    const i = prev.findIndex(x=>x.productId===id);
     if(i>=0){ const next=[...prev]; next[i]={...next[i], qty}; return next; }
     return prev;
   });

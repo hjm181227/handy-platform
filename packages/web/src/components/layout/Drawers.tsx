@@ -13,20 +13,18 @@ export function CartDrawer({
 }: {
   open: boolean;
   onClose: () => void;
-  items: {id: string; qty: number}[];
+  items: {productId: string; qty: number}[];
   onRemove: (id: string) => void;
   onUpdateQuantity?: (id: string, qty: number) => void;
   onCheckout: (total: number) => void;
 }) {
   const cartItems = items.map(item => {
-    const product = products.find(p => p.id === item.id);
+    const product = products.find(p => p.productId === item.productId);
     return product ? { ...item, product } : null;
-  }).filter(Boolean) as Array<{id: string; qty: number; product: typeof products[0]}>;
+  }).filter(Boolean) as Array<{productId: string; qty: number; product: typeof products[0]}>;
 
   const total = cartItems.reduce((sum, item) => {
-    const salePrice = item.product.sale 
-      ? Math.round(item.product.price * (100 - item.product.sale) / 100)
-      : item.product.price;
+    const salePrice = item.product.salePrice || item.product.price;
     return sum + (salePrice * item.qty);
   }, 0);
 
@@ -58,7 +56,7 @@ export function CartDrawer({
                   ? Math.round(item.product.price * (100 - item.product.sale) / 100)
                   : item.product.price;
                 return (
-                  <div key={item.id} className="flex gap-3 border-b pb-4 transition-all duration-200 hover:bg-gray-50 p-2 rounded-lg -m-2">
+                  <div key={item.productId} className="flex gap-3 border-b pb-4 transition-all duration-200 hover:bg-gray-50 p-2 rounded-lg -m-2">
                     <img src={item.product.image} className="h-16 w-16 rounded object-cover transition-transform duration-200 hover:scale-105" />
                     <div className="flex-1">
                       <h3 className="text-sm font-medium">{item.product.name}</h3>
@@ -66,7 +64,7 @@ export function CartDrawer({
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-sm font-semibold">{money(salePrice)}원</span>
                         <button 
-                          onClick={() => onRemove(item.id)}
+                          onClick={() => onRemove(item.productId)}
                           className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-all duration-200"
                         >
                           삭제
@@ -76,7 +74,7 @@ export function CartDrawer({
                         <div className="mt-2 flex items-center justify-center">
                           <div className="flex items-center border rounded-lg">
                             <button
-                              onClick={() => onUpdateQuantity(item.id, Math.max(1, item.qty - 1))}
+                              onClick={() => onUpdateQuantity(item.productId, Math.max(1, item.qty - 1))}
                               disabled={item.qty <= 1}
                               className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                               aria-label="수량 감소"
@@ -87,7 +85,7 @@ export function CartDrawer({
                               {item.qty}
                             </span>
                             <button
-                              onClick={() => onUpdateQuantity(item.id, Math.min(99, item.qty + 1))}
+                              onClick={() => onUpdateQuantity(item.productId, Math.min(99, item.qty + 1))}
                               disabled={item.qty >= 99}
                               className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                               aria-label="수량 증가"

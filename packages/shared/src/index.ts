@@ -49,7 +49,6 @@ export type {
   Order,
   ApiResponse,
   WebViewMessage,
-  ProductCategory,
   OrderStatus,
   PaymentStatus,
   PaymentMethod,

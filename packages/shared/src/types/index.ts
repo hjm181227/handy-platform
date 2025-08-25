@@ -45,12 +45,11 @@ export interface AuthResponse {
   user: User;
 }
 
-// Product Related Types (서버 API 스펙에 맞게 수정)
-export interface ProductImage {
+// Product Related Types (네일팁 전용 API 스펙에 맞게 완전 재정의)
+export interface DetailImage {
   url: string;
-  filename: string;
-  s3Key: string;
   description?: string;
+  order: number;
 }
 
 export interface ProductRating {
@@ -69,194 +68,164 @@ export interface ProductReview {
   createdAt: string;
 }
 
-export interface ProductSpecifications {
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  color?: string;
-  material?: string;
-  [key: string]: any;
-}
-
-export interface Seller {
-  id: string;
-  name: string;
-  sellerInfo: {
-    companyName: string;
-    isVerified?: boolean;
-  };
-}
-
-// Nail Category Types
+// 네일 전용 카테고리 타입 (서버 API 스펙 기준)
 export interface NailCategories {
-  style: string[];  // 최대 3개
-  color: string[];  // 최대 3개  
-  texture: string[]; // 최대 3개
-  shape: string;     // 1개만
-  length: string;    // 1개만
-  tpo: string[];     // 최대 3개
-  ab: string;        // 1개만
-  nation: string;    // 1개만
+  style: string[];    // ["신상", "심플", "화려", "클래식", "키치", "내추럴"] 최대 3개
+  color: string[];    // ["레드 계열", "핑크 계열", "뉴트럴", "블랙/화이트"] 최대 3개
+  texture: string[];  // ["젤", "매트", "글리터"] 최대 3개
+  tpo: string[];      // ["데일리", "파티", "웨딩", "공연"] 최대 3개
+  nation: string;     // "K네일" | "J네일" | "기타" 1개만
 }
 
-// 네일 상품 옵션 인터페이스
-export interface NailProductOptions {
-  lengthCustomizable: boolean;    // 길이 커스텀 가능 여부
-  shapeCustomizable: boolean;     // 모양 커스텀 가능 여부
-  designCustomizable: boolean;    // 디자인 커스텀 가능 여부
+// 네일 옵션 타입
+export interface NailOptions {
+  lengthCustomizable: boolean;    // 길이 커스터마이징 가능 여부
+  shapeCustomizable: boolean;     // 모양 커스터마이징 가능 여부  
+  designCustomizable: boolean;    // 디자인 커스터마이징 가능 여부
 }
 
-// 업로드용 상품 이미지 인터페이스 (프론트엔드 전용)
-export interface ProductImageUpload extends ProductImage {
-  file?: File;              // 업로드용 파일 객체
-  preview?: string;         // 미리보기 URL (로컬)
-}
-
-// 배송 정보 인터페이스
-export interface ShippingInfo {
-  weight?: number;          // 배송 무게
-  isFreeShipping: boolean;  // 무료배송 여부
-  shippingCost: number;     // 배송비
-  processingDays: number;   // 처리 일수 (제작 소요시간)
-  estimatedDeliveryDays: number; // 예상 배송일
-}
-
-// 재고 관리 인터페이스
-export interface InventoryInfo {
-  stockQuantity: number;        // 재고 수량
-  lowStockThreshold: number;    // 낮은 재고 임계값
-  isUnlimitedStock: boolean;    // 무제한 재고 여부
-  isInStock: boolean;           // 재고 있음 여부
-}
-
-// SEO 메타데이터 인터페이스
-export interface SEOMetadata {
-  metaTitle?: string;
-  metaDescription?: string;
-  keywords: string[];
-  slug: string;  // URL용 슬러그
-}
-
-// 상품 인터페이스 (서버 API 스펙에 맞게 수정)
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  discountedPrice?: number;
-  category: ProductCategory;
-  brand: string;
-  stock: number;
-  sku: string;
-  mainImage: ProductImage;
-  detailImages: ProductImage[];
-  seller: Seller;
-  specifications?: ProductSpecifications;
-  reviews?: ProductReview[];
-  rating: ProductRating;
-  featured: boolean;
-  isActive: boolean;
-  tags?: string[];
-  createdAt: string;
-}
-
-
-// 상품 카테고리 타입 (서버 API 스펙에 맞게 수정)
-export type ProductCategory = 
-  | 'electronics' 
-  | 'clothing' 
-  | 'books' 
-  | 'home' 
-  | 'sports' 
-  | 'beauty' 
-  | 'toys' 
-  | 'food' 
-  | 'other';
-
-// 상품 상태 타입
-export type ProductStatus = 'active' | 'inactive' | 'draft' | 'out_of_stock';
-
-// 네일 모양 및 길이 타입 (레거시 지원)
+// 네일 모양 및 길이 타입
 export type NailShape = 'ROUND' | 'ALMOND' | 'OVAL' | 'STILETTO' | 'SQUARE' | 'COFFIN';
 export type NailLength = 'SHORT' | 'MEDIUM' | 'LONG';
 
-export interface ProductsResponse {
-  products: Product[];
-  pagination: PaginationInfo;
+// 판매자 정보
+export interface Seller {
+  userId: string;
+  name: string;
+  companyName: string;
+  isVerified: boolean;
 }
 
-// 상품 생성 요청 인터페이스 (백엔드 API 스펙에 맞게 수정)
-export interface CreateProductRequest {
-  // 기본 정보
+// 소셜 프루프
+export interface SocialProof {
+  totalMentions: number;
+  recentMentions: number;
+  averageRating: number;
+  trendingScore: number;
+}
+
+// 상품 통계
+export interface ProductStats {
+  viewsCount: number;
+  ordersCount: number;
+  reviewsCount: number;
+}
+
+// 상품 인터페이스 (서버 API 스펙 완전 일치)
+export interface Product {
+  productId: string;              // Sequential ID ("1", "2", "3"...)
   name: string;
-  description: string;  // 최소 10자
-  price: number;
-  category: ProductCategory;
+  description: string;
+  shortDescription: string;
   brand: string;
-  stock: number;
-  sku: string;  // 고유 SKU
-  
-  // 이미지 (임시 S3 URL에서 실제 저장소로 이동됨)
-  mainImage: {
-    imageUrl: string;  // 임시 S3 URL
-    filename: string;
+  sku: string;
+  price: number;
+  salePrice?: number;
+  discountRate?: number;
+  discountedPrice: number;
+  hasDiscount: boolean;
+  mainImageUrl: string;
+  detailImages: DetailImage[];
+  stockQuantity: number;
+  isInStock: boolean;
+  processingDays: number;
+  nailCategories: NailCategories;
+  nailShape: NailShape;
+  nailLength: NailLength;
+  nailOptions: NailOptions;
+  rating: ProductRating;
+  likesCount: number;
+  postsCount: number;
+  isFeatured: boolean;
+  isNewProduct: boolean;
+  tags: string[];
+  seller: Seller;
+  stats: ProductStats;
+  socialProof: SocialProof;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 상품 목록 응답 타입
+export interface ProductsResponse {
+  success: boolean;
+  data: Product[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
+  filters: {
+    sellerId: string | null;
+    search: string | null;
+    priceRange: {
+      min: number | null;
+      max: number | null;
+    };
+    nailShape: string | null;
+    nailLength: string | null;
+    featured: boolean;
+  };
+}
+
+// 상품 상세 응답 타입
+export interface ProductDetailResponse {
+  success: boolean;
+  data: Product;
+}
+
+// 상품 생성 요청 (서버 API 스펙에 완전 일치)
+export interface CreateProductRequest {
+  name: string;                    // Required, max 200 characters
+  description: string;             // Required, max 2000 characters
+  shortDescription?: string;
+  brand?: string;
+  sku?: string;
+  price: number;                   // Required, > 0
+  salePrice?: number;              // Optional, must be < price if provided
+  discountRate?: number | null;
+  mainImageUrl: string;            // Required
   detailImages?: Array<{
-    imageUrl: string;  // 임시 S3 URL
-    filename: string;
+    url: string;
     description?: string;
+    order: number;
   }>;
-  
-  // 선택적 정보
-  specifications?: ProductSpecifications;
-  tags?: string[];
-  
-  // 할인 정보
-  discount?: {
-    percentage: number;
-    startDate: string;  // YYYY-MM-DD
-    endDate: string;    // YYYY-MM-DD
-  };
+  stockQuantity: number;           // Required, >= 0
+  processingDays: number;          // Required, 0-365 days
+  nailCategories: NailCategories;
+  nailShape: NailShape;
+  nailLength: NailLength;
+  nailOptions: NailOptions;
+  isFeatured?: boolean;
+  isNewProduct?: boolean;
+  tags?: string[];                 // Max 20 tags
 }
 
 // 상품 업데이트 요청 인터페이스
 export interface UpdateProductRequest extends Partial<CreateProductRequest> {
-  id: string;
-}
-
-// 상품 이미지 업로드 요청
-export interface ProductImageUploadRequest {
   productId: string;
-  files: File[];
-  descriptions?: string[];
-  isMainImage?: boolean[];
 }
 
-// 상품 검색/필터 인터페이스 (확장)
+// 상품 검색/필터 인터페이스 (서버 API 스펙에 완전 일치)
 export interface ProductFilters {
-  page?: number;
-  limit?: number;
-  category?: string;  // 네일 팁, 젤 네일, 네일 아트 등
-  brand?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  search?: string;
-  sortBy?: 'name' | 'price' | 'createdAt' | 'rating' | 'sales';
-  sortOrder?: 'asc' | 'desc';
-  featured?: boolean;
-  status?: ProductStatus;
-  
-  // 네일 전용 필터
-  nailShape?: NailShape;
-  nailLength?: NailLength;
-  nailCategories?: Partial<NailCategories>;
-  
-  // 판매자 필터
+  page?: string;           // "1", "2", ... (서버에서 string으로 받음)
+  limit?: string;          // "12", "20", ... (서버에서 string으로 받음)
   sellerId?: string;
+  search?: string;         // 텍스트 검색 (제품명, 설명, 태그)
+  minPrice?: string;       // 최소 가격 필터
+  maxPrice?: string;       // 최대 가격 필터
+  nailShape?: NailShape;   // 네일 모양 필터
+  nailLength?: NailLength; // 네일 길이 필터
+  featured?: string;       // "true" for featured products
+  sortBy?: 'price' | 'rating' | 'createdAt' | 'likesCount' | 'trending';
+  sortOrder?: 'asc' | 'desc';
 }
+
+// 판매자별 상품 조회 필터 (ProductFilters에서 sellerId 제외)
+export interface SellerProductFilters extends Omit<ProductFilters, 'sellerId'> {}
 
 // 상품 대량 업데이트 요청
 export interface BulkUpdateProductsRequest {
@@ -309,30 +278,30 @@ export interface Cart {
 }
 
 // Order Related Types
-export type OrderStatus = 
-  | 'pending' 
-  | 'confirmed' 
-  | 'processing' 
-  | 'shipped' 
-  | 'delivered' 
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
   | 'cancelled';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
-export type PaymentMethod = 
-  | 'credit_card' 
-  | 'debit_card' 
-  | 'paypal' 
-  | 'bank_transfer' 
+export type PaymentMethod =
+  | 'credit_card'
+  | 'debit_card'
+  | 'paypal'
+  | 'bank_transfer'
   | 'cash_on_delivery';
 
 export interface OrderItem {
   product: {
     id: string;
     name: string;
-    mainImage: ProductImage;
+    mainImage: string;
     brand: string;
-    category: ProductCategory;
+    category: string;
     price: number;
     discountedPrice?: number;
   };
@@ -379,17 +348,17 @@ export interface OrdersResponse {
 }
 
 // WebView Message Types
-export type WebViewMessageType = 
-  | 'NAVIGATION' 
-  | 'API_CALL' 
-  | 'AUTH' 
-  | 'CART' 
-  | 'NOTIFICATION' 
+export type WebViewMessageType =
+  | 'NAVIGATION'
+  | 'API_CALL'
+  | 'AUTH'
+  | 'CART'
+  | 'NOTIFICATION'
   | 'CAMERA'
   | 'PAYMENT'
   | 'PERMISSIONS'
-  | 'API_RESPONSE' 
-  | 'AUTH_RESPONSE' 
+  | 'API_RESPONSE'
+  | 'AUTH_RESPONSE'
   | 'CART_RESPONSE'
   | 'CAMERA_RESPONSE'
   | 'PAYMENT_RESPONSE'
