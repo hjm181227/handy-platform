@@ -26,7 +26,7 @@ export function ProductCard({ p, onOpen, onAdd }: { p: Product; onOpen:(id:strin
           {p.salePrice && p.salePrice < p.price ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}원</div> : null}
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1"><Stars v={p.stats.rating.average ?? 0}/><span className="text-[11px] text-gray-500">({p.stats.rating.count ?? 0})</span></div>
+          <div className="flex items-center gap-1"><Stars v={p.rating.average ?? 0}/><span className="text-[11px] text-gray-500">({p.rating.count ?? 0})</span></div>
           <button onClick={()=>onAdd(p.productId)} className="rounded-full border px-3 py-1 text-xs bg-white hover:bg-gray-50">담기</button>
         </div>
       </div>

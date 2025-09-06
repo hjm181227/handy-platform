@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
 import { products } from './data';
 import { webApiService } from './services/apiService';
-import type { User } from '@handy-platform/shared';
+import { useResponsiveCart } from './hooks/useResponsiveCart';
+import type { User, Product } from '@handy-platform/shared';
 
 // Layout Components
 import { TopDarkNav } from './components/layout/TopDarkNav';
@@ -22,6 +23,7 @@ import { LoginPage } from './components/pages/LoginPage';
 import { SignupPage } from './components/pages/SignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
+import { CartPage } from './components/pages/CartPage';
 
 // MyPage Components
 import { 
@@ -80,14 +82,79 @@ import {
 
 export default function App() {
   const { path, nav } = useMiniRouter();
+  const { isMobile } = useResponsiveCart();
 
   // Auth state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Cart
-  const [cart, setCart] = useState<{productId:string; qty:number}[]>([]);
+  // Cart state
+  const [cartCount, setCartCount] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  
+  // Toast notification state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+
+  // Home page products state
+  const [newProducts, setNewProducts] = useState<Product[]>([]);
+  const [loadingNewProducts, setLoadingNewProducts] = useState(false);
+
+  // Toast 표시 함수
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    
+    // 3초 후 자동 숨김
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  // 장바구니 개수 로딩
+  const loadCartCount = async () => {
+    try {
+      const response = await webApiService.cart.getCartCount();
+      setCartCount(response.data.count || 0);
+    } catch (error) {
+      console.warn('Cart count fetch failed:', error);
+      setCartCount(0);
+    }
+  };
+
+  // 신상 제품 로딩
+  const loadNewProducts = async () => {
+    try {
+      setLoadingNewProducts(true);
+      const response = await webApiService.product.getProducts({
+        page: 1,
+        limit: 10,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'  // 최신순
+      });
+      setNewProducts(response.data || []);
+    } catch (error: any) {
+      console.error('Failed to load new products:', error);
+      // 에러가 발생하면 기존 더미 데이터 중 일부를 사용 (fallback)
+      setNewProducts([...products].reverse().slice(0, 10));
+    } finally {
+      setLoadingNewProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCartCount();
+    loadNewProducts();
+  }, []);
+
+  // 장바구니 클릭 핸들러 (반응형)
+  const handleCartClick = () => {
+    if (isMobile) {
+      nav('/cart'); // 모바일: 페이지로 이동
+    } else {
+      setDrawer(true); // PC: Drawer 열기
+    }
+  };
 
   // Native에서 토큰 초기화 (WebView 환경에서만)
   useEffect(() => {
@@ -106,22 +173,29 @@ export default function App() {
     }
   }, []);
 
-  const add = (id:string) => setCart(prev=>{
-    const i = prev.findIndex(x=>x.productId===id);
-    if(i>=0){ const next=[...prev]; next[i]={...next[i], qty: next[i].qty+1}; return next; }
-    return [...prev, {productId: id, qty:1}];
-  });
-  const remove = (id:string) => setCart(prev=>prev.filter(x=>x.productId!==id));
-  const updateQuantity = (id:string, qty:number) => setCart(prev=>{
-    if(qty <= 0) return prev.filter(x=>x.productId!==id);
-    const i = prev.findIndex(x=>x.productId===id);
-    if(i>=0){ const next=[...prev]; next[i]={...next[i], qty}; return next; }
-    return prev;
-  });
-  const count = cart.reduce((a,c)=>a+c.qty,0);
-  const checkout = (total:number)=>{
-    try{ (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout", total})); }catch{};
-    alert(`결제 진행 (총 ${total.toLocaleString()}원)`);
+  // 장바구니에 상품 추가
+  const addToCart = async (productId: string, options?: Record<string, string>) => {
+    try {
+      await webApiService.cart.addToCart(productId, 1, options);
+      await loadCartCount(); // 카운트 새로고침
+      
+      // 성공 피드백
+      const message = options ? `옵션과 함께 장바구니에 추가되었습니다` : `장바구니에 추가되었습니다`;
+      showToast(message, 'success');
+    } catch (error: any) {
+      console.error('Add to cart failed:', error);
+      const errorMessage = error.message || '장바구니 추가에 실패했습니다.';
+      showToast(errorMessage, 'error');
+    }
+  };
+
+  // 체크아웃 처리
+  const handleCheckout = () => {
+    // TODO: Milestone 3에서 체크아웃 페이지로 이동 구현
+    try { 
+      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"})); 
+    } catch {}
+    alert('체크아웃 기능은 곧 구현됩니다!');
     setDrawer(false);
   };
 
@@ -134,8 +208,8 @@ export default function App() {
   const q = useMemo(()=> new URLSearchParams(search), [search]);
 
   // helper screens
-  const openProduct = (id:string)=> nav(`/p/${id}`);
-  const addProduct = (id:string)=> add(id);
+  const openProduct = (id:string)=> nav(`/product/${id}`);
+  const addProduct = (id:string)=> addToCart(id);
 
   let screen: React.ReactNode;
   
@@ -143,9 +217,14 @@ export default function App() {
   console.log("Current pathname:", pathname);
 
   // Product detail
-  const mDetail = pathname.match(/^\/p\/(.+)$/);
+  const mDetail = pathname.match(/^\/product\/(.+)$/);
   if (mDetail) {
-    screen = <Detail id={decodeURIComponent(mDetail[1])} onBack={()=>history.back()} onAdd={addProduct}/>;
+    screen = <Detail 
+      id={decodeURIComponent(mDetail[1])} 
+      onBack={()=>history.back()} 
+      onAdd={addProduct}
+      onCartUpdate={loadCartCount}
+    />;
   } else if (pathname.startsWith("/brands")) {
     screen = (
       <BrandsPage
@@ -185,6 +264,8 @@ export default function App() {
   } else if (pathname.startsWith("/search")) {
     const keyword = q.get("q") ?? "";
     screen = (<><TitleBar title={`검색: ${keyword || "전체"}`} desc="검색 결과"/><ProductGrid title="검색 결과" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+  } else if (pathname.startsWith("/cart")) {
+    screen = <CartPage onBack={() => history.back()} onCheckout={handleCheckout} onCartUpdate={loadCartCount} />;
   } else if (pathname.startsWith("/help")) {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
@@ -275,7 +356,13 @@ export default function App() {
     screen = (
       <>
         <Hero3 onGo={nav}/>
-        <SectionRow title="신상 제품" items={[...products].reverse()} onOpen={openProduct} onAdd={addProduct}/>
+        <SectionRow 
+          title="신상 제품" 
+          items={newProducts} 
+          loading={loadingNewProducts}
+          onOpen={openProduct} 
+          onAdd={addProduct}
+        />
         <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct}/>
         <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct}/>
       </>
@@ -296,8 +383,8 @@ export default function App() {
           </div>
           <div data-apphide="true">
             <MainHeader 
-              cartCount={count} 
-              onCart={() => setDrawer(true)} 
+              cartCount={cartCount} 
+              onCart={handleCartClick} 
               onGo={nav}
               onAuthStateChange={setCurrentUser}
             />
@@ -315,10 +402,8 @@ export default function App() {
           <CartDrawer
             open={drawer}
             onClose={() => setDrawer(false)}
-            items={cart}
-            onRemove={remove}
-            onUpdateQuantity={updateQuantity}
-            onCheckout={checkout}
+            onCheckout={handleCheckout}
+            onCartUpdate={loadCartCount}
           />
           <CategoryDrawer
             open={catOpen}
@@ -326,6 +411,32 @@ export default function App() {
             onGo={nav}
           />
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`
+          fixed bottom-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium
+          transform transition-all duration-300 ease-in-out
+          ${toastType === 'success' ? 'bg-green-500' : 
+            toastType === 'error' ? 'bg-red-500' : 
+            'bg-blue-500'}
+        `}>
+          <div className="flex items-center gap-3">
+            <span className="text-xl">
+              {toastType === 'success' ? '✅' : 
+               toastType === 'error' ? '❌' : 
+               'ℹ️'}
+            </span>
+            {toastMessage}
+            <button 
+              onClick={() => setToastMessage(null)}
+              className="ml-2 text-white/70 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

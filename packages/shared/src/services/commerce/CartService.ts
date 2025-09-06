@@ -1,14 +1,16 @@
 import { BaseApiService } from '../base/BaseApiService';
 import { 
   ApiResponse, 
-  Cart 
+  Cart,
+  CartResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
 export abstract class BaseCartService extends BaseApiService {
-  // 장바구니 조회
-  async getCart(): Promise<ApiResponse<{ cart: Cart }>> {
-    return this.request<ApiResponse<{ cart: Cart }>>(API_ENDPOINTS.CART.GET);
+  // 장바구니 조회 (판매자별 그룹화 포함)
+  async getCart(region?: string): Promise<CartResponse> {
+    const url = region ? `${API_ENDPOINTS.CART.GET}?region=${region}` : API_ENDPOINTS.CART.GET;
+    return this.request<CartResponse>(url);
   }
 
   async getCartCount(): Promise<ApiResponse<{ count: number }>> {
@@ -20,13 +22,13 @@ export abstract class BaseCartService extends BaseApiService {
     productId: string, 
     quantity: number, 
     options?: Record<string, string>
-  ): Promise<ApiResponse<{ cart: Cart }>> {
+  ): Promise<CartResponse> {
     const body: any = { productId, quantity };
     if (options) {
       body.options = options;
     }
 
-    return this.request<ApiResponse<{ cart: Cart }>>(API_ENDPOINTS.CART.ITEMS, {
+    return this.request<CartResponse>(API_ENDPOINTS.CART.ITEMS, {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -36,16 +38,17 @@ export abstract class BaseCartService extends BaseApiService {
     productId: string, 
     quantity?: number, 
     options?: Record<string, string>
-  ): Promise<ApiResponse<{ cart: Cart }>> {
+  ): Promise<CartResponse> {
     const body: any = {};
     if (quantity !== undefined) {
       body.quantity = quantity;
     }
+    // 서버에서 options로 특정 아이템을 구분하므로 항상 포함
     if (options) {
       body.options = options;
     }
 
-    return this.request<ApiResponse<{ cart: Cart }>>(API_ENDPOINTS.CART.ITEM(productId), {
+    return this.request<CartResponse>(API_ENDPOINTS.CART.ITEM(productId), {
       method: 'PUT',
       body: JSON.stringify(body),
     });
@@ -54,7 +57,7 @@ export abstract class BaseCartService extends BaseApiService {
   async removeFromCart(
     productId: string, 
     options?: Record<string, string>
-  ): Promise<ApiResponse<{ cart: Cart }>> {
+  ): Promise<CartResponse> {
     let endpoint = API_ENDPOINTS.CART.ITEM(productId);
     
     if (options) {
@@ -62,7 +65,7 @@ export abstract class BaseCartService extends BaseApiService {
       endpoint += `?${queryString}`;
     }
 
-    return this.request<ApiResponse<{ cart: Cart }>>(endpoint, {
+    return this.request<CartResponse>(endpoint, {
       method: 'DELETE',
     });
   }
@@ -78,8 +81,8 @@ export abstract class BaseCartService extends BaseApiService {
     productId: string;
     quantity: number;
     options?: Record<string, string>;
-  }>): Promise<ApiResponse<{ cart: Cart; syncSummary: any; invalidItems: any[] }>> {
-    return this.request<ApiResponse<{ cart: Cart; syncSummary: any; invalidItems: any[] }>>(
+  }>): Promise<CartResponse & { syncSummary?: any; invalidItems?: any[] }> {
+    return this.request<CartResponse & { syncSummary?: any; invalidItems?: any[] }>(
       API_ENDPOINTS.CART.SYNC,
       {
         method: 'POST',

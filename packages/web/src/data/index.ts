@@ -27,25 +27,39 @@ export const products: Product[] = [
     nailShape: "ALMOND",
     nailLength: "SHORT",
     nailOptions: {
-      customizable: true,
-      availableLengths: ["SHORT", "MEDIUM"],
-      availableShapes: ["ALMOND", "ROUND"]
+      lengthCustomizable: true,
+      shapeCustomizable: true,
+      designCustomizable: false
     },
+    rating: { average: 4.7, count: 214 },
+    likesCount: 89,
+    postsCount: 12,
+    isFeatured: true,
+    isNewProduct: true,
+    isInStock: true,
+    discountRate: 25,
+    discountedPrice: 14250,
+    hasDiscount: true,
     stats: {
-      rating: { average: 4.7, count: 214 },
-      views: 1250,
-      likes: 89,
-      sales: 156
+      viewsCount: 1250,
+      ordersCount: 156,
+      reviewsCount: 214
     },
-    status: "ACTIVE",
+    seller: {
+      userId: "seller-001",
+      name: "핸디 메이드",
+      companyName: "핸디 메이드 컴퍼니",
+      isVerified: true
+    },
+    socialProof: {
+      totalMentions: 450,
+      recentMentions: 24,
+      averageRating: 4.7,
+      trendingScore: 85
+    },
     tags: ["HOT", "NEW"],
-    metadata: {
-      createdAt: "2024-01-15T00:00:00Z",
-      updatedAt: "2024-08-20T00:00:00Z",
-      createdBy: "seller-001",
-      featured: true,
-      trending: true
-    }
+    createdAt: "2024-01-15T00:00:00Z",
+    updatedAt: "2024-08-20T00:00:00Z"
   },
   { 
     productId: "2",
@@ -68,25 +82,39 @@ export const products: Product[] = [
     nailShape: "SQUARE",
     nailLength: "SHORT",
     nailOptions: {
-      customizable: true,
-      availableLengths: ["SHORT", "MEDIUM"],
-      availableShapes: ["SQUARE", "ROUND"]
+      lengthCustomizable: true,
+      shapeCustomizable: true,
+      designCustomizable: false
     },
+    rating: { average: 4.5, count: 156 },
+    likesCount: 67,
+    postsCount: 8,
+    isFeatured: false,
+    isNewProduct: false,
+    isInStock: true,
+    discountRate: 0,
+    discountedPrice: 16000,
+    hasDiscount: false,
     stats: {
-      rating: { average: 4.5, count: 156 },
-      views: 890,
-      likes: 67,
-      sales: 123
+      viewsCount: 890,
+      ordersCount: 123,
+      reviewsCount: 156
     },
-    status: "ACTIVE",
+    seller: {
+      userId: "seller-001",
+      name: "핸디 메이드",
+      companyName: "핸디 메이드 컴퍼니",
+      isVerified: true
+    },
+    socialProof: {
+      totalMentions: 280,
+      recentMentions: 15,
+      averageRating: 4.5,
+      trendingScore: 72
+    },
     tags: ["BEST"],
-    metadata: {
-      createdAt: "2024-01-20T00:00:00Z",
-      updatedAt: "2024-08-18T00:00:00Z",
-      createdBy: "seller-001",
-      featured: false,
-      trending: false
-    }
+    createdAt: "2024-01-20T00:00:00Z",
+    updatedAt: "2024-08-18T00:00:00Z"
   },
   { 
     productId: "3",
@@ -109,25 +137,39 @@ export const products: Product[] = [
     nailShape: "COFFIN",
     nailLength: "LONG",
     nailOptions: {
-      customizable: true,
-      availableLengths: ["MEDIUM", "LONG"],
-      availableShapes: ["COFFIN", "ALMOND"]
+      lengthCustomizable: true,
+      shapeCustomizable: true,
+      designCustomizable: true
     },
+    rating: { average: 4.8, count: 98 },
+    likesCount: 112,
+    postsCount: 15,
+    isFeatured: true,
+    isNewProduct: false,
+    isInStock: true,
+    discountRate: 0,
+    discountedPrice: 22000,
+    hasDiscount: false,
     stats: {
-      rating: { average: 4.8, count: 98 },
-      views: 1450,
-      likes: 112,
-      sales: 87
+      viewsCount: 1450,
+      ordersCount: 87,
+      reviewsCount: 98
     },
-    status: "ACTIVE",
+    seller: {
+      userId: "seller-001",
+      name: "핸디 메이드",
+      companyName: "핸디 메이드 컴퍼니",
+      isVerified: true
+    },
+    socialProof: {
+      totalMentions: 320,
+      recentMentions: 22,
+      averageRating: 4.8,
+      trendingScore: 88
+    },
     tags: ["SALE"],
-    metadata: {
-      createdAt: "2024-02-01T00:00:00Z",
-      updatedAt: "2024-08-19T00:00:00Z",
-      createdBy: "seller-001",
-      featured: true,
-      trending: true
-    }
+    createdAt: "2024-02-01T00:00:00Z",
+    updatedAt: "2024-08-19T00:00:00Z"
   },
   { 
     productId: "4",
@@ -150,25 +192,39 @@ export const products: Product[] = [
     nailShape: "ROUND",
     nailLength: "MEDIUM",
     nailOptions: {
-      customizable: true,
-      availableLengths: ["SHORT", "MEDIUM", "LONG"],
-      availableShapes: ["ROUND", "OVAL"]
+      lengthCustomizable: true,
+      shapeCustomizable: true,
+      designCustomizable: false
     },
+    rating: { average: 4.6, count: 167 },
+    likesCount: 95,
+    postsCount: 18,
+    isFeatured: false,
+    isNewProduct: false,
+    isInStock: true,
+    discountRate: 0,
+    discountedPrice: 18000,
+    hasDiscount: false,
     stats: {
-      rating: { average: 4.6, count: 167 },
-      views: 1100,
-      likes: 95,
-      sales: 134
+      viewsCount: 1100,
+      ordersCount: 134,
+      reviewsCount: 167
     },
-    status: "ACTIVE",
+    seller: {
+      userId: "seller-001",
+      name: "핸디 메이드",
+      companyName: "핸디 메이드 컴퍼니",
+      isVerified: true
+    },
+    socialProof: {
+      totalMentions: 290,
+      recentMentions: 18,
+      averageRating: 4.6,
+      trendingScore: 75
+    },
     tags: [],
-    metadata: {
-      createdAt: "2024-02-10T00:00:00Z",
-      updatedAt: "2024-08-17T00:00:00Z",
-      createdBy: "seller-001",
-      featured: false,
-      trending: false
-    }
+    createdAt: "2024-02-10T00:00:00Z",
+    updatedAt: "2024-08-17T00:00:00Z"
   },
   { 
     productId: "5",
@@ -191,25 +247,39 @@ export const products: Product[] = [
     nailShape: "OVAL",
     nailLength: "SHORT",
     nailOptions: {
-      customizable: true,
-      availableLengths: ["SHORT", "MEDIUM"],
-      availableShapes: ["OVAL", "ROUND"]
+      lengthCustomizable: true,
+      shapeCustomizable: true,
+      designCustomizable: false
     },
+    rating: { average: 4.9, count: 203 },
+    likesCount: 156,
+    postsCount: 25,
+    isFeatured: true,
+    isNewProduct: false,
+    isInStock: true,
+    discountRate: 0,
+    discountedPrice: 17000,
+    hasDiscount: false,
     stats: {
-      rating: { average: 4.9, count: 203 },
-      views: 1680,
-      likes: 156,
-      sales: 178
+      viewsCount: 1680,
+      ordersCount: 178,
+      reviewsCount: 203
     },
-    status: "ACTIVE",
+    seller: {
+      userId: "seller-001",
+      name: "핸디 메이드",
+      companyName: "핸디 메이드 컴퍼니",
+      isVerified: true
+    },
+    socialProof: {
+      totalMentions: 380,
+      recentMentions: 28,
+      averageRating: 4.9,
+      trendingScore: 92
+    },
     tags: ["BEST"],
-    metadata: {
-      createdAt: "2024-02-15T00:00:00Z",
-      updatedAt: "2024-08-16T00:00:00Z",
-      createdBy: "seller-001",
-      featured: true,
-      trending: false
-    }
+    createdAt: "2024-02-15T00:00:00Z",
+    updatedAt: "2024-08-16T00:00:00Z"
   }
 ];
 

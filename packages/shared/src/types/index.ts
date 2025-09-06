@@ -252,6 +252,7 @@ export interface ProductVariant {
 }
 
 export interface CartItem {
+  productId: string;  // 서버 API 스펙에 맞춰 추가
   product: Product;
   variant?: ProductVariant;
   options?: Record<string, string>;
@@ -269,12 +270,115 @@ export interface CartTotals {
   freeShippingRemaining: number;
 }
 
+// 판매자 정보 타입
+export interface SellerInfo {
+  companyName: string;
+  isVerified: boolean;
+  estimatedDeliveryDays: {
+    min: number;
+    max: number;
+  };
+}
+
+// 판매자별 배송 정보
+export interface SellerShipping {
+  sellerId: string;
+  sellerName: string;
+  subtotal: number;
+  baseShippingCost: number;
+  freeShippingThreshold: number;
+  shippingCost: number;
+  isFreeShipping: boolean;
+  freeShippingRemaining: number;
+  region: string;
+  additionalRegionalCost: number;
+  estimatedDeliveryDays: {
+    min: number;
+    max: number;
+  };
+  itemCount: number;
+}
+
+// 판매자별 그룹화된 장바구니 아이템
+export interface CartItemsBySeller {
+  sellerId: string;
+  sellerName: string;
+  sellerInfo: SellerInfo;
+  items: CartItem[];
+  subtotal: number;
+  itemCount: number;
+  shipping: SellerShipping;
+}
+
+// 다중 판매자 총액 정보
+export interface MultiSellerTotals {
+  subtotal: number;
+  totalShippingCost: number;
+  tax: number;
+  total: number;
+  itemCount: number;
+  sellersShipping: SellerShipping[];
+  estimatedProductionTime: number;
+  earliestDeliveryDate: string;
+  shippingBreakdown: {
+    totalSellers: number;
+    freeShippingSellers: number;
+    paidShippingSellers: number;
+    averageDeliveryDays: number;
+  };
+}
+
+// 장바구니 요약 정보
+export interface CartSummary {
+  totalSellers: number;
+  totalItems: number;
+  totalAmount: number;
+  hasMultipleSellers: boolean;
+  largestSellerItemCount: number;
+  sellersWithFreeShipping: number;
+}
+
+// 제작 용량 경고
+export interface CapacityWarning {
+  sellerId: string;
+  sellerName: string;
+  currentMonth: string;
+  remainingCapacity: number;
+  totalCapacity: number;
+  message: string;
+}
+
+// 제거된 아이템 정보
+export interface RemovedItem {
+  productName: string;
+  reason: string;
+  availableCapacity: number;
+  requestedQuantity: number;
+  nextAvailableMonth: string;
+}
+
 export interface Cart {
   id: string;
   user: string;
   items: CartItem[];
+  // 새로운 판매자별 그룹화 정보
+  itemsBySeller?: CartItemsBySeller[];
+  multiSellerTotals?: MultiSellerTotals;
+  summary?: CartSummary;
+  // 기존 정보 (하위 호환성)
   totals: CartTotals;
   updatedAt: string;
+}
+
+// Cart API 응답 타입 업데이트
+export interface CartResponse {
+  success: boolean;
+  data: {
+    cart: Cart;
+  };
+  removedItems?: RemovedItem[];
+  capacityWarnings?: CapacityWarning[];
+  message?: string;
 }
 
 // Order Related Types
