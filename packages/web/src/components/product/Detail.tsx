@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Product } from '@handy-platform/shared';
+import { Product, User } from '@handy-platform/shared';
 import { productService, cartService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
@@ -9,11 +9,13 @@ export function Detail({
   onBack,
   onAdd,
   onCartUpdate,
+  currentUser,
 }: {
   id: string;
   onBack: () => void;
   onAdd: (id: string) => void;
   onCartUpdate?: () => void;
+  currentUser?: User | null;
 }) {
   // 모든 상태를 컴포넌트 최상단에 선언 (Hook 순서 보장)
   const [product, setProduct] = useState<Product | null>(null);
@@ -71,19 +73,31 @@ export function Detail({
   const addToCart = async () => {
     if (!product) return;
     
+    // 로그인 체크
+    if (!currentUser) {
+      setCartMessage('로그인이 필요한 서비스입니다.');
+      setTimeout(() => setCartMessage(null), 3000);
+      return;
+    }
+    
     try {
       setAddingToCart(true);
       setCartMessage(null);
       
-      const options = {
-        nailShape: shape,
-        nailLength: length
-      };
+      const options: Record<string, string> = {};
+      if (shape) options.nailShape = shape;
+      if (length) options.nailLength = length;
+
+      console.log('Adding to cart:', {
+        productId: product.id,
+        quantity: qty,
+        options
+      });
       
-      await cartService.addToCart(product.productId, qty, options);
+      await cartService.addToCart(product.id, qty, options);
       
       setCartMessage('장바구니에 추가되었습니다!');
-      onAdd(product.productId);
+      // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거
       
       if (onCartUpdate) {
         onCartUpdate();
@@ -92,10 +106,25 @@ export function Detail({
       setTimeout(() => setCartMessage(null), 3000);
       
     } catch (err: any) {
-      const errorMessage = err.message || '장바구니 추가에 실패했습니다.';
-      setCartMessage(errorMessage);
       console.error('Add to cart failed:', err);
+      console.error('Error details:', {
+        status: err.status,
+        message: err.message,
+        data: err.data
+      });
       
+      let errorMessage = '장바구니 추가에 실패했습니다.';
+      
+      // 특별한 에러 코드 처리
+      if (err.data?.code === 'PRODUCTION_CAPACITY_EXCEEDED') {
+        errorMessage = '현재 판매자의 생산 능력을 초과하여 주문을 받을 수 없습니다. 나중에 다시 시도해주세요.';
+      } else if (err.data?.error) {
+        errorMessage = err.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setCartMessage(errorMessage);
       setTimeout(() => setCartMessage(null), 5000);
     } finally {
       setAddingToCart(false);
@@ -367,7 +396,7 @@ export function Detail({
             <button onClick={() => setLiked((v) => !v)} className="underline">{liked ? "♥ 찜됨" : "♡ 찜하기"}</button>
             <button onClick={share} className="underline">공유</button>
             <button
-              onClick={() => { try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "open-sizing", productId: p.productId })); } catch {} }}
+              onClick={() => { try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "open-sizing", productId: product.id })); } catch {} }}
               className="underline"
             >
               사이징(앱)

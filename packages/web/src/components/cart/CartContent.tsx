@@ -14,9 +14,11 @@ interface CartContentProps {
   onCheckout: () => void;
   /** 장바구니 변경 시 호출될 콜백 (헤더 카운트 업데이트용) */
   onCartUpdate?: () => void;
+  /** 새로고침 트리거 - 이 값이 변경될 때마다 장바구니 새로고침 */
+  refreshTrigger?: any;
 }
 
-export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }: CartContentProps) {
+export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, refreshTrigger }: CartContentProps) {
   // 상태 관리
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,18 +35,45 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
     try {
       setLoading(true);
       setError(null);
-      const response = await cartService.getCart('seoul'); // 기본 지역: 서울
-      setCart(response.data.cart);
       
-      // 제작 용량 관련 정보 업데이트
-      if (response.removedItems) {
-        setRemovedItems(response.removedItems);
-      }
-      if (response.capacityWarnings) {
-        setCapacityWarnings(response.capacityWarnings);
-      }
-      if (response.message) {
-        setMessage(response.message);
+      console.log('Loading cart data from API...');
+      const response = await cartService.getCart();
+      
+      console.log('Cart API response:', response);
+      
+      if (response.success && response.data) {
+        // 새로운 응답 구조: data.cart가 아닌 data에 직접 장바구니 정보
+        const cartData = {
+          items: response.data.items || [],
+          totals: response.data.totals || {},
+          user: response.data.user
+        };
+        
+        setCart(cartData);
+        
+        // 실제 API 응답에서 제작 용량 관련 정보 처리
+        setRemovedItems(response.removedItems || []);
+        setCapacityWarnings(response.capacityWarnings || []);
+        setMessage(response.message || null);
+        
+        console.log('Cart loaded successfully:', cartData);
+        
+        // 이미지 디버깅을 위한 로그 (새 API 구조)
+        response.data.items?.forEach((item, index) => {
+          console.log(`Cart item ${index} info:`, {
+            productId: item.product.id,
+            productName: item.product.name,
+            mainImageUrl: item.product.mainImageUrl,
+            sellerName: item.product.seller?.name,
+            hasMainImage: !!item.product.mainImageUrl,
+            options: item.options,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.subtotal
+          });
+        });
+      } else {
+        throw new Error('장바구니 정보를 불러올 수 없습니다.');
       }
     } catch (err: any) {
       setError(err.message || '장바구니를 불러오는데 실패했습니다.');
@@ -58,18 +87,43 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
     loadCart();
   }, []);
 
+  // refreshTrigger가 변경될 때마다 장바구니 새로고침 (drawer가 열릴 때)
+  useEffect(() => {
+    if (refreshTrigger) {
+      loadCart();
+    }
+  }, [refreshTrigger]);
+
   // 수량 변경
   const updateQuantity = async (productId: string, quantity: number, options?: Record<string, string>) => {
     if (quantity < 1) return;
     
     try {
       setUpdatingItems(prev => new Set(prev).add(productId));
-      await cartService.updateCartItem(productId, quantity, options);
-      await loadCart();
       
-      // 헤더 카운트 업데이트
-      if (onCartUpdate) {
-        onCartUpdate();
+      console.log('Updating cart item:', { productId, quantity, options });
+      const response = await cartService.updateCartItem(productId, quantity, options);
+      
+      console.log('Update cart response:', response);
+      
+      if (response.success && response.data) {
+        // 새로운 응답 구조 처리
+        const cartData = {
+          items: response.data.items || [],
+          totals: response.data.totals || {},
+          user: response.data.user
+        };
+        
+        setCart(cartData);
+        
+        // 제작 용량 관련 정보도 업데이트
+        setRemovedItems(response.removedItems || []);
+        setCapacityWarnings(response.capacityWarnings || []);
+        setMessage(response.message || null);
+        
+        onCartUpdate?.();
+      } else {
+        throw new Error('수량 변경에 실패했습니다.');
       }
     } catch (err: any) {
       console.error('Update cart item failed:', err);
@@ -89,12 +143,30 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
     
     try {
       setUpdatingItems(prev => new Set(prev).add(productId));
-      await cartService.removeFromCart(productId, options);
-      await loadCart();
       
-      // 헤더 카운트 업데이트
-      if (onCartUpdate) {
-        onCartUpdate();
+      console.log('Removing cart item:', { productId, options });
+      const response = await cartService.removeFromCart(productId, options);
+      
+      console.log('Remove cart response:', response);
+      
+      if (response.success && response.data) {
+        // 새로운 응답 구조 처리
+        const cartData = {
+          items: response.data.items || [],
+          totals: response.data.totals || {},
+          user: response.data.user
+        };
+        
+        setCart(cartData);
+        
+        // 제작 용량 관련 정보도 업데이트
+        setRemovedItems(response.removedItems || []);
+        setCapacityWarnings(response.capacityWarnings || []);
+        setMessage(response.message || null);
+        
+        onCartUpdate?.();
+      } else {
+        throw new Error('상품 제거에 실패했습니다.');
       }
     } catch (err: any) {
       console.error('Remove cart item failed:', err);
@@ -114,16 +186,28 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
     
     try {
       setLoading(true);
-      await cartService.clearCart();
-      await loadCart();
       
-      // 헤더 카운트 업데이트
-      if (onCartUpdate) {
-        onCartUpdate();
+      console.log('Clearing all cart items...');
+      const response = await cartService.clearCart();
+      
+      console.log('Clear cart response:', response);
+      
+      if (response.success) {
+        // 빈 장바구니 상태로 설정
+        setCart(null);
+        setRemovedItems([]);
+        setCapacityWarnings([]);
+        setMessage(null);
+        
+        onCartUpdate?.();
+      } else {
+        throw new Error('장바구니 비우기에 실패했습니다.');
       }
     } catch (err: any) {
       console.error('Clear cart failed:', err);
       alert(err.message || '장바구니 비우기에 실패했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -157,8 +241,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
           <button onClick={onBack} className="text-gray-500 hover:text-black">← 뒤로</button>
           <h1 className="text-2xl font-bold">장바구니</h1>
           <span className="text-gray-500">
-            ({cartItems.length}개 상품
-            {cartSummary?.hasMultipleSellers && `, ${cartSummary.totalSellers}개 판매자`})
+            ({cartItems.length}개 상품)
           </span>
         </div>
         {cartItems.length > 0 && (
@@ -308,8 +391,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
       {/* 판매자의 상품 목록 */}
       <div className="p-4 space-y-4">
         {seller.items.map((item: CartItem) => {
-          const isUpdating = updatingItems.has(item.product.productId);
-          const itemKey = `${item.product.productId}-${JSON.stringify(item.options)}`;
+          const productId = item.product.id; // 새 API는 id 필드 사용
+          const isUpdating = updatingItems.has(productId);
+          const itemKey = `${productId}-${JSON.stringify(item.options)}`;
           
           return (
             <div 
@@ -318,11 +402,30 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
             >
               {/* 상품 이미지 */}
               <div className="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                <img 
-                  src={item.product.mainImageUrl} 
-                  alt={item.product.name}
-                  className="w-full h-full object-cover"
-                />
+                {item.product.mainImageUrl ? (
+                  <img 
+                    src={item.product.mainImageUrl} 
+                    alt={item.product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                          <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                          </svg>
+                        </div>
+                      `;
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
 
               {/* 상품 정보 */}
@@ -331,7 +434,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                   <div>
                     <h4 className="font-semibold">{item.product.name}</h4>
                     <div className="text-gray-500 text-sm mt-1">
-                      {item.product.brand}
+                      {item.product.seller?.name}
                       {item.options && (
                         <div className="mt-1 space-x-1">
                           {Object.entries(item.options).map(([key, value]) => (
@@ -344,7 +447,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(item.product.productId, item.options)}
+                    onClick={() => removeItem(productId, item.options)}
                     disabled={isUpdating}
                     className="text-gray-400 hover:text-red-500 p-1"
                     title="상품 제거"
@@ -357,7 +460,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                   {/* 수량 조절 */}
                   <div className="flex items-center border rounded">
                     <button
-                      onClick={() => updateQuantity(item.product.productId, item.quantity - 1, item.options)}
+                      onClick={() => updateQuantity(productId, item.quantity - 1, item.options)}
                       disabled={isUpdating || item.quantity <= 1}
                       className="px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
                     >
@@ -367,7 +470,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                       {isUpdating ? '...' : item.quantity}
                     </div>
                     <button
-                      onClick={() => updateQuantity(item.product.productId, item.quantity + 1, item.options)}
+                      onClick={() => updateQuantity(productId, item.quantity + 1, item.options)}
                       disabled={isUpdating}
                       className="px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
                     >
@@ -434,8 +537,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
     return (
       <div className={mode === 'drawer' ? 'space-y-4' : 'space-y-4'}>
         {cartItems.map((item: CartItem) => {
-          const isUpdating = updatingItems.has(item.product.productId);
-          const itemKey = `${item.product.productId}-${JSON.stringify(item.options)}`;
+          const productId = item.product.id; // 새 API는 id 필드 사용
+          const isUpdating = updatingItems.has(productId);
+          const itemKey = `${productId}-${JSON.stringify(item.options)}`;
         
         return (
           <div 
@@ -448,14 +552,33 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
           >
             <div className={mode === 'drawer' ? 'flex gap-3' : 'flex gap-4'}>
               {/* 상품 이미지 */}
-              <div className={`rounded-lg bg-gray-100 overflow-hidden ${
+              <div className={`rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 ${
                 mode === 'drawer' ? 'w-16 h-16' : 'w-20 h-20'
               }`}>
-                <img 
-                  src={item.product.mainImageUrl} 
-                  alt={item.product.name}
-                  className="w-full h-full object-cover"
-                />
+                {item.product.mainImageUrl ? (
+                  <img 
+                    src={item.product.mainImageUrl} 
+                    alt={item.product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                          <svg class="${mode === 'drawer' ? 'w-6 h-6' : 'w-8 h-8'}" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                          </svg>
+                        </div>
+                      `;
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <svg className={mode === 'drawer' ? 'w-6 h-6' : 'w-8 h-8'} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
 
               {/* 상품 정보 */}
@@ -466,7 +589,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                       {item.product.name}
                     </h4>
                     <div className={`text-gray-500 mt-1 ${mode === 'drawer' ? 'text-xs' : 'text-sm'}`}>
-                      {item.product.brand}
+                      {item.product.seller?.name}
                       {item.options && (
                         <div className="mt-1">
                           {Object.entries(item.options).map(([key, value]) => (
@@ -479,7 +602,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(item.product.productId, item.options)}
+                    onClick={() => removeItem(productId, item.options)}
                     disabled={isUpdating}
                     className="text-gray-400 hover:text-red-500 p-1"
                   >
@@ -491,7 +614,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                   {/* 수량 조절 */}
                   <div className="flex items-center border rounded">
                     <button
-                      onClick={() => updateQuantity(item.product.productId, item.quantity - 1, item.options)}
+                      onClick={() => updateQuantity(productId, item.quantity - 1, item.options)}
                       disabled={isUpdating || item.quantity <= 1}
                       className="px-2 py-1 hover:bg-gray-50 disabled:opacity-50"
                     >
@@ -501,7 +624,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                       {isUpdating ? '...' : item.quantity}
                     </div>
                     <button
-                      onClick={() => updateQuantity(item.product.productId, item.quantity + 1, item.options)}
+                      onClick={() => updateQuantity(productId, item.quantity + 1, item.options)}
                       disabled={isUpdating}
                       className="px-2 py-1 hover:bg-gray-50 disabled:opacity-50"
                     >
@@ -514,7 +637,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
                     <div className="font-semibold">
                       {money(item.subtotal)}원
                     </div>
-                    {mode === 'page' && item.price !== item.product.price && (
+                    {mode === 'page' && (
                       <div className="text-xs text-gray-500">
                         개당 {money(item.price)}원
                       </div>
@@ -585,12 +708,6 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate }:
             </>
           )}
           
-          {totals.tax > 0 && (
-            <div className="flex items-center justify-between">
-              <span>세금</span>
-              <span>{money(totals.tax)}원</span>
-            </div>
-          )}
           
           {/* 제작 일정 정보 */}
           {hasMultiSellerInfo && multiSellerTotals!.estimatedProductionTime > 0 && (

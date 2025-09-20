@@ -1,4 +1,4 @@
-import { ApiError, withRetry, parseApiError, safeJsonParse, isTokenExpired } from '../../utils/apiHelpers';
+import { ApiError, withRetry, parseApiError, safeJsonParse, isTokenExpired, isRetryableError } from '../../utils/apiHelpers';
 
 export interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -6,6 +6,7 @@ export interface ApiRequestOptions {
   headers?: Record<string, string>;
   enableRetry?: boolean;
   timeout?: number;
+  disableAutoRetry?: boolean; // 수동 재시도 시 자동 재시도 비활성화
 }
 
 export abstract class BaseApiService {
@@ -28,7 +29,8 @@ export abstract class BaseApiService {
       body,
       headers = {},
       enableRetry = true,
-      timeout = this.timeout
+      timeout = this.timeout,
+      disableAutoRetry = false
     } = options;
 
     const makeRequest = async (): Promise<T> => {
@@ -61,16 +63,10 @@ export abstract class BaseApiService {
       }
     };
 
-    if (enableRetry) {
+    // disableAutoRetry가 true이면 자동 재시도를 비활성화
+    if (enableRetry && !disableAutoRetry) {
       return withRetry(makeRequest, {
-        retryCondition: (error) => {
-          if (error instanceof ApiError && error.status) {
-            if (error.status >= 400 && error.status < 500) {
-              return error.status === 408 || error.status === 429;
-            }
-          }
-          return true;
-        },
+        retryCondition: isRetryableError,
       });
     }
 

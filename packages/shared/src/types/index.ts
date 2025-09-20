@@ -17,7 +17,7 @@ export interface PaginationInfo {
 
 // User Related Types
 export interface User {
-  id: string;
+  id: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) after migration
   email: string;
   name: string;
   phone?: string;
@@ -26,6 +26,15 @@ export interface User {
   isActive: boolean;
   address?: Address;
   wishlist?: string[];
+  // Added from server API spec (UUID migration v1.1.0+)
+  points?: {
+    balance: number;
+    tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+  };
+  stats?: {
+    totalOrders: number;
+    totalSpent: number;
+  };
   createdAt: string;
 }
 
@@ -58,7 +67,7 @@ export interface ProductRating {
 }
 
 export interface ProductReview {
-  id: string;
+  id: string;                     // UUID format (b2c3d4e5-f6a7-8901-2345-6789abcdef01) after migration
   user: {
     name: string;
     avatar?: string;
@@ -111,19 +120,20 @@ export interface ProductStats {
   reviewsCount: number;
 }
 
-// 상품 인터페이스 (서버 API 스펙 완전 일치)
+// 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
-  productId: string;              // Sequential ID ("1", "2", "3"...)
+  id: string;                     // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
+  productId?: string;             // Sequential ID ("1", "2", "3"...) - legacy compatibility
   name: string;
   description: string;
-  shortDescription: string;
-  brand: string;
-  sku: string;
+  shortDescription?: string;
+  brand?: string;
+  sku?: string;
   price: number;
   salePrice?: number;
-  discountRate?: number;
+  discountRate?: number | null;
   discountedPrice: number;
-  hasDiscount: boolean;
+  hasDiscount?: boolean;
   mainImageUrl: string;
   detailImages: DetailImage[];
   stockQuantity: number;
@@ -135,13 +145,14 @@ export interface Product {
   nailOptions: NailOptions;
   rating: ProductRating;
   likesCount: number;
-  postsCount: number;
+  postsCount?: number;
   isFeatured: boolean;
   isNewProduct: boolean;
   tags: string[];
-  seller: Seller;
+  seller?: Seller;
   stats: ProductStats;
-  socialProof: SocialProof;
+  socialProof?: SocialProof;
+  status: 'active' | 'inactive' | 'outOfStock';  // 추가: 상품 상태
   createdAt: string;
   updatedAt: string;
 }
@@ -224,8 +235,16 @@ export interface ProductFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-// 판매자별 상품 조회 필터 (ProductFilters에서 sellerId 제외)
-export interface SellerProductFilters extends Omit<ProductFilters, 'sellerId'> {}
+// 판매자별 상품 조회 필터 (ProductFilters에서 sellerId 제외) - 서버 API 스펙에 맞게 변경
+export interface SellerProductFilters {
+  page?: number;                 // 페이지 번호 (기본값: 1) - 서버는 number 타입 요구
+  limit?: number;                // 페이지당 항목 수 (기본값: 20)
+  isActive?: boolean;            // 활성 상태별 필터링
+  lowStock?: boolean;            // 저재고 제품 필터링 (≤10)
+  search?: string;               // 제품명 또는 SKU 검색
+  sortBy?: string;               // 정렬 필드 (기본값: "createdAt")
+  sortOrder?: 'asc' | 'desc';    // 정렬 순서 (기본값: "desc")
+}
 
 // 상품 대량 업데이트 요청
 export interface BulkUpdateProductsRequest {
@@ -401,15 +420,18 @@ export type PaymentMethod =
 
 export interface OrderItem {
   product: {
-    id: string;
+    id: string;                   // UUID format - product identifier
     name: string;
-    mainImage: string;
+    mainImage: any;               // Updated to match server response type
     brand: string;
-    category: string;
     price: number;
     discountedPrice?: number;
   };
-  variant?: ProductVariant;
+  variant?: {
+    id: string;
+    sku: string;
+    priceModifier: number;
+  };
   options?: Record<string, string>;
   quantity: number;
   price: number;
@@ -417,7 +439,7 @@ export interface OrderItem {
   priceModifier: number;
   subtotal: number;
   seller: {
-    id: string;
+    id: string;                   // UUID format - seller identifier
     name: string;
     companyName: string;
     isVerified: boolean;
@@ -436,7 +458,7 @@ export interface ShippingDetails {
 }
 
 export interface Order {
-  id: string;
+  id: string;                     // UUID format (d4e5f6a7-b8c9-1234-5678-90abcdef1234) after migration
   orderNumber: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
@@ -566,7 +588,7 @@ export interface PushNotification {
 // 이미지 업로드 관련 타입
 export interface PresignedUrlRequest {
   filename: string;
-  contentType: string;
+  contentType: string;  // 다시 필수 필드로 복원
   uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general';
 }
 
@@ -773,6 +795,26 @@ export interface SellerRegistration {
   };
 }
 
+// 판매자 상품 목록 필터 (서버 API 스펙에 맞게 업데이트)
+export interface SellerProductFilters {
+  page?: number;                 // 페이지 번호 (기본값: 1)
+  limit?: number;                // 페이지당 항목 수 (기본값: 20)  
+  isActive?: boolean;            // 활성 상태별 필터링
+  lowStock?: boolean;            // 저재고 제품 필터링 (≤10)
+  search?: string;               // 제품명 또는 SKU 검색
+  sortBy?: string;               // 정렬 필드 (기본값: "createdAt")
+  sortOrder?: 'asc' | 'desc';    // 정렬 순서 (기본값: "desc")
+}
+
+// 판매자 상품 분석 개요
+export interface SellerProductOverview {
+  totalProducts: number;
+  activeProducts: number;
+  lowStockProducts: number;
+  averageRating: number;
+  totalReviews: number;
+}
+
 export interface SellerProfile {
   id: string;
   userId: string;
@@ -903,15 +945,44 @@ export interface BulkOperationResult {
 }
 
 // 배송지 관리 타입
+// 주문 시 사용하는 배송지 (기존)
 export interface ShippingAddress {
-  id: string;
-  userId: string;
-  name: string;
-  recipient: string;
+  recipientName: string;
   phone: string;
-  address: Address;
+  address: string;
+  addressDetail?: string;
+  zipCode: string;
+  memo?: string;
+}
+
+// 사용자가 저장한 배송지 목록 관리용
+export interface SavedShippingAddress extends ShippingAddress {
+  id: string;
+  userId?: string;
   isDefault: boolean;
   createdAt: string;
+  updatedAt?: string;
+}
+
+// 배송지 관련 API 요청/응답 타입
+export interface CreateShippingAddressRequest {
+  recipientName: string;
+  phone: string;
+  address: string;
+  addressDetail?: string;
+  zipCode: string;
+  memo?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateShippingAddressRequest extends CreateShippingAddressRequest {
+  id: string;
+}
+
+export interface ShippingAddressResponse {
+  success: boolean;
+  data: SavedShippingAddress[];
+  message?: string;
 }
 
 // QR 코드 관련 타입
@@ -926,4 +997,135 @@ export interface QRCodeResponse {
   qrCode: string;
   data: QRCodeData;
   expiresAt?: string;
+}
+
+// 생산 관리 관련 타입 (서버 API 스펙에 완전 일치)
+export interface ProductionSettings {
+  weeklyCapacity: number;           // 주간 생산량 (1-500)
+  monthlyCapacity: number;          // 월간 생산량 (1-2000, 주별 × 4.3배 이상)
+  averageProcessingDays: number;    // 평균 제작 소요일 (1-30)
+  isAvailableForOrders: boolean;    // 주문 접수 여부
+  vacationMode: boolean;            // 휴가 모드
+  vacationStartDate?: string;       // 휴가 시작일 (ISO 날짜)
+  vacationEndDate?: string;         // 휴가 종료일 (ISO 날짜)
+  specialNotice?: string;           // 특별 안내사항 (최대 500자)
+  lastUpdatedAt?: string;           // 마지막 업데이트 시간
+}
+
+export interface ProductionCapacity {
+  capacityId: string;               // 생산량 ID (형식: sellerId_year_month)
+  year: number;                     // 년도 (2024-2030)
+  month: number;                    // 월 (1-12)
+  maxOrders: number;                // 최대 주문 수
+  currentOrders: number;            // 현재 주문 수
+  remainingOrders: number;          // 남은 주문 수
+  utilizationRate: number;          // 가동률 (%)
+  isActive: boolean;                // 활성 상태
+  baseCapacity?: number;            // 기본 생산량
+  extraCapacity?: number;           // 추가 생산량
+  boostAmount?: number;             // 임시 부스트량
+  statistics?: {
+    lastMonthUtilization: number;   // 전월 가동률
+  };
+  hybridSettings?: {
+    maxWaitingDays: number;         // 최대 대기일
+    bufferDays: number;             // 버퍼일
+    enableDailyLimits: boolean;     // 일간 제한 활성화
+  };
+  extraCapacityHistory?: ExtraCapacityHistory[];  // 추가 생산량 이력
+  temporaryBoosts?: TemporaryBoost[];            // 임시 부스트 이력
+}
+
+export interface ExtraCapacityHistory {
+  amount: number;                   // 추가 생산량 (1-1000)
+  reason: string;                   // 추가 사유 (최대 200자)
+  addedAt: string;                 // 추가 시간
+  expiresAt?: string;              // 만료 시간 (선택사항)
+}
+
+export interface TemporaryBoost {
+  amount: number;                   // 부스트량 (1-500)
+  reason: string;                   // 부스트 사유 (최대 200자)
+  appliedAt: string;               // 적용 시간
+  expiresAt: string;               // 만료 시간
+  duration: number;                // 지속 기간 (1-30일)
+  isActive: boolean;               // 활성 상태
+}
+
+export interface ProductionHistory {
+  year: number;                     // 년도
+  month: number;                    // 월
+  monthName: string;               // 월 이름 ("1월", "2월", ...)
+  maxOrders: number;                // 최대 주문 수
+  currentOrders: number;            // 현재 주문 수
+  remainingOrders: number;          // 남은 주문 수
+  utilizationRate: number;          // 가동률 (%)
+  statistics?: {
+    lastMonthUtilization?: number;  // 전월 가동률
+  };
+}
+
+export interface ProductionHistoryResponse {
+  history: ProductionHistory[];     // 생산 이력 배열
+  summary: {
+    totalOrders: number;            // 총 주문 수
+    averageUtilization: number;     // 평균 가동률
+    periodStart: string;           // 조회 시작 기간 ("YYYY-MM")
+    periodEnd: string;             // 조회 종료 기간 ("YYYY-MM")
+  };
+}
+
+export interface CurrentCapacityInfo {
+  year: number;                     // 현재 년도
+  month: number;                    // 현재 월
+  maxOrders: number;                // 최대 주문 수
+  currentOrders: number;            // 현재 주문 수
+  remainingOrders: number;          // 남은 주문 수
+  utilizationRate: string;          // 가동률 (문자열, "22.5")
+}
+
+// 생산 관리 API 요청 타입들
+export interface UpdateProductionSettingsRequest {
+  weeklyCapacity?: number;
+  monthlyCapacity?: number;
+  averageProcessingDays?: number;
+  isAvailableForOrders?: boolean;
+  vacationMode?: boolean;
+  vacationStartDate?: string;
+  vacationEndDate?: string;
+  specialNotice?: string;
+}
+
+export interface UpdateProductionCapacityRequest {
+  maxOrders: number;                // 수정할 최대 주문 수 (1-2000)
+  reason: string;                  // 수정 사유 (필수)
+}
+
+export interface AddExtraCapacityRequest {
+  extraCapacity: number;            // 추가 생산량 (1-1000, 정수, 필수)
+  reason: string;                  // 추가 사유 (최대 200자, 필수)
+  expiresAt?: string;              // 만료일 (ISO 날짜 형식, 선택사항)
+}
+
+export interface ProductionBoostRequest {
+  boostAmount: number;              // 부스트량 (1-500, 정수, 필수)
+  reason: string;                  // 부스트 사유 (최대 200자, 필수)
+  duration: number;                // 지속 기간 (1-30일, 정수, 필수)
+}
+
+// 생산 관리 API 응답 타입들
+export interface ProductionSettingsResponse {
+  productionSettings: ProductionSettings;
+  currentCapacity?: CurrentCapacityInfo;    // 현재 용량 정보
+  isConfigured?: boolean;                   // 설정 완료 여부
+}
+
+export interface ProductionCapacityResponse {
+  success: boolean;
+  data: ProductionCapacity;
+}
+
+export interface ProductionHistoryApiResponse {
+  success: boolean;
+  data: ProductionHistoryResponse;
 }

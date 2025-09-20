@@ -10,19 +10,45 @@ import {
   UpdateProductRequest
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
+import { validateResponseId, normalizeProductId, isValidId } from '../../utils/uuidUtils';
 
 export abstract class BaseProductService extends BaseApiService {
   // 상품 조회 (고객용 - 서버 API 스펙 완전 일치)
   async getProducts(filters: ProductFilters = {}): Promise<ProductsResponse> {
     const queryString = this.buildQueryString(filters);
     const endpoint = queryString ? `${API_ENDPOINTS.PRODUCTS.LIST}?${queryString}` : API_ENDPOINTS.PRODUCTS.LIST;
-    return this.request<ProductsResponse>(endpoint);
+    
+    const response = await this.request<ProductsResponse>(endpoint);
+    
+    // Validate UUID format in response products during migration period
+    if (response.success && response.data) {
+      response.data.forEach((product, index) => {
+        try {
+          validateResponseId(product, `Product[${index}]`);
+        } catch (error) {
+          console.warn(`UUID Migration Warning - Product validation:`, error);
+        }
+      });
+    }
+    
+    return response;
   }
 
   async getProduct(productId: string): Promise<ProductDetailResponse> {
-    return this.request<ProductDetailResponse>(
+    const response = await this.request<ProductDetailResponse>(
       API_ENDPOINTS.PRODUCTS.DETAIL(productId)
     );
+    
+    // Validate UUID format in single product response during migration period
+    if (response.success && response.data) {
+      try {
+        validateResponseId(response.data, 'Product');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Product detail validation:`, error);
+      }
+    }
+    
+    return response;
   }
 
   // 판매자별 상품 조회 (공개)
@@ -76,6 +102,32 @@ export abstract class BaseProductService extends BaseApiService {
         method: 'DELETE',
       }
     );
+  }
+
+  /**
+   * Helper method to safely extract product identifier for API calls
+   * Handles both UUID and legacy productId formats during migration
+   * @param product - Product object with id and/or productId fields
+   * @returns string - normalized product identifier for API calls
+   */
+  protected getProductApiId(product: { id?: string; productId?: string }): string {
+    try {
+      return normalizeProductId(product);
+    } catch (error) {
+      console.error('UUID Migration Error - Invalid product ID format:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Helper method to validate product ID before API calls
+   * @param productId - Product ID to validate
+   * @throws Error if ID format is invalid
+   */
+  protected validateProductId(productId: string): void {
+    if (!isValidId(productId)) {
+      throw new Error(`Invalid product ID format: ${productId}. Expected UUID or ObjectId format.`);
+    }
   }
 }
 

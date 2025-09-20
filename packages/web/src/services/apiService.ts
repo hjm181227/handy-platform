@@ -93,6 +93,8 @@ class WebApiService {
   get order() { return this.apiService.order; }
   get payment() { return this.apiService.payment; }
   get seller() { return this.apiService.seller; }
+  get production() { return this.apiService.production; }
+  get admin() { return this.apiService.admin; }
   get loyalty() { return this.apiService.loyalty; }
   get image() { return this.apiService.image; }
   get shipping() { return this.apiService.shipping; }
@@ -114,6 +116,32 @@ class WebApiService {
 
   async loginAndStoreToken(credentials: { email: string; password: string }) {
     const response = await this.auth.login(credentials);
+    await this.auth.setAuthToken(response.token, response.user);
+    return response;
+  }
+
+  async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string) {
+    const response = await this.auth.oauthLogin(provider, accessToken);
+    await this.auth.setAuthToken(response.token, response.user);
+    return response;
+  }
+
+  async signupWithOauth(data: {
+    provider: 'kakao' | 'google' | 'apple' | 'naver';
+    kakaoUserInfo: {
+      id: string;
+      email: string;
+      name: string;
+      profileImage?: string;
+    };
+    additionalInfo?: {
+      phone?: string;
+    };
+  }) {
+    const response = await this.auth.signupWithOauth(data.provider, {
+      kakaoUserInfo: data.kakaoUserInfo,
+      additionalInfo: data.additionalInfo
+    });
     await this.auth.setAuthToken(response.token, response.user);
     return response;
   }
@@ -160,6 +188,8 @@ export const {
   order: orderService,
   payment: paymentService,
   seller: sellerService,
+  production: productionService,
+  admin: adminService,
   loyalty: loyaltyService,
   image: imageService,
   shipping: shippingService,

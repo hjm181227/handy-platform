@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
 import { imageService, productService, sellerService } from '../../services/apiService';
 import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions } from '../../types';
+
+// 생산 관리 컴포넌트 임포트
+import { ProductionDashboard } from './seller/ProductionDashboard';
+import { ProductionSettings } from './seller/ProductionSettings';
+import { ProductionManage } from './seller/ProductionManage';
+import { ProductionStatus } from './seller/ProductionStatus';
+
+// 주문 관리 컴포넌트 임포트
+import { OrderManagement } from './seller/OrderManagement';
 
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
@@ -346,12 +355,32 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   const [ productToDelete, setProductToDelete ] = useState<any | null>(null);
   const [ isDeleting, setIsDeleting ] = useState(false);
 
-  // 상품 목록 로드
+  // 중복 API 호출 방지용 ref (React StrictMode 대응)
+  const isLoadingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 상품 목록 로드 (중복 호출 방지)
   useEffect(() => {
     const loadProducts = async () => {
+      // 이미 로딩 중이면 중복 호출 방지
+      if (isLoadingRef.current) {
+        console.log('API call already in progress, skipping...');
+        return;
+      }
+
+      // 이전 요청이 있으면 취소
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
       try {
+        isLoadingRef.current = true;
+        abortControllerRef.current = new AbortController();
+        
         setIsLoading(true);
         setError(null);
+
+        console.log('Loading products with filter:', filter, 'search:', searchQuery);
 
         // API 호출
         try {
@@ -363,19 +392,29 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             ...(filter !== 'all' && { isActive: filter === 'active' })
           });
 
+          // 요청이 취소되었으면 처리하지 않음
+          if (abortControllerRef.current?.signal.aborted) {
+            return;
+          }
+
           console.log('Seller products API response:', response);
-          console.log('Products data:', response.products);
+          console.log('Products data:', response.data);
           // 첫 번째 상품의 구조 확인
-          if (response.products && response.products.length > 0) {
-            console.log('First product structure:', response.products[0]);
+          if (response.data && response.data.length > 0) {
+            console.log('First product structure:', response.data[0]);
             console.log('Product ID fields:', {
-              _id: response.products[0]._id,
-              id: response.products[0].id,
-              productId: response.products[0].productId
+              _id: response.data[0]._id,
+              id: response.data[0].id,
+              productId: response.data[0].productId
             });
           }
-          setProducts(response.products || []);
+          setProducts(response.data || []);
         } catch (apiError) {
+          // 요청이 취소된 경우는 에러로 처리하지 않음
+          if (abortControllerRef.current?.signal.aborted) {
+            return;
+          }
+          
           console.error('Failed to load seller products:', apiError);
           // API 오류 시 사용자에게 알림
           setError('상품 목록을 불러오는데 실패했습니다.');
@@ -425,11 +464,21 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
         console.error('Failed to load products:', error);
         setError('상품 목록을 불러오는데 실패했습니다.');
       } finally {
+        isLoadingRef.current = false;
         setIsLoading(false);
+        abortControllerRef.current = null;
       }
     };
 
     loadProducts();
+
+    // 컴포넌트 언마운트 시 진행 중인 요청 취소
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      isLoadingRef.current = false;
+    };
   }, [ filter, searchQuery ]); // filter나 searchQuery가 변경될 때마다 재로드
 
   // API에서 이미 필터링된 데이터가 오므로 추가 필터링 불필요
@@ -604,7 +653,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                   {filteredProducts.map((product) => (
-                    <tr key={product.productId} className="hover:bg-gray-50">
+                    <tr key={product.id || product.productId} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
@@ -623,7 +672,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {money(product.price)}원
+                        {money(product.discountedPrice || product.price)}원
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(product.status || (product.isActive ? 'active' : 'inactive'))}
@@ -637,13 +686,13 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => onGo(`/seller/products/${product.productId}/edit`)}
+                            onClick={() => onGo(`/seller/products/${product.id || product.productId}/edit`)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             수정
                           </button>
                           <button
-                            onClick={() => onGo(`/seller/products/${product.productId}/analytics`)}
+                            onClick={() => onGo(`/seller/products/${product.id || product.productId}/analytics`)}
                             className="text-green-600 hover:text-green-900"
                           >
                             분석
@@ -818,29 +867,47 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
           console.log('Loading product data for ID:', productId);
           const response = await sellerService.getSellerProduct(productId);
-          const product = response.product; // 판매자용 API 사용
+          
+          console.log('Full API response:', response);
+          
+          if (!response.success || !response.data) {
+            throw new Error('Failed to load product data');
+          }
+          
+          const product = response.data; // 실제 API 응답 구조에 맞게 수정
 
           console.log('Loaded product data:', product);
 
-          // 폼 데이터 업데이트 (새로운 타입에 맞게)
+          // 상품 데이터 유효성 검증
+          if (!product || typeof product !== 'object') {
+            throw new Error('Invalid product data received from server');
+          }
+
+          // 폼 데이터 업데이트 (API 응답 구조에 맞게, 안전한 접근)
           setFormData({
-            name: product.name || '',
-            description: product.description || '',
-            shortDescription: product.shortDescription || '',
-            brand: product.brand || '네일 제품',
-            sku: product.sku || '',
-            price: product.price?.toString() || '',
-            salePrice: product.salePrice?.toString() || '',
-            discountRate: product.discountRate?.toString() || '',
-            stockQuantity: product.stockQuantity?.toString() || '100',
-            processingDays: product.processingDays?.toString() || '3',
+            // 기본 정보
+            name: String(product.name || ''),
+            description: String(product.description || ''),
+            shortDescription: String(product.shortDescription || ''),
+            brand: String(product.brand || 'Seller Store'),
+            sku: String(product.sku || ''),
+            
+            // 가격 정보 (숫자를 안전하게 문자열로 변환)
+            price: product.price ? String(product.price) : '',
+            salePrice: product.salePrice ? String(product.salePrice) : '',
+            discountRate: product.discountRate !== null && product.discountRate !== undefined ? String(product.discountRate) : '',
+            
+            // 재고 및 처리 정보
+            stockQuantity: product.stockQuantity ? String(product.stockQuantity) : '100',
+            processingDays: product.processingDays ? String(product.processingDays) : '3',
+            status: product.status || 'active',
 
             // 네일 전용 필드
-            nailShape: product.nailShape || 'ROUND',
-            nailLength: product.nailLength || 'MEDIUM',
-            lengthCustomizable: product.nailOptions?.lengthCustomizable || false,
-            shapeCustomizable: product.nailOptions?.shapeCustomizable || false,
-            designCustomizable: product.nailOptions?.designCustomizable || false,
+            nailShape: (product.nailShape as NailShape) || 'ROUND',
+            nailLength: (product.nailLength as NailLength) || 'MEDIUM',
+            lengthCustomizable: product.nailOptions?.lengthCustomizable ?? false,
+            shapeCustomizable: product.nailOptions?.shapeCustomizable ?? false,
+            designCustomizable: product.nailOptions?.designCustomizable ?? false,
             nailCategories: product.nailCategories || {
               style: [],
               color: [],
@@ -850,13 +917,13 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
             },
 
             // 이미지
-            mainImageUrl: product.mainImageUrl || '',
-            detailImages: product.detailImages || [],
+            mainImageUrl: String(product.mainImageUrl || ''),
+            detailImages: Array.isArray(product.detailImages) ? product.detailImages : [],
 
             // 상품 옵션
-            isFeatured: product.isFeatured || false,
-            isNewProduct: product.isNewProduct || false,
-            tags: product.tags || []
+            isFeatured: Boolean(product.isFeatured),
+            isNewProduct: Boolean(product.isNewProduct ?? true),
+            tags: Array.isArray(product.tags) ? product.tags : []
           });
 
         } catch (error) {
@@ -988,11 +1055,14 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
       console.log('Uploading to S3...');
       const uploadResponse = await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
-        body: file
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
       });
-
+      
       if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        throw new Error(`S3 upload failed: ${uploadResponse.status}`);
       }
 
       console.log('Image uploaded successfully to S3');
@@ -1042,11 +1112,14 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
       console.log('Uploading detail image to S3...');
       const uploadResponse = await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
-        body: file
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
       });
-
+      
       if (!uploadResponse.ok) {
-        throw new Error(`Detail image upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        throw new Error(`S3 upload failed: ${uploadResponse.status}`);
       }
 
       console.log('Detail image uploaded successfully to S3');
@@ -1121,13 +1194,17 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         uploadType: 'product-detail'
       });
 
+      // S3에 재업로드
       const uploadResponse = await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
-        body: detailImage.file
+        body: detailImage.file,
+        headers: {
+          'Content-Type': detailImage.file.type,
+        },
       });
-
+      
       if (!uploadResponse.ok) {
-        throw new Error(`Retry upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        throw new Error(`S3 retry upload failed: ${uploadResponse.status}`);
       }
 
       console.log(`Image ${index} retry upload successful`);
@@ -1977,294 +2054,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
 // 주문 관리 페이지
 export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
-  const [ statusFilter, setStatusFilter ] = useState('all');
-  const [ dateFilter, setDateFilter ] = useState('week');
-  const [ orders, setOrders ] = useState<any[]>([]);
-  const [ isLoading, setIsLoading ] = useState(true);
-  const [ error, setError ] = useState<string | null>(null);
-
-  // 주문 목록 로드
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // API 호출 시도
-        try {
-          const params = new URLSearchParams({
-            page: '1',
-            limit: '50',
-            ...(statusFilter !== 'all' && { status: statusFilter }),
-            sortBy: 'createdAt',
-            sortOrder: 'desc'
-          });
-
-          const response = await fetch(`/api/seller/orders?${params}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setOrders(data.orders || []);
-          } else {
-            throw new Error('API not implemented');
-          }
-        } catch (apiError) {
-          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
-          console.warn('Seller orders API not implemented, using sample data');
-          setOrders([
-            {
-              id: 'ORD-20240818-001',
-              customerName: '김민지',
-              customerEmail: 'minji@example.com',
-              products: [
-                { name: 'Glossy Almond Tip – Milk Beige', quantity: 2, price: 18000 },
-                { name: 'Square Short – Cocoa', quantity: 1, price: 16500 }
-              ],
-              total: 52500,
-              status: 'pending',
-              paymentStatus: 'paid',
-              orderDate: '2024-08-18 14:30',
-              shippingAddress: '서울시 강남구 테헤란로 123',
-              trackingNumber: null
-            },
-            {
-              id: 'ORD-20240818-002',
-              customerName: '이수진',
-              customerEmail: 'sujin@example.com',
-              products: [
-                { name: 'Gel Polish - Rose Gold', quantity: 3, price: 22000 }
-              ],
-              total: 66000,
-              status: 'processing',
-              paymentStatus: 'paid',
-              orderDate: '2024-08-18 11:15',
-              shippingAddress: '부산시 해운대구 센텀동로 456',
-              trackingNumber: null
-            },
-            {
-              id: 'ORD-20240817-003',
-              customerName: '박지영',
-              customerEmail: 'jiyoung@example.com',
-              products: [
-                { name: 'Glossy Almond Tip – Milk Beige', quantity: 1, price: 18000 }
-              ],
-              total: 18000,
-              status: 'shipped',
-              paymentStatus: 'paid',
-              orderDate: '2024-08-17 16:45',
-              shippingAddress: '대구시 중구 동성로 789',
-              trackingNumber: '1234567890123'
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error('Failed to load orders:', error);
-        setError('주문 목록을 불러오는데 실패했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadOrders();
-  }, [ statusFilter, dateFilter ]);
-
-  const filteredOrders = orders.filter(order => {
-    if (statusFilter !== 'all' && order.status !== statusFilter) return false;
-    return true;
-  });
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <span className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-medium">처리 대기</span>;
-      case 'processing':
-        return <span className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">처리 중</span>;
-      case 'shipped':
-        return <span className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">배송 중</span>;
-      case 'delivered':
-        return <span className="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full font-medium">배송 완료</span>;
-      case 'cancelled':
-        return <span className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full font-medium">취소됨</span>;
-      default:
-        return null;
-    }
-  };
-
-  const handleStatusUpdate = (orderId: string, newStatus: string) => {
-    alert(`주문 ${orderId}의 상태를 ${newStatus}로 변경합니다.`);
-  };
-
-  return (
-    <SellerLayout title="주문 관리" onGo={onGo}>
-      <div className="space-y-6">
-        {/* 필터 및 통계 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">전체 주문</option>
-                <option value="pending">처리 대기</option>
-                <option value="processing">처리 중</option>
-                <option value="shipped">배송 중</option>
-                <option value="delivered">배송 완료</option>
-                <option value="cancelled">취소됨</option>
-              </select>
-
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="today">오늘</option>
-                <option value="week">최근 1주일</option>
-                <option value="month">최근 1개월</option>
-                <option value="quarter">최근 3개월</option>
-              </select>
-            </div>
-
-            <button
-              onClick={() => alert('주문 데이터를 Excel로 내보냅니다.')}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-              Excel 내보내기
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <p className="text-2xl font-bold text-yellow-600">12</p>
-              <p className="text-sm text-gray-600">처리 대기</p>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">8</p>
-              <p className="text-sm text-gray-600">처리 중</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">45</p>
-              <p className="text-sm text-gray-600">배송 중</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-600">128</p>
-              <p className="text-sm text-gray-600">배송 완료</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 주문 목록 */}
-        <div className="space-y-4">
-          {filteredOrders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg border shadow-sm">
-              <div className="p-6">
-                {/* 주문 헤더 */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{order.id}</h3>
-                    <p className="text-sm text-gray-500">주문일: {order.orderDate}</p>
-                  </div>
-                  <div className="flex items-center gap-3 mt-3 sm:mt-0">
-                    {getStatusBadge(order.status)}
-                    <span className="text-lg font-bold text-gray-900">{money(order.total)}원</span>
-                  </div>
-                </div>
-
-                {/* 고객 정보 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-sm text-gray-600">주문자</p>
-                    <p className="font-medium">{order.customerName}</p>
-                    <p className="text-sm text-gray-500">{order.customerEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">배송지</p>
-                    <p className="font-medium">{order.shippingAddress}</p>
-                    {order.trackingNumber && (
-                      <p className="text-sm text-blue-600">송장번호: {order.trackingNumber}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* 주문 상품 */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">주문 상품</p>
-                  <div className="space-y-2">
-                    {order.products.map((product, index) => (
-                      <div key={index}
-                           className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                        <div>
-                          <p className="font-medium">{product.name}</p>
-                          <p className="text-sm text-gray-500">수량: {product.quantity}개</p>
-                        </div>
-                        <p className="font-medium">{money(product.price * product.quantity)}원</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 액션 버튼 */}
-                <div className="flex flex-wrap gap-2">
-                  {order.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => handleStatusUpdate(order.id, 'processing')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                      >
-                        처리 시작
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(order.id, 'cancelled')}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-                      >
-                        주문 취소
-                      </button>
-                    </>
-                  )}
-                  {order.status === 'processing' && (
-                    <button
-                      onClick={() => handleStatusUpdate(order.id, 'shipped')}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                    >
-                      배송 시작
-                    </button>
-                  )}
-                  <button
-                    onClick={() => onGo(`/seller/orders/${order.id}`)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-                  >
-                    상세 보기
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">주문이 없습니다</h3>
-            <p className="mt-1 text-sm text-gray-500">새로운 주문을 기다리고 있습니다.</p>
-          </div>
-        )}
-      </div>
-    </SellerLayout>
-  );
+  return <OrderManagement onGo={onGo} />;
 }
 
 // 매출 분석 페이지
@@ -3064,3 +2854,6 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     </SellerLayout>
   );
 }
+
+// 생산 관리 컴포넌트들 내보내기
+export { ProductionDashboard, ProductionSettings, ProductionManage, ProductionStatus };

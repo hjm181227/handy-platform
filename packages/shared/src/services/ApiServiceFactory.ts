@@ -6,6 +6,8 @@ import { BaseCartService, CartServiceFactory } from './commerce/CartService';
 import { BaseOrderService, OrderServiceFactory } from './commerce/OrderService';
 import { BasePaymentService, PaymentServiceFactory } from './commerce/PaymentService';
 import { BaseSellerService, SellerServiceFactory } from './seller/SellerService';
+import { BaseProductionService, ProductionServiceFactory } from './seller/ProductionService';
+import { BaseAdminService, AdminServiceFactory } from './admin/AdminService';
 import { BaseLoyaltyService, LoyaltyServiceFactory } from './loyalty/LoyaltyService';
 import { BaseImageService, ImageServiceFactory } from './utils/ImageService';
 import { BaseShippingService, ShippingServiceFactory } from './utils/ShippingService';
@@ -21,6 +23,8 @@ export interface IntegratedApiService {
   order: BaseOrderService;
   payment: BasePaymentService;
   seller: BaseSellerService;
+  production: BaseProductionService;
+  admin: BaseAdminService;
   loyalty: BaseLoyaltyService;
   image: BaseImageService;
   shipping: BaseShippingService;
@@ -43,6 +47,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public order: BaseOrderService;
   public payment: BasePaymentService;
   public seller: BaseSellerService;
+  public production: BaseProductionService;
+  public admin: BaseAdminService;
   public loyalty: BaseLoyaltyService;
   public image: BaseImageService;
   public shipping: BaseShippingService;
@@ -67,6 +73,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.order = OrderServiceFactory.create(baseURL, getAuthHeaders);
     this.payment = PaymentServiceFactory.create(baseURL, getAuthHeaders);
     this.seller = SellerServiceFactory.create(baseURL, getAuthHeaders);
+    this.production = ProductionServiceFactory.create(baseURL, getAuthHeaders);
+    this.admin = AdminServiceFactory.create(baseURL, getAuthHeaders);
     this.loyalty = LoyaltyServiceFactory.create(baseURL, getAuthHeaders);
     this.image = ImageServiceFactory.create(baseURL, getAuthHeaders);
     this.shipping = ShippingServiceFactory.create(baseURL, getAuthHeaders);
@@ -85,6 +93,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'order',
         'payment',
         'seller',
+        'production',
+        'admin',
         'loyalty',
         'image',
         'shipping',
@@ -163,6 +173,7 @@ export type {
   BaseOrderService,
   BasePaymentService,
   BaseSellerService,
+  BaseAdminService,
   BaseLoyaltyService,
   BaseImageService,
   BaseShippingService,

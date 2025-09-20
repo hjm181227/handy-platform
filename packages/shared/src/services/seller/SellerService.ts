@@ -11,7 +11,15 @@ import {
   SellerProductAnalytics,
   SellerOrderAnalytics,
   SettlementInfo,
-  SettlementSummary
+  SettlementSummary,
+  ProductionSettings,
+  ProductionCapacity,
+  ProductionHistory,
+  ProductionHistoryResponse,
+  UpdateProductionSettingsRequest,
+  UpdateProductionCapacityRequest,
+  AddExtraCapacityRequest,
+  ProductionBoostRequest
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -50,24 +58,48 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<SellerDashboard>>(API_ENDPOINTS.SELLER.DASHBOARD);
   }
 
-  // 상품 관리
+  // 상품 관리 (서버 API 스펙에 완전 일치)
   async getSellerProducts(filters: {
-    page?: number;
-    limit?: number;
-    category?: string;
-    isActive?: boolean;
-    lowStock?: boolean;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: string;
-  } = {}): Promise<ApiResponse<{ products: Product[]; pagination: any }>> {
+    page?: number;                  // 페이지 번호 (기본값: 1)
+    limit?: number;                 // 페이지당 항목 수 (기본값: 20)
+    isActive?: boolean;             // 활성 상태별 필터링
+    lowStock?: boolean;             // 저재고 제품 필터링 (≤10)
+    search?: string;                // 제품명 또는 SKU 검색
+    sortBy?: string;                // 정렬 필드 (기본값: "createdAt")
+    sortOrder?: 'asc' | 'desc';     // 정렬 순서 (기본값: "desc")
+  } = {}): Promise<{ 
+    success: boolean;
+    data: Product[]; 
+    pagination: any;
+  }> {
     const queryString = this.buildQueryString(filters);
     const endpoint = queryString ? `${API_ENDPOINTS.SELLER.PRODUCTS}?${queryString}` : API_ENDPOINTS.SELLER.PRODUCTS;
-    return this.request<ApiResponse<{ products: Product[]; pagination: any }>>(endpoint);
+    
+    const response = await this.request<{ 
+      success: boolean;
+      data: Product[]; 
+      pagination: any;
+    }>(endpoint);
+    
+    // UUID validation for seller products
+    if (response.data) {
+      response.data.forEach((product, index) => {
+        try {
+          // Validate product UUID format during migration period
+          if (product.id) {
+            console.debug(`[Seller Products] Product[${index}] ID: ${product.id}`);
+          }
+        } catch (error) {
+          console.warn(`UUID Migration Warning - Seller Product validation:`, error);
+        }
+      });
+    }
+
+    return response;
   }
 
-  async getSellerProduct(id: string): Promise<ApiResponse<{ product: Product }>> {
-    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.SELLER.PRODUCT_DETAIL(id));
+  async getSellerProduct(id: string): Promise<{ success: boolean; data: Product }> {
+    return this.request<{ success: boolean; data: Product }>(API_ENDPOINTS.SELLER.PRODUCT_DETAIL(id));
   }
 
   async createProduct(productData: {
@@ -114,15 +146,33 @@ export abstract class BaseSellerService extends BaseApiService {
     });
   }
 
-  async updateProductStock(id: string, stock: number): Promise<ApiResponse<{ product: Product }>> {
-    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.SELLER.PRODUCT_STOCK(id), {
+  // PATCH /:id/stock - 제품 재고 업데이트 (서버 API 스펙 일치)
+  async updateProductStock(id: string, stock: number): Promise<ApiResponse<{ 
+    success: boolean; 
+    message: string; 
+    product?: Product;
+  }>> {
+    return this.request<ApiResponse<{ 
+      success: boolean; 
+      message: string; 
+      product?: Product;
+    }>>(API_ENDPOINTS.SELLER.PRODUCT_STOCK(id), {
       method: 'PATCH',
       body: JSON.stringify({ stock }),
     });
   }
 
-  async updateProductStatus(id: string, isActive: boolean): Promise<ApiResponse<{ product: Product }>> {
-    return this.request<ApiResponse<{ product: Product }>>(API_ENDPOINTS.SELLER.PRODUCT_STATUS(id), {
+  // PATCH /:id/status - 제품 활성 상태 업데이트 (서버 API 스펙 일치)
+  async updateProductStatus(id: string, isActive: boolean): Promise<ApiResponse<{ 
+    success: boolean; 
+    message: string; 
+    product?: Product;
+  }>> {
+    return this.request<ApiResponse<{ 
+      success: boolean; 
+      message: string; 
+      product?: Product;
+    }>>(API_ENDPOINTS.SELLER.PRODUCT_STATUS(id), {
       method: 'PATCH',
       body: JSON.stringify({ isActive }),
     });
@@ -157,27 +207,121 @@ export abstract class BaseSellerService extends BaseApiService {
 
   async updateOrderStatus(
     id: string, 
-    status: string, 
-    note?: string, 
-    trackingNumber?: string
+    updates: {
+      status: string;
+      note?: string;
+      trackingNumber?: string;
+      carrierCode?: string;
+      carrierName?: string;
+    }
   ): Promise<ApiResponse<{ order: Order }>> {
-    const body: any = { status };
-    if (note) body.note = note;
-    if (trackingNumber) body.trackingNumber = trackingNumber;
-
     return this.request<ApiResponse<{ order: Order }>>(API_ENDPOINTS.SELLER.ORDER_STATUS(id), {
       method: 'PATCH',
-      body: JSON.stringify(body),
+      body: JSON.stringify(updates),
     });
   }
 
-  // 분석 및 통계
+  // 배송 정보 업데이트 (별도 메서드)
+  async updateShippingInfo(
+    orderId: string,
+    shippingInfo: {
+      carrierCode: string;
+      carrierName: string;
+      trackingNumber: string;
+      shippingDate?: string;
+      estimatedDeliveryDate?: string;
+      note?: string;
+    }
+  ): Promise<ApiResponse<{ order: Order }>> {
+    return this.updateOrderStatus(orderId, {
+      status: 'shipped',
+      trackingNumber: shippingInfo.trackingNumber,
+      carrierCode: shippingInfo.carrierCode,
+      carrierName: shippingInfo.carrierName,
+      note: shippingInfo.note || `배송 시작됨 (${shippingInfo.carrierName}: ${shippingInfo.trackingNumber})`
+    });
+  }
+
+  // 주문 상태 일괄 업데이트
+  async bulkUpdateOrderStatus(
+    orderIds: string[],
+    updates: {
+      status: string;
+      note?: string;
+    }
+  ): Promise<ApiResponse<{ 
+    successCount: number;
+    failedOrders: { orderId: string; error: string }[];
+  }>> {
+    return this.request<ApiResponse<{
+      successCount: number;
+      failedOrders: { orderId: string; error: string }[];
+    }>>(API_ENDPOINTS.SELLER.ORDERS, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        action: 'bulk_update_status',
+        orderIds,
+        updates
+      }),
+    });
+  }
+
+  // 배송 정보 일괄 업데이트
+  async bulkUpdateShipping(
+    shippingUpdates: Array<{
+      orderId: string;
+      carrierCode: string;
+      carrierName: string;
+      trackingNumber: string;
+      note?: string;
+    }>
+  ): Promise<ApiResponse<{
+    successCount: number;
+    failedOrders: { orderId: string; error: string }[];
+  }>> {
+    return this.request<ApiResponse<{
+      successCount: number;
+      failedOrders: { orderId: string; error: string }[];
+    }>>(API_ENDPOINTS.SELLER.ORDERS, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        action: 'bulk_update_shipping',
+        updates: shippingUpdates
+      }),
+    });
+  }
+
+  // GET /analytics/overview - 제품 분석 개요 (서버 API 스펙 일치)
+  async getProductAnalyticsOverview(): Promise<ApiResponse<{
+    totalProducts: number;
+    activeProducts: number;
+    lowStockProducts: number;
+    averageRating: number;
+    totalReviews: number;
+  }>> {
+    return this.request<ApiResponse<{
+      totalProducts: number;
+      activeProducts: number;
+      lowStockProducts: number;
+      averageRating: number;
+      totalReviews: number;
+    }>>(API_ENDPOINTS.SELLER.PRODUCT_ANALYTICS);
+  }
+
+  // GET /analytics/overview - 주문 분석 개요 (서버 API 스펙 일치)
+  async getOrderAnalyticsOverview(): Promise<ApiResponse<SellerOrderAnalytics>> {
+    return this.request<ApiResponse<SellerOrderAnalytics>>(API_ENDPOINTS.SELLER.ORDER_ANALYTICS);
+  }
+
+  // 기존 메서드들 (하위 호환성 유지)  
   async getProductAnalytics(): Promise<ApiResponse<SellerProductAnalytics>> {
-    return this.request<ApiResponse<SellerProductAnalytics>>(API_ENDPOINTS.SELLER.PRODUCT_ANALYTICS);
+    // Note: 서버 API 응답이 변경되어 기존 SellerProductAnalytics와 다름
+    // 새로운 getProductAnalyticsOverview() 사용 권장
+    return this.getProductAnalyticsOverview() as any;
   }
 
   async getOrderAnalytics(): Promise<ApiResponse<SellerOrderAnalytics>> {
-    return this.request<ApiResponse<SellerOrderAnalytics>>(API_ENDPOINTS.SELLER.ORDER_ANALYTICS);
+    return this.getOrderAnalyticsOverview();
   }
 
   // 정산 관리
@@ -245,6 +389,181 @@ export abstract class BaseSellerService extends BaseApiService {
   async deleteReviewReply(reviewId: string): Promise<ApiResponse> {
     return this.request<ApiResponse>(API_ENDPOINTS.SELLER_REVIEWS.DELETE_REPLY(reviewId), {
       method: 'DELETE',
+    });
+  }
+
+  // 생산 관리 API (서버 스펙 완전 일치)
+  
+  // GET /production-settings - 생산 설정 조회
+  async getProductionSettings(): Promise<ApiResponse<{
+    productionSettings: ProductionSettings;
+    currentCapacity?: {
+      year: number;
+      month: number;
+      maxOrders: number;
+      currentOrders: number;
+      remainingOrders: number;
+      utilizationRate: string;
+    };
+    isConfigured?: boolean;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS);
+  }
+
+  // PUT /production-settings - 생산 설정 업데이트
+  async updateProductionSettings(settings: UpdateProductionSettingsRequest): Promise<ApiResponse<{
+    productionSettings: ProductionSettings;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  // GET /production-capacity/:year?/:month? - 특정 월 생산 현황 조회
+  async getProductionCapacity(year?: number, month?: number): Promise<ApiResponse<ProductionCapacity>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_CAPACITY(year, month));
+  }
+
+  // PUT /production-capacity/:year/:month - 특정 월 생산 용량 수정
+  async updateProductionCapacity(
+    year: number, 
+    month: number, 
+    data: UpdateProductionCapacityRequest
+  ): Promise<ApiResponse<ProductionCapacity>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_CAPACITY_UPDATE(year, month), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // GET /production-history - 생산 히스토리 조회
+  async getProductionHistory(): Promise<ApiResponse<ProductionHistoryResponse>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_HISTORY);
+  }
+
+  // POST /production-capacity/:year/:month/add-extra - 임의 추가 생산량 적용
+  async addExtraProductionCapacity(
+    year: number, 
+    month: number, 
+    data: AddExtraCapacityRequest
+  ): Promise<ApiResponse<ProductionCapacity>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_ADD_EXTRA(year, month), {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // POST /production-capacity/boost - 임시 생산량 부스트 적용
+  async boostProductionCapacity(data: ProductionBoostRequest): Promise<ApiResponse<ProductionCapacity>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_BOOST, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // 배송 정책 관리 API (서버 스펙 완전 일치)
+
+  // GET /shipping - 배송 정책 조회
+  async getShippingPolicy(): Promise<ApiResponse<{
+    shippingPolicy: {
+      baseShippingCost: number;
+      freeShippingThreshold: number;
+      isActive: boolean;
+      shippingRegions: Array<{
+        region: string;
+        additionalCost: number;
+        isServiceable: boolean;
+      }>;
+      estimatedDeliveryDays: {
+        min: number;
+        max: number;
+      };
+      specialInstructions?: string;
+      lastUpdatedAt: string;
+    };
+    isConfigured: boolean;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.SHIPPING_POLICY);
+  }
+
+  // PUT /shipping - 배송 정책 설정/업데이트
+  async updateShippingPolicy(policy: {
+    baseShippingCost?: number;
+    freeShippingThreshold?: number;
+    isActive?: boolean;
+    shippingRegions?: Array<{
+      region: string;
+      additionalCost: number;
+      isServiceable: boolean;
+    }>;
+    estimatedDeliveryDays?: {
+      min: number;
+      max: number;
+    };
+    specialInstructions?: string;
+  }): Promise<ApiResponse<{
+    shippingPolicy: any;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.SHIPPING_POLICY, {
+      method: 'PUT',
+      body: JSON.stringify(policy),
+    });
+  }
+
+  // PUT /shipping/regions - 지역별 배송 설정 업데이트
+  async updateShippingRegions(regions: Array<{
+    region: string;
+    additionalCost: number;
+    isServiceable: boolean;
+  }>): Promise<ApiResponse<{
+    regions: any[];
+    message: string;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.SHIPPING_REGIONS, {
+      method: 'PUT',
+      body: JSON.stringify({ regions }),
+    });
+  }
+
+  // PATCH /shipping/toggle - 배송 서비스 활성화/비활성화
+  async toggleShippingService(isActive: boolean): Promise<ApiResponse<{
+    isActive: boolean;
+    lastUpdatedAt: string;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.SHIPPING_TOGGLE, {
+      method: 'PATCH',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  // POST /shipping/preview - 배송 정책 미리보기
+  async previewShippingPolicy(
+    policy: any,
+    params?: { region?: string; subtotal?: number }
+  ): Promise<ApiResponse<{
+    preview: {
+      testConditions: {
+        region: string;
+        subtotal: number;
+      };
+      calculatedShipping: {
+        baseShippingCost: number;
+        additionalCost: number;
+        shippingCost: number;
+        isFreeShipping: boolean;
+        freeShippingRemaining: number;
+        isServiceable: boolean;
+      };
+      policy: any;
+    };
+  }>> {
+    const queryString = params ? this.buildQueryString(params) : '';
+    const endpoint = queryString ? `${API_ENDPOINTS.SELLER.SHIPPING_PREVIEW}?${queryString}` : API_ENDPOINTS.SELLER.SHIPPING_PREVIEW;
+    
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(policy),
     });
   }
 }

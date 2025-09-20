@@ -10,6 +10,7 @@ import { API_ENDPOINTS } from '../../config/api';
 export abstract class BaseImageService extends BaseApiService {
   // Presigned URL 관련
   async getPresignedUrl(request: PresignedUrlRequest): Promise<PresignedUrlResponse> {
+    // 일반적인 API 요청 (Content-Type: application/json 유지)
     return this.request<PresignedUrlResponse>(API_ENDPOINTS.UPLOAD.PRESIGNED_URL, {
       method: 'POST',
       body: JSON.stringify(request),

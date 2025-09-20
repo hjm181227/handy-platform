@@ -8,6 +8,7 @@ export * from './utils/imageUpload';
 export * from './utils/oauthService';
 export * from './utils/apiTesting';
 export * from './utils/errorMessages';
+export * from './utils/uuidUtils';
 
 
 // New Structured Services
@@ -29,6 +30,9 @@ export * from './services/commerce/PaymentService';
 // Seller Services
 export * from './services/seller/SellerService';
 
+// Admin Services
+export * from './services/admin/AdminService';
+
 // Loyalty Services
 export * from './services/loyalty/LoyaltyService';
 
@@ -36,6 +40,8 @@ export * from './services/loyalty/LoyaltyService';
 export * from './services/utils/ImageService';
 export * from './services/utils/ShippingService';
 export * from './services/utils/QRService';
+export * from './services/utils/AlertService';
+export * from './services/utils/AlertTypes';
 
 // Config
 export * from './config/api';

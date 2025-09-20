@@ -15,7 +15,7 @@ export const API_CONFIG: Record<string, ApiConfig> = {
     retryDelay: 1000,
   },
   development: {
-    baseURL: 'http://15.165.5.64:3001',
+    baseURL: 'http://localhost:11000',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
@@ -100,7 +100,7 @@ export const shouldUseProxy = (): boolean => {
 export const getApiConfig = (): ApiConfig => {
   const env = getCurrentEnvironment();
   const config = API_CONFIG[env] || API_CONFIG.development;
-  
+
   // 항상 실제 서버 URL 사용
   return config;
 };
@@ -128,6 +128,7 @@ export const API_ENDPOINTS = {
     GOOGLE: '/api/auth/oauth/google',
     APPLE: '/api/auth/oauth/apple',
     NAVER: '/api/auth/oauth/naver',
+    SIGNUP: (provider: string) => `/api/auth/oauth/${provider}/signup`,
     LINK: (provider: string) => `/api/auth/oauth/link/${provider}`,
     UNLINK: (provider: string) => `/api/auth/oauth/unlink/${provider}`,
     LINKED: '/api/auth/oauth/linked',
@@ -294,6 +295,23 @@ export const API_ENDPOINTS = {
     SETTLEMENT_REQUEST: '/api/seller/settlement/request',                // POST /request
     SETTLEMENT_SUMMARY: '/api/seller/settlement/summary/overview',       // GET /summary/overview
     SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',     // GET /available/amount
+
+    // 생산 관리
+    PRODUCTION_SETTINGS: '/api/seller/production-settings',             // GET/PUT
+    PRODUCTION_CAPACITY: (year?: number, month?: number) =>
+      `/api/seller/production-capacity${year ? `/${year}` : ''}${month ? `/${month}` : ''}`, // GET
+    PRODUCTION_CAPACITY_UPDATE: (year: number, month: number) =>
+      `/api/seller/production-capacity/${year}/${month}`,               // PUT
+    PRODUCTION_HISTORY: '/api/seller/production-history',               // GET
+    PRODUCTION_ADD_EXTRA: (year: number, month: number) =>
+      `/api/seller/production-capacity/${year}/${month}/add-extra`,     // POST
+    PRODUCTION_BOOST: '/api/seller/production-capacity/boost',          // POST
+
+    // 배송 정책 관리
+    SHIPPING_POLICY: '/api/seller/shipping',                            // GET/PUT
+    SHIPPING_REGIONS: '/api/seller/shipping/regions',                   // PUT
+    SHIPPING_TOGGLE: '/api/seller/shipping/toggle',                     // PATCH
+    SHIPPING_PREVIEW: '/api/seller/shipping/preview',                   // POST
   },
 
   // QR 코드

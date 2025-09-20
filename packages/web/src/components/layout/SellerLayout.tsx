@@ -29,6 +29,12 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
       description: "주문 처리 및 배송"
     },
     {
+      label: "생산 관리",
+      icon: "🏭",
+      path: "/seller/production",
+      description: "생산량 설정 및 관리"
+    },
+    {
       label: "리뷰 관리",
       icon: "⭐",
       path: "/seller/reviews",

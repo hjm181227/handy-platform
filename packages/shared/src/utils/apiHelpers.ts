@@ -34,20 +34,30 @@ export async function withRetry<T>(
 ): Promise<T> {
   const finalConfig = { ...defaultRetryConfig, ...config };
   let lastError: Error;
+  let totalAttempts = 0;
 
-  for (let attempt = 0; attempt <= finalConfig.maxRetries; attempt++) {
+  // maxRetries=3이면 총 4번 시도 (1번 원래 + 3번 재시도)
+  for (let attempt = 0; attempt < finalConfig.maxRetries + 1; attempt++) {
+    totalAttempts++;
+    
     try {
+      if (attempt > 0) {
+        console.log(`API 재시도 ${attempt}/${finalConfig.maxRetries}`);
+      }
+      
       return await fn();
     } catch (error) {
       lastError = error as Error;
 
       // Don't retry on the last attempt
       if (attempt === finalConfig.maxRetries) {
+        console.log(`API 호출 실패: 총 ${totalAttempts}번 시도 후 포기`);
         break;
       }
 
       // Check if we should retry this error
       if (!finalConfig.retryCondition!(lastError)) {
+        console.log(`재시도 불가능한 에러: ${lastError.message}`);
         break;
       }
 
@@ -60,6 +70,7 @@ export async function withRetry<T>(
       // Add jitter to prevent thundering herd
       const jitteredDelay = delay + Math.random() * 1000;
 
+      console.log(`${jitteredDelay.toFixed(0)}ms 후 재시도 예정...`);
       await new Promise(resolve => setTimeout(resolve, jitteredDelay));
     }
   }

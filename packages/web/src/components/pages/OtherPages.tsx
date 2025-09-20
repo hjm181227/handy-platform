@@ -198,6 +198,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
       <Section title="주문·배송 / 반품·교환">
         <div className="divide-y">
           <LinkRow title="주문 내역" to="/my/orders" />
+          <LinkRow title="배송지 관리" to="/my/shipping-address" />
           <LinkRow title="반품/교환 내역" to="/my/claims" />
           <LinkRow title="취소 내역" to="/my/cancel" />
         </div>

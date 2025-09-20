@@ -23,10 +23,16 @@ export abstract class BaseCartService extends BaseApiService {
     quantity: number, 
     options?: Record<string, string>
   ): Promise<CartResponse> {
-    const body: any = { productId, quantity };
+    const body: any = { 
+      productUuid: productId,  // 서버에서 요구하는 필드명
+      quantity
+    };
+    
     if (options) {
       body.options = options;
     }
+
+    console.log('Cart API request:', body);
 
     return this.request<CartResponse>(API_ENDPOINTS.CART.ITEMS, {
       method: 'POST',

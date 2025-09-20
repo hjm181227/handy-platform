@@ -8,27 +8,61 @@ import {
   LinkedAccountsResponse 
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
+import { validateResponseId, normalizeUserId } from '../../utils/uuidUtils';
 
 export abstract class BaseAuthService extends BaseApiService {
   // 기본 인증 메서드
   async login(credentials: LoginForm): Promise<AuthResponse> {
-    return this.request<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, {
       method: 'POST',
       body: JSON.stringify(credentials),
       enableRetry: false,
     });
+
+    // Validate UUID format in login response during migration period
+    if (response.user) {
+      try {
+        validateResponseId(response.user, 'User');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Login user validation:`, error);
+      }
+    }
+
+    return response;
   }
 
   async register(userData: RegisterForm): Promise<AuthResponse> {
-    return this.request<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, {
       method: 'POST',
       body: JSON.stringify(userData),
       enableRetry: false,
     });
+
+    // Validate UUID format in register response during migration period
+    if (response.user) {
+      try {
+        validateResponseId(response.user, 'User');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Register user validation:`, error);
+      }
+    }
+
+    return response;
   }
 
   async getUserProfile(): Promise<ApiResponse<{ user: User }>> {
-    return this.request<ApiResponse<{ user: User }>>(API_ENDPOINTS.AUTH.PROFILE);
+    const response = await this.request<ApiResponse<{ user: User }>>(API_ENDPOINTS.AUTH.PROFILE);
+
+    // Validate UUID format in profile response during migration period
+    if (response.data?.user) {
+      try {
+        validateResponseId(response.data.user, 'User Profile');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Profile user validation:`, error);
+      }
+    }
+
+    return response;
   }
 
   async updateProfile(userData: Partial<User>): Promise<ApiResponse<{ user: User }>> {
@@ -61,6 +95,25 @@ export abstract class BaseAuthService extends BaseApiService {
     });
   }
 
+  async signupWithOauth(provider: 'kakao' | 'google' | 'apple' | 'naver', data: {
+    kakaoUserInfo: {
+      id: string;
+      email: string;
+      name: string;
+      profileImage?: string;
+    };
+    additionalInfo?: {
+      phone?: string;
+    };
+  }): Promise<AuthResponse> {
+    const endpoint = API_ENDPOINTS.OAUTH.SIGNUP(provider);
+    return this.request<AuthResponse>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      enableRetry: false,
+    });
+  }
+
   async linkOAuthAccount(provider: string, accessToken: string): Promise<ApiResponse> {
     return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.LINK(provider), {
       method: 'POST',
@@ -88,6 +141,37 @@ export abstract class BaseAuthService extends BaseApiService {
   async removeFromWishlist(productId: string): Promise<ApiResponse> {
     return this.request<ApiResponse>(API_ENDPOINTS.AUTH.WISHLIST_REMOVE(productId), {
       method: 'DELETE',
+    });
+  }
+
+  // 배송지 관리 메서드
+  async getAddresses(): Promise<ApiResponse<any[]>> {
+    return this.request<ApiResponse<any[]>>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESSES);
+  }
+
+  async addAddress(address: any): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_CREATE, {
+      method: 'POST',
+      body: JSON.stringify(address),
+    });
+  }
+
+  async updateAddress(addressId: string, updates: any): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_UPDATE(addressId), {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteAddress(addressId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_DELETE(addressId), {
+      method: 'DELETE',
+    });
+  }
+
+  async setDefaultAddress(addressId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_DEFAULT(addressId), {
+      method: 'PUT',
     });
   }
 

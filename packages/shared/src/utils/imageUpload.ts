@@ -34,14 +34,14 @@ export class ImageUploadManager {
    */
   async uploadImage(options: ImageUploadOptions): Promise<ImageUploadResult> {
     const { file, uploadType, filename: customFilename, onProgress } = options;
-    
+
     try {
       // 1. 파일 유효성 검사
       this.validateFile(file);
-      
+
       // 2. 파일명 생성
       const filename = customFilename || this.generateFilename(file, uploadType);
-      
+
       // 3. presigned URL 요청
       const presignedResponse = await this.getPresignedUrl({
         filename,
@@ -87,7 +87,7 @@ export class ImageUploadManager {
    */
   async notifyUploadComplete(images: string[], targetPath?: string): Promise<void> {
     const headers = await this.getAuthHeaders();
-    
+
     const response = await fetch(`${this.baseURL}/api/upload/complete`, {
       method: 'POST',
       headers,
@@ -107,17 +107,20 @@ export class ImageUploadManager {
    */
   private async getPresignedUrl(request: PresignedUrlRequest): Promise<PresignedUrlResponse> {
     const headers = await this.getAuthHeaders();
-    
+
     const response = await fetch(`${this.baseURL}/api/upload/presigned-url`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
       body: JSON.stringify(request),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
-        errorData.message || 'Failed to get presigned URL', 
+        errorData.message || 'Failed to get presigned URL',
         response.status,
         errorData.code
       );
@@ -185,7 +188,7 @@ export class ImageUploadManager {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);
     const extension = this.getFileExtension(file);
-    
+
     return `${uploadType}_${timestamp}_${random}${extension}`;
   }
 
@@ -196,7 +199,7 @@ export class ImageUploadManager {
     if (file instanceof File && file.name) {
       return file.name.substring(file.name.lastIndexOf('.'));
     }
-    
+
     // MIME 타입으로부터 확장자 추정
     switch (file.type) {
       case 'image/jpeg':
@@ -224,7 +227,7 @@ export async function resizeImage(file: File, maxWidth: number, maxHeight: numbe
     img.onload = () => {
       // 비율 계산
       let { width, height } = img;
-      
+
       if (width > height) {
         if (width > maxWidth) {
           height = (height * maxWidth) / width;

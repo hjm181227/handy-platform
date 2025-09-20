@@ -8,6 +8,7 @@ import {
   Cart
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
+import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
 
 export abstract class BaseOrderService extends BaseApiService {
   // 주문 조회
@@ -23,11 +24,36 @@ export abstract class BaseOrderService extends BaseApiService {
   } = {}): Promise<OrdersResponse> {
     const queryString = this.buildQueryString(filters);
     const endpoint = queryString ? `${API_ENDPOINTS.ORDERS.LIST}?${queryString}` : API_ENDPOINTS.ORDERS.LIST;
-    return this.request<OrdersResponse>(endpoint);
+    
+    const response = await this.request<OrdersResponse>(endpoint);
+
+    // Validate UUID format in orders response during migration period
+    if (response.orders) {
+      response.orders.forEach((order, index) => {
+        try {
+          validateResponseId(order, `Order[${index}]`);
+        } catch (error) {
+          console.warn(`UUID Migration Warning - Order validation:`, error);
+        }
+      });
+    }
+
+    return response;
   }
 
   async getOrder(id: string): Promise<ApiResponse<{ order: Order }>> {
-    return this.request<ApiResponse<{ order: Order }>>(API_ENDPOINTS.ORDERS.DETAIL(id));
+    const response = await this.request<ApiResponse<{ order: Order }>>(API_ENDPOINTS.ORDERS.DETAIL(id));
+
+    // Validate UUID format in single order response during migration period
+    if (response.data?.order) {
+      try {
+        validateResponseId(response.data.order, 'Order Detail');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Order detail validation:`, error);
+      }
+    }
+
+    return response;
   }
 
   // 주문 생성
@@ -123,6 +149,16 @@ export abstract class BaseOrderService extends BaseApiService {
     return this.request<ApiResponse<{ products: any[] }>>(API_ENDPOINTS.ORDERS.REVIEW_REMINDER(id), {
       method: 'POST',
     });
+  }
+
+  /**
+   * Helper method to safely extract order identifier for API calls
+   * Handles UUID format during migration period
+   * @param order - Order object with id field
+   * @returns string - normalized order identifier for API calls
+   */
+  protected getOrderApiId(order: { id: string }): string {
+    return normalizeOrderId(order);
   }
 }
 
