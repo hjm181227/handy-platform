@@ -21,7 +21,7 @@ export const API_CONFIG: Record<string, ApiConfig> = {
     retryDelay: 1000,
   },
   stage: {
-    baseURL: 'http://15.165.5.64:3001',
+    baseURL: 'https://api.stage-handy.com',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
@@ -105,8 +105,10 @@ export const getApiConfig = (): ApiConfig => {
   return config;
 };
 
-// API Base URL (편의용)
-export const API_BASE_URL = getApiConfig().baseURL;
+// API Base URL (편의용) - Vite 환경변수 우선 사용
+export const API_BASE_URL = 
+  (typeof window !== 'undefined' && (globalThis as any).__VITE_API_BASE_URL__) ||
+  getApiConfig().baseURL;
 
 // API 엔드포인트 구성 (서버 스펙에 맞게 확장)
 export const API_ENDPOINTS = {

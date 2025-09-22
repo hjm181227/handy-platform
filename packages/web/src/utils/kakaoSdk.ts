@@ -8,7 +8,7 @@ declare global {
 }
 
 // 카카오 앱 키 (환경 변수 또는 설정에서 가져와야 함)
-const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_APP_KEY || 'YOUR_KAKAO_APP_KEY';
+const KAKAO_APP_KEY = (import.meta as any).env.VITE_KAKAO_APP_KEY || 'YOUR_KAKAO_APP_KEY';
 
 // 디버깅용: 앱 키가 제대로 로드되었는지 확인
 console.log('카카오 앱 키 로드됨:', KAKAO_APP_KEY ? '✅ 설정됨' : '❌ 설정되지 않음');
