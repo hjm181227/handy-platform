@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { products } from '../../data';
+import { purchaseApiService } from '../../services/purchaseApiService';
 
 // 공통 컴포넌트들
 const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) => (
@@ -38,52 +39,399 @@ const EmptyState = ({ title, description, actionText, onAction }: {
 
 // 주문 내역 페이지
 export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
-  const orders = [
-    { id: "2024081801", date: "2024-08-18", status: "배송중", items: ["Glossy Almond Tip – Milk Beige", "Square Short – Cocoa"], total: 35000, trackingNumber: "123456789" },
-    { id: "2024081502", date: "2024-08-15", status: "배송완료", items: ["Gel Press – Clear Fit"], total: 12000 },
-    { id: "2024081203", date: "2024-08-12", status: "주문완료", items: ["Oval Short – Mauve", "Cuticle Oil – Rose"], total: 30000 },
-  ];
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // 필터 상태
+  const [filters, setFilters] = useState({
+    status: [] as string[],
+    sortBy: 'createdAt',
+    sortOrder: 'desc' as 'asc' | 'desc'
+  });
+
+  // 실제 API에서 주문 내역 로드
+  const loadOrders = async (page: number = 1, filterOptions = filters) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await purchaseApiService.getOrders({
+        page,
+        limit: 10,
+        status: filterOptions.status.length > 0 ? filterOptions.status : undefined,
+        sortBy: filterOptions.sortBy,
+        sortOrder: filterOptions.sortOrder
+      });
+      
+      console.log('Orders API Response:', response);
+      
+      if (response.success && response.orders) {
+        setOrders(response.orders);
+        setPagination(response.pagination);
+        setCurrentPage(page);
+      } else {
+        throw new Error(response.message || '주문 내역을 불러올 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('Orders loading failed:', err);
+      setError(err.message || '주문 내역을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 필터 변경 핸들러
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+    loadOrders(1, newFilters);
+  };
+
+  useEffect(() => {
+    loadOrders(1);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "주문완료": return "bg-blue-100 text-blue-700";
-      case "배송중": return "bg-orange-100 text-orange-700";
-      case "배송완료": return "bg-green-100 text-green-700";
+      case "pending": return "bg-yellow-100 text-yellow-700";
+      case "confirmed": return "bg-blue-100 text-blue-700";
+      case "processing": return "bg-purple-100 text-purple-700";
+      case "shipped": return "bg-orange-100 text-orange-700";
+      case "delivered": return "bg-green-100 text-green-700";
+      case "cancelled": return "bg-red-100 text-red-700";
       default: return "bg-gray-100 text-gray-700";
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch(status) {
+      case "pending": return "대기 중";
+      case "confirmed": return "확인됨";
+      case "processing": return "처리 중";
+      case "shipped": return "배송됨";
+      case "delivered": return "배송완료";
+      case "cancelled": return "취소됨";
+      default: return status;
+    }
+  };
+
+  // 로딩 상태
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <BackButton onBack={() => onGo("/my")} title="주문 내역" />
+        <div className="p-4 flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-gray-500">주문 내역을 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <BackButton onBack={() => onGo("/my")} title="주문 내역" />
+        <div className="p-4 flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <BackButton onBack={() => onGo("/my")} title="주문 내역" />
-      <div className="p-4 space-y-4">
-        {orders.map(order => (
-          <div key={order.id} className="bg-white rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-500">{order.date}</span>
-              <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
-                {order.status}
-              </span>
-            </div>
-            <div className="mb-3">
-              <div className="font-medium mb-1">주문번호: {order.id}</div>
-              <div className="text-sm text-gray-600 mb-2">
-                {order.items.join(", ")} 외 {order.items.length - 1}개
-              </div>
-              <div className="font-semibold">{order.total.toLocaleString()}원</div>
-            </div>
-            <div className="flex gap-2">
-              <button className="flex-1 py-2 px-4 text-sm border rounded-lg hover:bg-gray-50">
-                주문상세
-              </button>
-              {order.trackingNumber && (
-                <button className="flex-1 py-2 px-4 text-sm border rounded-lg hover:bg-gray-50">
-                  배송조회
+      
+      {/* 필터 영역 */}
+      <div className="bg-white border-b px-4 py-3">
+        <div className="space-y-3">
+          {/* 주문 상태 필터 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">주문 상태</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: '', label: '전체' },
+                { value: 'confirmed', label: '확인됨' },
+                { value: 'processing', label: '처리 중' },
+                { value: 'shipped', label: '배송됨' },
+                { value: 'delivered', label: '배송완료' },
+                { value: 'cancelled', label: '취소됨' }
+              ].map(status => (
+                <button
+                  key={status.value}
+                  onClick={() => {
+                    const newStatus = status.value === '' 
+                      ? [] 
+                      : filters.status.includes(status.value)
+                        ? filters.status.filter(s => s !== status.value)
+                        : [...filters.status, status.value];
+                    handleFilterChange({ ...filters, status: newStatus });
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                    (status.value === '' && filters.status.length === 0) || 
+                    (status.value !== '' && filters.status.includes(status.value))
+                      ? 'bg-blue-100 border-blue-200 text-blue-700'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {status.label}
                 </button>
-              )}
+              ))}
             </div>
           </div>
-        ))}
+
+          {/* 정렬 옵션 */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">정렬</label>
+            <button
+              onClick={() => handleFilterChange({ 
+                ...filters, 
+                sortOrder: filters.sortOrder === 'desc' ? 'asc' : 'desc' 
+              })}
+              className="px-3 py-1 text-sm border border-gray-300 rounded bg-white hover:bg-gray-50 flex items-center gap-1"
+            >
+              {filters.sortOrder === 'desc' ? '↓' : '↑'}
+              {filters.sortOrder === 'desc' ? '최신순' : '오래된순'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* 필터 적용 상태 표시 */}
+        {(filters.status.length > 0 || filters.sortOrder !== 'desc') && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <span>필터 적용:</span>
+                {filters.status.length > 0 && (
+                  <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+                    상태: {filters.status.map(s => getStatusText(s)).join(', ')}
+                  </span>
+                )}
+                {filters.sortOrder !== 'desc' && (
+                  <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+                    정렬: 오래된순
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => handleFilterChange({
+                  status: [],
+                  sortBy: 'createdAt',
+                  sortOrder: 'desc'
+                })}
+                className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                초기화
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 결과 개수 표시 */}
+        {!loading && (
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>
+              총 {pagination?.totalItems || orders.length}개의 주문
+              {pagination && pagination.totalPages > 1 && (
+                <> ({pagination.currentPage}/{pagination.totalPages} 페이지)</>
+              )}
+            </span>
+            {orders.length > 0 && (
+              <span className="text-xs">
+                {filters.sortOrder === 'desc' ? '최신순' : '오래된순'} 정렬
+              </span>
+            )}
+          </div>
+        )}
+
+        {orders.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="text-gray-400 text-4xl">📦</div>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">주문 내역이 없습니다</h3>
+            <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              아직 주문하신 상품이 없습니다.<br />
+              다양한 네일 상품을 둘러보세요!
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => onGo('/')}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                상품 둘러보기
+              </button>
+              <button
+                onClick={() => onGo('/cart')}
+                className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                장바구니 확인
+              </button>
+            </div>
+          </div>
+        ) : (
+          orders.map(order => (
+            <div key={order.id} className="bg-white rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">
+                    {new Date(order.createdAt).toLocaleDateString('ko-KR')}
+                  </span>
+                  {order.paymentStatus === 'paid' && (
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                      결제완료
+                    </span>
+                  )}
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                  {getStatusText(order.status)}
+                </span>
+              </div>
+              
+              <div className="mb-3">
+                <div className="font-medium mb-1">
+                  주문번호: {order.orderNumber || order.id}
+                </div>
+                
+                {/* 주문 상품 목록 */}
+                <div className="mb-2">
+                  {order.items && order.items.length > 0 ? (
+                    <div className="space-y-2">
+                      {order.items.slice(0, 2).map((item: any, index: number) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0">
+                            {item.productImage ? (
+                              <img
+                                src={item.productImage}
+                                alt={item.productName || 'Product'}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                📦
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {item.productName || '상품명'}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              {item.shape && item.size && (
+                                <span>{item.shape} · {item.size}</span>
+                              )}
+                              <span>수량 {item.quantity}개</span>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {item.sellerName || 'HANDY'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {order.items.length > 2 && (
+                        <div className="text-sm text-gray-500 text-center py-2">
+                          외 {order.items.length - 2}개 상품
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 py-2">상품 정보 없음</div>
+                  )}
+                </div>
+                
+                <div className="font-semibold text-lg text-blue-600">
+                  {order.totalAmount?.toLocaleString() || 0}원
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => onGo(`/orders/${order.id}`)}
+                  className="flex-1 py-2 px-4 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  주문상세
+                </button>
+                {order.status === 'shipped' && (
+                  <button 
+                    onClick={() => onGo(`/orders/${order.id}/track`)}
+                    className="flex-1 py-2 px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    배송조회
+                  </button>
+                )}
+                {(order.status === 'pending' || order.status === 'confirmed') && (
+                  <button className="flex-1 py-2 px-4 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                    주문취소
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+        
+        {/* 페이지네이션 */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+            <button
+              onClick={() => loadOrders(currentPage - 1, filters)}
+              disabled={!pagination.hasPrev}
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              이전
+            </button>
+            
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                const startPage = Math.max(1, currentPage - 2);
+                const page = startPage + i;
+                if (page > pagination.totalPages) return null;
+                
+                return (
+                  <button
+                    key={page}
+                    onClick={() => loadOrders(page, filters)}
+                    className={`px-3 py-2 text-sm border rounded-lg ${
+                      page === currentPage
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => loadOrders(currentPage + 1, filters)}
+              disabled={!pagination.hasNext}
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              다음
+            </button>
+            
+            <div className="text-sm text-gray-500 ml-4">
+              {pagination.totalItems}개 중 {((currentPage - 1) * 10) + 1}-{Math.min(currentPage * 10, pagination.totalItems)}개
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

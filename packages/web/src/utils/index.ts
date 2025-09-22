@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 
 // Utility functions
-export const money = (n: number) => n.toLocaleString();
+export const money = (n: number | undefined | null) => {
+  if (n == null || isNaN(n)) return '0';
+  return n.toLocaleString();
+};
 export const toQ = (obj: Record<string, string>) =>
   "?" + new URLSearchParams(obj).toString();
 

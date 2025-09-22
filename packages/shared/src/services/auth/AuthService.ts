@@ -1,0 +1,215 @@
+import { BaseApiService } from '../base/BaseApiService';
+import { 
+  ApiResponse, 
+  AuthResponse, 
+  User, 
+  LoginForm, 
+  RegisterForm,
+  LinkedAccountsResponse 
+} from '../../types';
+import { API_ENDPOINTS } from '../../config/api';
+import { validateResponseId, normalizeUserId } from '../../utils/uuidUtils';
+
+export abstract class BaseAuthService extends BaseApiService {
+  // 기본 인증 메서드
+  async login(credentials: LoginForm): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      enableRetry: false,
+    });
+
+    // Validate UUID format in login response during migration period
+    if (response.user) {
+      try {
+        validateResponseId(response.user, 'User');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Login user validation:`, error);
+      }
+    }
+
+    return response;
+  }
+
+  async register(userData: RegisterForm): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, {
+      method: 'POST',
+      body: JSON.stringify(userData),
+      enableRetry: false,
+    });
+
+    // Validate UUID format in register response during migration period
+    if (response.user) {
+      try {
+        validateResponseId(response.user, 'User');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Register user validation:`, error);
+      }
+    }
+
+    return response;
+  }
+
+  async getUserProfile(): Promise<ApiResponse<{ user: User }>> {
+    const response = await this.request<ApiResponse<{ user: User }>>(API_ENDPOINTS.AUTH.PROFILE);
+
+    // Validate UUID format in profile response during migration period
+    if (response.data?.user) {
+      try {
+        validateResponseId(response.data.user, 'User Profile');
+      } catch (error) {
+        console.warn(`UUID Migration Warning - Profile user validation:`, error);
+      }
+    }
+
+    return response;
+  }
+
+  async updateProfile(userData: Partial<User>): Promise<ApiResponse<{ user: User }>> {
+    return this.request<ApiResponse<{ user: User }>>(API_ENDPOINTS.AUTH.UPDATE_PROFILE, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
+  async logout(): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.LOGOUT, {
+      method: 'POST',
+    });
+  }
+
+  // OAuth 메서드
+  async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string): Promise<AuthResponse> {
+    const endpoint = API_ENDPOINTS.OAUTH[provider.toUpperCase() as keyof typeof API_ENDPOINTS.OAUTH] as string;
+    return this.request<AuthResponse>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ accessToken }),
+      enableRetry: false,
+    });
+  }
+
+  async signupWithOauth(provider: 'kakao' | 'google' | 'apple' | 'naver', data: {
+    kakaoUserInfo: {
+      id: string;
+      email: string;
+      name: string;
+      profileImage?: string;
+    };
+    additionalInfo?: {
+      phone?: string;
+    };
+  }): Promise<AuthResponse> {
+    const endpoint = API_ENDPOINTS.OAUTH.SIGNUP(provider);
+    return this.request<AuthResponse>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      enableRetry: false,
+    });
+  }
+
+  async linkOAuthAccount(provider: string, accessToken: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.LINK(provider), {
+      method: 'POST',
+      body: JSON.stringify({ accessToken }),
+    });
+  }
+
+  async unlinkOAuthAccount(provider: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.OAUTH.UNLINK(provider), {
+      method: 'DELETE',
+    });
+  }
+
+  async getLinkedAccounts(): Promise<LinkedAccountsResponse> {
+    return this.request<LinkedAccountsResponse>(API_ENDPOINTS.OAUTH.LINKED);
+  }
+
+  // 위시리스트 메서드
+  async addToWishlist(productId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.WISHLIST_ADD(productId), {
+      method: 'POST',
+    });
+  }
+
+  async removeFromWishlist(productId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.WISHLIST_REMOVE(productId), {
+      method: 'DELETE',
+    });
+  }
+
+  // 배송지 관리 메서드
+  async getAddresses(): Promise<ApiResponse<any[]>> {
+    return this.request<ApiResponse<any[]>>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESSES);
+  }
+
+  async addAddress(address: any): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_CREATE, {
+      method: 'POST',
+      body: JSON.stringify(address),
+    });
+  }
+
+  async updateAddress(addressId: string, updates: any): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_UPDATE(addressId), {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteAddress(addressId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_DELETE(addressId), {
+      method: 'DELETE',
+    });
+  }
+
+  async setDefaultAddress(addressId: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.USER_MANAGEMENT.ADDRESS_DEFAULT(addressId), {
+      method: 'PUT',
+    });
+  }
+
+  // 추상 메서드 - 각 플랫폼에서 구현해야 함
+  abstract setAuthToken(token: string, user?: User): Promise<void>;
+  abstract clearAuthToken(): Promise<void>;
+  abstract getAuthToken(): Promise<string | null>;
+  abstract isAuthenticated(): Promise<boolean>;
+  abstract getCurrentUser(): Promise<User | null>;
+}
+
+export class AuthServiceFactory {
+  static create(baseURL: string, getAuthHeaders: () => Promise<Record<string, string>>): BaseAuthService {
+    return new (class extends BaseAuthService {
+      async setAuthToken(token: string, user?: User): Promise<void> {
+        // 플랫폼별 구현 필요
+        throw new Error('setAuthToken method must be implemented');
+      }
+      
+      async clearAuthToken(): Promise<void> {
+        // 플랫폼별 구현 필요
+        throw new Error('clearAuthToken method must be implemented');
+      }
+      
+      async getAuthToken(): Promise<string | null> {
+        // 플랫폼별 구현 필요
+        throw new Error('getAuthToken method must be implemented');
+      }
+      
+      async isAuthenticated(): Promise<boolean> {
+        const token = await this.getAuthToken();
+        return !!token;
+      }
+      
+      async getCurrentUser(): Promise<User | null> {
+        // 플랫폼별 구현 필요
+        throw new Error('getCurrentUser method must be implemented');
+      }
+    })(baseURL, getAuthHeaders);
+  }
+}

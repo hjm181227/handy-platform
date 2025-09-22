@@ -5,6 +5,31 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Handy - 네일아트 쇼핑몰</title>
+    <!-- 카카오 SDK 다른 버전으로 테스트 -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script>
+      console.log('HTML 스크립트 섹션에서 카카오 체크:', typeof window !== 'undefined' ? !!window.Kakao : 'window undefined');
+      
+      // 스크립트 로드 즉시 초기화 시도
+      if (typeof window !== 'undefined' && window.Kakao) {
+        try {
+          if (!window.Kakao.isInitialized()) {
+            window.Kakao.init('f466bdbd818f288f370407d10da4710d');
+            console.log('HTML에서 카카오 즉시 초기화 완료');
+          }
+          
+          // Auth 모듈 강제 로드 시도
+          setTimeout(() => {
+            console.log('HTML 스크립트에서 Auth 체크:', !!window.Kakao.Auth);
+            if (window.Kakao.Auth) {
+              console.log('Auth 모듈 사용 가능!');
+            }
+          }, 100);
+        } catch (error) {
+          console.error('HTML에서 카카오 초기화 실패:', error);
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

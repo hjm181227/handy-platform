@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { webApiService } from '../../services/api';
+import { webApiService } from '../../services/apiService';
+import { getErrorMessageFromApiError } from '@handy-platform/shared';
+import { initKakaoSdk, executeKakaoLogin, getKakaoUserInfo } from '../../utils/kakaoSdk';
+import { setSocialAuthState, normalizeKakaoUser, getSocialSignupUrl } from '../../utils/socialAuthState';
 
 export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [email, setEmail] = useState("");
@@ -8,8 +11,9 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorAction, setErrorAction] = useState("");
 
-  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  // 이미 로그인된 사용자는 홈으로 리다이렉트 & 카카오 SDK 초기화
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       const isAuthenticated = await webApiService.isAuthenticated();
@@ -17,7 +21,17 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         onGo("/");
       }
     };
+
+    const initSdk = async () => {
+      try {
+        await initKakaoSdk();
+      } catch (error) {
+        console.warn('카카오 SDK 초기화 실패:', error);
+      }
+    };
+
     checkAuthAndRedirect();
+    initSdk();
   }, [onGo]);
 
   const submit = async (e?: React.FormEvent<HTMLFormElement>) => {
@@ -31,7 +45,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
     setError("");
 
     try {
-      const response = await webApiService.login({ email, password });
+      const response = await webApiService.loginAndStoreToken({ email, password });
       
       if (auto) {
         // 자동 로그인 설정 저장 (로컬 스토리지에 플래그만 저장)
@@ -43,24 +57,134 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       // 인증 상태 변경 이벤트 발생
       window.dispatchEvent(new CustomEvent('authStateChanged'));
       
-      alert(`로그인 성공! 환영합니다, ${response.user?.name || email}님!`);
       onGo("/");
     } catch (error: any) {
       console.error('로그인 실패:', error);
-      setError(error.message || '로그인에 실패했습니다.');
+      
+      const errorMessage = getErrorMessageFromApiError(error);
+      setError(errorMessage.message);
+      setErrorAction(errorMessage.action || "");
+      
+      // USER_NOT_FOUND 에러인 경우 회원가입 페이지로 이동 버튼 표시
+      if (error?.code === 'USER_NOT_FOUND' || error?.response?.data?.code === 'USER_NOT_FOUND') {
+        setErrorAction("회원가입하기");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const oauth = (provider: "kakao" | "apple" | "google" | "naver") => {
+  const oauth = async (provider: "kakao" | "apple" | "google" | "naver") => {
+    setLoading(true);
+    setError("");
+
     try {
-      (window as any).ReactNativeWebView?.postMessage(
-        JSON.stringify({ type: "oauth", provider })
-      );
-    } catch {}
-    // 데모: 해당 경로로 라우팅만
-    onGo(`/auth/${provider}`);
+      // React Native WebView 환경인 경우
+      if ((window as any).ReactNativeWebView) {
+        (window as any).ReactNativeWebView.postMessage(
+          JSON.stringify({ type: "oauth", provider })
+        );
+        return;
+      }
+
+      // 웹 환경에서 카카오 로그인 처리
+      if (provider === "kakao") {
+        await handleKakaoLogin();
+      } else {
+        // 다른 소셜 로그인은 준비 중 안내
+        setError(`${provider.toUpperCase()} 로그인은 준비 중입니다.`);
+      }
+    } catch (error: any) {
+      console.error(`${provider} 로그인 실패:`, error);
+      const errorMessage = getErrorMessageFromApiError(error);
+      setError(errorMessage.message || `${provider} 로그인에 실패했습니다.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKakaoLogin = async () => {
+    try {
+      console.log('=== 카카오 로그인 시작 ===');
+      
+      if (!window.Kakao) {
+        throw new Error('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+      }
+      
+      // SDK 초기화 확인
+      if (!window.Kakao.isInitialized()) {
+        const appKey = import.meta.env.VITE_KAKAO_APP_KEY;
+        console.log('카카오 SDK 초기화 시도, 앱키:', appKey);
+        window.Kakao.init(appKey);
+      }
+      
+      console.log('초기화 후 Kakao 객체:', Object.keys(window.Kakao));
+      
+      // Auth 모듈 확인
+      if (!window.Kakao.Auth || !window.Kakao.Auth.login) {
+        throw new Error('카카오 Auth 모듈을 사용할 수 없습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+      }
+      
+      console.log('카카오 로그인 팝업 실행...');
+      
+      // 1. 카카오 로그인으로 액세스 토큰 획득
+      const accessToken = await new Promise<string>((resolve, reject) => {
+        window.Kakao.Auth.login({
+          success: (authObj: any) => {
+            console.log('카카오 로그인 성공:', authObj);
+            if (authObj && authObj.access_token) {
+              resolve(authObj.access_token);
+            } else {
+              reject(new Error('액세스 토큰을 받지 못했습니다.'));
+            }
+          },
+          fail: (error: any) => {
+            console.error('카카오 로그인 실패:', error);
+            reject(new Error('카카오 로그인이 취소되었거나 실패했습니다.'));
+          }
+        });
+      });
+      
+      console.log('카카오 액세스 토큰 획득:', accessToken.substring(0, 20) + '...');
+      
+      // 2. 서버로 액세스 토큰 전송하여 인증 처리
+      const response = await webApiService.oauthLogin('kakao', accessToken);
+      console.log('OAuth 서버 응답:', response);
+      
+      // 3. 응답 분기 처리
+      if (response.needsSignup && response.kakaoUserInfo) {
+        console.log('신규 사용자 - 약관 동의 페이지로 이동');
+        
+        // 서버에서 받은 카카오 사용자 정보로 소셜 로그인 상태 저장
+        setSocialAuthState({
+          accessToken,
+          userInfo: {
+            id: response.kakaoUserInfo.id,
+            email: response.kakaoUserInfo.email,
+            name: response.kakaoUserInfo.name,
+            profileImage: response.kakaoUserInfo.profileImage,
+            provider: 'kakao'
+          },
+          timestamp: Date.now()
+        });
+        
+        // 약관 동의 페이지로 이동
+        onGo(getSocialSignupUrl('kakao'));
+      } else {
+        // 기존 회원 - 즉시 로그인 완료
+        console.log('기존 회원 - 로그인 완료');
+        
+        // 인증 상태 변경 이벤트 발생
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
+        
+        onGo("/");
+      }
+      
+      console.log('=== 카카오 로그인 완료 ===');
+    } catch (error) {
+      console.error('카카오 로그인 처리 실패:', error);
+      throw error;
+    }
   };
 
   // 간단 아이콘
@@ -103,15 +227,35 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
       <form onSubmit={submit} className="mt-4 space-y-3">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-            {error}
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm">
+            <div className="text-red-600 mb-2">{error}</div>
+            {errorAction && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (errorAction === "회원가입하기") {
+                    onGo("/signup");
+                  } else {
+                    setError("");
+                    setErrorAction("");
+                  }
+                }}
+                className="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
+                {errorAction}
+              </button>
+            )}
           </div>
         )}
         
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+            setErrorAction("");
+          }}
           placeholder="이메일 주소"
           className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-500"
           disabled={loading}
@@ -121,7 +265,11 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           <input
             type={showPw ? "text" : "password"}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError("");
+              setErrorAction("");
+            }}
             placeholder="비밀번호"
             className="w-full rounded-lg border px-4 py-3 pr-10 text-sm outline-none focus:border-blue-500"
             disabled={loading}
@@ -181,32 +329,60 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       </form>
 
       {/* 소셜 로그인 */}
-      <div className="mt-4 space-y-2">
-        <button
-          onClick={() => oauth("kakao")}
-          className="w-full rounded-lg bg-[#FEE500] py-3 text-sm font-medium text-black inline-flex items-center justify-center gap-2"
-        >
-          <KakaoI /> 카카오 로그인
-        </button>
-        <button
-          onClick={() => oauth("apple")}
-          className="w-full rounded-lg bg-white border py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-        >
-          <AppleI /> Apple 로그인
-        </button>
-        <button
-          onClick={() => oauth("google")}
-          className="w-full rounded-lg bg-white border py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-        >
-          <GoogleI /> Google 로그인
-        </button>
-        <button
-          onClick={() => oauth("naver")}
-          className="w-full rounded-lg py-3 text-sm font-medium text-white inline-flex items-center justify-center gap-2"
-          style={{ backgroundColor: "#03C75A" }}
-        >
-          <NaverI /> NAVER 로그인
-        </button>
+      <div className="mt-6">
+        <div className="flex items-center my-4">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="mx-3 text-sm text-gray-500">또는</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+        
+        <div className="space-y-2">
+          <button
+            onClick={() => oauth("kakao")}
+            disabled={loading}
+            className={`w-full rounded-lg py-3 text-sm font-medium text-black inline-flex items-center justify-center gap-2 transition-all ${
+              loading 
+                ? 'bg-gray-200 cursor-not-allowed' 
+                : 'bg-[#FEE500] hover:bg-[#FDD835]'
+            }`}
+          >
+            <KakaoI /> {loading ? '로그인 중...' : '카카오 로그인'}
+          </button>
+          <button
+            onClick={() => oauth("apple")}
+            disabled={loading}
+            className={`w-full rounded-lg bg-white border py-3 text-sm font-medium inline-flex items-center justify-center gap-2 transition-all ${
+              loading 
+                ? 'bg-gray-100 cursor-not-allowed text-gray-400' 
+                : 'hover:bg-gray-50'
+            }`}
+          >
+            <AppleI /> Apple 로그인 (준비중)
+          </button>
+          <button
+            onClick={() => oauth("google")}
+            disabled={loading}
+            className={`w-full rounded-lg bg-white border py-3 text-sm font-medium inline-flex items-center justify-center gap-2 transition-all ${
+              loading 
+                ? 'bg-gray-100 cursor-not-allowed text-gray-400' 
+                : 'hover:bg-gray-50'
+            }`}
+          >
+            <GoogleI /> Google 로그인 (준비중)
+          </button>
+          <button
+            onClick={() => oauth("naver")}
+            disabled={loading}
+            className={`w-full rounded-lg py-3 text-sm font-medium text-white inline-flex items-center justify-center gap-2 transition-all ${
+              loading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'hover:opacity-90'
+            }`}
+            style={{ backgroundColor: loading ? '#9CA3AF' : "#03C75A" }}
+          >
+            <NaverI /> NAVER 로그인 (준비중)
+          </button>
+        </div>
       </div>
 
       {/* 가입 유도 */}
