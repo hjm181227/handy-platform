@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "echo 'Skipping build - using pre-built files'",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "echo 'Skipping install'",
   "rewrites": [
     {
       "source": "/(.*)",

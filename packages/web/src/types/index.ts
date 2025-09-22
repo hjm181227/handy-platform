@@ -1,8 +1,6 @@
 // 공유 타입들을 가져오기 (실제로 export된 것들만)
 export type {
   Product,
-  ProductImage,
-  ProductSpecifications,
   ProductRating,
   ProductReview,
   Seller,

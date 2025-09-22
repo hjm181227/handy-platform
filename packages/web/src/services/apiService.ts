@@ -50,8 +50,12 @@ class WebApiService {
   private apiService: IntegratedApiService;
 
   constructor() {
+    // Vite 환경변수 우선 사용
+    const baseURL = (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL;
+    console.log('🔧 Web API Service Base URL:', baseURL);
+    
     this.apiService = createApiService(
-      API_BASE_URL,
+      baseURL,
       getWebAuthHeaders,
       'web'
     );
