@@ -48,6 +48,55 @@ export interface Address {
   phone?: string;
 }
 
+// 한국 주소 시스템 타입
+export type KoreanRegion = 'seoul' | 'metropolitan' | 'general' | 'jeju' | 'remote';
+
+export interface KoreanAddress {
+  recipientName: string;
+  recipientPhone: string;
+  postcode: string;
+  roadAddress: string;
+  jibunAddress: string;
+  detailAddress: string;
+  extraAddress: string;
+  region: KoreanRegion;
+  deliveryNote?: string;
+  addressName?: string;
+  isDefault?: boolean;
+}
+
+export interface KoreanAddressResponse extends KoreanAddress {
+  index: number;
+  lastUsed?: string;
+  fullAddress: string;
+  displayName: string;
+}
+
+export interface KoreanAddressListResponse {
+  addresses: KoreanAddressResponse[];
+  defaultAddressIndex: number;
+  totalAddresses: number;
+  maxAddresses: number;
+}
+
+export interface KoreanAddressValidationRequest extends KoreanAddress {}
+
+export interface KoreanAddressValidationResponse {
+  isValid: boolean;
+  warnings: string[];
+  formattedAddress: {
+    full: string;
+    delivery: string;
+    recipient: string;
+  };
+  shippingEstimate: {
+    region: KoreanRegion;
+    estimatedCost: number;
+    estimatedDays: number;
+  };
+  message: string;
+}
+
 export interface AuthResponse {
   message: string;
   token: string;
@@ -466,6 +515,12 @@ export interface Order {
   items: OrderItem[];
   shipping: ShippingDetails;
   createdAt: string;
+  
+  // Checkout 페이지용 필드들
+  totalPrice?: number;           // 상품 총 금액
+  shippingCost?: number;         // 배송비 (shipping.cost와 동일할 수 있음)
+  totalDiscount?: number;        // 총 할인 금액
+  finalPrice?: number;           // 최종 결제 금액
 }
 
 export interface OrdersResponse {
@@ -947,12 +1002,14 @@ export interface BulkOperationResult {
 // 배송지 관리 타입
 // 주문 시 사용하는 배송지 (기존)
 export interface ShippingAddress {
+  id?: string;                    // 저장된 배송지의 경우 포함
   recipientName: string;
   phone: string;
   address: string;
   addressDetail?: string;
   zipCode: string;
   memo?: string;
+  isDefault?: boolean;           // 기본 배송지 여부
 }
 
 // 사용자가 저장한 배송지 목록 관리용

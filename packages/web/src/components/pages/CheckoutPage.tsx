@@ -3,12 +3,15 @@ import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
+import { ShippingAddressForm } from '../common/ShippingAddressForm';
+import { API_BASE_URL } from '@handy-platform/shared/src/config/api';
 import type {
   Cart,
   Order,
-  CreateOrderRequest,
   ShippingAddress,
-  PaymentMethod
+  ShippingDetails,
+  OrderStatus,
+  PaymentStatus
 } from '@handy-platform/shared';
 
 interface CheckoutPageProps {
@@ -16,7 +19,7 @@ interface CheckoutPageProps {
 }
 
 export function CheckoutPage({ onGo }: CheckoutPageProps) {
-  const { alert, error: showError, confirm } = useAlert();
+  const { alert } = useAlert();
   const [cart, setCart] = useState<Cart | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,8 +42,6 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
   // 결제 방법
   const [paymentMethod, setPaymentMethod] = useState<string>('card');
-  const [savedPaymentMethods, setSavedPaymentMethods] = useState<any[]>([]);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   // 장바구니와 pending 주문 로드
   const loadCheckoutData = async () => {
@@ -69,9 +70,25 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         }
 
         // 장바구니 기반으로 임시 주문 정보 생성 (결제 시점에 실제 주문 생성)
-        const tempOrder = {
+        const tempOrder: Order = {
           id: `temp_${Date.now()}`,
+          orderNumber: `ORDER_${Date.now()}`,
+          status: 'pending',
+          paymentStatus: 'pending',
+          totalAmount: cartData.totals?.total || 0,
           items: cartData.items,
+          shipping: {
+            id: `shipping_${Date.now()}`,
+            status: 'preparing',
+            trackingNumber: undefined,
+            estimatedDelivery: undefined,
+            carrier: {
+              name: 'Standard Delivery',
+              code: 'STD'
+            }
+          } as ShippingDetails,
+          createdAt: new Date().toISOString(),
+          // Checkout 페이지 전용 필드들
           totalPrice: cartData.totals?.subtotal || 0,
           shippingCost: cartData.totals?.shippingCost || 0,
           totalDiscount: 0,
@@ -79,24 +96,39 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         };
         setOrder(tempOrder);
 
-        // 저장된 배송지 목록 로드 (임시 비활성화)
-        // const addressesResponse = await purchaseApiService.getShippingAddresses();
-        // if (addressesResponse.success && addressesResponse.data) {
-        //   setSavedAddresses(addressesResponse.data);
-        //   // 기본 배송지가 있으면 선택
-        //   const defaultAddress = addressesResponse.data.find(addr => addr.isDefault);
-        //   if (defaultAddress) {
-        //     setSelectedAddressId(defaultAddress.id);
-        //     setShippingAddress(defaultAddress);
-        //   } else if (addressesResponse.data.length > 0) {
-        //     setShowAddressForm(addressesResponse.data.length === 0);
-        //   } else {
-        //     setShowAddressForm(true);
-        //   }
-        // }
+        // 저장된 배송지 목록 로드
+        try {
+          const addressesResponse = await purchaseApiService.getShippingAddresses();
 
-        // 임시로 배송지 입력 폼 활성화
-        setShowAddressForm(true);
+          if (addressesResponse.success && addressesResponse.data) {
+            setSavedAddresses(addressesResponse.data);
+
+            // 기본 배송지가 있으면 선택
+            const defaultAddress = addressesResponse.data.find(addr => addr.isDefault);
+            if (defaultAddress) {
+              setSelectedAddressId(defaultAddress.id);
+              setShippingAddress(defaultAddress);
+              setShowAddressForm(false);
+            } else if (addressesResponse.data.length > 0) {
+              // 기본 배송지가 없으면 첫 번째 배송지 선택
+              const firstAddress = addressesResponse.data[0];
+              setSelectedAddressId(firstAddress.id);
+              setShippingAddress(firstAddress);
+              setShowAddressForm(false);
+            } else {
+              // 배송지가 없으면 빈 상태 표시 (폼은 버튼을 눌러야 열림)
+              setShowAddressForm(false);
+            }
+          } else {
+            console.warn('배송지 목록 로드 실패:', addressesResponse.message);
+            // 배송지 로드 실패 시 빈 상태 표시
+            setShowAddressForm(false);
+          }
+        } catch (addressError) {
+          console.error('배송지 목록 로드 오류:', addressError);
+          // 오류 발생 시 빈 상태 표시
+          setShowAddressForm(false);
+        }
 
         // 저장된 결제수단 목록 로드 (임시 비활성화)
         // const paymentMethodsResponse = await purchaseApiService.getPaymentMethods();
@@ -145,30 +177,44 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     setShowAddressForm(true);
   };
 
-  // 배송지 정보 변경 핸들러
-  const handleShippingChange = (field: keyof ShippingAddress, value: string) => {
-    setShippingAddress(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // 새 배송지 저장
-  const saveNewAddress = async () => {
+  // 새 배송지 저장 핸들러 (ShippingAddressForm 컴포넌트용)
+  const handleSaveNewAddress = async (addressData: ShippingAddress) => {
     try {
-      const response = await purchaseApiService.addShippingAddress(shippingAddress);
+      setProcessing(true);
+      setError(null);
+
+      const response = await purchaseApiService.addShippingAddress(addressData);
       if (response.success && response.data) {
-        setSavedAddresses(prev => [...prev, response.data]);
-        setSelectedAddressId(response.data.id);
+        // 배송지 목록 새로고침
+        const addressesResponse = await purchaseApiService.getShippingAddresses();
+        if (addressesResponse.success && addressesResponse.data) {
+          setSavedAddresses(addressesResponse.data);
+          // 새로 추가된 배송지 선택
+          setSelectedAddressId(response.data.id);
+          setShippingAddress(response.data);
+        } else {
+          // 새로고침 실패 시 기존 방식으로 추가
+          setSavedAddresses(prev => [...prev, response.data]);
+          setSelectedAddressId(response.data.id);
+        }
+
         setShowAddressForm(false);
         await alert('배송지가 저장되었습니다.', {
           variant: 'success',
           title: '저장 완료'
         });
+      } else {
+        throw new Error(response.message || '배송지 저장에 실패했습니다.');
       }
     } catch (err: any) {
       console.error('Address save failed:', err);
-      setError('배송지 저장에 실패했습니다.');
+      setError(err.message || '배송지 저장에 실패했습니다.');
+      await alert(err.message || '배송지 저장에 실패했습니다.', {
+        variant: 'error',
+        title: '저장 실패'
+      });
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -207,59 +253,36 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setProcessing(true);
       setError(null);
 
-      // 1. 먼저 주문 생성
-      const orderData = {
-        shippingAddress: {
-          street: shippingAddress.address + (shippingAddress.addressDetail ? ` ${shippingAddress.addressDetail}` : ''),
-          city: '서울', // 기본값 - 실제로는 배송지에서 추출해야 함
-          state: '서울특별시',
-          zipCode: shippingAddress.zipCode,
-          country: 'KR',
-          name: shippingAddress.recipientName,
-          phone: shippingAddress.phone
-        },
-        paymentMethod: paymentMethod === 'kakaopay' ? 'KAKAO_PAY' :
-                       paymentMethod === 'card' ? 'CREDIT_CARD' :
+      // 결제 준비 직접 호출 (주문 생성은 서버에서 처리)
+      const payMethod = paymentMethod === 'kakaopay' ? 'KAKAO_PAY' :
                        paymentMethod === 'naverpay' ? 'NAVER_PAY' :
-                       paymentMethod === 'bank' ? 'BANK_TRANSFER' : 'CREDIT_CARD', // 서버 API 스펙에 맞는 값으로 변환
-        useCart: true // 장바구니 기반 주문
+                       paymentMethod === 'card' ? 'CREDIT_CARD' : 'BANK_TRANSFER';
+
+      // 새로운 API 스펙: items 배열로 각 상품의 shape, size 정보 전달
+      const paymentPrepareData = {
+        amount: order?.finalPrice || 0,
+        payMethod,
+        items: cart?.items.map(item => ({
+          productUuid: item.productId || item.product.id,
+          shape: item.options?.shape || item.selectedOptions?.shape || 'default',
+          size: item.options?.size || item.selectedOptions?.size || 'default',
+          quantity: item.quantity,
+          price: item.price || 0
+        })) || [],
+        callbackUrls: {
+          success: `${API_BASE_URL}/api/payment/callback/success`,
+          cancel: `${API_BASE_URL}/api/payment/callback/cancel`,
+          fail: `${API_BASE_URL}/api/payment/callback/fail`
+        }
       };
 
-      const orderResponse = await webApiService.order.createOrder(orderData);
+      const prepareResponse = await purchaseApiService.preparePayment(paymentPrepareData);
 
-      if (orderResponse.success && orderResponse.data) {
-        // 2. 주문 생성 성공 후 결제 준비
-        const payMethod = paymentMethod === 'kakaopay' ? 'KAKAO_PAY' :
-                         paymentMethod === 'naverpay' ? 'NAVER_PAY' :
-                         paymentMethod === 'card' ? 'CREDIT_CARD' : 'BANK_TRANSFER';
-
-        const itemName = cart?.items.length === 1
-          ? cart.items[0].product.name
-          : `${cart?.items[0].product.name} 외 ${(cart?.items.length || 1) - 1}건`;
-
-        const paymentPrepareData = {
-          orderId: orderResponse.data.order.id,
-          amount: order.finalPrice,
-          itemName,
-          payMethod,
-          quantity: cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 1,
-          callbackUrls: {
-            success: `${window.location.origin}/payment/success`,
-            cancel: `${window.location.origin}/payment/cancel`,
-            fail: `${window.location.origin}/payment/fail`
-          }
-        };
-
-        const prepareResponse = await purchaseApiService.preparePayment(paymentPrepareData);
-
-        if (prepareResponse.success && prepareResponse.data) {
-          // 3. 결제 페이지로 이동
-          window.location.href = prepareResponse.data.paymentUrl;
-        } else {
-          throw new Error(prepareResponse.error || '결제 준비에 실패했습니다.');
-        }
+      if (prepareResponse.success && prepareResponse.data) {
+        // 결제 페이지로 이동
+        window.location.href = prepareResponse.data.paymentUrl;
       } else {
-        throw new Error('주문 생성에 실패했습니다.');
+        throw new Error(prepareResponse.error || '결제 준비에 실패했습니다.');
       }
 
     } catch (err: any) {
@@ -370,15 +393,30 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             <div className="bg-white rounded-lg border p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">배송지 정보</h2>
-                {savedAddresses.length > 0 && !showAddressForm && (
+                {!showAddressForm && (
                   <button
                     onClick={handleAddNewAddress}
-                    className="text-sm text-blue-600 hover:text-blue-700"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                   >
-                    + 새 주소 추가
+                    + 배송지 추가
                   </button>
                 )}
               </div>
+
+              {/* 빈 배송지 상태 */}
+              {savedAddresses.length === 0 && !showAddressForm && (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-4xl mb-4">📍</div>
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">등록된 배송지가 없습니다</h3>
+                  <p className="text-gray-500 mb-4">주문을 완료하려면 배송지를 추가해주세요.</p>
+                  <button
+                    onClick={() => onGo('/my/addresses')}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    배송지 관리 페이지에서 추가하기 →
+                  </button>
+                </div>
+              )}
 
               {/* 저장된 배송지 목록 */}
               {savedAddresses.length > 0 && !showAddressForm && (
@@ -395,18 +433,23 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="font-medium">{address.recipientName}</div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="font-bold text-lg text-gray-900">
+                              {(address as any).addressName || '배송지'}
+                            </div>
+                            {address.isDefault && (
+                              <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
+                                기본 배송지
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600 mb-1">{address.recipientName}</div>
                           <div className="text-sm text-gray-600 mt-1">
                             {address.address} {address.addressDetail}
                           </div>
                           <div className="text-sm text-gray-600">
                             {address.phone}
                           </div>
-                          {address.isDefault && (
-                            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded mt-2">
-                              기본 배송지
-                            </span>
-                          )}
                         </div>
                         <input
                           type="radio"
@@ -420,112 +463,19 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 </div>
               )}
 
-              {/* 배송지 입력 폼 */}
+              {/* 배송지 입력 모달 */}
               {showAddressForm && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      받는 분 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={shippingAddress.recipientName}
-                      onChange={(e) => handleShippingChange('recipientName', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="받는 분 성함"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      연락처 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={shippingAddress.phone}
-                      onChange={(e) => handleShippingChange('phone', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="010-0000-0000"
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <ShippingAddressForm
+                      title="새 배송지 추가"
+                      onSave={handleSaveNewAddress}
+                      onCancel={() => setShowAddressForm(false)}
+                      processing={processing}
+                      showCancelButton={true}
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      우편번호 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={shippingAddress.zipCode}
-                        onChange={(e) => handleShippingChange('zipCode', e.target.value)}
-                        className="flex-1 border rounded-lg px-3 py-2"
-                        placeholder="12345"
-                      />
-                      <button
-                        onClick={() => alert('우편번호 찾기는 추후 구현됩니다.')}
-                        className="px-3 py-2 border rounded-lg hover:bg-gray-50"
-                      >
-                        검색
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    주소 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={shippingAddress.address}
-                    onChange={(e) => handleShippingChange('address', e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2"
-                    placeholder="기본 주소"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">상세 주소</label>
-                  <input
-                    type="text"
-                    value={shippingAddress.addressDetail}
-                    onChange={(e) => handleShippingChange('addressDetail', e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2"
-                    placeholder="상세 주소 (아파트 동/호수 등)"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">배송 메모</label>
-                  <textarea
-                    value={shippingAddress.memo}
-                    onChange={(e) => handleShippingChange('memo', e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 h-20 resize-none"
-                    placeholder="배송 시 요청사항이 있으면 입력해주세요"
-                  />
-                </div>
-
-                {/* 배송지 저장 버튼 */}
-                <div className="flex justify-end space-x-3 pt-4">
-                  {savedAddresses.length > 0 && (
-                    <button
-                      onClick={() => setShowAddressForm(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                      취소
-                    </button>
-                  )}
-                  <button
-                    onClick={saveNewAddress}
-                    disabled={!validateShipping()}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                  >
-                    배송지 저장
-                  </button>
-                </div>
-              </div>
               )}
             </div>
 

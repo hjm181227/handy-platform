@@ -110,10 +110,13 @@ class MobileApiService {
   get order() { return this.apiService.order; }
   get payment() { return this.apiService.payment; }
   get seller() { return this.apiService.seller; }
+  get production() { return this.apiService.production; }
+  get admin() { return this.apiService.admin; }
   get loyalty() { return this.apiService.loyalty; }
   get image() { return this.apiService.image; }
   get shipping() { return this.apiService.shipping; }
   get qr() { return this.apiService.qr; }
+  get address() { return this.apiService.address; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -194,10 +197,13 @@ export const {
   order: orderService,
   payment: paymentService,
   seller: sellerService,
+  production: productionService,
+  admin: adminService,
   loyalty: loyaltyService,
   image: imageService,
   shipping: shippingService,
   qr: qrService,
+  address: addressService,
 } = mobileApiService;
 
 // 레거시 호환성을 위한 기본 함수들

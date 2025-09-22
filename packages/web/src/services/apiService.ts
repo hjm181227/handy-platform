@@ -99,6 +99,7 @@ class WebApiService {
   get image() { return this.apiService.image; }
   get shipping() { return this.apiService.shipping; }
   get qr() { return this.apiService.qr; }
+  get address() { return this.apiService.address; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -194,6 +195,7 @@ export const {
   image: imageService,
   shipping: shippingService,
   qr: qrService,
+  address: addressService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들

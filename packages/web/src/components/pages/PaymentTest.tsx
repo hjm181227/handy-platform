@@ -100,17 +100,23 @@ export function PaymentTest({ onGo }: PaymentTestProps) {
         message: 'MongoDB 트랜잭션 오류 회피를 위해 모의 주문 ID 사용'
       });
 
-      // 카카오페이 결제 준비
+      // 카카오페이 결제 준비 (새로운 API 스펙)
       const paymentData = {
-        orderId: mockOrderId,
         amount: 10000,
-        itemName: '카카오페이 테스트 상품',
         payMethod: 'KAKAO_PAY',
-        quantity: 1,
+        items: [
+          {
+            productUuid: 'test-product-1',
+            shape: 'round',
+            size: 'medium',
+            quantity: 1,
+            price: 10000
+          }
+        ],
         callbackUrls: {
-          success: `${window.location.origin}/payment/success`,
-          cancel: `${window.location.origin}/payment/cancel`,
-          fail: `${window.location.origin}/payment/fail`
+          success: `${import.meta.env.VITE_API_URL || 'http://localhost:11000'}/api/payment/callback/success`,
+          cancel: `${import.meta.env.VITE_API_URL || 'http://localhost:11000'}/api/payment/callback/cancel`,
+          fail: `${import.meta.env.VITE_API_URL || 'http://localhost:11000'}/api/payment/callback/fail`
         }
       };
 

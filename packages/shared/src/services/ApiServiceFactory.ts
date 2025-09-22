@@ -12,6 +12,7 @@ import { BaseLoyaltyService, LoyaltyServiceFactory } from './loyalty/LoyaltyServ
 import { BaseImageService, ImageServiceFactory } from './utils/ImageService';
 import { BaseShippingService, ShippingServiceFactory } from './utils/ShippingService';
 import { BaseQRService, QRServiceFactory } from './utils/QRService';
+import { BaseAddressService, AddressServiceFactory } from './utils/AddressService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -29,6 +30,7 @@ export interface IntegratedApiService {
   image: BaseImageService;
   shipping: BaseShippingService;
   qr: BaseQRService;
+  address: BaseAddressService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -53,6 +55,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public image: BaseImageService;
   public shipping: BaseShippingService;
   public qr: BaseQRService;
+  public address: BaseAddressService;
 
   protected baseURL: string;
   protected platform: string;
@@ -79,6 +82,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.image = ImageServiceFactory.create(baseURL, getAuthHeaders);
     this.shipping = ShippingServiceFactory.create(baseURL, getAuthHeaders);
     this.qr = QRServiceFactory.create(baseURL, getAuthHeaders);
+    this.address = AddressServiceFactory.create(baseURL, getAuthHeaders);
   }
 
   getEnvironmentInfo() {
@@ -98,7 +102,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'loyalty',
         'image',
         'shipping',
-        'qr'
+        'qr',
+        'address'
       ],
     };
   }
@@ -178,4 +183,5 @@ export type {
   BaseImageService,
   BaseShippingService,
   BaseQRService,
+  BaseAddressService,
 };

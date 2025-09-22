@@ -13,27 +13,38 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
   const [paymentResult, setPaymentResult] = useState<any>(null);
 
   useEffect(() => {
-    const processPaymentApproval = async () => {
+    const loadOrderInformation = async () => {
       try {
-        // URL 파라미터에서 결제 정보 추출
+        // URL 파라미터에서 주문 ID 추출
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('orderId');
-        const pgToken = urlParams.get('pgToken');
-        const payMethod = urlParams.get('payMethod');
 
-        if (!orderId || !pgToken || !payMethod) {
-          throw new Error('결제 정보가 올바르지 않습니다.');
+        if (!orderId || orderId === 'undefined') {
+          throw new Error('주문 정보가 올바르지 않습니다.');
         }
 
-        // 결제 승인 처리
-        const approveResponse = await purchaseApiService.approvePayment({
-          orderId,
-          payMethod,
-          approvalData: { pgToken }
-        });
+        // 완료된 주문 정보 조회
+        const orderResponse = await purchaseApiService.getOrder(orderId);
 
-        if (approveResponse.success) {
-          setPaymentResult(approveResponse.data);
+        console.log('Order API Response:', orderResponse);
+
+        if (orderResponse.success && orderResponse.order) {
+          const order = orderResponse.order;
+          setPaymentResult({
+            success: true,
+            orderId: order.id || orderId,
+            orderNumber: order.orderNumber,
+            payMethod: order.paymentMethod || 'KAKAO_PAY',
+            amount: {
+              total: order.totalAmount || 0
+            },
+            items: order.items || [],
+            shippingAddress: order.shippingAddress,
+            approvedAt: order.createdAt || new Date().toISOString(),
+            status: order.status,
+            paymentStatus: order.paymentStatus,
+            paymentDetails: order.paymentDetails
+          });
           
           // 성공 알림
           await alert('결제가 완료되었습니다!', {
@@ -41,13 +52,13 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
             title: '결제 완료'
           });
         } else {
-          throw new Error(approveResponse.error || '결제 승인에 실패했습니다.');
+          throw new Error(orderResponse.message || '주문 정보를 불러올 수 없습니다.');
         }
 
       } catch (error: any) {
-        console.error('Payment approval failed:', error);
+        console.error('Order information loading failed:', error);
         await showError(error, {
-          title: '결제 승인 실패'
+          title: '주문 정보 로드 실패'
         });
         setPaymentResult({ success: false, error: error.message });
       } finally {
@@ -55,7 +66,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
       }
     };
 
-    processPaymentApproval();
+    loadOrderInformation();
   }, []);
 
   if (isProcessing) {
@@ -111,34 +122,92 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           <p className="text-gray-600 mb-6">주문이 성공적으로 처리되었습니다.</p>
           
           {paymentResult && (
-            <div className="bg-gray-50 rounded-lg p-6 text-left">
-              <h3 className="text-lg font-semibold mb-4">결제 정보</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">주문번호</span>
-                  <span className="font-medium">{paymentResult.orderId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">결제수단</span>
-                  <span className="font-medium">{paymentResult.payMethod}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">상품명</span>
-                  <span className="font-medium">{paymentResult.itemName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">결제금액</span>
-                  <span className="font-bold text-blue-600">
-                    {money(paymentResult.amount?.total || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">결제일시</span>
-                  <span className="font-medium">
-                    {new Date(paymentResult.approvedAt).toLocaleString('ko-KR')}
-                  </span>
+            <div className="space-y-6">
+              {/* 주문 정보 */}
+              <div className="bg-gray-50 rounded-lg p-6 text-left">
+                <h3 className="text-lg font-semibold mb-4">주문 정보</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">주문번호</span>
+                    <span className="font-medium">{paymentResult.orderNumber || paymentResult.orderId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">결제수단</span>
+                    <span className="font-medium">{paymentResult.payMethod}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">결제금액</span>
+                    <span className="font-bold text-blue-600">
+                      {money(paymentResult.amount?.total || 0)}원
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">주문일시</span>
+                    <span className="font-medium">
+                      {new Date(paymentResult.approvedAt).toLocaleString('ko-KR')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">주문상태</span>
+                    <span className="font-medium text-green-600">
+                      {paymentResult.status === 'completed' ? '결제완료' : '처리중'}
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              {/* 주문 상품 */}
+              {paymentResult.items && paymentResult.items.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6 text-left">
+                  <h3 className="text-lg font-semibold mb-4">주문 상품</h3>
+                  <div className="space-y-4">
+                    {paymentResult.items.map((item: any, index: number) => (
+                      <div key={index} className="flex gap-4 p-3 bg-white rounded-lg">
+                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0">
+                          {item.productImage ? (
+                            <img
+                              src={item.productImage}
+                              alt={item.productName || 'Product'}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              📦
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.productName || '상품명'}</h4>
+                          <p className="text-sm text-gray-500">판매자: {item.sellerName || 'HANDY'}</p>
+                          <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
+                          <p className="text-sm font-medium">{money(item.price || 0)}원</p>
+                          {item.subtotal && item.subtotal !== item.price && (
+                            <p className="text-sm font-semibold text-blue-600">소계: {money(item.subtotal)}원</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 배송지 정보 */}
+              {paymentResult.shippingAddress && (
+                <div className="bg-gray-50 rounded-lg p-6 text-left">
+                  <h3 className="text-lg font-semibold mb-4">배송지 정보</h3>
+                  <div className="space-y-2">
+                    <p className="font-medium">{paymentResult.shippingAddress.name || '수령인'}</p>
+                    <p className="text-gray-600">{paymentResult.shippingAddress.phone || '연락처'}</p>
+                    <p className="text-gray-600">
+                      {paymentResult.shippingAddress.street || paymentResult.shippingAddress.address} 
+                      {paymentResult.shippingAddress.city ? `, ${paymentResult.shippingAddress.city}` : ''}
+                      {paymentResult.shippingAddress.state ? `, ${paymentResult.shippingAddress.state}` : ''}
+                    </p>
+                    <p className="text-gray-600">우편번호: {paymentResult.shippingAddress.zipCode}</p>
+                    <p className="text-gray-600">국가: {paymentResult.shippingAddress.country || 'KR'}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

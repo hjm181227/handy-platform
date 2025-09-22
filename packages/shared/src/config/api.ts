@@ -320,6 +320,16 @@ export const API_ENDPOINTS = {
     PROCESS: '/api/qr/process',
   },
 
+  // 배송지 관리 (한국 주소 시스템)
+  SHIPPING_ADDRESSES: {
+    LIST: '/api/shipping-addresses',
+    CREATE: '/api/shipping-addresses',
+    UPDATE: (index: string) => `/api/shipping-addresses/${index}`,
+    DELETE: (index: string) => `/api/shipping-addresses/${index}`,
+    SET_DEFAULT: (index: string) => `/api/shipping-addresses/${index}/set-default`,
+    VALIDATE: '/api/shipping-addresses/validate',
+  },
+
   // 사용자 관리 (배송지, 위시리스트 등)
   USER_MANAGEMENT: {
     ADDRESSES: '/api/user/addresses',
