@@ -8,7 +8,7 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd }:{
   const renderLoadingSkeleton = () => (
     <div className="flex gap-4 overflow-x-auto snap-x pb-2">
       {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="snap-start flex-shrink-0">
+        <div key={`skeleton-${index}`} className="snap-start flex-shrink-0">
           <div className="w-40 animate-pulse">
             <div className="aspect-square bg-gray-200 rounded-lg mb-2"></div>
             <div className="h-4 bg-gray-200 rounded mb-1"></div>

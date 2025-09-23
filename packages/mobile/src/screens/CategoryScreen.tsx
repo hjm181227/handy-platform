@@ -71,8 +71,8 @@ const CategoryScreen: React.FC = () => {
     // 해당 카테고리 페이지로 WebView 네비게이션
     const env = getCurrentEnvironment();
     const baseURL = env === 'development'
-      ? 'http://10.0.2.2:3001'
-      : 'http://10.0.2.2:3001';
+      ? 'http://10.0.2.2:3003'
+      : 'http://10.0.2.2:3003';
     
     const fullUrl = `${baseURL}${path}`;
     

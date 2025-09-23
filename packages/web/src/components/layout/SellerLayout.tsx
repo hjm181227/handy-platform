@@ -75,11 +75,16 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
           {/* 로고 및 헤더 */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">H</span>
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">Handy</h1>
+                <button 
+                  onClick={() => onGo("/")}
+                  className="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
+                >
+                  Handy
+                </button>
                 <p className="text-xs text-gray-500">판매자 센터</p>
               </div>
             </div>
@@ -156,9 +161,17 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
               </svg>
             </button>
 
+            {/* 모바일에서 보이는 로고 */}
+            <button 
+              onClick={() => onGo("/")}
+              className="lg:hidden text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors"
+            >
+              Handy
+            </button>
+
             {/* 페이지 제목 */}
             {title && (
-              <div>
+              <div className="hidden lg:block">
                 <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
               </div>
             )}

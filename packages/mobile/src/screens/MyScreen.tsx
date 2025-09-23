@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentEnvironment } from '@handy-platform/shared';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import WebViewBridge from '../components/WebViewBridge';
 import ARCameraScreen from './ARCameraScreen';
 import NailSizesScreen from './NailSizesScreen';
@@ -27,13 +28,31 @@ interface NailMeasurement {
 const MyScreen: React.FC = () => {
   const [showNailFeatures, setShowNailFeatures] = useState(true);
   const [recentMeasurements, setRecentMeasurements] = useState<NailMeasurement[]>([]);
-  const [showWebView, setShowWebView] = useState(false);
+  const [showWebView, setShowWebView] = useState(true); // 웹뷰를 먼저 표시
   const [showARCamera, setShowARCamera] = useState(false);
   const [showNailSizes, setShowNailSizes] = useState(false);
+  const navigation = useNavigation();
 
   useEffect(() => {
     loadRecentMeasurements();
   }, []);
+
+  // MyScreen의 focus 상태 디버깅
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('👤 [MYSCREEN] MyScreen focused');
+      
+      // 현재 활성화된 탭이 My인지 확인
+      const state = navigation.getState();
+      const currentRoute = state.routes[state.index];
+      console.log('👤 [MYSCREEN] Current route:', currentRoute.name);
+      console.log('👤 [MYSCREEN] Current showWebView state:', showWebView);
+      
+      return () => {
+        console.log('👤 [MYSCREEN] MyScreen blurred');
+      };
+    }, [showWebView])
+  );
 
   const loadRecentMeasurements = async () => {
     try {
@@ -82,7 +101,10 @@ const MyScreen: React.FC = () => {
       <View style={styles.container}>
         <WebViewBridge 
           url={getWebURL()} 
-          onShowNativeFeatures={() => setShowWebView(false)}
+          onShowNativeFeatures={() => {
+            console.log('🟢 [MYSCREEN] 사이즈 측정 버튼으로 네이티브로 전환');
+            setShowWebView(false);
+          }}
         />
       </View>
     );
@@ -96,7 +118,10 @@ const MyScreen: React.FC = () => {
           <Text style={styles.title}>사이즈 측정</Text>
           <TouchableOpacity
             style={styles.webViewButton}
-            onPress={() => setShowWebView(true)}
+            onPress={() => {
+              console.log('🟢 [MYSCREEN] 웹뷰로 돌아가기');
+              setShowWebView(true);
+            }}
           >
             <Text style={styles.webViewButtonText}>🌐</Text>
           </TouchableOpacity>
@@ -113,37 +138,6 @@ const MyScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 측정 통계 카드 */}
-        <View style={styles.statsSection}>
-          <Text style={styles.statsTitle}>측정 통계</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{recentMeasurements.length}</Text>
-              <Text style={styles.statLabel}>총 측정</Text>
-              <Text style={styles.statIcon}>📏</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {recentMeasurements.length > 0 ? 
-                  new Date(recentMeasurements[0]?.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : 
-                  '--'
-                }
-              </Text>
-              <Text style={styles.statLabel}>최근 측정</Text>
-              <Text style={styles.statIcon}>⏰</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {recentMeasurements.length > 0 ? 
-                  `${Math.round(recentMeasurements.reduce((sum, m) => sum + m.width, 0) / recentMeasurements.length)}mm` : 
-                  '--'
-                }
-              </Text>
-              <Text style={styles.statLabel}>평균 크기</Text>
-              <Text style={styles.statIcon}>📊</Text>
-            </View>
-          </View>
-        </View>
 
         {/* 측정 기능 섹션 */}
         {showNailFeatures && (

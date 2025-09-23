@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { toQ } from '../../utils';
 import { webApiService } from '../../services/apiService';
 import type { User } from '@handy-platform/shared';
+import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
+import { Logo } from '../common/Logo';
 
 export function MainHeader({ 
   cartCount, 
@@ -122,27 +124,28 @@ export function MainHeader({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
       {/* 데스크톱 레이아웃 */}
       <div className="hidden md:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center h-16 px-4">
           <div className="justify-self-start">
-            <a className="text-2xl font-extrabold tracking-tight" href="/" onClick={(e)=>{e.preventDefault(); onGo("/");}}>Handy</a>
+            <Logo 
+              className="hover:scale-105 transition-transform" 
+              onClick={() => onGo("/")} 
+            />
           </div>
 
           <div className="justify-self-center w-full max-w-2xl">
-            <div className="flex items-center gap-2 rounded-full border px-3 py-2">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-gray-500" strokeWidth="2" fill="none">
-                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
-              </svg>
+            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-gray-100 px-3 py-2 focus-within:border-gray-500 focus-within:bg-white transition-all">
+              <SearchIcon size={16} color="#666" />
               <input
                 value={q}
                 onChange={e=>setQ(e.target.value)}
                 onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                 placeholder="검색어를 입력하세요"
-                className="w-full text-sm outline-none placeholder:text-gray-400"
+                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700"
               />
-              <button onClick={submitSearch} className="text-xs rounded border px-2 py-1">Search</button>
+              <button onClick={submitSearch} className="text-xs rounded-full bg-gray-800 text-white px-3 py-1 hover:bg-gray-900 transition-colors">Search</button>
             </div>
           </div>
 
@@ -150,8 +153,8 @@ export function MainHeader({
             {isLoading ? (
               // 로딩 상태
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                <span className="text-sm text-gray-500">인증 확인 중...</span>
+                <div className="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
+                <span className="text-sm text-gray-900">인증 확인 중...</span>
               </div>
             ) : user ? (
               // 로그인 상태
@@ -280,13 +283,10 @@ export function MainHeader({
         {/* 상단 바: 로고 + 액션 버튼들 */}
         <div className="flex items-center justify-between h-14 px-4">
           {/* 로고 */}
-          <a 
-            className="text-xl font-extrabold tracking-tight" 
-            href="/" 
-            onClick={(e)=>{e.preventDefault(); onGo("/");}}
-          >
-            Handy
-          </a>
+          <Logo 
+            className="text-xl" 
+            onClick={() => onGo("/")} 
+          />
 
           {/* 액션 버튼들 */}
           <div className="flex items-center gap-2">
@@ -390,7 +390,7 @@ export function MainHeader({
               )}
             </button>
 
-            {/* QR 스캔 버튼 (모바일 전용) */}
+            {/* QR 스캔 버튼 (모바일 전용) - 숨김 처리 */}
             <button 
               onClick={() => {
                 try {
@@ -401,7 +401,7 @@ export function MainHeader({
                   console.warn('QR 스캔은 모바일 앱에서만 사용 가능합니다.');
                 }
               }}
-              className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="hidden w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors"
             >
               📷
             </button>

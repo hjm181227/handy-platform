@@ -46,6 +46,12 @@ export * from './services/utils/AlertTypes';
 // Config
 export * from './config/api';
 
+// Styles
+export * from './styles/colors';
+
+// Components
+export * from './components/icons';
+
 // Re-export commonly used types
 export type {
   User,

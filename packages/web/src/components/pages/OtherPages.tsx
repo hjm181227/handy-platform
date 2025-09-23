@@ -117,10 +117,11 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
   // 앱 기능 보기로 돌아가기
   const goToNativeApp = () => {
-    if (isWebViewEnvironment()) {
-      // 특별한 URL로 이동해서 네이티브에서 감지하도록 함
-      window.location.href = 'about:blank?action=goToNative';
-    }
+    console.log('🔵 [WEB] 사이즈 측정 버튼 클릭됨');
+    
+    // URL을 변경하여 네이티브에서 감지하도록 함
+    console.log('🔵 [WEB] URL 변경으로 네이티브 전환 시도');
+    window.location.href = 'about:blank?action=goToNative';
   };
 
   return (

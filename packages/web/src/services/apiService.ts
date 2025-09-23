@@ -1,6 +1,6 @@
 import { 
   createApiService,
-  IntegratedApiService,
+  BaseIntegratedApiService,
   User
 } from '@handy-platform/shared';
 import { API_BASE_URL } from '@handy-platform/shared/src/config/api';
@@ -47,7 +47,7 @@ const getWebAuthHeaders = async (): Promise<Record<string, string>> => {
 
 // 웹 전용 통합 API 서비스 생성
 class WebApiService {
-  private apiService: IntegratedApiService;
+  private apiService: BaseIntegratedApiService;
 
   constructor() {
     // Vite 환경변수 우선 사용

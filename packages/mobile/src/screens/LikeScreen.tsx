@@ -8,8 +8,8 @@ const LikeScreen: React.FC = () => {
   const getWebURL = () => {
     const env = getCurrentEnvironment();
     const baseURL = env === 'development'
-      ? (Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001')
-      : (Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001');
+      ? (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003')
+      : (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003');
     
     return `${baseURL}/likes`;
   };
