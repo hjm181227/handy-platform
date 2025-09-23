@@ -156,20 +156,26 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         console.log('신규 사용자 - 약관 동의 페이지로 이동');
         
         // 서버에서 받은 카카오 사용자 정보로 소셜 로그인 상태 저장
-        setSocialAuthState({
+        const socialStateData = {
           accessToken,
           userInfo: {
             id: response.kakaoUserInfo.id,
             email: response.kakaoUserInfo.email,
             name: response.kakaoUserInfo.name,
             profileImage: response.kakaoUserInfo.profileImage,
-            provider: 'kakao'
+            provider: 'kakao' as const
           },
           timestamp: Date.now()
-        });
+        };
         
-        // 약관 동의 페이지로 이동
-        onGo(getSocialSignupUrl('kakao'));
+        console.log('💾 소셜 상태 저장 시도:', socialStateData);
+        setSocialAuthState(socialStateData);
+        
+        // 저장 완료 확인을 위해 짧은 지연 후 페이지 이동
+        setTimeout(() => {
+          console.log('🚀 약관 동의 페이지로 이동:', getSocialSignupUrl('kakao'));
+          onGo(getSocialSignupUrl('kakao'));
+        }, 100);
       } else {
         // 기존 회원 - 즉시 로그인 완료
         console.log('기존 회원 - 로그인 완료');
