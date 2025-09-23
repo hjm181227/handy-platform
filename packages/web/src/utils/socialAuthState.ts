@@ -21,15 +21,12 @@ const EXPIRE_TIME = 10 * 60 * 1000; // 10분
  * 소셜 로그인 임시 상태 저장
  */
 export const setSocialAuthState = (state: SocialAuthState): void => {
-  try {
-    sessionStorage.setItem(SOCIAL_AUTH_KEY, JSON.stringify({
-      ...state,
-      timestamp: Date.now()
-    }));
-    console.log('소셜 로그인 임시 상태 저장:', state.userInfo.provider, state.userInfo.email);
-  } catch (error) {
-    console.error('소셜 로그인 상태 저장 실패:', error);
-  }
+  const stateWithTimestamp = {
+    ...state,
+    timestamp: Date.now()
+  };
+  const serializedState = JSON.stringify(stateWithTimestamp);
+  sessionStorage.setItem(SOCIAL_AUTH_KEY, serializedState);
 };
 
 /**
@@ -38,20 +35,24 @@ export const setSocialAuthState = (state: SocialAuthState): void => {
 export const getSocialAuthState = (): SocialAuthState | null => {
   try {
     const stored = sessionStorage.getItem(SOCIAL_AUTH_KEY);
-    if (!stored) return null;
+
+    if (!stored) {
+      return null;
+    }
 
     const state: SocialAuthState = JSON.parse(stored);
-    
+
     // 만료 시간 확인
-    if (Date.now() - state.timestamp > EXPIRE_TIME) {
+    const currentTime = Date.now();
+    const elapsed = currentTime - state.timestamp;
+
+    if (elapsed > EXPIRE_TIME) {
       clearSocialAuthState();
-      console.warn('소셜 로그인 임시 상태 만료됨');
       return null;
     }
 
     return state;
   } catch (error) {
-    console.error('소셜 로그인 상태 조회 실패:', error);
     clearSocialAuthState();
     return null;
   }
