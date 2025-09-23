@@ -1,5 +1,6 @@
 import { Drawer } from '../ui';
 import { CartContent } from '../cart/CartContent';
+import type { User } from '@handy-platform/shared';
 
 // Cart Drawer (반응형 CartContent 사용)
 export function CartDrawer({
@@ -7,11 +8,13 @@ export function CartDrawer({
   onClose,
   onCheckout,
   onCartUpdate,
+  currentUser,
 }: {
   open: boolean;
   onClose: () => void;
   onCheckout: () => void;
   onCartUpdate?: () => void;
+  currentUser?: User | null;
 }) {
   return (
     <Drawer open={open} onClose={onClose} side="right">
@@ -21,6 +24,7 @@ export function CartDrawer({
         onCheckout={onCheckout}
         onCartUpdate={onCartUpdate}
         refreshTrigger={open} // drawer가 열릴 때마다 새로고침
+        currentUser={currentUser}
       />
     </Drawer>
   );
@@ -115,7 +119,7 @@ export function CategoryDrawer({
             <h2 id="drawer-title" className="text-lg font-semibold">카테고리</h2>
             <button 
               onClick={onClose} 
-              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 hover:bg-gray-100 rounded-full"
+              className="text-black hover:text-gray-700 transition-colors duration-200 p-1"
               aria-label="카테고리 닫기"
             >
               ✕

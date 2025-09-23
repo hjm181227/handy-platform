@@ -32,11 +32,11 @@ function ArticleCard({
         <h3 className="mt-1 text-[15px] font-semibold line-clamp-2">{p.title}</h3>
         <p className="mt-1 text-sm text-gray-600 line-clamp-2">{p.excerpt}</p>
         <div className="mt-2 flex flex-wrap gap-1">
-          {p.tags.map((t) => (
+          {p.tags?.map((t) => (
             <span key={t} className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
               #{t}
             </span>
-          ))}
+          )) || null}
         </div>
         <button
           onClick={() => onGo(`/news/${p.slug}`)}

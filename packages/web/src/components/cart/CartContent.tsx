@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem } from '@handy-platform/shared';
+import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
 import { money } from '../../utils';
 
@@ -16,9 +16,11 @@ interface CartContentProps {
   onCartUpdate?: () => void;
   /** 새로고침 트리거 - 이 값이 변경될 때마다 장바구니 새로고침 */
   refreshTrigger?: any;
+  /** 현재 로그인한 사용자 정보 */
+  currentUser?: User | null;
 }
 
-export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, refreshTrigger }: CartContentProps) {
+export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, refreshTrigger, currentUser }: CartContentProps) {
   // 상태 관리
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,10 +38,14 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       setLoading(true);
       setError(null);
       
-      console.log('Loading cart data from API...');
-      const response = await cartService.getCart();
+      // 로그인되지 않은 경우 빈 장바구니로 설정
+      if (!currentUser) {
+        setCart({ items: [], totals: {}, user: undefined });
+        setLoading(false);
+        return;
+      }
       
-      console.log('Cart API response:', response);
+      const response = await cartService.getCart();
       
       if (response.success && response.data) {
         // 새로운 응답 구조: data.cart가 아닌 data에 직접 장바구니 정보
@@ -56,22 +62,6 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
         setCapacityWarnings(response.capacityWarnings || []);
         setMessage(response.message || null);
         
-        console.log('Cart loaded successfully:', cartData);
-        
-        // 이미지 디버깅을 위한 로그 (새 API 구조)
-        response.data.items?.forEach((item, index) => {
-          console.log(`Cart item ${index} info:`, {
-            productId: item.product.id,
-            productName: item.product.name,
-            mainImageUrl: item.product.mainImageUrl,
-            sellerName: item.product.seller?.name,
-            hasMainImage: !!item.product.mainImageUrl,
-            options: item.options,
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.subtotal
-          });
-        });
       } else {
         throw new Error('장바구니 정보를 불러올 수 없습니다.');
       }
@@ -85,7 +75,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
   useEffect(() => {
     loadCart();
-  }, []);
+  }, [currentUser]);
 
   // refreshTrigger가 변경될 때마다 장바구니 새로고침 (drawer가 열릴 때)
   useEffect(() => {

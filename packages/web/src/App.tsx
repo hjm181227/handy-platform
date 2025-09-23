@@ -280,8 +280,6 @@ export default function App() {
 
   let screen: React.ReactNode;
   
-  // DEBUG: 현재 pathname 확인
-  console.log("Current pathname:", pathname);
 
   // Product detail
   const mDetail = pathname.match(/^\/product\/(.+)$/);
@@ -338,7 +336,8 @@ export default function App() {
       mode="page" 
       onBack={() => history.back()} 
       onCheckout={handleCheckout} 
-      onCartUpdate={loadCartCount} 
+      onCartUpdate={loadCartCount}
+      currentUser={currentUser}
     />;
   } else if (pathname === "/checkout") {
     screen = <CheckoutPage onGo={nav} />;
@@ -680,6 +679,7 @@ export default function App() {
             onClose={() => setDrawer(false)}
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
+            currentUser={currentUser}
           />
           <CategoryDrawer
             open={catOpen}
