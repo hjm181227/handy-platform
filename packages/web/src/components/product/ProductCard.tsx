@@ -16,7 +16,7 @@ export function ProductCard({ p, onOpen, onAdd }: { p: Product; onOpen:(id:strin
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               if (target.src !== '/placeholder-image.jpg') {
-                target.src = '/placeholder-image.jpg';
+                target.src = '';
               }
             }}
           />

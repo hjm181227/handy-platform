@@ -10,14 +10,39 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState({ phone: '' });
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 소셜 인증 상태가 없으면 로그인 페이지로 리다이렉트
+  // 소셜 인증 상태 확인 및 복구 시도
   useEffect(() => {
-    if (!socialState) {
-      console.warn('소셜 인증 상태가 없습니다. 로그인 페이지로 이동합니다.');
-      onGo('/login');
-    }
-  }, [socialState, onGo]);
+    console.log('🔍 SocialSignupPage 초기화 중...');
+    
+    const initializePage = async () => {
+      // URL에서 provider 파라미터 확인
+      const urlParams = new URLSearchParams(window.location.search);
+      const provider = urlParams.get('provider');
+      console.log('📝 URL provider 파라미터:', provider);
+      
+      // 소셜 상태 확인
+      const currentSocialState = getSocialAuthState();
+      console.log('💾 현재 소셜 상태:', currentSocialState);
+      
+      if (currentSocialState) {
+        setSocialState(currentSocialState);
+        console.log('✅ 소셜 상태 복구 성공');
+      } else {
+        console.warn('❌ 소셜 인증 상태가 없습니다.');
+        // 즉시 리다이렉트하지 않고 3초 대기 후 이동
+        setTimeout(() => {
+          console.log('⏰ 3초 대기 후 로그인 페이지로 이동');
+          onGo('/login');
+        }, 3000);
+      }
+      
+      setIsInitialized(true);
+    };
+
+    initializePage();
+  }, [onGo]);
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트
   useEffect(() => {
@@ -94,9 +119,34 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
     onGo('/login');
   };
 
-  // 소셜 상태가 없으면 아무것도 렌더링하지 않음
-  if (!socialState) {
-    return null;
+  // 초기화 중이거나 소셜 상태가 없으면 로딩 화면 표시
+  if (!isInitialized || !socialState) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-6">
+        <div className="rounded-lg bg-gray-100 px-4 py-3 text-[15px] font-semibold">
+          소셜 회원가입
+        </div>
+        <div className="mt-8 text-center">
+          {!isInitialized ? (
+            <>
+              <div className="text-lg">페이지를 준비하고 있습니다...</div>
+              <div className="mt-2 text-sm text-gray-600">잠시만 기다려주세요</div>
+            </>
+          ) : (
+            <>
+              <div className="text-lg">소셜 로그인 정보를 찾을 수 없습니다</div>
+              <div className="mt-2 text-sm text-gray-600">3초 후 로그인 페이지로 이동합니다</div>
+              <button
+                onClick={() => onGo('/login')}
+                className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+              >
+                지금 이동하기
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
 
   const providerName = {
