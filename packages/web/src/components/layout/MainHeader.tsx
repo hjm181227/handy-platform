@@ -18,7 +18,10 @@ export function MainHeader({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const gnb = [
     {label:"랭킹", to:"/ranking"},
     {label:"세일", to:"/sale"},
@@ -28,6 +31,52 @@ export function MainHeader({
     {label:"트렌드", to:"/trend"},
     {label:"판매자센터", to:"/seller"},
   ];
+  // 최근 검색어 로드
+  const loadRecentSearches = () => {
+    try {
+      const saved = localStorage.getItem('recentSearches');
+      if (saved) {
+        setRecentSearches(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.warn('최근 검색어 로드 실패:', error);
+    }
+  };
+
+  // 최근 검색어 저장
+  const saveRecentSearch = (query: string) => {
+    if (!query.trim()) return;
+
+    try {
+      const newSearches = [query.trim(), ...recentSearches.filter(s => s !== query.trim())].slice(0, 5);
+      setRecentSearches(newSearches);
+      localStorage.setItem('recentSearches', JSON.stringify(newSearches));
+    } catch (error) {
+      console.warn('최근 검색어 저장 실패:', error);
+    }
+  };
+
+  // 최근 검색어 삭제
+  const removeRecentSearch = (query: string) => {
+    try {
+      const newSearches = recentSearches.filter(s => s !== query);
+      setRecentSearches(newSearches);
+      localStorage.setItem('recentSearches', JSON.stringify(newSearches));
+    } catch (error) {
+      console.warn('최근 검색어 삭제 실패:', error);
+    }
+  };
+
+  // 모든 최근 검색어 삭제
+  const clearRecentSearches = () => {
+    try {
+      setRecentSearches([]);
+      localStorage.removeItem('recentSearches');
+    } catch (error) {
+      console.warn('최근 검색어 전체 삭제 실패:', error);
+    }
+  };
+
   // 로그인 상태 확인
   const checkAuthStatus = async () => {
     try {
@@ -46,6 +95,7 @@ export function MainHeader({
 
   useEffect(() => {
     checkAuthStatus();
+    loadRecentSearches();
   }, []);
 
   // 전역에서 인증 상태 변경을 감지하는 이벤트 리스너
@@ -65,25 +115,49 @@ export function MainHeader({
     };
   }, []);
 
-  // 외부 클릭 시 메뉴 닫기
+  // 외부 클릭 시 메뉴 및 검색 제안 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchSuggestions(false);
+      }
     };
 
-    if (showUserMenu) {
+    if (showUserMenu || showSearchSuggestions) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showUserMenu]);
+  }, [showUserMenu, showSearchSuggestions]);
 
-  const submitSearch = () => {
-    onGo("/search" + toQ({ q }));
+  const submitSearch = (searchQuery?: string) => {
+    const query = searchQuery || q;
+    if (query.trim()) {
+      saveRecentSearch(query.trim());
+    }
+    setShowSearchSuggestions(false);
+    onGo("/search" + toQ({ q: query }));
+  };
+
+  const handleSearchInputFocus = () => {
+    setShowSearchSuggestions(true);
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setQ(value);
+    if (value.trim() && !showSearchSuggestions) {
+      setShowSearchSuggestions(true);
+    }
+  };
+
+  const handleRecentSearchClick = (query: string) => {
+    setQ(query);
+    submitSearch(query);
   };
 
   const handleLogout = async () => {
@@ -127,23 +201,118 @@ export function MainHeader({
       <div className="hidden md:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center h-16 px-4">
           <div className="justify-self-start">
-            <a className="text-2xl font-extrabold tracking-tight" href="/" onClick={(e)=>{e.preventDefault(); onGo("/");}}>Handy</a>
+            <a href="/" onClick={(e)=>{e.preventDefault(); onGo("/");}} className="block">
+              <img 
+                src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png" 
+                alt="Handy" 
+                className="h-8 w-auto"
+              />
+            </a>
           </div>
 
-          <div className="justify-self-center w-full max-w-2xl">
+          <div className="justify-self-center w-full max-w-2xl relative" ref={searchRef}>
             <div className="flex items-center gap-2 rounded-full border px-3 py-2">
               <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-gray-500" strokeWidth="2" fill="none">
                 <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
               </svg>
               <input
                 value={q}
-                onChange={e=>setQ(e.target.value)}
+                onChange={e=>handleSearchInputChange(e.target.value)}
+                onFocus={handleSearchInputFocus}
                 onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                 placeholder="검색어를 입력하세요"
                 className="w-full text-sm outline-none placeholder:text-gray-400"
               />
-              <button onClick={submitSearch} className="text-xs rounded border px-2 py-1">Search</button>
+              {q && (
+                <button 
+                  onClick={() => setQ("")}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              <button onClick={() => submitSearch()} className="text-xs rounded border px-2 py-1 hover:bg-gray-50">Search</button>
             </div>
+
+            {/* 검색 제안 드롭다운 */}
+            {showSearchSuggestions && (
+              <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border z-50 max-h-80 overflow-y-auto">
+                {recentSearches.length > 0 && (
+                  <div className="p-3 border-b border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-500">최근 검색어</span>
+                      <button
+                        onClick={clearRecentSearches}
+                        className="text-xs text-gray-400 hover:text-gray-600"
+                      >
+                        전체삭제
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      {recentSearches.map((search, index) => (
+                        <div key={index} className="flex items-center justify-between group">
+                          <button
+                            onClick={() => handleRecentSearchClick(search)}
+                            className="flex-1 text-left py-1.5 px-2 text-sm text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{search}</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecentSearch(search);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 transition-opacity"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 인기 검색어 또는 추천 검색어 */}
+                <div className="p-3">
+                  <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                  <div className="space-y-1">
+                    {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일'].map((keyword, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleRecentSearchClick(keyword)}
+                        className="block w-full text-left py-1.5 px-2 text-sm text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span>{keyword}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {q.trim() && (
+                  <div className="border-t border-gray-100 p-3">
+                    <button
+                      onClick={() => submitSearch()}
+                      className="w-full text-left py-2 px-3 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 flex items-center gap-2 font-medium"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      '<span className="text-blue-800">{q}</span>' 검색
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="justify-self-end flex items-center gap-3">
@@ -281,11 +450,15 @@ export function MainHeader({
         <div className="flex items-center justify-between h-14 px-4">
           {/* 로고 */}
           <a 
-            className="text-xl font-extrabold tracking-tight" 
             href="/" 
             onClick={(e)=>{e.preventDefault(); onGo("/");}}
+            className="block"
           >
-            Handy
+            <img 
+              src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png" 
+              alt="Handy" 
+              className="h-7 w-auto"
+            />
           </a>
 
           {/* 액션 버튼들 */}
@@ -409,14 +582,15 @@ export function MainHeader({
         </div>
 
         {/* 검색바 */}
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-3 relative">
           <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-gray-50">
             <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
               <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
             </svg>
             <input
               value={q}
-              onChange={e=>setQ(e.target.value)}
+              onChange={e=>handleSearchInputChange(e.target.value)}
+              onFocus={handleSearchInputFocus}
               onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
               placeholder="검색어를 입력하세요"
               className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent"
@@ -432,6 +606,81 @@ export function MainHeader({
               </button>
             )}
           </div>
+
+          {/* 모바일 검색 제안 드롭다운 */}
+          {showSearchSuggestions && (
+            <div className="absolute top-full left-4 right-4 mt-2 bg-white rounded-lg shadow-lg border z-50 max-h-80 overflow-y-auto">
+              {recentSearches.length > 0 && (
+                <div className="p-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-gray-500">최근 검색어</span>
+                    <button
+                      onClick={clearRecentSearches}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      전체삭제
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {recentSearches.map((search, index) => (
+                      <div key={index} className="flex items-center justify-between group">
+                        <button
+                          onClick={() => handleRecentSearchClick(search)}
+                          className="flex-1 text-left py-2 px-2 text-sm text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>{search}</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecentSearch(search);
+                          }}
+                          className="p-2 text-gray-400 hover:text-gray-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 모바일 추천 검색어 */}
+              <div className="p-3">
+                <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                <div className="flex flex-wrap gap-2">
+                  {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일'].map((keyword, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRecentSearchClick(keyword)}
+                      className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+                    >
+                      {keyword}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {q.trim() && (
+                <div className="border-t border-gray-100 p-3">
+                  <button
+                    onClick={() => submitSearch()}
+                    className="w-full text-left py-3 px-3 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 flex items-center gap-2 font-medium"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    '<span className="text-blue-800">{q}</span>' 검색
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 네비게이션 탭들 */}

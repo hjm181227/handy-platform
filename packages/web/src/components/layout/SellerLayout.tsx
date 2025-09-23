@@ -75,11 +75,21 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
           {/* 로고 및 헤더 */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">H</span>
-              </div>
+              <a 
+                href="/" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  onGo("/");
+                }}
+                className="block hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png" 
+                  alt="Handy" 
+                  className="h-8 w-auto"
+                />
+              </a>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">Handy</h1>
                 <p className="text-xs text-gray-500">판매자 센터</p>
               </div>
             </div>

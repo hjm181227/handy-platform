@@ -20,6 +20,7 @@ import { Detail } from './components/product/Detail';
 // Page Components
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
 import { BrandsPage } from './components/pages/BrandsPage';
+import { SearchResultsPage } from './components/pages/SearchResultsPage';
 import { LoginPage } from './components/pages/LoginPage';
 import { SignupPage } from './components/pages/SignupPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
@@ -331,7 +332,7 @@ export default function App() {
     screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
   } else if (pathname.startsWith("/search")) {
     const keyword = q.get("q") ?? "";
-    screen = (<><TitleBar title={`검색: ${keyword || "전체"}`} desc="검색 결과"/><ProductGrid title="검색 결과" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} />;
   } else if (pathname.startsWith("/cart")) {
     screen = <CartContent 
       key={pathname} // 페이지 진입할 때마다 새로고침
