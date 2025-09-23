@@ -89,9 +89,6 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
                   className="h-8 w-auto"
                 />
               </a>
-              <div>
-                <p className="text-xs text-gray-500">판매자 센터</p>
-              </div>
             </div>
 
             <button
