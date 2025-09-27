@@ -702,15 +702,27 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         <div className="mt-6 space-y-3">
-          <button 
+          <button
             onClick={() => alert("비밀번호 변경 페이지로 이동")}
             className="w-full bg-white border rounded-lg p-4 text-left hover:bg-gray-50"
           >
             <div className="font-medium">비밀번호 변경</div>
             <div className="text-sm text-gray-600">계정 보안을 위해 정기적으로 변경하세요</div>
           </button>
-          
-          <button 
+
+          <button
+            onClick={() => {
+              if (confirm("판매자로 전환하시겠습니까? 승인 후 상품 등록 및 판매가 가능합니다.")) {
+                onGo("/seller/register");
+              }
+            }}
+            className="w-full bg-white border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-50"
+          >
+            <div className="font-medium text-blue-600">판매자 전환</div>
+            <div className="text-sm text-gray-600">상품을 판매하고 수익을 창출하세요</div>
+          </button>
+
+          <button
             onClick={() => {
               if (confirm("정말 탈퇴하시겠습니까? 탈퇴 시 모든 데이터가 삭제됩니다.")) {
                 alert("탈퇴 처리가 완료되었습니다.");

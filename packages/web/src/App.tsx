@@ -41,13 +41,16 @@ import {
 } from './components/pages/MyPages';
 
 // Support Components
-import { 
-  ContactPage, 
-  FaqPage, 
-  NotificationsPage, 
+import {
+  ContactPage,
+  FaqPage,
+  NotificationsPage,
   SettingsPage,
-  PromoPage 
+  PromoPage
 } from './components/pages/SupportPages';
+
+// Seller Components
+import { SellerRegistrationPage } from './components/pages/SellerRegistrationPage';
 
 // Checkout and Order Components
 import { CheckoutPage } from './components/pages/CheckoutPage';
@@ -391,6 +394,8 @@ export default function App() {
     screen = <NotificationsPage onGo={nav} />;
   } else if (pathname === "/my/settings") {
     screen = <SettingsPage onGo={nav} />;
+  } else if (pathname === "/seller/register") {
+    screen = <SellerRegistrationPage onGo={nav} />;
   } else if (pathname === "/support/contact") {
     screen = <ContactPage onGo={nav} />;
   } else if (pathname === "/support/faq") {
