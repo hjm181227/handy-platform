@@ -44,11 +44,19 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
     initializePage();
   }, [onGo]);
 
-  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  // 이미 로그인된 사용자는 홈으로 리다이렉트 (단, 소셜 회원가입 진행 중이 아닐 때만)
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
+      // 소셜 회원가입 진행 중이면 인증 체크를 하지 않음
+      const currentSocialState = getSocialAuthState();
+      if (currentSocialState) {
+        console.log('🔄 소셜 회원가입 진행 중이므로 인증 체크를 건너뜀');
+        return;
+      }
+
       const isAuthenticated = await webApiService.isAuthenticated();
       if (isAuthenticated) {
+        console.log('✅ 이미 로그인된 사용자, 홈으로 리다이렉트');
         onGo('/');
       }
     };

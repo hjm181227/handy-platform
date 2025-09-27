@@ -20,6 +20,7 @@ import { Detail } from './components/product/Detail';
 // Page Components
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
 import { BrandsPage } from './components/pages/BrandsPage';
+import { BrandDetailPage } from './components/pages/BrandDetailPage';
 import { LoginPage } from './components/pages/LoginPage';
 import { SignupPage } from './components/pages/SignupPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
@@ -291,7 +292,19 @@ export default function App() {
       onCartUpdate={loadCartCount}
       currentUser={currentUser}
     />;
+  } else if (pathname.startsWith("/brand/") && pathname.split("/").length === 3) {
+    // 브랜드 상세 페이지: /brand/{brandName}
+    const brandName = pathname.split("/")[2];
+    screen = (
+      <BrandDetailPage
+        brandName={brandName}
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+      />
+    );
   } else if (pathname.startsWith("/brands")) {
+    // 브랜드 목록 페이지: /brands
     screen = (
       <BrandsPage
         onGo={nav}
@@ -378,6 +391,10 @@ export default function App() {
     screen = <NotificationsPage onGo={nav} />;
   } else if (pathname === "/my/settings") {
     screen = <SettingsPage onGo={nav} />;
+  } else if (pathname === "/support/contact") {
+    screen = <ContactPage onGo={nav} />;
+  } else if (pathname === "/support/faq") {
+    screen = <FaqPage onGo={nav} />;
   } else if (pathname === "/promo/plus") {
     screen = <PromoPage onGo={nav} />;
   } else if (pathname === "/about/회사 소개") {
@@ -628,11 +645,11 @@ export default function App() {
     screen = (
       <>
         <Hero3 onGo={nav}/>
-        <SectionRow 
-          title="신상 제품" 
-          items={newProducts} 
+        <SectionRow
+          title="신상 제품"
+          items={newProducts}
           loading={loadingNewProducts}
-          onOpen={openProduct} 
+          onOpen={openProduct}
           onAdd={addProduct}
         />
         <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct}/>
@@ -657,10 +674,11 @@ export default function App() {
             <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
           </div>
           <div data-apphide="true">
-            <MainHeader 
-              cartCount={cartCount} 
-              onCart={handleCartClick} 
+            <MainHeader
+              cartCount={cartCount}
+              onCart={handleCartClick}
               onGo={nav}
+              currentPath={pathname}
               onAuthStateChange={setCurrentUser}
             />
           </div>

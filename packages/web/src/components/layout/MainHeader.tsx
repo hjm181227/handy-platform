@@ -5,15 +5,17 @@ import type { User } from '@handy-platform/shared';
 import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
 import { Logo } from '../common/Logo';
 
-export function MainHeader({ 
-  cartCount, 
-  onCart, 
+export function MainHeader({
+  cartCount,
+  onCart,
   onGo,
-  onAuthStateChange 
-}: { 
-  cartCount:number; 
-  onCart:()=>void; 
+  currentPath,
+  onAuthStateChange
+}: {
+  cartCount:number;
+  onCart:()=>void;
   onGo:(to:string)=>void;
+  currentPath?: string;
   onAuthStateChange?: (user: User | null) => void;
 }) {
   const [q,setQ]=useState("");
@@ -23,13 +25,32 @@ export function MainHeader({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const gnb = [
     {label:"랭킹", to:"/ranking"},
-    {label:"세일", to:"/sale"},
     {label:"브랜드", to:"/brands"},
-    {label:"추천", to:"/recommend"},
     {label:"신상", to:"/new"},
-    {label:"트렌드", to:"/trend"},
+    {label:"추천", to:"/recommend"},
+    {label:"이벤트", to:"/event"},
     {label:"판매자센터", to:"/seller"},
   ];
+
+  // 활성화 상태 판단 함수
+  const isActive = (menuPath: string) => {
+    if (!currentPath) return false;
+    if (menuPath === '/') return currentPath === '/';
+    return currentPath.startsWith(menuPath);
+  };
+
+  // 링크 클래스명 생성 함수
+  const getLinkClassName = (menuPath: string, isMobile = false) => {
+    const baseClass = isMobile
+      ? "text-sm whitespace-nowrap py-1 no-underline"
+      : "no-underline";
+
+    const activeClass = isActive(menuPath)
+      ? "font-bold text-black"
+      : "text-gray-700 hover:font-bold hover:no-underline";
+
+    return `${baseClass} ${activeClass}`.trim();
+  };
   // 로그인 상태 확인
   const checkAuthStatus = async () => {
     try {
@@ -136,7 +157,7 @@ export function MainHeader({
           </div>
 
           <div className="justify-self-center w-full max-w-2xl">
-            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-gray-100 px-3 py-2 focus-within:border-gray-500 focus-within:bg-white transition-all">
+            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 focus-within:border-gray-500 transition-all">
               <SearchIcon size={16} color="#666" />
               <input
                 value={q}
@@ -272,7 +293,14 @@ export function MainHeader({
         <div className="mx-auto max-w-7xl px-4 overflow-x-auto">
           <div className="flex gap-4 py-2 text-sm whitespace-nowrap">
             {gnb.map(x=>(
-              <a key={x.label} href={x.to} onClick={(e)=>{e.preventDefault(); onGo(x.to);}} className="text-gray-700 hover:text-black">{x.label}</a>
+              <a
+                key={x.label}
+                href={x.to}
+                onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
+                className={getLinkClassName(x.to)}
+              >
+                {x.label}
+              </a>
             ))}
           </div>
         </div>
@@ -410,7 +438,7 @@ export function MainHeader({
 
         {/* 검색바 */}
         <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-gray-50">
+          <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-white">
             <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
               <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
             </svg>
@@ -438,11 +466,11 @@ export function MainHeader({
         <div className="px-4 overflow-x-auto">
           <div className="flex gap-4 pb-2">
             {gnb.map(x=>(
-              <a 
-                key={x.label} 
-                href={x.to} 
-                onClick={(e)=>{e.preventDefault(); onGo(x.to);}} 
-                className="text-sm text-gray-700 hover:text-black whitespace-nowrap py-1 border-b-2 border-transparent hover:border-gray-300"
+              <a
+                key={x.label}
+                href={x.to}
+                onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
+                className={getLinkClassName(x.to, true)}
               >
                 {x.label}
               </a>

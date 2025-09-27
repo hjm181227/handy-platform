@@ -127,7 +127,12 @@ class WebApiService {
 
   async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string) {
     const response = await this.auth.oauthLogin(provider, accessToken);
-    await this.auth.setAuthToken(response.token, response.user);
+
+    // 신규 사용자가 아닌 경우에만 토큰 저장
+    if (!response.needsSignup) {
+      await this.auth.setAuthToken(response.token, response.user);
+    }
+
     return response;
   }
 
@@ -159,6 +164,15 @@ class WebApiService {
   async logoutAndRedirect(redirectPath: string = '/login') {
     await this.logoutAndClearToken();
     window.location.href = redirectPath;
+  }
+
+  // 사용자 프로필 관련 메서드
+  async getCurrentUserProfile() {
+    return this.auth.getUserProfile();
+  }
+
+  async updateUserProfile(userData: Partial<User>) {
+    return this.auth.updateProfile(userData);
   }
 
   // WebView 환경에서 네이티브 토큰 동기화

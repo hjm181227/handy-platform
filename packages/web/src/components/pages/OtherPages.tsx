@@ -1,5 +1,8 @@
 
+import { useState, useEffect } from 'react';
 import { products } from '../../data';
+import { webApiService } from '../../services/apiService';
+import type { User } from '@handy-platform/shared';
 
 // 간단한 더미 페이지들
 export function LikesPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
@@ -15,10 +18,29 @@ export function LikesPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen
 }
 
 export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
-  // 샘플 사용자 / 집계
-  const me = {
-    nickname: "speed1",
-    level: "HANDY+",
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 사용자 정보 로드
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const response = await webApiService.getCurrentUserProfile();
+        if (response.user) {
+          setUser(response.user);
+        }
+      } catch (error) {
+        console.error('Failed to load user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  // 샘플 데이터 (API에서 제공되지 않는 정보들)
+  const stats = {
     points: 2300,
     coupons: 2,
     ordersWaiting: 0,
@@ -26,6 +48,20 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     cs: 0,
     likes: 23,
   };
+
+  // 로딩 상태일 때
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-5">
+        <div className="rounded-lg border bg-white p-4">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+            <div className="h-6 bg-gray-200 rounded w-40"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 작은 유틸
   const Right = () => (
@@ -145,8 +181,8 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           <div>
             <div className="text-sm text-gray-600">내 정보</div>
             <div className="mt-1 text-lg font-semibold">
-              {me.nickname} <span className="text-gray-400">/</span>{" "}
-              <span className="text-blue-600">{me.level}</span>
+              {user?.name || '사용자'} <span className="text-gray-400">/</span>{" "}
+              <span className="text-blue-600">HANDY+</span>
             </div>
           </div>
           <div className="flex gap-2">
@@ -158,7 +194,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
               }}
               className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
             >
-              설정
+              회원정보 수정
             </a>
             <a
               href="/logout"
@@ -175,10 +211,10 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
         {/* 요약 통계 4분할 */}
         <div className="mt-3 flex gap-2">
-          <Stat label="주문/배송" value={`${me.ordersWaiting}건`} to="/my/orders" />
-          <Stat label="배송중" value={`${me.shipping}건`} to="/my/shipping" />
-          <Stat label="포인트" value={`${me.points.toLocaleString()}P`} to="/my/points" />
-          <Stat label="쿠폰" value={`${me.coupons}장`} to="/my/coupons" />
+          <Stat label="주문/배송" value={`${stats.ordersWaiting}건`} to="/my/orders" />
+          <Stat label="배송중" value={`${stats.shipping}건`} to="/my/shipping" />
+          <Stat label="포인트" value={`${stats.points.toLocaleString()}P`} to="/my/points" />
+          <Stat label="쿠폰" value={`${stats.coupons}장`} to="/my/coupons" />
         </div>
 
         {/* 프로모션 배너 */}
@@ -188,7 +224,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             e.preventDefault();
             onGo("/promo/plus");
           }}
-          className="mt-4 block rounded-lg bg-blue-600 px-4 py-3 text-white"
+          className="mt-4 block rounded-lg bg-black px-4 py-3 text-white"
         >
           <div className="text-sm opacity-90">핸디플러스 멤버</div>
           <div className="text-[15px] font-semibold">
@@ -234,14 +270,14 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
       <Section title="리뷰·좋아요">
         <div className="divide-y">
           <LinkRow title="내 리뷰 관리" to="/my/reviews" />
-          <LinkRow title="좋아요(위시리스트)" to="/likes" note={`${me.likes}`} />
+          <LinkRow title="좋아요(위시리스트)" to="/likes" note={`${stats.likes}`} />
         </div>
       </Section>
 
       <Section title="혜택 / 결제">
         <div className="divide-y">
-          <LinkRow title="쿠폰" to="/my/coupons" note={`${me.coupons}장`} />
-          <LinkRow title="포인트" to="/my/points" note={`${me.points.toLocaleString()}P`} />
+          <LinkRow title="쿠폰" to="/my/coupons" note={`${stats.coupons}장`} />
+          <LinkRow title="포인트" to="/my/points" note={`${stats.points.toLocaleString()}P`} />
           <LinkRow title="결제수단 관리" to="/my/payments" />
         </div>
       </Section>

@@ -4,7 +4,7 @@ import { NewsCategory } from '../../types';
 
 function CategoryPill({ c }: { c: NewsCategory }) {
   const map = {
-    event: "bg-pink-600",
+    event: "bg-gray-600",
     nail: "bg-emerald-600",
     handy: "bg-indigo-600",
     update: "bg-amber-600",

@@ -28,7 +28,11 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd }:{
       </div>
       {loading ? renderLoadingSkeleton() : (
         <div className="flex gap-4 overflow-x-auto snap-x pb-2">
-          {items.map(p=> <div key={p.id || p.productUuid} className="snap-start"><ProductCard p={p} onOpen={onOpen} onAdd={onAdd}/></div>)}
+          {items.map((p, index) => (
+            <div key={p.id || p.productUuid || `product-${index}`} className="snap-start">
+              <ProductCard p={p} onOpen={onOpen} onAdd={onAdd}/>
+            </div>
+          ))}
         </div>
       )}
     </section>
@@ -42,8 +46,8 @@ export function ProductGrid({ title, items, onOpen, onAdd }:{
     <section className="mx-auto max-w-7xl px-4 mt-6">
       <h2 className="text-base md:text-lg font-semibold mb-3">{title}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {items.map(p=>(
-          <div key={p.id || p.productUuid}>
+        {items.map((p, index) => (
+          <div key={p.id || p.productUuid || `grid-product-${index}`}>
             <ProductCard p={p} onOpen={onOpen} onAdd={onAdd}/>
           </div>
         ))}
