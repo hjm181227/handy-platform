@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { purchaseApiService } from '../../services/purchaseApiService';
+import type { CustomerOrder } from '@handy-platform/shared';
 
 // 공통 컴포넌트들
 const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) => (
@@ -39,7 +40,7 @@ const EmptyState = ({ title, description, actionText, onAction }: {
 
 // 주문 내역 페이지
 export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);

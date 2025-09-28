@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//Users/heojeongmin/WebstormProjects/handy-server1/docs/api/**)",
-      "Read(//Users/heojeongmin/WebstormProjects/handy-server1/docs/**)"
+      "Read(//Users/heojeongmin/WebstormProjects/handy-server1/docs/**)",
+      "Read(//Users/heojeongmin/WebstormProjects/handy-server1/types/**)"
     ],
     "deny": [],
     "ask": []

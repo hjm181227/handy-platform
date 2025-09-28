@@ -156,53 +156,16 @@ export interface Cart {
   totalAmount: number;
 }
 
-// Order Related Types
-export type OrderStatus = 
-  | 'pending' 
-  | 'confirmed' 
-  | 'processing' 
-  | 'shipped' 
-  | 'delivered' 
-  | 'cancelled';
-
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-
-export type PaymentMethod = 
-  | 'credit_card' 
-  | 'debit_card' 
-  | 'paypal' 
-  | 'bank_transfer' 
-  | 'cash_on_delivery';
-
-export interface OrderItem {
-  product: {
-    id: string;
-    name: string;
-    images: ProductImage[];
-  };
-  quantity: number;
-  price: number;
-}
-
-export interface Order {
-  id: string;
-  orderNumber: string;
-  status: OrderStatus;
-  paymentStatus: PaymentStatus;
-  totalAmount: number;
-  items: OrderItem[];
-  shippingAddress: Address;
-  paymentMethod: PaymentMethod;
-  createdAt: string;
-  estimatedDelivery?: string;
-  actualDelivery?: string;
-  trackingNumber?: string;
-}
-
-export interface OrdersResponse {
-  orders: Order[];
-  pagination: PaginationInfo;
-}
+// Order Related Types - imported from shared package
+export type { 
+  OrderStatus, 
+  PaymentStatus, 
+  PaymentMethod, 
+  OrderItem, 
+  Order, 
+  OrdersResponse,
+  PaginationInfo
+} from '@handy-platform/shared';
 
 // WebView Message Types
 export type WebViewMessageType = 
