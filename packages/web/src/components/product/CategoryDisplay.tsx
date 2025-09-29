@@ -1,4 +1,5 @@
 import type { NailCategories } from '@handy-platform/shared';
+import { CategoryIcon } from '../common/CategoryIcon';
 
 interface CategoryDisplayProps {
   categories: Partial<NailCategories>;
@@ -7,14 +8,14 @@ interface CategoryDisplayProps {
 
 export function CategoryDisplay({ categories, onCategoryClick }: CategoryDisplayProps) {
   const categoryData = {
-    style: { name: "스타일", icon: "🎨" },
-    color: { name: "컬러", icon: "🎨" },
-    texture: { name: "텍스쳐", icon: "✨" },
-    tpo: { name: "TPO", icon: "📅" },
-    shape: { name: "모양", icon: "💅" },
-    length: { name: "길이", icon: "📏" },
-    ab: { name: "아티스트/브랜드", icon: "👨‍🎨" },
-    nation: { name: "국가별", icon: "🌍" },
+    style: { name: "스타일" },
+    color: { name: "컬러" },
+    texture: { name: "텍스쳐" },
+    tpo: { name: "TPO" },
+    shape: { name: "모양" },
+    length: { name: "길이" },
+    ab: { name: "아티스트/브랜드" },
+    nation: { name: "국가별" },
   };
 
   const hasCategories = Object.values(categories).some(cat => 
@@ -47,7 +48,11 @@ export function CategoryDisplay({ categories, onCategoryClick }: CategoryDisplay
           return (
             <div key={key} className="flex items-start gap-3">
               <div className="flex items-center gap-1 min-w-0">
-                <span className="text-sm">{categoryInfo.icon}</span>
+                <CategoryIcon 
+                  categoryKey={key}
+                  categoryLabel={categoryInfo.name}
+                  className="text-sm"
+                />
                 <span className="text-sm font-medium text-gray-600">
                   {categoryInfo.name}
                 </span>

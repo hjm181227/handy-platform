@@ -19,7 +19,10 @@ import {
   UpdateProductionSettingsRequest,
   UpdateProductionCapacityRequest,
   AddExtraCapacityRequest,
-  ProductionBoostRequest
+  ProductionBoostRequest,
+  SellerOrder,
+  SellerOrderDetail,
+  SellerOrderPagination
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -192,30 +195,83 @@ export abstract class BaseSellerService extends BaseApiService {
     );
   }
 
-  // 주문 관리
+  // 주문 관리 (멀티셀러 지원 - 서버 API 스펙 완전 일치)
   async getSellerOrders(filters: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    paymentStatus?: string;
-    search?: string;
-  } = {}): Promise<ApiResponse<{ orders: Order[]; pagination: any }>> {
-    const queryString = this.buildQueryString(filters);
-    const endpoint = queryString ? `${API_ENDPOINTS.SELLER.ORDERS}?${queryString}` : API_ENDPOINTS.SELLER.ORDERS;
-    return this.request<ApiResponse<{ orders: Order[]; pagination: any }>>(endpoint);
+    page?: number;                  // 페이지 번호 (기본값: 1)
+    limit?: number;                 // 페이지당 항목 수 (기본값: 20)
+    status?: string[];              // 주문 상태별 필터링 (배열)
+    search?: string;                // 주문번호로 검색
+    sortBy?: 'create-desc' | 'create-asc' | 'price-desc' | 'price-asc'; // 정렬 방식
+  } = {}): Promise<{
+    items: SellerOrder[];
+    pagination: SellerOrderPagination;
+  }> {
+    // POST 메서드로 필터링 데이터 전송 (서버 API 스펙 준수)
+    const requestBody = {
+      page: filters.page || 1,
+      limit: filters.limit || 20,
+      status: filters.status || [],
+      search: filters.search,
+      sortBy: filters.sortBy || 'create-desc'
+    };
+
+    const response = await this.request<{
+      items: SellerOrder[];
+      pagination: SellerOrderPagination;
+    }>(API_ENDPOINTS.SELLER.ORDERS, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    });
+
+    // UUID validation for seller orders during migration period
+    if (response.items) {
+      response.items.forEach((order, index) => {
+        try {
+          // Validate order UUID format
+          if (order.orderUuid) {
+            console.debug(`[Seller Orders] Order[${index}] UUID: ${order.orderUuid}`);
+          }
+        } catch (error) {
+          console.warn(`UUID Migration Warning - Seller Order validation:`, error);
+        }
+      });
+    }
+
+    return response;
   }
 
+  // 특정 주문의 상세 정보 조회 (서버 API 스펙 일치)
+  async getSellerOrderDetail(orderUuid: string): Promise<{
+    success: boolean;
+    data: SellerOrderDetail;
+  }> {
+    return this.request<{
+      success: boolean;
+      data: SellerOrderDetail;
+    }>(API_ENDPOINTS.SELLER.ORDER_DETAIL(orderUuid));
+  }
+
+  // 주문 상태 업데이트 (서버 API 스펙 일치)
   async updateOrderStatus(
-    id: string, 
+    orderUuid: string, 
     updates: {
       status: string;
       note?: string;
       trackingNumber?: string;
-      carrierCode?: string;
-      carrierName?: string;
     }
-  ): Promise<ApiResponse<{ order: Order }>> {
-    return this.request<ApiResponse<{ order: Order }>>(API_ENDPOINTS.SELLER.ORDER_STATUS(id), {
+  ): Promise<{
+    message: string;
+    order: {
+      _id: string;
+      orderNumber: string;
+      status: string;
+      trackingNumber?: string;
+    };
+  }> {
+    return this.request<{
+      message: string;
+      order: any;
+    }>(API_ENDPOINTS.SELLER.ORDER_STATUS(orderUuid), {
       method: 'PATCH',
       body: JSON.stringify(updates),
     });
@@ -223,7 +279,7 @@ export abstract class BaseSellerService extends BaseApiService {
 
   // 배송 정보 업데이트 (별도 메서드)
   async updateShippingInfo(
-    orderId: string,
+    orderUuid: string,
     shippingInfo: {
       carrierCode: string;
       carrierName: string;
@@ -232,12 +288,18 @@ export abstract class BaseSellerService extends BaseApiService {
       estimatedDeliveryDate?: string;
       note?: string;
     }
-  ): Promise<ApiResponse<{ order: Order }>> {
-    return this.updateOrderStatus(orderId, {
+  ): Promise<{
+    message: string;
+    order: {
+      _id: string;
+      orderNumber: string;
+      status: string;
+      trackingNumber?: string;
+    };
+  }> {
+    return this.updateOrderStatus(orderUuid, {
       status: 'shipped',
       trackingNumber: shippingInfo.trackingNumber,
-      carrierCode: shippingInfo.carrierCode,
-      carrierName: shippingInfo.carrierName,
       note: shippingInfo.note || `배송 시작됨 (${shippingInfo.carrierName}: ${shippingInfo.trackingNumber})`
     });
   }

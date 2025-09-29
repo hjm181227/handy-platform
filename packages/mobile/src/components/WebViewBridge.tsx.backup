@@ -3,18 +3,17 @@ import { Alert, BackHandler, Platform, PermissionsAndroid, Linking } from 'react
 import { WebView } from 'react-native-webview';
 import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
-import { mobileApiService } from '../services/apiService';
+import { apiService } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface WebViewBridgeProps {
   url: string;
   onNavigationStateChange?: (navState: any) => void;
   additionalJavaScript?: string;
-  onShowNativeFeatures?: () => void;
 }
 
 const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
-  { url, onNavigationStateChange, additionalJavaScript = '', onShowNativeFeatures },
+  { url, onNavigationStateChange, additionalJavaScript = '' },
   ref
 ) => {
   const webViewRef = useRef<WebView>(null);
@@ -36,9 +35,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
 
   const handleMessage = async (event: any) => {
     try {
-      console.log('🟢 [BRIDGE] 메시지 수신:', event.nativeEvent.data);
       const message: WebViewMessage = JSON.parse(event.nativeEvent.data);
-      console.log('🟢 [BRIDGE] 파싱된 메시지:', message);
       
       switch (message.type) {
         case 'API_CALL':
@@ -62,20 +59,11 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'PERMISSIONS':
           await handlePermissions(message.data);
           break;
-        case 'SHOW_NATIVE_FEATURES':
-          console.log('🟢 [BRIDGE] SHOW_NATIVE_FEATURES 메시지 처리');
-          if (onShowNativeFeatures) {
-            console.log('🟢 [BRIDGE] onShowNativeFeatures 콜백 호출');
-            onShowNativeFeatures();
-          } else {
-            console.log('🔴 [BRIDGE] onShowNativeFeatures 콜백이 없음');
-          }
-          break;
         default:
-          console.log('🔴 [BRIDGE] 알 수 없는 메시지 타입:', message.type);
+          console.log('Unknown message type:', message.type);
       }
     } catch (error) {
-      console.error('🔴 [BRIDGE] WebView 메시지 처리 오류:', error);
+      console.error('Error handling WebView message:', error);
     }
   };
 
@@ -84,16 +72,16 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       let result;
       switch (data.endpoint) {
         case 'getProducts':
-          result = await mobileApiService.product.getProducts({ page: data.page, limit: data.limit });
+          result = await apiService.getProducts({ page: data.page, limit: data.limit });
           break;
         case 'getProduct':
-          result = await mobileApiService.product.getProduct(data.id);
+          result = await apiService.getProduct(data.id);
           break;
         case 'getCart':
-          result = await mobileApiService.cart.getCart();
+          result = await apiService.getCart();
           break;
         case 'getOrders':
-          result = await mobileApiService.order.getOrders();
+          result = await apiService.getOrders();
           break;
         default:
           throw new Error(`Unknown API endpoint: ${data.endpoint}`);
@@ -120,13 +108,14 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       let result;
       switch (data.action) {
         case 'login':
-          result = await mobileApiService.loginAndStoreToken({ email: data.email, password: data.password });
+          result = await apiService.login({ email: data.email, password: data.password });
+          await AsyncStorage.setItem('auth_token', (result as any).token);
           break;
         case 'register':
-          result = await mobileApiService.registerAndStoreToken(data);
+          result = await apiService.register(data);
           break;
         case 'logout':
-          await mobileApiService.logoutAndClearToken();
+          await AsyncStorage.removeItem('auth_token');
           result = { success: true };
           break;
         default:
@@ -153,10 +142,10 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       let result;
       switch (data.action) {
         case 'add':
-          result = await mobileApiService.cart.addToCart(data.productId, data.quantity);
+          result = await apiService.addToCart(data.productId, data.quantity);
           break;
         case 'createOrder':
-          result = await mobileApiService.order.createOrder({
+          result = await apiService.createOrder({
             shippingAddress: data.shippingAddress,
             paymentMethod: data.paymentMethod,
             items: data.items,
@@ -443,22 +432,6 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   };
 
   const injectedJavaScript = `
-    console.log('🟢 [INJECT] JavaScript 주입됨');
-    
-    // 네이티브로 돌아가기 함수 (전역으로 노출)
-    window.goToNativeApp = function() {
-      console.log('🟢 [INJECT] window.goToNativeApp 호출됨');
-      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-        console.log('🟢 [INJECT] postMessage 전송');
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'SHOW_NATIVE_FEATURES',
-          data: {}
-        }));
-      } else {
-        console.log('🔴 [INJECT] ReactNativeWebView.postMessage 없음');
-      }
-    };
-    
     window.ReactNativeWebView = {
       postMessage: window.ReactNativeWebView.postMessage,
       
@@ -544,19 +517,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       source={{ uri: url }}
       onMessage={handleMessage}
       injectedJavaScript={injectedJavaScript}
-      onNavigationStateChange={(navState) => {
-        // 특별한 URL 감지
-        if (navState.url.includes('action=goToNative')) {
-          if (onShowNativeFeatures) {
-            onShowNativeFeatures();
-          }
-          return; // 실제 페이지 이동은 하지 않음
-        }
-        
-        if (onNavigationStateChange) {
-          onNavigationStateChange(navState);
-        }
-      }}
+      onNavigationStateChange={onNavigationStateChange}
       javaScriptEnabled={true}
       domStorageEnabled={true}
       startInLoadingState={true}

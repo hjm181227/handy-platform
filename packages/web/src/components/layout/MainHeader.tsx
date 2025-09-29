@@ -2,15 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { toQ } from '../../utils';
 import { webApiService } from '../../services/apiService';
 import type { User } from '@handy-platform/shared';
+import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
+import { Logo } from '../common/Logo';
 
-export function MainHeader({ 
-  cartCount, 
-  onCart, 
+export function MainHeader({
+  cartCount,
+  onCart,
   onGo,
-  onAuthStateChange 
-}: { 
-  cartCount:number; 
-  onCart:()=>void; 
+  onAuthStateChange
+}: {
+  cartCount:number;
+  onCart:()=>void;
   onGo:(to:string)=>void;
   onAuthStateChange?: (user: User | null) => void;
 }) {
@@ -108,7 +110,7 @@ export function MainHeader({
     // 커스텀 이벤트로 로그인/로그아웃 상태 변경 감지 (여러 이벤트명 지원)
     window.addEventListener('authStateChanged', handleAuthChange);
     window.addEventListener('auth-state-changed', handleAuthChange);
-    
+
     return () => {
       window.removeEventListener('authStateChanged', handleAuthChange);
       window.removeEventListener('auth-state-changed', handleAuthChange);
@@ -163,7 +165,7 @@ export function MainHeader({
   const handleLogout = async () => {
     try {
       await webApiService.logoutAndClearToken();
-      
+
       setUser(null);
       setShowUserMenu(false);
       onAuthStateChange?.(null);
@@ -196,35 +198,33 @@ export function MainHeader({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
       {/* 데스크톱 레이아웃 */}
       <div className="hidden md:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center h-16 px-4">
           <div className="justify-self-start">
             <a href="/" onClick={(e)=>{e.preventDefault(); onGo("/");}} className="block">
-              <img 
-                src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png" 
-                alt="Handy" 
+              <img
+                src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+                alt="Handy"
                 className="h-8 w-auto"
               />
             </a>
           </div>
 
-          <div className="justify-self-center w-full max-w-2xl relative" ref={searchRef}>
-            <div className="flex items-center gap-2 rounded-full border px-3 py-2">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-gray-500" strokeWidth="2" fill="none">
-                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
-              </svg>
+          <div className="justify-self-center w-full max-w-2xl">
+            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-gray-100 px-3 py-2 focus-within:border-gray-500 focus-within:bg-white transition-all">
+              <SearchIcon size={16} color="#666" />
               <input
                 value={q}
                 onChange={e=>handleSearchInputChange(e.target.value)}
                 onFocus={handleSearchInputFocus}
                 onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                 placeholder="검색어를 입력하세요"
-                className="w-full text-sm outline-none placeholder:text-gray-400"
+                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700"
               />
               {q && (
-                <button 
+                <button
                   onClick={() => setQ("")}
                   className="text-gray-400 hover:text-gray-600 p-1"
                 >
@@ -319,8 +319,8 @@ export function MainHeader({
             {isLoading ? (
               // 로딩 상태
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                <span className="text-sm text-gray-500">인증 확인 중...</span>
+                <div className="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
+                <span className="text-sm text-gray-900">인증 확인 중...</span>
               </div>
             ) : user ? (
               // 로그인 상태
@@ -337,18 +337,18 @@ export function MainHeader({
                       {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                     <span className="hidden sm:inline">{user.name || user.email}</span>
-                    <svg 
-                      className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  
+
                   {showUserMenu && (
-                    <div 
+                    <div
                       className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50"
                       onMouseDown={(e) => e.stopPropagation()} // 외부 클릭 이벤트 방지
                     >
@@ -367,7 +367,7 @@ export function MainHeader({
                         </svg>
                         마이페이지
                       </button>
-                      
+
                       {/* 어드민 사용자에게만 어드민 센터 메뉴 표시 */}
                       {user.role === 'admin' && (
                         <button
@@ -386,7 +386,7 @@ export function MainHeader({
                           어드민 센터
                         </button>
                       )}
-                      
+
                       <hr className="my-1" />
                       <button
                         onClick={(e) => {
@@ -415,9 +415,9 @@ export function MainHeader({
                 로그인/회원가입
               </button>
             )}
-            
-            <button 
-              onClick={onCart} 
+
+            <button
+              onClick={onCart}
               className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors relative"
             >
               <span className="flex items-center gap-1">
@@ -449,14 +449,14 @@ export function MainHeader({
         {/* 상단 바: 로고 + 액션 버튼들 */}
         <div className="flex items-center justify-between h-14 px-4">
           {/* 로고 */}
-          <a 
-            href="/" 
+          <a
+            href="/"
             onClick={(e)=>{e.preventDefault(); onGo("/");}}
             className="block"
           >
-            <img 
-              src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png" 
-              alt="Handy" 
+            <img
+              src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+              alt="Handy"
               className="h-7 w-auto"
             />
           </a>
@@ -475,9 +475,9 @@ export function MainHeader({
                 >
                   {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                 </button>
-                
+
                 {showUserMenu && (
-                  <div 
+                  <div
                     className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50"
                     onMouseDown={(e) => e.stopPropagation()}
                   >
@@ -498,7 +498,7 @@ export function MainHeader({
                       </svg>
                       마이페이지
                     </button>
-                    
+
                     {/* 모바일 - 어드민 사용자에게만 어드민 센터 메뉴 표시 */}
                     {user.role === 'admin' && (
                       <button
@@ -517,7 +517,7 @@ export function MainHeader({
                         어드민 센터
                       </button>
                     )}
-                    
+
                     <hr className="my-1" />
                     <button
                       onClick={(e) => {
@@ -547,10 +547,10 @@ export function MainHeader({
                 </svg>
               </button>
             )}
-            
+
             {/* 장바구니 버튼 */}
-            <button 
-              onClick={onCart} 
+            <button
+              onClick={onCart}
               className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors relative"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -563,8 +563,8 @@ export function MainHeader({
               )}
             </button>
 
-            {/* QR 스캔 버튼 (모바일 전용) */}
-            <button 
+            {/* QR 스캔 버튼 (모바일 전용) - 숨김 처리 */}
+            <button
               onClick={() => {
                 try {
                   (window as any).ReactNativeWebView?.postMessage(
@@ -574,7 +574,7 @@ export function MainHeader({
                   console.warn('QR 스캔은 모바일 앱에서만 사용 가능합니다.');
                 }
               }}
-              className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="hidden w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors"
             >
               📷
             </button>
@@ -596,7 +596,7 @@ export function MainHeader({
               className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent"
             />
             {q && (
-              <button 
+              <button
                 onClick={() => setQ("")}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -687,10 +687,10 @@ export function MainHeader({
         <div className="px-4 overflow-x-auto">
           <div className="flex gap-4 pb-2">
             {gnb.map(x=>(
-              <a 
-                key={x.label} 
-                href={x.to} 
-                onClick={(e)=>{e.preventDefault(); onGo(x.to);}} 
+              <a
+                key={x.label}
+                href={x.to}
+                onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
                 className="text-sm text-gray-700 hover:text-black whitespace-nowrap py-1 border-b-2 border-transparent hover:border-gray-300"
               >
                 {x.label}

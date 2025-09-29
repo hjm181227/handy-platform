@@ -506,21 +506,120 @@ export interface ShippingDetails {
   };
 }
 
-export interface Order {
-  id: string;                     // UUID format (d4e5f6a7-b8c9-1234-5678-90abcdef1234) after migration
-  orderNumber: string;
-  status: OrderStatus;
-  paymentStatus: PaymentStatus;
-  totalAmount: number;
-  items: OrderItem[];
-  shipping: ShippingDetails;
-  createdAt: string;
+// Base Order Interface - 공통 필드
+export interface BaseOrder {
+  id: string;                     // UUID format - 주문 식별자 (orderUuid 매핑)
+  orderNumber: string;            // 사람이 읽기 쉬운 주문번호
+  status: OrderStatus;            // 주문 상태
+  paymentStatus: PaymentStatus;   // 결제 상태
+  totalAmount: number;            // 총 주문 금액
+  createdAt: string;              // 주문 생성일
+  items: OrderItem[];             // 주문 상품 목록
+  estimatedDelivery?: string;     // 예상 배송일
+  notes?: string;                 // 주문 메모
+}
+
+// Customer Order Interface - 소비자가 보는 주문 (다중 판매자 주문)
+export interface CustomerOrder extends BaseOrder {
+  paymentMethod: PaymentMethod;   // 결제 수단 (필수)
+  shippingAddress: {              // 배송 주소 (필수)
+    recipientName: string;        // 받는 분
+    phone: string;                // 연락처
+    zipCode: string;              // 우편번호
+    address: string;              // 주소
+    addressDetail?: string;       // 상세주소
+    memo?: string;                // 배송메모
+  };
   
-  // Checkout 페이지용 필드들
-  totalPrice?: number;           // 상품 총 금액
-  shippingCost?: number;         // 배송비 (shipping.cost와 동일할 수 있음)
-  totalDiscount?: number;        // 총 할인 금액
-  finalPrice?: number;           // 최종 결제 금액
+  // 다중 판매자 배송 정보 - 각 판매자별로 다른 배송 정보를 가질 수 있음
+  sellerShippings?: Array<{
+    sellerId: string;             // 판매자 ID
+    sellerName: string;           // 판매자명
+    items: OrderItem[];           // 해당 판매자의 상품들
+    shipping: ShippingDetails;    // 배송 정보
+    subtotal: number;             // 판매자별 소계
+  }>;
+}
+
+// Seller Order Item Interface - 서버 OrderItemResponse 기반
+export interface SellerOrderItem {
+  productUuid: string;
+  shape?: string;
+  size?: string;
+  quantity: number;
+  price: number;
+  
+  // 주문 시점 스냅샷 정보
+  productName: string;
+  sellerName: string;
+  productImage?: string;
+  
+  // 상세 조회 시 추가 정보
+  options?: Record<string, any>;
+  sku?: string;
+  basePrice?: number;
+  priceModifier?: number;
+  subtotal?: number;
+}
+
+// Seller Order Interface - 서버 SellerOrderResponse 기반 (통일된 필드명)
+export interface SellerOrder {
+  id: string;              // orderUuid → id (CustomerOrder와 통일) - 필수 필드
+  orderNumber: string;
+  status: string;
+  items: SellerOrderItem[];
+  totalAmount: number;     // sellerTotal → totalAmount (CustomerOrder와 통일)
+  createdAt: string;
+  updatedAt: string;       // 서버 스펙에 추가됨
+  estimatedDelivery?: string;
+}
+
+// Seller Order Detail Interface - 서버 SellerOrderDetailData 기반
+export interface SellerOrderDetail extends SellerOrder {
+  statusHistory?: Array<{
+    status: string;
+    date: string;
+    note?: string;
+  }>;
+  shippingAddress?: {
+    name?: string;                // 마스킹된 이름 "홍**"
+    street?: string;              // 마스킹된 주소
+    city?: string;
+    state?: string;
+    zipCode?: string;             // 마스킹된 우편번호 "06***"
+    country?: string;
+    phone?: string;               // 마스킹된 전화번호 "010-****-5678"
+  };
+  updatedAt?: string;
+  notes?: string;
+}
+
+// Seller Order Pagination - 서버 SellerOrderPagination 기반
+export interface SellerOrderPagination {
+  currentPage: number;
+  totalPages: number;
+  totalOrders: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// Legacy Order Interface - 하위 호환성을 위해 유지 (CustomerOrder 기반)
+export interface Order extends CustomerOrder {}
+
+// Order Group for Seller Management - 판매자별 주문 그룹핑
+export interface SellerOrderGroup {
+  sellerId: string;
+  sellerName: string;
+  orders: SellerOrder[];
+  totalOrders: number;
+  totalAmount: number;
+  summary: {
+    pending: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+  };
 }
 
 export interface OrdersResponse {

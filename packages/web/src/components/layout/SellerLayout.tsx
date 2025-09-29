@@ -23,7 +23,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
       description: "상품 등록 및 수정"
     },
     {
-      label: "주문 관리", 
+      label: "주문 관리",
       icon: "📋",
       path: "/seller/orders",
       description: "주문 처리 및 배송"
@@ -43,7 +43,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
     {
       label: "매출 분석",
       icon: "📈",
-      path: "/seller/analytics", 
+      path: "/seller/analytics",
       description: "매출 데이터 분석"
     },
     {
@@ -60,7 +60,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
     <div className="min-h-screen bg-gray-50 flex">
       {/* 사이드바 오버레이 (모바일) */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -75,25 +75,22 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
           {/* 로고 및 헤더 */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <a 
-                href="/" 
+              <a
+                href="/"
                 onClick={(e) => {
                   e.preventDefault();
                   onGo("/");
                 }}
                 className="block hover:opacity-80 transition-opacity"
               >
-                <img 
-                  src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png" 
-                  alt="Handy" 
+                <img
+                  src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+                  alt="Handy"
                   className="h-8 w-auto"
                 />
               </a>
-              <div>
-                <p className="text-xs text-gray-500">판매자 센터</p>
-              </div>
             </div>
-            
+
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
@@ -139,7 +136,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
               <span className="text-xl">🏠</span>
               <span className="font-medium">메인 사이트로</span>
             </button>
-            
+
             <button
               onClick={() => alert('로그아웃 기능은 추후 구현됩니다.')}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
@@ -166,9 +163,17 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
               </svg>
             </button>
 
+            {/* 모바일에서 보이는 로고 */}
+            <button
+              onClick={() => onGo("/")}
+              className="lg:hidden text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors"
+            >
+              Handy
+            </button>
+
             {/* 페이지 제목 */}
             {title && (
-              <div>
+              <div className="hidden lg:block">
                 <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
               </div>
             )}
