@@ -21,6 +21,8 @@ import { Detail } from './components/product/Detail';
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
 import { BrandsPage } from './components/pages/BrandsPage';
 import { BrandDetailPage } from './components/pages/BrandDetailPage';
+import { RankingPage } from './components/pages/RankingPage';
+import { RecommendPage } from './components/pages/RecommendPage';
 import { LoginPage } from './components/pages/LoginPage';
 import { SignupPage } from './components/pages/SignupPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
@@ -327,13 +329,26 @@ export default function App() {
       screen = <NewsPage onGo={nav} onOpenProduct={openProduct} />;
     }
   } else if (pathname.startsWith("/ranking")) {
-    screen = (<><TitleBar title="랭킹"/><ProductGrid title="Top Rated" items={[...products].sort((a,b)=>(b.rating??0)-(a.rating??0))} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (
+      <RankingPage
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+      />
+    );
   } else if (pathname.startsWith("/sale")) {
     screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct}/></>);
   } else if (pathname.startsWith("/recommend")) {
-    screen = (<><TitleBar title="추천"/><ProductGrid title="회원님을 위한 추천" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (
+      <RecommendPage
+        currentUser={currentUser}
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+      />
+    );
   } else if (pathname.startsWith("/new")) {
-    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNew)} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNewProduct)} onOpen={openProduct} onAdd={addProduct}/></>);
   } else if (pathname.startsWith("/trend")) {
     screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct}/></>);
   } else if (pathname.startsWith("/promo/")) {
