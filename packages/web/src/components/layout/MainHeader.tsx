@@ -174,7 +174,8 @@ export function MainHeader({
 
   const handleSearchInputChange = (value: string) => {
     setQ(value);
-    if (value.trim() && !showSearchSuggestions) {
+    // 검색어가 있거나 포커스 상태일 때 제안 표시
+    if (!showSearchSuggestions) {
       setShowSearchSuggestions(true);
     }
   };
@@ -234,9 +235,11 @@ export function MainHeader({
             </a>
           </div>
 
-          <div className="justify-self-center w-full max-w-2xl">
+          <div className="justify-self-center w-full max-w-2xl relative" ref={searchRef}>
             <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 transition-all">
-              <SearchIcon size={16} color="#666" />
+              <button onClick={handleSearchInputFocus} className="flex items-center">
+                <SearchIcon size={16} color="#666" />
+              </button>
               <input
                 value={q}
                 onChange={e=>handleSearchInputChange(e.target.value)}
@@ -305,7 +308,7 @@ export function MainHeader({
                 <div className="p-3">
                   <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
                   <div className="space-y-1">
-                    {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일'].map((keyword, index) => (
+                    {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일', '네일스티커', '베이스코트', '탑코트', '글리터', '홀로그램'].map((keyword, index) => (
                       <button
                         key={index}
                         onClick={() => handleRecentSearchClick(keyword)}
@@ -613,9 +616,11 @@ export function MainHeader({
         {/* 검색바 */}
         <div className="px-4 pb-3 relative">
           <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-white">
-            <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
-              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
-            </svg>
+            <button onClick={handleSearchInputFocus} className="flex items-center">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
+              </svg>
+            </button>
             <input
               value={q}
               onChange={e=>handleSearchInputChange(e.target.value)}
@@ -683,7 +688,7 @@ export function MainHeader({
               <div className="p-3">
                 <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
                 <div className="flex flex-wrap gap-2">
-                  {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일'].map((keyword, index) => (
+                  {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일', '네일스티커', '베이스코트', '탑코트'].map((keyword, index) => (
                     <button
                       key={index}
                       onClick={() => handleRecentSearchClick(keyword)}
