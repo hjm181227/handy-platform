@@ -287,9 +287,10 @@ export const API_ENDPOINTS = {
     PRODUCT_STATUS: (productId: string) => `/api/seller/products/${productId}/status`,   // PATCH /:id/status
     PRODUCT_ANALYTICS: '/api/seller/products/analytics/overview',        // GET /analytics/overview
 
-    // 주문 관리
-    ORDERS: '/api/seller/orders',                                        // GET /
-    ORDER_STATUS: (orderId: string) => `/api/seller/orders/${orderId}/status`,    // PATCH /:id/status
+    // 주문 관리 (멀티셀러 지원)
+    ORDERS: '/api/seller/orders',                                        // POST / (필터링 데이터 전송)
+    ORDER_DETAIL: (orderUuid: string) => `/api/seller/orders/${orderUuid}`,      // GET /:orderUuid
+    ORDER_STATUS: (orderUuid: string) => `/api/seller/orders/${orderUuid}/status`, // PATCH /:orderUuid/status
     ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',           // GET /analytics/overview
 
     // 정산 관리

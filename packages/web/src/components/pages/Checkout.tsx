@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
-import { Cart, CartItem, ShippingAddress, PaymentMethod, Order } from '@handy-platform/shared';
+import { Cart, CartItem, ShippingAddress, PaymentMethod, CustomerOrder } from '@handy-platform/shared';
 
 interface CheckoutProps {
   onGo: (path: string) => void;

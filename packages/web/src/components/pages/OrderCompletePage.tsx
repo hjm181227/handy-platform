@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
+import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
-import type { Order } from '@handy-platform/shared';
+import type { CustomerOrder } from '@handy-platform/shared';
 
 interface OrderCompletePageProps {
   onGo: (path: string) => void;
@@ -11,7 +12,7 @@ interface OrderCompletePageProps {
 
 export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
   const { alert, error: showError } = useAlert();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<CustomerOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
