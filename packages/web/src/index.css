@@ -145,3 +145,8 @@ a:hover {
 .animate-pulse-gray {
   animation: pulse-gray 2s infinite;
 }
+
+/* WebView 환경에서 앱 전용 요소 숨김 */
+body.webview-mode [data-apphide="true"] {
+  display: none !important;
+}

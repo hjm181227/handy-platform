@@ -444,7 +444,13 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
 
   const injectedJavaScript = `
     console.log('🟢 [INJECT] JavaScript 주입됨');
-    
+
+    // WebView 환경 감지하여 body에 클래스 추가
+    if (window.ReactNativeWebView) {
+      document.body.classList.add('webview-mode');
+      console.log('🟢 [INJECT] WebView 모드 활성화: webview-mode 클래스 추가됨');
+    }
+
     // 네이티브로 돌아가기 함수 (전역으로 노출)
     window.goToNativeApp = function() {
       console.log('🟢 [INJECT] window.goToNativeApp 호출됨');

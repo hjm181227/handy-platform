@@ -21,15 +21,15 @@ const HomeScreen: React.FC = () => {
   // 환경별 웹 URL 설정
   const getWebURL = () => {
     const env = getCurrentEnvironment();
-    
+
     if (env === 'development') {
-      return Platform.OS === 'android' 
-        ? 'http://172.29.9.248:3003' // Android 에뮬레이터용 IP:포트
+      return Platform.OS === 'android'
+        ? 'http://10.0.2.2:3003' // Android 에뮬레이터용 IP:포트
         : 'http://localhost:3003'; // iOS 시뮬레이터용
     } else {
       // 프로덕션 환경
-      return Platform.OS === 'android' 
-        ? 'http://172.29.9.248:3003' // Android 에뮬레이터용 IP:포트
+      return Platform.OS === 'android'
+        ? 'http://10.0.2.2:3003' // Android 에뮬레이터용 IP:포트
         : 'http://localhost:3003'; // iOS 시뮬레이터용
     }
   };

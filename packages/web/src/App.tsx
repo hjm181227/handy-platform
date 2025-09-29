@@ -685,16 +685,20 @@ export default function App() {
   // 어드민 센터 페이지인지 확인
   const isAdminPage = pathname.startsWith("/admin");
 
+  // 홈화면에서는 헤더를 표시, 다른 페이지에서는 숨김
+  const isHomePage = pathname === '/';
+  const shouldShowHeader = !isSellerPage && !isAdminPage;
+
   return (
     <AlertProvider>
       {/* 판매자 센터와 어드민 센터가 아닐 때만 헤더 표시 */}
-      {!isSellerPage && !isAdminPage && (
+      {shouldShowHeader && (
         <>
-          {/* 앱(WebView)에서만 숨길 요소 */}
-          <div data-apphide="true">
+          {/* 홈페이지에서는 헤더 표시, 다른 페이지에서는 앱에서만 숨김 */}
+          <div data-apphide={isHomePage ? "false" : "true"}>
             <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
           </div>
-          <div data-apphide="true">
+          <div data-apphide={isHomePage ? "false" : "true"}>
             <MainHeader
               cartCount={cartCount}
               onCart={handleCartClick}

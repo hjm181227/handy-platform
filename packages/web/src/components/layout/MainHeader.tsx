@@ -235,7 +235,7 @@ export function MainHeader({
           </div>
 
           <div className="justify-self-center w-full max-w-2xl">
-            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 focus-within:border-gray-500 transition-all">
+            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 transition-all">
               <SearchIcon size={16} color="#666" />
               <input
                 value={q}
@@ -243,7 +243,7 @@ export function MainHeader({
                 onFocus={handleSearchInputFocus}
                 onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                 placeholder="검색어를 입력하세요"
-                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700"
+                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700 focus:border-transparent focus:shadow-none"
               />
               {q && (
                 <button
@@ -622,7 +622,7 @@ export function MainHeader({
               onFocus={handleSearchInputFocus}
               onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
               placeholder="검색어를 입력하세요"
-              className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent"
+              className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent focus:border-transparent focus:shadow-none"
             />
             {q && (
               <button
