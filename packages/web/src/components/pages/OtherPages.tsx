@@ -246,6 +246,15 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
         </div>
       </Section>
 
+      <Section title="판매자 서비스">
+        <div className="divide-y">
+          <LinkRow title="판매자 신청하기" to="/seller/apply" />
+          <div className="py-3 text-xs text-gray-500">
+            네일아트 상품을 판매하여 수익을 창출해보세요!
+          </div>
+        </div>
+      </Section>
+
       <Section title="고객센터 / 설정">
         <div className="divide-y">
           <LinkRow title="1:1 문의" to="/support/contact" />

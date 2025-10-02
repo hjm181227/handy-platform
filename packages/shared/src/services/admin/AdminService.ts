@@ -92,6 +92,86 @@ export interface AdminDashboardData {
   }>;
 }
 
+// 판매자 신청 관련 타입
+export interface SellerApplication {
+  sellerInfoId: string;
+  userId: string;
+  brandName: string;
+  representativeName?: string;
+  businessNumber: string;
+  businessType?: string;
+  businessCategory?: string;
+  contactEmail: string;
+  contactPhone: string;
+  status: 'pending' | 'approved' | 'rejected';
+  hasVerificationDocuments: boolean;
+  documentsCount: number;
+  createdAt: string;
+  updatedAt: string;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  approvedAt?: string;
+}
+
+export interface SellerApplicationDetail extends SellerApplication {
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  businessAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  bankAccount: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+  };
+  verificationDocuments: Array<{
+    type: string;
+    url: string;
+    uploadedAt: string;
+  }>;
+  isVerified: boolean;
+  isActive: boolean;
+  commission: number;
+  verificationNote?: string;
+  stats: {
+    totalProducts: number;
+    totalOrders: number;
+    totalRevenue: number;
+    averageRating: number;
+    responseRate: number;
+    fulfillmentRate: number;
+    lastActiveAt: string;
+  };
+}
+
+export interface SellerApplicationListResponse {
+  success: boolean;
+  data: {
+    items: SellerApplication[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+}
+
+export interface SellerApplicationDetailResponse {
+  success: boolean;
+  data: SellerApplicationDetail;
+}
+
 export abstract class BaseAdminService extends BaseApiService {
   
   // === 사용자 관리 ===
@@ -258,6 +338,64 @@ export abstract class BaseAdminService extends BaseApiService {
 
   async getProductAnalytics(): Promise<any> {
     return this.request<any>(API_ENDPOINTS.ADMIN.ANALYTICS_PRODUCTS);
+  }
+
+  // === 판매자 신청 관리 ===
+  
+  async getSellerApplications(params: {
+    page?: number;
+    limit?: number;
+    status?: 'pending' | 'approved' | 'rejected';
+    search?: string;
+    sortBy?: 'created' | 'updated' | 'brandName';
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<SellerApplicationListResponse> {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+    
+    const url = `/api/admin/seller-applications?${queryParams.toString()}`;
+    return this.request<SellerApplicationListResponse>(url);
+  }
+
+  async getSellerApplicationDetail(sellerInfoId: string): Promise<SellerApplicationDetailResponse> {
+    return this.request<SellerApplicationDetailResponse>(`/api/admin/seller-applications/${sellerInfoId}`);
+  }
+
+  async approveSellerApplication(
+    sellerInfoId: string, 
+    verificationNote?: string
+  ): Promise<ApiResponse<{
+    sellerInfoId: string;
+    userId: string;
+    status: string;
+    approvedAt: string;
+  }>> {
+    return this.request<ApiResponse<any>>(`/api/admin/seller-applications/${sellerInfoId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ verificationNote }),
+    });
+  }
+
+  async rejectSellerApplication(
+    sellerInfoId: string, 
+    rejectionReason: string,
+    verificationNote?: string
+  ): Promise<ApiResponse<{
+    sellerInfoId: string;
+    userId: string;
+    status: string;
+    rejectionReason: string;
+    rejectedAt: string;
+  }>> {
+    return this.request<ApiResponse<any>>(`/api/admin/seller-applications/${sellerInfoId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason, verificationNote }),
+    });
   }
 }
 

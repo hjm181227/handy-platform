@@ -36,7 +36,6 @@ import {
   LinkedAccountsResponse,
   ImageUploadManager,
   // 새로운 타입들
-  SellerProfile,
   SellerDashboard,
   ShippingAddress,
   QRCodeData,

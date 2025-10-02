@@ -1,7 +1,6 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { 
-  ApiResponse, 
-  SellerProfile,
+import {
+  ApiResponse,
   SellerDashboard,
   Product,
   Order,
@@ -27,40 +26,6 @@ import {
 import { API_ENDPOINTS } from '../../config/api';
 
 export abstract class BaseSellerService extends BaseApiService {
-  // 판매자 등록 및 프로필 관리
-  async registerSeller(sellerData: {
-    companyName: string;
-    businessNumber: string;
-    contactEmail: string;
-    contactPhone: string;
-    address: Address;
-    bankAccount: {
-      bankName: string;
-      accountNumber: string;
-      accountHolder: string;
-    };
-  }): Promise<ApiResponse<{ user: any }>> {
-    return this.request<ApiResponse<{ user: any }>>(API_ENDPOINTS.SELLER.REGISTER, {
-      method: 'POST',
-      body: JSON.stringify(sellerData),
-    });
-  }
-
-  async getSellerProfile(): Promise<ApiResponse<{ seller: SellerProfile }>> {
-    return this.request<ApiResponse<{ seller: SellerProfile }>>(API_ENDPOINTS.SELLER.PROFILE);
-  }
-
-  async updateSellerProfile(updates: Partial<SellerProfile>): Promise<ApiResponse<{ seller: SellerProfile }>> {
-    return this.request<ApiResponse<{ seller: SellerProfile }>>(API_ENDPOINTS.SELLER.UPDATE_PROFILE, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  }
-
-  async getSellerDashboard(): Promise<ApiResponse<SellerDashboard>> {
-    return this.request<ApiResponse<SellerDashboard>>(API_ENDPOINTS.SELLER.DASHBOARD);
-  }
-
   // 상품 관리 (서버 API 스펙에 완전 일치)
   async getSellerProducts(filters: {
     page?: number;                  // 페이지 번호 (기본값: 1)
@@ -70,20 +35,20 @@ export abstract class BaseSellerService extends BaseApiService {
     search?: string;                // 제품명 또는 SKU 검색
     sortBy?: string;                // 정렬 필드 (기본값: "createdAt")
     sortOrder?: 'asc' | 'desc';     // 정렬 순서 (기본값: "desc")
-  } = {}): Promise<{ 
+  } = {}): Promise<{
     success: boolean;
-    data: Product[]; 
+    data: Product[];
     pagination: any;
   }> {
     const queryString = this.buildQueryString(filters);
     const endpoint = queryString ? `${API_ENDPOINTS.SELLER.PRODUCTS}?${queryString}` : API_ENDPOINTS.SELLER.PRODUCTS;
-    
-    const response = await this.request<{ 
+
+    const response = await this.request<{
       success: boolean;
-      data: Product[]; 
+      data: Product[];
       pagination: any;
     }>(endpoint);
-    
+
     // UUID validation for seller products
     if (response.data) {
       response.data.forEach((product, index) => {
@@ -150,14 +115,14 @@ export abstract class BaseSellerService extends BaseApiService {
   }
 
   // PATCH /:id/stock - 제품 재고 업데이트 (서버 API 스펙 일치)
-  async updateProductStock(id: string, stock: number): Promise<ApiResponse<{ 
-    success: boolean; 
-    message: string; 
+  async updateProductStock(id: string, stock: number): Promise<ApiResponse<{
+    success: boolean;
+    message: string;
     product?: Product;
   }>> {
-    return this.request<ApiResponse<{ 
-      success: boolean; 
-      message: string; 
+    return this.request<ApiResponse<{
+      success: boolean;
+      message: string;
       product?: Product;
     }>>(API_ENDPOINTS.SELLER.PRODUCT_STOCK(id), {
       method: 'PATCH',
@@ -166,14 +131,14 @@ export abstract class BaseSellerService extends BaseApiService {
   }
 
   // PATCH /:id/status - 제품 활성 상태 업데이트 (서버 API 스펙 일치)
-  async updateProductStatus(id: string, isActive: boolean): Promise<ApiResponse<{ 
-    success: boolean; 
-    message: string; 
+  async updateProductStatus(id: string, isActive: boolean): Promise<ApiResponse<{
+    success: boolean;
+    message: string;
     product?: Product;
   }>> {
-    return this.request<ApiResponse<{ 
-      success: boolean; 
-      message: string; 
+    return this.request<ApiResponse<{
+      success: boolean;
+      message: string;
       product?: Product;
     }>>(API_ENDPOINTS.SELLER.PRODUCT_STATUS(id), {
       method: 'PATCH',
@@ -227,9 +192,9 @@ export abstract class BaseSellerService extends BaseApiService {
     if (response.items) {
       response.items.forEach((order, index) => {
         try {
-          // Validate order UUID format
-          if (order.orderUuid) {
-            console.debug(`[Seller Orders] Order[${index}] UUID: ${order.orderUuid}`);
+          // Validate order ID format (id instead of orderUuid after server unification)
+          if (order.id) {
+            console.debug(`[Seller Orders] Order[${index}] ID: ${order.id}`);
           }
         } catch (error) {
           console.warn(`UUID Migration Warning - Seller Order validation:`, error);
@@ -253,7 +218,7 @@ export abstract class BaseSellerService extends BaseApiService {
 
   // 주문 상태 업데이트 (서버 API 스펙 일치)
   async updateOrderStatus(
-    orderUuid: string, 
+    orderUuid: string,
     updates: {
       status: string;
       note?: string;
@@ -311,7 +276,7 @@ export abstract class BaseSellerService extends BaseApiService {
       status: string;
       note?: string;
     }
-  ): Promise<ApiResponse<{ 
+  ): Promise<ApiResponse<{
     successCount: number;
     failedOrders: { orderId: string; error: string }[];
   }>> {
@@ -375,7 +340,7 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<SellerOrderAnalytics>>(API_ENDPOINTS.SELLER.ORDER_ANALYTICS);
   }
 
-  // 기존 메서드들 (하위 호환성 유지)  
+  // 기존 메서드들 (하위 호환성 유지)
   async getProductAnalytics(): Promise<ApiResponse<SellerProductAnalytics>> {
     // Note: 서버 API 응답이 변경되어 기존 SellerProductAnalytics와 다름
     // 새로운 getProductAnalyticsOverview() 사용 권장
@@ -455,7 +420,7 @@ export abstract class BaseSellerService extends BaseApiService {
   }
 
   // 생산 관리 API (서버 스펙 완전 일치)
-  
+
   // GET /production-settings - 생산 설정 조회
   async getProductionSettings(): Promise<ApiResponse<{
     productionSettings: ProductionSettings;
@@ -489,8 +454,8 @@ export abstract class BaseSellerService extends BaseApiService {
 
   // PUT /production-capacity/:year/:month - 특정 월 생산 용량 수정
   async updateProductionCapacity(
-    year: number, 
-    month: number, 
+    year: number,
+    month: number,
     data: UpdateProductionCapacityRequest
   ): Promise<ApiResponse<ProductionCapacity>> {
     return this.request(API_ENDPOINTS.SELLER.PRODUCTION_CAPACITY_UPDATE(year, month), {
@@ -506,8 +471,8 @@ export abstract class BaseSellerService extends BaseApiService {
 
   // POST /production-capacity/:year/:month/add-extra - 임의 추가 생산량 적용
   async addExtraProductionCapacity(
-    year: number, 
-    month: number, 
+    year: number,
+    month: number,
     data: AddExtraCapacityRequest
   ): Promise<ApiResponse<ProductionCapacity>> {
     return this.request(API_ENDPOINTS.SELLER.PRODUCTION_ADD_EXTRA(year, month), {
@@ -622,7 +587,7 @@ export abstract class BaseSellerService extends BaseApiService {
   }>> {
     const queryString = params ? this.buildQueryString(params) : '';
     const endpoint = queryString ? `${API_ENDPOINTS.SELLER.SHIPPING_PREVIEW}?${queryString}` : API_ENDPOINTS.SELLER.SHIPPING_PREVIEW;
-    
+
     return this.request(endpoint, {
       method: 'POST',
       body: JSON.stringify(policy),

@@ -590,7 +590,6 @@ export interface SellerOrderDetail extends SellerOrder {
     country?: string;
     phone?: string;               // 마스킹된 전화번호 "010-****-5678"
   };
-  updatedAt?: string;
   notes?: string;
 }
 
@@ -969,24 +968,6 @@ export interface SellerProductOverview {
   totalReviews: number;
 }
 
-export interface SellerProfile {
-  id: string;
-  userId: string;
-  companyName: string;
-  businessNumber: string;
-  representative: string;
-  phone: string;
-  address: Address;
-  isVerified: boolean;
-  verificationStatus: 'pending' | 'approved' | 'rejected' | 'suspended';
-  bankAccount: {
-    bank: string;
-    accountNumber: string;
-    accountHolder: string;
-  };
-  createdAt: string;
-  verifiedAt?: string;
-}
 
 export interface SellerDashboard {
   summary: {

@@ -193,6 +193,7 @@ export const {
   order: orderService,
   payment: paymentService,
   seller: sellerService,
+  sellerApplication: sellerApplicationService,
   production: productionService,
   admin: adminService,
   loyalty: loyaltyService,

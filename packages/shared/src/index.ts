@@ -64,7 +64,6 @@ export type {
   OrderStatus,
   PaymentStatus,
   PaymentMethod,
-  SellerProfile,
   SellerDashboard,
   ShippingAddress,
   Coupon,

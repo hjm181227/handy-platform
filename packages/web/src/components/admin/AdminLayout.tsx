@@ -6,24 +6,23 @@ import type { User } from '@handy-platform/shared';
 interface AdminLayoutProps {
   children: React.ReactNode;
   currentUser: User | null;
+  authLoading?: boolean;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser }) => {
-  const [loading, setLoading] = useState(true);
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLoading = false }) => {
+  const [internalLoading, setInternalLoading] = useState(true);
   const { path, nav } = useMiniRouter();
 
   useEffect(() => {
-    // currentUser가 전달되면 즉시 확인
-    if (currentUser !== null) {
-      setLoading(false);
-    } else {
-      // currentUser가 null이면 잠시 기다려보기 (로딩 중일 수 있음)
+    // authLoading이 false가 되면 (App에서 인증 초기화 완료) 내부 로딩도 완료
+    if (!authLoading) {
+      // 추가적인 안전 장치: 짧은 딜레이 후 로딩 완료
       const timer = setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+        setInternalLoading(false);
+      }, 100);
       return () => clearTimeout(timer);
     }
-  }, [currentUser]);
+  }, [authLoading, currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -35,23 +34,43 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser }) => {
     }
   };
 
-  if (loading) {
+  // 로딩 중이거나 인증 상태가 아직 확정되지 않은 경우
+  if (authLoading || internalLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">관리자 센터 로딩 중...</p>
+        </div>
       </div>
     );
   }
 
   // 인증 확인: currentUser가 있고 admin 역할인지 확인
   if (!currentUser) {
+    console.log('AdminLayout: No user found, redirecting to login');
     nav('/login');
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">로그인이 필요합니다.</p>
+          <div className="animate-pulse text-blue-600">로그인 페이지로 이동 중...</div>
+        </div>
+      </div>
+    );
   }
 
   if (currentUser.role !== 'admin') {
+    console.log('AdminLayout: User is not admin, redirecting to home');
     nav('/');
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">관리자 권한이 필요합니다.</p>
+          <div className="animate-pulse text-blue-600">홈페이지로 이동 중...</div>
+        </div>
+      </div>
+    );
   }
 
   const navigation = [
@@ -79,6 +98,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser }) => {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      )
+    },
+    { 
+      name: '판매자 신청', 
+      href: '/admin/seller-applications', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       )
     },
@@ -205,8 +233,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser }) => {
 
       {/* 메인 콘텐츠 */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-          {children}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
