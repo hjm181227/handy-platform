@@ -3,6 +3,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { colors } from '../styles/colors';
 import { DeviceEventEmitter } from 'react-native';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import BiIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import CategoryScreen from '../screens/CategoryScreen';
 import SnapScreen from '../screens/SnapScreen';
@@ -45,8 +50,8 @@ const BottomTabNavigator: React.FC = () => {
         component={CategoryScreen}
         options={{
           title: '카테고리',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22, color, opacity: focused ? 1 : 0.7 }}>⊞</Text>
+          tabBarIcon: ({ color, focused, size }) => (
+            <BiIcon name="view-grid" size={size} color={color} style={{ opacity: focused ? 1 : 0.7 }} />
           ),
         }}
       />
@@ -55,8 +60,8 @@ const BottomTabNavigator: React.FC = () => {
         component={SnapScreen}
         options={{
           title: '스냅',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22, color, opacity: focused ? 1 : 0.7 }}>○</Text>
+          tabBarIcon: ({ color, focused, size }) => (
+            <FontAwesome6 name="camera" size={size} color={color} style={{ opacity: focused ? 1 : 0.7 }} />
           ),
         }}
       />
@@ -65,8 +70,8 @@ const BottomTabNavigator: React.FC = () => {
         component={HomeScreen}
         options={{
           title: '홈',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22, color, opacity: focused ? 1 : 0.7 }}>▲</Text>
+          tabBarIcon: ({ color, focused, size }) => (
+            <MaterialIcon name="home" size={size * 1.3} color={color} style={{ opacity: focused ? 1 : 0.7 }} />
           ),
         }}
         listeners={({ navigation }) => ({
@@ -92,8 +97,8 @@ const BottomTabNavigator: React.FC = () => {
         component={LikeScreen}
         options={{
           title: '좋아요',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22, color, opacity: focused ? 1 : 0.7 }}>{focused ? '♥' : '♡'}</Text>
+          tabBarIcon: ({ color, focused, size }) => (
+            <FontAwesome name="heart" size={size} color={color} style={{ opacity: focused ? 1 : 0.7 }} />
           ),
         }}
       />
@@ -102,8 +107,8 @@ const BottomTabNavigator: React.FC = () => {
         component={MyScreen}
         options={{
           title: '마이',
-          tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22, color, opacity: focused ? 1 : 0.7 }}>◉</Text>
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons name="person-circle" size={size * 1.3} color={color} style={{ opacity: focused ? 1 : 0.7 }} />
           ),
         }}
         listeners={({ navigation }) => ({

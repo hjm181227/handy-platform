@@ -1,15 +1,21 @@
 import React from 'react';
 import { products } from '../../data';
 import { ProductCard } from '../product/ProductCard';
+import { Stars } from '../ui';
+import { FaHeart, FaArrowUp } from 'react-icons/fa';
 
 export function BrandsPage({
   onGo,
   onOpen,
   onAdd,
+  onLike,
+  likedProducts = []
 }: {
   onGo: (to: string) => void;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
+  onLike?: (id: string) => void;
+  likedProducts?: string[];
 }) {
   // 탭 기능 제거
 
@@ -64,9 +70,15 @@ export function BrandsPage({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
-        <div>⭐ {brand.avgRating.toFixed(1)}</div>
-        <div>❤️ {brand.totalLikes}</div>
+      <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+        <div className="flex items-center gap-1">
+          <Stars v={brand.avgRating} />
+          <span className="text-sm font-medium">{brand.avgRating.toFixed(1)}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <FaHeart className="text-red-500 w-3 h-3" />
+          <span>{brand.totalLikes}</span>
+        </div>
       </div>
 
       <button
@@ -98,12 +110,15 @@ export function BrandsPage({
             브랜드 프로필
           </button>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {brand.products.map((p) => (
-            <div key={p.id || p.productId} className="snap-start">
-              <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} />
-            </div>
-          ))}
+        <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto pb-2">
+          {brand.products.map((p) => {
+            const productId = p.id || p.productUuid;
+            return (
+              <div key={p.id || p.productId} className="md:snap-start">
+                <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+              </div>
+            );
+          })}
         </div>
       </section>
     );
@@ -134,7 +149,12 @@ export function BrandsPage({
 
       {/* 우측 플로팅 버튼 */}
       <div className="fixed right-6 bottom-6 flex flex-col items-center gap-3">
-        <button className="h-12 w-12 rounded-full bg-white border text-xl leading-none">⬆</button>
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="h-12 w-12 rounded-full bg-white border shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
+        >
+          <FaArrowUp className="text-lg" />
+        </button>
         <button className="h-10 px-4 rounded-full bg-white border text-sm">전체</button>
       </div>
     </div>

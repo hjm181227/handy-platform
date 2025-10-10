@@ -206,14 +206,20 @@ export abstract class BaseSellerService extends BaseApiService {
     items: SellerOrder[];
     pagination: SellerOrderPagination;
   }> {
-    // POST 메서드로 필터링 데이터 전송 (서버 API 스펙 준수)
-    const requestBody = {
+    // POST 메서드로 body에 JSON 전송 (서버 API 스펙 준수)
+    const requestBody: any = {
       page: filters.page || 1,
       limit: filters.limit || 20,
       status: filters.status || [],
-      search: filters.search,
       sortBy: filters.sortBy || 'create-desc'
     };
+
+    // search 파라미터는 값이 있을 때만 추가 (빈 문자열 방지)
+    if (filters.search && filters.search.trim()) {
+      requestBody.search = filters.search.trim();
+    }
+
+    console.log('🔍 [getSellerOrders] Request body:', requestBody);
 
     const response = await this.request<{
       items: SellerOrder[];
@@ -223,13 +229,15 @@ export abstract class BaseSellerService extends BaseApiService {
       body: JSON.stringify(requestBody),
     });
 
+    console.log('✅ [getSellerOrders] Response:', response);
+
     // UUID validation for seller orders during migration period
     if (response.items) {
       response.items.forEach((order, index) => {
         try {
           // Validate order UUID format
-          if (order.orderUuid) {
-            console.debug(`[Seller Orders] Order[${index}] UUID: ${order.orderUuid}`);
+          if (order.id) {
+            console.debug(`[Seller Orders] Order[${index}] ID: ${order.id}`);
           }
         } catch (error) {
           console.warn(`UUID Migration Warning - Seller Order validation:`, error);

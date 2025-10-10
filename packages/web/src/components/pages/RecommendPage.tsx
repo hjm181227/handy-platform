@@ -3,6 +3,7 @@ import { products } from '../../data';
 import { ProductCard } from '../product/ProductCard';
 import { RecommendationEngine, getUserActivity, addToRecentViews } from '../../utils/recommendationEngine';
 import type { User } from '@handy-platform/shared';
+import { FaArrowUp } from 'react-icons/fa';
 
 // 추천 섹션 컴포넌트
 const RecommendationSection = ({
@@ -10,13 +11,17 @@ const RecommendationSection = ({
   products: sectionProducts,
   reason,
   onOpen,
-  onAdd
+  onAdd,
+  onLike,
+  likedProducts = []
 }: {
   title: string;
   products: typeof products;
   reason?: string;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
+  onLike?: (id: string) => void;
+  likedProducts?: string[];
 }) => {
   if (sectionProducts.length === 0) return null;
 
@@ -29,12 +34,15 @@ const RecommendationSection = ({
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {sectionProducts.map((product, index) => (
-          <div key={product.id || product.productId || index} className="snap-start flex-shrink-0">
-            <ProductCard p={product} onOpen={onOpen} onAdd={onAdd} />
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
+        {sectionProducts.map((product, index) => {
+          const productId = product.id || product.productUuid;
+          return (
+            <div key={product.id || product.productId || index} className="md:snap-start md:flex-shrink-0">
+              <ProductCard p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -65,11 +73,15 @@ export function RecommendPage({
   onGo,
   onOpen,
   onAdd,
+  onLike,
+  likedProducts = []
 }: {
   currentUser: User | null;
   onGo: (to: string) => void;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
+  onLike?: (id: string) => void;
+  likedProducts?: string[];
 }) {
   const isLoggedIn = !!currentUser;
 
@@ -143,18 +155,18 @@ export function RecommendPage({
       {/* 로그인 안내 (비로그인 사용자용) */}
       {!isLoggedIn && (
         <div className="mx-auto max-w-7xl px-4 py-3 bg-blue-50 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-blue-800">
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs md:text-sm text-blue-800 min-w-0">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
-              <span>로그인하시면 개인 취향에 맞는 상품을 추천받을 수 있어요</span>
+              <span className="truncate">로그인하시면 개인 취향에 맞는 상품을 추천받을 수 있어요</span>
             </div>
             <button
               onClick={() => onGo('/login')}
-              className="text-sm text-blue-600 hover:underline font-medium"
+              className="text-xs md:text-sm text-blue-600 hover:underline font-medium whitespace-nowrap flex-shrink-0"
             >
-              로그인하기
+              로그인
             </button>
           </div>
         </div>
@@ -174,6 +186,8 @@ export function RecommendPage({
                 reason={recommendation.reason}
                 onOpen={handleProductOpen}
                 onAdd={onAdd}
+                onLike={onLike}
+                likedProducts={likedProducts}
               />
             ))}
           </div>
@@ -192,25 +206,25 @@ export function RecommendPage({
                   : '다양한 카테고리의 상품들을 확인해보세요'
                 }
               </p>
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button
                   onClick={() => onGo('/brands')}
-                  className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50"
+                  className="px-3 py-2 bg-white border rounded-lg text-xs md:text-sm hover:bg-gray-50 whitespace-nowrap"
                 >
-                  브랜드 둘러보기
+                  브랜드
                 </button>
                 <button
                   onClick={() => onGo('/ranking')}
-                  className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50"
+                  className="px-3 py-2 bg-white border rounded-lg text-xs md:text-sm hover:bg-gray-50 whitespace-nowrap"
                 >
-                  인기 상품 보기
+                  인기상품
                 </button>
                 {!isLoggedIn && (
                   <button
                     onClick={() => onGo('/login')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap"
                   >
-                    로그인하기
+                    로그인
                   </button>
                 )}
               </div>
@@ -223,9 +237,9 @@ export function RecommendPage({
       <div className="fixed right-6 bottom-6 flex flex-col items-center gap-3">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="h-12 w-12 rounded-full bg-white border text-xl leading-none shadow-lg hover:shadow-xl transition-shadow"
+          className="h-12 w-12 rounded-full bg-white border shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
         >
-          ⬆
+          <FaArrowUp className="text-lg" />
         </button>
       </div>
     </div>

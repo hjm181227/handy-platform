@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
 import { getErrorMessageFromApiError } from '@handy-platform/shared';
 import { TermsAgreement, TermsState, validateTerms, getDefaultTermsState } from '../common/TermsAgreement';
+import { VscEye, VscEyeClosed } from 'react-icons/vsc';
 
 export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
   const [formData, setFormData] = useState({
@@ -207,7 +208,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
             aria-label="비밀번호 표시 전환"
             disabled={loading}
           >
-            {showPw ? "🙈" : "👁️"}
+            {showPw ? <VscEye className="w-5 h-5" /> : <VscEyeClosed className="w-5 h-5" />}
           </button>
         </div>
 
@@ -228,7 +229,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
             aria-label="비밀번호 확인 표시 전환"
             disabled={loading}
           >
-            {showConfirmPw ? "🙈" : "👁️"}
+            {showConfirmPw ? <VscEye className="w-5 h-5" /> : <VscEyeClosed className="w-5 h-5" />}
           </button>
         </div>
 

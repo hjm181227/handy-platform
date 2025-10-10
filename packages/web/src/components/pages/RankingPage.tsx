@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { products } from '../../data';
 import { RankedProductCard } from '../product/RankedProductCard';
+import { FaTrophy } from 'react-icons/fa';
 
 type FilterType = 'all' | 'weekly' | 'monthly';
 
@@ -8,10 +9,14 @@ export function RankingPage({
   onGo,
   onOpen,
   onAdd,
+  onLike,
+  likedProducts = []
 }: {
   onGo: (to: string) => void;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
+  onLike?: (id: string) => void;
+  likedProducts?: string[];
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
@@ -155,23 +160,71 @@ export function RankingPage({
             {filteredProducts.length >= 5 && (
               <div className="mb-8">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="text-yellow-500">🏆</span>
+                  <FaTrophy className="text-yellow-500" />
                   TOP 5
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  {filteredProducts.slice(0, 5).map((product, index) => (
+
+                {/* 모바일: 페이지 단위 슬라이드 (2열 그리드) */}
+                <div className="md:hidden overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4">
+                  <div className="flex">
+                    {Array.from({ length: Math.ceil(filteredProducts.slice(0, 5).length / 2) }).map((_, pageIndex) => {
+                      const startIndex = pageIndex * 2;
+                      const pageProducts = filteredProducts.slice(startIndex, Math.min(startIndex + 2, 5));
+
+                      return (
+                        <div
+                          key={`page-${pageIndex}`}
+                          className="w-full flex-shrink-0 snap-start px-4"
+                        >
+                          <div className="grid grid-cols-2 gap-4">
+                            {pageProducts.map((product, i) => {
+                              const productId = product.id || product.productUuid;
+                              const rank = startIndex + i + 1;
+                              return (
+                                <RankedProductCard
+                                  key={product.id || product.productId}
+                                  p={product}
+                                  rank={rank}
+                                  onOpen={onOpen}
+                                  onAdd={onAdd}
+                                  onLike={onLike}
+                                  isLiked={likedProducts.includes(productId)}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 페이지 인디케이터 (모바일만) */}
+                <div className="md:hidden flex justify-center gap-2 mt-4">
+                  {Array.from({ length: Math.ceil(filteredProducts.slice(0, 5).length / 2) }).map((_, i) => (
                     <div
-                      key={product.id || product.productId}
-                      className="flex justify-center"
-                    >
+                      key={i}
+                      className="w-2 h-2 rounded-full bg-gray-300"
+                    />
+                  ))}
+                </div>
+
+                {/* 데스크톱: 5열 그리드 */}
+                <div className="hidden md:grid md:grid-cols-5 md:gap-4">
+                  {filteredProducts.slice(0, 5).map((product, index) => {
+                    const productId = product.id || product.productUuid;
+                    return (
                       <RankedProductCard
+                        key={product.id || product.productId}
                         p={product}
                         rank={index + 1}
                         onOpen={onOpen}
                         onAdd={onAdd}
+                        onLike={onLike}
+                        isLiked={likedProducts.includes(productId)}
                       />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -180,16 +233,21 @@ export function RankingPage({
             <div>
               <h2 className="text-lg font-semibold mb-4">전체 랭킹</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredProducts.map((product, index) => (
-                  <div key={product.id || product.productId}>
-                    <RankedProductCard
-                      p={product}
-                      rank={index + 1}
-                      onOpen={onOpen}
-                      onAdd={onAdd}
-                    />
-                  </div>
-                ))}
+                {filteredProducts.map((product, index) => {
+                  const productId = product.id || product.productUuid;
+                  return (
+                    <div key={product.id || product.productId}>
+                      <RankedProductCard
+                        p={product}
+                        rank={index + 1}
+                        onOpen={onOpen}
+                        onAdd={onAdd}
+                        onLike={onLike}
+                        isLiked={likedProducts.includes(productId)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </>

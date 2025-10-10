@@ -575,7 +575,15 @@ export interface SellerOrder {
 }
 
 // Seller Order Detail Interface - 서버 SellerOrderDetailData 기반
-export interface SellerOrderDetail extends SellerOrder {
+export interface SellerOrderDetail {
+  id: string;
+  orderNumber: string;
+  status: string;
+  items: SellerOrderItem[];
+  totalAmount: number;
+  createdAt: string;
+  updatedAt?: string;
+  estimatedDelivery?: string;
   statusHistory?: Array<{
     status: string;
     date: string;
@@ -590,7 +598,6 @@ export interface SellerOrderDetail extends SellerOrder {
     country?: string;
     phone?: string;               // 마스킹된 전화번호 "010-****-5678"
   };
-  updatedAt?: string;
   notes?: string;
 }
 

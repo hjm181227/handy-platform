@@ -7,11 +7,15 @@ export function BrandDetailPage({
   onGo,
   onOpen,
   onAdd,
+  onLike,
+  likedProducts = []
 }: {
   brandName: string;
   onGo: (to: string) => void;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
+  onLike?: (id: string) => void;
+  likedProducts?: string[];
 }) {
   // URL 디코딩
   const decodedBrandName = decodeURIComponent(brandName);
@@ -152,9 +156,12 @@ export function BrandDetailPage({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {brandProducts.map((product) => (
-            <ProductCard key={product.id || product.productId} p={product} onOpen={onOpen} onAdd={onAdd} />
-          ))}
+          {brandProducts.map((product) => {
+            const productId = product.id || product.productUuid;
+            return (
+              <ProductCard key={product.id || product.productId} p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+            );
+          })}
         </div>
       </div>
 
@@ -166,9 +173,12 @@ export function BrandDetailPage({
             <div key={category} className="mb-8">
               <h3 className="text-lg font-medium mb-3">{category} ({categoryProducts.length}개)</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {categoryProducts.map((product) => (
-                  <ProductCard key={`${category}-${product.id || product.productId}`} p={product} onOpen={onOpen} onAdd={onAdd} />
-                ))}
+                {categoryProducts.map((product) => {
+                  const productId = product.id || product.productUuid;
+                  return (
+                    <ProductCard key={`${category}-${product.id || product.productId}`} p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+                  );
+                })}
               </div>
             </div>
           ))}

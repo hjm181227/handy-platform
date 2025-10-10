@@ -128,6 +128,9 @@ export default function App() {
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [loadingNewProducts, setLoadingNewProducts] = useState(false);
 
+  // Like state
+  const [likedProducts, setLikedProducts] = useState<string[]>([]);
+
   // Toast 표시 함수
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
@@ -285,6 +288,19 @@ export default function App() {
   const openProduct = (id:string)=> nav(`/product/${id}`);
   const addProduct = (id:string)=> addToCart(id);
 
+  // Like handler
+  const handleLike = (productId: string) => {
+    setLikedProducts(prev => {
+      if (prev.includes(productId)) {
+        // 이미 좋아요한 경우 제거
+        return prev.filter(id => id !== productId);
+      } else {
+        // 좋아요 추가
+        return [...prev, productId];
+      }
+    });
+  };
+
   let screen: React.ReactNode;
   
 
@@ -307,6 +323,8 @@ export default function App() {
         onGo={nav}
         onOpen={openProduct}
         onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
       />
     );
   } else if (pathname.startsWith("/brands")) {
@@ -316,6 +334,8 @@ export default function App() {
         onGo={nav}
         onOpen={openProduct}
         onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
       />
     );
   } else if (pathname.startsWith("/snap")) {
@@ -335,10 +355,12 @@ export default function App() {
         onGo={nav}
         onOpen={openProduct}
         onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
       />
     );
   } else if (pathname.startsWith("/sale")) {
-    screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/recommend")) {
     screen = (
       <RecommendPage
@@ -346,22 +368,24 @@ export default function App() {
         onGo={nav}
         onOpen={openProduct}
         onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
       />
     );
   } else if (pathname.startsWith("/new")) {
-    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNewProduct)} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNewProduct)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/trend")) {
-    screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/promo/")) {
     const slug = pathname.split("/").pop();
-    screen = (<><TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전"/><SectionRow title="기획전 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전"/><SectionRow title="기획전 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/cat/")) {
     const parts = pathname.split("/").slice(2).map(decodeURIComponent);
     const [group, name] = parts;
-    screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/search")) {
     const keyword = q.get("q") ?? "";
-    screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} />;
+    screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />;
   } else if (pathname.startsWith("/cart")) {
     screen = <CartContent 
       key={pathname} // 페이지 진입할 때마다 새로고침
@@ -672,9 +696,11 @@ export default function App() {
           loading={loadingNewProducts}
           onOpen={openProduct}
           onAdd={addProduct}
+          onLike={handleLike}
+          likedProducts={likedProducts}
         />
-        <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct}/>
-        <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct}/>
+        <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
+        <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
       </>
     );
   }

@@ -4,6 +4,8 @@ import { webApiService } from '../../services/apiService';
 import type { User } from '@handy-platform/shared';
 import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
 import { Logo } from '../common/Logo';
+import { IoPersonCircleOutline } from 'react-icons/io5';
+import { FiShoppingBag } from 'react-icons/fi';
 
 export function MainHeader({
   cartCount,
@@ -446,9 +448,7 @@ export function MainHeader({
               className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors relative"
             >
               <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h8a2 2 0 002-2v-8" />
-                </svg>
+                <FiShoppingBag className="w-4 h-4" />
                 <span className="hidden sm:inline">장바구니</span>
                 {cartCount > 0 && (
                   <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
@@ -574,9 +574,7 @@ export function MainHeader({
                 onClick={handleLogin}
                 className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <IoPersonCircleOutline className="w-6 h-6" />
               </button>
             )}
 
@@ -585,9 +583,7 @@ export function MainHeader({
               onClick={onCart}
               className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors relative"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h8a2 2 0 002-2v-8" />
-              </svg>
+              <FiShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                   {cartCount > 99 ? '99+' : cartCount}

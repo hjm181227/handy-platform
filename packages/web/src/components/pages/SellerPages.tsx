@@ -3,6 +3,10 @@ import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
 import { imageService, productService, sellerService } from '../../services/apiService';
+import { Stars } from '../ui';
+import { IoMdStar } from 'react-icons/io';
+import { FaDollarSign, FaChartLine, FaClipboardList, FaBox, FaPlus, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
+import { MdDashboard } from 'react-icons/md';
 import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions } from '../../types';
 
 // 생산 관리 컴포넌트 임포트
@@ -136,10 +140,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         <div className="space-y-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
-              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-              </svg>
+              <FaExclamationTriangle className="w-6 h-6 text-red-500 mr-3" />
               <div>
                 <h3 className="text-red-800 font-medium">오류 발생</h3>
                 <p className="text-red-700 text-sm mt-1">{error}</p>
@@ -162,67 +163,47 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
       <div className="space-y-6">
         {/* 상단 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">오늘 매출</p>
-                <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}원</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                </svg>
-              </div>
+          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">오늘 매출</p>
+              <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}원</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaDollarSign className="w-6 h-6 text-blue-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">이달 매출</p>
-                <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.month)}원</p>
-                <p className={`text-sm ${Number(salesGrowth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Number(salesGrowth) >= 0 ? '+' : ''}{salesGrowth}% vs 지난달
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                </svg>
-              </div>
+          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">이달 매출</p>
+              <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.month)}원</p>
+              <p className={`text-sm ${Number(salesGrowth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {Number(salesGrowth) >= 0 ? '+' : ''}{salesGrowth}% vs 지난달
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaChartLine className="w-6 h-6 text-green-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">처리 대기 주문</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData.orders.pending}건</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-              </div>
+          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">처리 대기 주문</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData.orders.pending}건</p>
+            </div>
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaClipboardList className="w-6 h-6 text-orange-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">등록 상품</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData.products.total}개</p>
-                <p className="text-sm text-gray-600">활성: {dashboardData.products.active}개</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
-              </div>
+          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">등록 상품</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData.products.total}개</p>
+              <p className="text-sm text-gray-600">활성: {dashboardData.products.active}개</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaBox className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -235,9 +216,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               onClick={() => onGo('/seller/products/new')}
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
-              <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-              </svg>
+              <FaPlus className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm font-medium">상품 등록</span>
             </button>
 
@@ -245,10 +224,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               onClick={() => onGo('/seller/orders')}
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
             >
-              <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-              </svg>
+              <FaClipboardList className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm font-medium">주문 관리</span>
             </button>
 
@@ -256,10 +232,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               onClick={() => onGo('/seller/analytics')}
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
             >
-              <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
+              <MdDashboard className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm font-medium">매출 분석</span>
             </button>
 
@@ -267,10 +240,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               onClick={() => onGo('/seller/settlement')}
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
             >
-              <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
+              <FaWallet className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm font-medium">정산 관리</span>
             </button>
           </div>
@@ -2648,8 +2618,9 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
           </div>
           <div className="bg-white rounded-lg p-4 border shadow-sm">
             <div className="text-sm text-gray-600">평균 평점</div>
-            <div className="text-2xl font-bold text-yellow-600">
-              ⭐ {stats.avgRating.toFixed(1)}
+            <div className="flex items-center gap-2 text-2xl font-bold text-yellow-600">
+              <IoMdStar className="w-6 h-6 text-yellow-400" />
+              {stats.avgRating.toFixed(1)}
             </div>
           </div>
         </div>
@@ -2707,13 +2678,13 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                   <button
                     key={rating}
                     onClick={() => setSelectedRating(selectedRating === rating ? null : rating)}
-                    className={`px-2 py-1 rounded text-sm ${
+                    className={`px-2 py-1 rounded text-sm flex items-center gap-1 ${
                       selectedRating === rating
                         ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {rating}⭐
+                    {rating}<IoMdStar className="w-3.5 h-3.5 text-yellow-400" />
                   </button>
                 ))}
                 {selectedRating && (
@@ -2749,13 +2720,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                     <div className="flex-1">
                       {/* 리뷰 헤더 */}
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center gap-1">
-                          {[ ...Array(5) ].map((_, i) => (
-                            <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
-                              ⭐
-                            </span>
-                          ))}
-                        </div>
+                        <Stars v={review.rating} />
                         <span className="text-sm font-medium text-gray-900">{review.customerName}</span>
                         <span className="text-sm text-gray-500">{review.date}</span>
                         {!review.isRead && (

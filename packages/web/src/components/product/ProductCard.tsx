@@ -1,12 +1,26 @@
 import { Product } from '@handy-platform/shared';
 import { Badge, Stars } from '../ui';
 import { money } from '../../utils';
+import { FaCartArrowDown } from 'react-icons/fa6';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
 
-export function ProductCard({ p, onOpen, onAdd }: { p: Product; onOpen:(id:string)=>void; onAdd:(id:string)=>void }) {
+export function ProductCard({
+  p,
+  onOpen,
+  onAdd,
+  onLike,
+  isLiked = false
+}: {
+  p: Product;
+  onOpen:(id:string)=>void;
+  onAdd:(id:string)=>void;
+  onLike?:(id:string)=>void;
+  isLiked?: boolean;
+}) {
   const productId = p.id || p.productUuid;
   const salePrice = p.discountedPrice;
   return (
-    <div className="w-[160px] md:w-[200px] shrink-0">
+    <div className="w-full md:w-[200px] shrink-0">
       <button onClick={()=>onOpen(productId)} className="block w-full text-left">
         <div className="relative rounded-lg overflow-hidden bg-gray-100">
           <img
@@ -36,7 +50,16 @@ export function ProductCard({ p, onOpen, onAdd }: { p: Product; onOpen:(id:strin
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1"><Stars v={p.rating.average ?? 0}/><span className="text-[11px] text-gray-500">({p.rating.count ?? 0})</span></div>
-          <button onClick={()=>onAdd(productId)} className="rounded-full border px-3 py-1 text-xs bg-white hover:bg-gray-50">담기</button>
+          <div className="flex items-center gap-1">
+            {onLike && (
+              <button onClick={()=>onLike(productId)} className="rounded-full border p-1.5 text-sm bg-white hover:bg-gray-50">
+                {isLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+              </button>
+            )}
+            <button onClick={()=>onAdd(productId)} className="rounded-full border p-1.5 text-sm bg-white hover:bg-gray-50">
+              <FaCartArrowDown />
+            </button>
+          </div>
         </div>
       </div>
     </div>

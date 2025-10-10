@@ -87,10 +87,10 @@ export function NewsPage({
           setTab(k);
           setShow(6);
         }}
-        className={`pb-2 text-[15px] ${
+        className={`pb-2 text-[15px] cursor-pointer hover:transform-none hover:shadow-none hover:font-semibold hover:text-black ${
           active
-            ? "border-b-2 border-black font-semibold"
-            : "text-gray-500 hover:text-black"
+            ? "underline font-semibold"
+            : "text-gray-500"
         }`}
       >
         {label}
