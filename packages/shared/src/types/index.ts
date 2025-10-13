@@ -348,6 +348,27 @@ export interface SellerInfo {
   };
 }
 
+// 판매자 신청 관련 타입
+export interface SellerApplication {
+  sellerInfoId: string;
+  userId: string;
+  brandName: string;
+  representativeName?: string;
+  businessNumber: string;
+  businessType?: string;
+  businessCategory?: string;
+  contactEmail: string;
+  contactPhone: string;
+  status: 'pending' | 'approved' | 'rejected';
+  hasVerificationDocuments: boolean;
+  documentsCount: number;
+  createdAt: string;
+  updatedAt: string;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  approvedAt?: string;
+}
+
 // 판매자별 배송 정보
 export interface SellerShipping {
   sellerId: string;

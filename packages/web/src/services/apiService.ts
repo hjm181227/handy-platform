@@ -97,6 +97,7 @@ class WebApiService {
   get order() { return this.apiService.order; }
   get payment() { return this.apiService.payment; }
   get seller() { return this.apiService.seller; }
+  get sellerApplication() { return this.apiService.sellerApplication; }
   get production() { return this.apiService.production; }
   get admin() { return this.apiService.admin; }
   get loyalty() { return this.apiService.loyalty; }

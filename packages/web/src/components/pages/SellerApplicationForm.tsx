@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sellerApplicationService } from '../../services/apiService';
-import { SellerApplicationData, MyApplicationStatusResponse } from '@handy-platform/shared/src/services/seller/SellerApplicationService';
+import { SellerApplicationData } from '@handy-platform/shared/src/services/seller/SellerApplicationService';
+import { SellerApplication } from '@handy-platform/shared';
 
 interface SellerApplicationFormProps {
   onGo: (to: string) => void;
@@ -9,7 +10,7 @@ interface SellerApplicationFormProps {
 const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) => {
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [applicationStatus, setApplicationStatus] = useState<MyApplicationStatusResponse | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<SellerApplication | null>(null);
   const [formData, setFormData] = useState<SellerApplicationData>({
     brandName: '',
     representativeName: '',
@@ -43,15 +44,14 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
   const checkApplicationStatus = async () => {
     try {
       setLoading(true);
-      const status = await sellerApplicationService.getMyApplicationStatus();
-      setApplicationStatus(status);
+      const response = await sellerApplicationService.getMyApplicationStatus();
+      setApplicationStatus(response.data); // response.data가 SellerApplication | null
     } catch (error) {
       console.error('Failed to check application status:', error);
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleInputChange = (
     section: keyof SellerApplicationData,
@@ -92,7 +92,6 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
     if (!formData.contactPhone.trim()) {
       newErrors['contactPhone'] = '연락처 전화번호를 입력해주세요';
     }
-
 
     // 사업자 주소 검증
     if (!formData.businessAddress?.street.trim()) {
@@ -144,7 +143,15 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
     try {
       setSubmitLoading(true);
-      await sellerApplicationService.submitApplication(formData);
+      
+      // 서버로 전송할 데이터 준비 (businessAddress를 address로 매핑)
+      const submitData = {
+        ...formData,
+        address: formData.businessAddress,
+        businessAddress: undefined // 제거
+      };
+      
+      await sellerApplicationService.submitApplication(submitData);
       
       alert('판매자 신청이 성공적으로 제출되었습니다. 검토 후 연락드리겠습니다.');
       
@@ -172,8 +179,8 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
   }
 
   // 이미 신청한 경우 상태 표시
-  if (applicationStatus?.hasApplication) {
-    const { application } = applicationStatus;
+  if (applicationStatus) {
+    const application = applicationStatus;
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4">
@@ -182,22 +189,31 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
             
             <div className="border rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{application?.brandName}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{application.brandName}</h3>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  application?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  application?.status === 'approved' ? 'bg-green-100 text-green-800' :
+                  application.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  application.status === 'approved' ? 'bg-green-100 text-green-800' :
                   'bg-red-100 text-red-800'
                 }`}>
-                  {application?.status === 'pending' ? '검토 중' :
-                   application?.status === 'approved' ? '승인됨' : '거부됨'}
+                  {application.status === 'pending' ? '승인 대기중' :
+                   application.status === 'approved' ? '승인됨' : '거부됨'}
                 </span>
               </div>
               
               <div className="text-sm text-gray-600 space-y-2">
-                <p><span className="font-medium">신청일:</span> {application?.createdAt ? new Date(application.createdAt).toLocaleDateString('ko-KR') : ''}</p>
-                <p><span className="font-medium">최종 업데이트:</span> {application?.updatedAt ? new Date(application.updatedAt).toLocaleDateString('ko-KR') : ''}</p>
+                <p><span className="font-medium">신청일:</span> {application.createdAt ? new Date(application.createdAt).toLocaleDateString('ko-KR') : ''}</p>
+                <p><span className="font-medium">최종 업데이트:</span> {application.updatedAt ? new Date(application.updatedAt).toLocaleDateString('ko-KR') : ''}</p>
                 
-                {application?.status === 'rejected' && application?.rejectionReason && (
+                {application.status === 'pending' && (
+                  <div className="mt-4 p-3 bg-yellow-50 rounded-md">
+                    <p className="text-sm font-medium text-yellow-800">승인 대기중</p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      관리자가 신청서를 검토 중입니다. 수정이 필요하시면 아래 '수정하기' 버튼을 눌러주세요.
+                    </p>
+                  </div>
+                )}
+                
+                {application.status === 'rejected' && application.rejectionReason && (
                   <div className="mt-4 p-3 bg-red-50 rounded-md">
                     <p className="text-sm font-medium text-red-800">거부 사유:</p>
                     <p className="text-sm text-red-700 mt-1">{application.rejectionReason}</p>
@@ -214,7 +230,40 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                 홈으로 이동
               </button>
               
-              {application?.status === 'rejected' && (
+              {application.status === 'pending' && (
+                <button
+                  onClick={() => {
+                    setApplicationStatus(null);
+                    setFormData({
+                      brandName: application.brandName || '',
+                      representativeName: application.representativeName || '',
+                      businessNumber: application.businessNumber || '',
+                      businessType: application.businessType || '개인사업자',
+                      businessCategory: application.businessCategory || '네일아트',
+                      contactEmail: application.contactEmail || '',
+                      contactPhone: application.contactPhone || '',
+                      businessAddress: {
+                        street: application.businessAddress?.street || '',
+                        city: application.businessAddress?.city || '',
+                        state: application.businessAddress?.state || '',
+                        zipCode: application.businessAddress?.zipCode || '',
+                        country: application.businessAddress?.country || '대한민국'
+                      },
+                      bankAccount: {
+                        bankName: application.bankAccount?.bankName || '',
+                        accountNumber: application.bankAccount?.accountNumber || '',
+                        accountHolder: application.bankAccount?.accountHolder || ''
+                      },
+                      verificationDocuments: application.verificationDocuments || []
+                    });
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  수정하기
+                </button>
+              )}
+              
+              {application.status === 'rejected' && (
                 <button
                   onClick={() => {
                     setApplicationStatus(null);
@@ -229,7 +278,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                 </button>
               )}
               
-              {application?.status === 'approved' && (
+              {application.status === 'approved' && (
                 <button
                   onClick={() => onGo('/seller')}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
@@ -393,102 +442,99 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
               </div>
             </div>
 
-
             {/* 사업자 주소 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">사업자 주소</h3>
               
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label htmlFor="businessAddress.street" className="block text-sm font-medium text-gray-700 mb-2">
-                      사업자 주소 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="businessAddress.street"
-                      value={formData.businessAddress?.street || ''}
-                      onChange={(e) => handleInputChange('businessAddress', 'street', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors['businessAddress.street'] ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="강남대로 456번길 78"
-                    />
-                    {errors['businessAddress.street'] && (
-                      <p className="text-red-500 text-sm mt-1">{errors['businessAddress.street']}</p>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label htmlFor="businessAddress.street" className="block text-sm font-medium text-gray-700 mb-2">
+                    사업자 주소 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="businessAddress.street"
+                    value={formData.businessAddress?.street || ''}
+                    onChange={(e) => handleInputChange('businessAddress', 'street', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors['businessAddress.street'] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="강남대로 456번길 78"
+                  />
+                  {errors['businessAddress.street'] && (
+                    <p className="text-red-500 text-sm mt-1">{errors['businessAddress.street']}</p>
+                  )}
+                </div>
 
-                  <div>
-                    <label htmlFor="businessAddress.city" className="block text-sm font-medium text-gray-700 mb-2">
-                      시/구 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="businessAddress.city"
-                      value={formData.businessAddress?.city || ''}
-                      onChange={(e) => handleInputChange('businessAddress', 'city', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors['businessAddress.city'] ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="강남구"
-                    />
-                    {errors['businessAddress.city'] && (
-                      <p className="text-red-500 text-sm mt-1">{errors['businessAddress.city']}</p>
-                    )}
-                  </div>
+                <div>
+                  <label htmlFor="businessAddress.city" className="block text-sm font-medium text-gray-700 mb-2">
+                    시/구 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="businessAddress.city"
+                    value={formData.businessAddress?.city || ''}
+                    onChange={(e) => handleInputChange('businessAddress', 'city', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors['businessAddress.city'] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="강남구"
+                  />
+                  {errors['businessAddress.city'] && (
+                    <p className="text-red-500 text-sm mt-1">{errors['businessAddress.city']}</p>
+                  )}
+                </div>
 
-                  <div>
-                    <label htmlFor="businessAddress.state" className="block text-sm font-medium text-gray-700 mb-2">
-                      시/도 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="businessAddress.state"
-                      value={formData.businessAddress?.state || ''}
-                      onChange={(e) => handleInputChange('businessAddress', 'state', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors['businessAddress.state'] ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="서울특별시"
-                    />
-                    {errors['businessAddress.state'] && (
-                      <p className="text-red-500 text-sm mt-1">{errors['businessAddress.state']}</p>
-                    )}
-                  </div>
+                <div>
+                  <label htmlFor="businessAddress.state" className="block text-sm font-medium text-gray-700 mb-2">
+                    시/도 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="businessAddress.state"
+                    value={formData.businessAddress?.state || ''}
+                    onChange={(e) => handleInputChange('businessAddress', 'state', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors['businessAddress.state'] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="서울특별시"
+                  />
+                  {errors['businessAddress.state'] && (
+                    <p className="text-red-500 text-sm mt-1">{errors['businessAddress.state']}</p>
+                  )}
+                </div>
 
-                  <div>
-                    <label htmlFor="businessAddress.zipCode" className="block text-sm font-medium text-gray-700 mb-2">
-                      우편번호 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="businessAddress.zipCode"
-                      value={formData.businessAddress?.zipCode || ''}
-                      onChange={(e) => handleInputChange('businessAddress', 'zipCode', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors['businessAddress.zipCode'] ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="06124"
-                    />
-                    {errors['businessAddress.zipCode'] && (
-                      <p className="text-red-500 text-sm mt-1">{errors['businessAddress.zipCode']}</p>
-                    )}
-                  </div>
+                <div>
+                  <label htmlFor="businessAddress.zipCode" className="block text-sm font-medium text-gray-700 mb-2">
+                    우편번호 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="businessAddress.zipCode"
+                    value={formData.businessAddress?.zipCode || ''}
+                    onChange={(e) => handleInputChange('businessAddress', 'zipCode', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors['businessAddress.zipCode'] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="06124"
+                  />
+                  {errors['businessAddress.zipCode'] && (
+                    <p className="text-red-500 text-sm mt-1">{errors['businessAddress.zipCode']}</p>
+                  )}
+                </div>
 
-                  <div>
-                    <label htmlFor="businessAddress.country" className="block text-sm font-medium text-gray-700 mb-2">
-                      국가
-                    </label>
-                    <input
-                      type="text"
-                      id="businessAddress.country"
-                      value={formData.businessAddress?.country || ''}
-                      onChange={(e) => handleInputChange('businessAddress', 'country', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="대한민국"
-                    />
-                  </div>
+                <div>
+                  <label htmlFor="businessAddress.country" className="block text-sm font-medium text-gray-700 mb-2">
+                    국가
+                  </label>
+                  <input
+                    type="text"
+                    id="businessAddress.country"
+                    value={formData.businessAddress?.country || ''}
+                    onChange={(e) => handleInputChange('businessAddress', 'country', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="대한민국"
+                  />
                 </div>
               </div>
             </div>

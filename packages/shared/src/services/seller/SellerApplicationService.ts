@@ -1,5 +1,5 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { ApiResponse } from '../../types';
+import { ApiResponse, SellerApplication } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
 // 판매자 신청 데이터 타입
@@ -11,7 +11,7 @@ export interface SellerApplicationData {
   businessCategory?: string;
   contactEmail: string;
   contactPhone: string;
-  address: {
+  address?: {
     street: string;
     city: string;
     state: string;
@@ -42,7 +42,7 @@ export interface SellerApplicationResponse {
   user: any;
 }
 
-// 내 신청 상태 응답
+// 내 신청 상태 응답 (서버 실제 응답 구조)
 export interface MyApplicationStatusResponse {
   hasApplication: boolean;
   application?: {
@@ -54,6 +54,17 @@ export interface MyApplicationStatusResponse {
     rejectionReason?: string;
     verificationNote?: string;
   };
+}
+
+// 판매자 정보 API 응답 (실제 서버 응답 구조)
+export interface SellerInfoResponse {
+  user: {
+    userId: string;
+    role: string;
+    name: string;
+  };
+  sellerInfo: SellerApplication | null;
+  hasSellerInfo: boolean;
 }
 
 export abstract class BaseSellerApplicationService extends BaseApiService {
@@ -70,8 +81,8 @@ export abstract class BaseSellerApplicationService extends BaseApiService {
   /**
    * 내 신청 상태 조회
    */
-  async getMyApplicationStatus(): Promise<ApiResponse<MyApplicationStatusResponse>> {
-    return this.request<ApiResponse<MyApplicationStatusResponse>>('/api/seller/application-status');
+  async getMyApplicationStatus(): Promise<ApiResponse<SellerApplication | null>> {
+    return this.request<ApiResponse<SellerApplication | null>>('/api/seller/info');
   }
 
   /**

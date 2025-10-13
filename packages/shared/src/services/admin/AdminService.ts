@@ -1,5 +1,5 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { ApiResponse } from '../../types';
+import { ApiResponse, SellerApplication } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
 // 어드민 전용 사용자 타입
@@ -92,26 +92,7 @@ export interface AdminDashboardData {
   }>;
 }
 
-// 판매자 신청 관련 타입
-export interface SellerApplication {
-  sellerInfoId: string;
-  userId: string;
-  brandName: string;
-  representativeName?: string;
-  businessNumber: string;
-  businessType?: string;
-  businessCategory?: string;
-  contactEmail: string;
-  contactPhone: string;
-  status: 'pending' | 'approved' | 'rejected';
-  hasVerificationDocuments: boolean;
-  documentsCount: number;
-  createdAt: string;
-  updatedAt: string;
-  rejectionReason?: string;
-  rejectedAt?: string;
-  approvedAt?: string;
-}
+// SellerApplication은 types/index.ts에서 import
 
 export interface SellerApplicationDetail extends SellerApplication {
   address: {
