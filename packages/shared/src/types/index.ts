@@ -1,5 +1,6 @@
 // API Response Types
 export interface ApiResponse<T = any> {
+  success?: boolean;
   message?: string;
   data?: T;
   error?: string;
@@ -177,9 +178,15 @@ export interface Product {
   description: string;
   shortDescription?: string;
   brand?: string;
+  category?: string;              // 카테고리 속성 추가
   sku?: string;
   price: number;
   salePrice?: number;
+  sale?: {                        // sale 속성 추가
+    isOnSale: boolean;
+    salePrice?: number;
+    originalPrice: number;
+  };
   discountRate?: number | null;
   discountedPrice: number;
   hasDiscount?: boolean;
@@ -324,6 +331,7 @@ export interface CartItem {
   product: Product;
   variant?: ProductVariant;
   options?: Record<string, string>;
+  selectedOptions?: Record<string, string>;  // 선택된 옵션들
   quantity: number;
   price: number;
   subtotal: number;
@@ -456,6 +464,11 @@ export interface Cart {
   summary?: CartSummary;
   // 기존 정보 (하위 호환성)
   totals: CartTotals;
+  totalItems: number;             // 총 아이템 수
+  totalPrice: number;             // 총 가격
+  totalDiscount?: number;         // 총 할인 금액
+  shippingCost: number;           // 배송비
+  finalPrice: number;             // 최종 가격
   updatedAt: string;
 }
 
