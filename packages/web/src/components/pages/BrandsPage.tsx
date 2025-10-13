@@ -1,115 +1,160 @@
+import React from 'react';
 import { products } from '../../data';
 import { ProductCard } from '../product/ProductCard';
+import { Stars } from '../ui';
+import { FaHeart, FaArrowUp } from 'react-icons/fa';
 
 export function BrandsPage({
   onGo,
   onOpen,
   onAdd,
+  onLike,
+  likedProducts = []
 }: {
   onGo: (to: string) => void;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
+  onLike?: (id: string) => void;
+  likedProducts?: string[];
 }) {
-  // 상단 필터 탭(스냅샷 느낌의 칩들)
-  const tabs = [
-    { label: "브랜드 랭킹", key: "rank" },
-    { label: "장바구니 BEST", key: "cartbest" },
-    { label: "핸디 추천 PICK", key: "pick" },
-    { label: "핸서 태그", key: "tag" },
-    { label: "신상 특집", key: "new" },
-  ];
-  const url = new URL(window.location.href);
-  const tab = url.searchParams.get("tab") ?? "rank";
+  // 탭 기능 제거
 
-  const TabChip = ({ label, active, to }: { label: string; active?: boolean; to: string }) => (
-    <a
-      href={to}
-      onClick={(e) => {
-        e.preventDefault();
-        onGo(to);
-      }}
-      className={`inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm ${
-        active ? "bg-black text-white border-black" : "bg-white hover:bg-gray-50"
-      }`}
-    >
-      {label}
-    </a>
-  );
+  // 실제 데이터에서 브랜드 추출 및 통계 생성
+  const brandStats = React.useMemo(() => {
+    const brandMap = new Map<string, { products: typeof products[0][], count: number }>();
 
-  // 브랜드 섹션 (샘플로 3개)
-  const brandNames = ["HANDY MADE", "HANDY LAB", "HANDY CARE"] as const;
+    products.forEach(product => {
+      if (product.brand) {
+        if (!brandMap.has(product.brand)) {
+          brandMap.set(product.brand, { products: [], count: 0 });
+        }
+        const brandData = brandMap.get(product.brand)!;
+        brandData.products.push(product);
+        brandData.count++;
+      }
+    });
+
+    return Array.from(brandMap.entries())
+      .map(([name, data]) => ({
+        name,
+        products: data.products,
+        count: data.count,
+        totalLikes: data.products.reduce((sum, p) => sum + (p.likesCount || 0), 0),
+        avgRating: data.products.reduce((sum, p) => sum + (p.rating?.average || 0), 0) / data.products.length,
+        isHot: data.count >= 2 || data.totalLikes > 50
+      }))
+      .sort((a, b) => b.count - a.count); // 상품 수가 많은 브랜드 먼저
+  }, []);
+
   const byBrand = (name: string) => products.filter((p) => p.brand === name);
 
-  const BrandRow = ({ name }: { name: string }) => {
-    const items = byBrand(name);
-    if (items.length === 0) return null;
+  // 브랜드 카드 컴포넌트
+  const BrandCard = ({ brand }: { brand: typeof brandStats[0] }) => (
+    <div className="rounded-lg border bg-white p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <span className="text-lg font-bold text-gray-600">
+              {brand.name.charAt(0)}
+            </span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm">{brand.name}</h3>
+            <p className="text-xs text-gray-500">{brand.count}개 상품</p>
+          </div>
+        </div>
+        {brand.isHot && (
+          <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-600 font-medium">
+            HOT
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+        <div className="flex items-center gap-1">
+          <Stars v={brand.avgRating} />
+          <span className="text-sm font-medium">{brand.avgRating.toFixed(1)}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <FaHeart className="text-red-500 w-3 h-3" />
+          <span>{brand.totalLikes}</span>
+        </div>
+      </div>
+
+      <button
+        onClick={() => onGo(`/brand/${encodeURIComponent(brand.name)}`)}
+        className="w-full rounded-md bg-gray-900 text-white py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+      >
+        브랜드 보기
+      </button>
+    </div>
+  );
+
+  const BrandRow = ({ brand }: { brand: typeof brandStats[0] }) => {
     return (
       <section className="mt-6">
         <div className="mb-2 flex items-end justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-[15px] font-semibold">{name}</div>
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">핫딜</span>
+            <div className="text-[15px] font-semibold">{brand.name}</div>
+            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+              {brand.count}개
+            </span>
+            {brand.isHot && (
+              <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-600">HOT</span>
+            )}
           </div>
-          <a
-            href={`/brand/${encodeURIComponent(name)}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onGo(`/brand/${encodeURIComponent(name)}`);
-            }}
+          <button
+            onClick={() => onGo(`/brand/${encodeURIComponent(brand.name)}`)}
             className="text-xs text-blue-600 hover:underline"
           >
             브랜드 프로필
-          </a>
+          </button>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {items.map((p) => (
-            <div key={p.id} className="snap-start">
-              <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} />
-            </div>
-          ))}
+        <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto pb-2">
+          {brand.products.map((p) => {
+            const productId = p.id || p.productUuid;
+            return (
+              <div key={p.id || p.productId} className="md:snap-start">
+                <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+              </div>
+            );
+          })}
         </div>
       </section>
     );
   };
 
-  // 정렬/기간(우측 드롭다운처럼 보이는 버튼)
-  const DropBtn = ({ label }: { label: string }) => (
-    <button className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-sm bg-white hover:bg-gray-50">
-      {label}
-      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5">
-        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </button>
-  );
 
   return (
     <div className="relative">
       <div className="mx-auto max-w-7xl px-4 py-5">
-        {/* 필터 칩들 */}
-        <div className="flex flex-wrap items-center gap-2">
-          {tabs.map((t) => (
-            <TabChip key={t.key} label={t.label} active={tab === t.key} to={`/brands?tab=${t.key}`} />
-          ))}
-        </div>
-
-        {/* 상단 보조 바: 업데이트/정렬 */}
-        <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
-          <div>13시간 전</div>
-          <div className="flex items-center gap-2">
-            <DropBtn label="최근 1일" />
-            <DropBtn label="관심순" />
+        {/* 브랜드 그리드 뷰 */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold mb-4">등록된 브랜드</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {brandStats.map((brand) => (
+              <BrandCard key={brand.name} brand={brand} />
+            ))}
           </div>
         </div>
 
-        {/* 브랜드 묶음 섹션들 */}
-        {brandNames.map((name) => (
-          <BrandRow key={name} name={name} />
-        ))}
+        {/* 브랜드별 상품 섹션 */}
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-4">브랜드별 상품</h2>
+          {brandStats.map((brand) => (
+            <BrandRow key={brand.name} brand={brand} />
+          ))}
+        </div>
       </div>
 
       {/* 우측 플로팅 버튼 */}
       <div className="fixed right-6 bottom-6 flex flex-col items-center gap-3">
-        <button className="h-12 w-12 rounded-full bg-white border text-xl leading-none">⬆</button>
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="h-12 w-12 rounded-full bg-white border shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
+        >
+          <FaArrowUp className="text-lg" />
+        </button>
         <button className="h-10 px-4 rounded-full bg-white border text-sm">전체</button>
       </div>
     </div>

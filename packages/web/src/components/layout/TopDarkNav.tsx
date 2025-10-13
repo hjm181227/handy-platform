@@ -38,32 +38,31 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
   return (
     <div className="hidden md:block bg-[#161616] text-white text-xs">
       <div className="mx-auto max-w-7xl h-8 flex items-center justify-between px-4">
-        <button onClick={onOpenCategories} className="flex items-center gap-2 text-white hover:opacity-90">
+        <button onClick={onOpenCategories} className="flex items-center gap-2 text-white">
           <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/></svg>
           <span className="font-semibold tracking-wide">Categories</span>
         </button>
 
         <nav className="hidden lg:flex items-center gap-4">
           {items.map(x=>(
-            <a
+            <button
               key={x.label}
-              href={x.to}
-              onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
-              className="text-white hover:opacity-80"
+              onClick={() => onGo(x.to)}
+              className="text-white"
             >
               {x.label}
-            </a>
+            </button>
           ))}
         </nav>
 
         <div className="flex items-center gap-3">
-          <a href="/help"  onClick={(e)=>{e.preventDefault(); onGo("/help");}}  className="text-white hover:opacity-80">Help</a>
-          <a href="/my"    onClick={(e)=>{e.preventDefault(); onGo("/my");}}    className="text-white hover:opacity-80">My</a>
-          <a href="/likes" onClick={(e)=>{e.preventDefault(); onGo("/likes");}} className="text-white hover:opacity-80">Likes</a>
+          <button onClick={() => onGo("/help")} className="text-white">Help</button>
+          <button onClick={() => onGo("/my")} className="text-white">My</button>
+          <button onClick={() => onGo("/likes")} className="text-white">Likes</button>
           {!isLoggedIn && (
             <>
-              <a href="/login" onClick={(e)=>{e.preventDefault(); onGo("/login");}} className="text-white hover:opacity-80">Login</a>
-              <a href="/signup"onClick={(e)=>{e.preventDefault(); onGo("/signup");}}className="text-white hover:opacity-80">Sign up</a>
+              <button onClick={() => onGo("/login")} className="text-white">Login</button>
+              <button onClick={() => onGo("/signup")} className="text-white">Sign up</button>
             </>
           )}
         </div>

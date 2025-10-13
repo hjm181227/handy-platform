@@ -1,5 +1,6 @@
 
 import { ReactNode, useEffect, useRef, useState, useCallback } from 'react';
+import { IoMdStar, IoMdStarOutline, IoMdStarHalf } from 'react-icons/io';
 
 export function Badge({ children, tone="black" }: { children: ReactNode; tone?: "black"|"red"|"blue" }) {
   const m = { black: "bg-black text-white", red: "bg-red-500 text-white", blue: "bg-blue-600 text-white" } as const;
@@ -7,15 +8,19 @@ export function Badge({ children, tone="black" }: { children: ReactNode; tone?: 
 }
 
 export function Stars({ v=0 }: { v?: number }) {
-  const full = Math.floor(v); 
+  const full = Math.floor(v);
   const half = v - full >= 0.5;
   return (
     <div className="flex items-center gap-0.5">
-      {Array.from({length:5}).map((_,i)=>(
-        <svg key={i} viewBox="0 0 24 24" className={`h-3.5 w-3.5 ${i<full? "fill-yellow-400 stroke-yellow-400": i===full&&half? "fill-yellow-300 stroke-yellow-300":"fill-transparent stroke-gray-300"}`} strokeWidth="1.5">
-          <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27Z"/>
-        </svg>
-      ))}
+      {Array.from({length:5}).map((_,i)=>{
+        if (i < full) {
+          return <IoMdStar key={i} className="w-4 h-4 text-yellow-400" />;
+        } else if (i === full && half) {
+          return <IoMdStarHalf key={i} className="w-4 h-4 text-yellow-400" />;
+        } else {
+          return <IoMdStarOutline key={i} className="w-4 h-4 text-gray-300" />;
+        }
+      })}
     </div>
   );
 }

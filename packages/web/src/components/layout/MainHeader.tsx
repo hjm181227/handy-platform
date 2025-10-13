@@ -4,17 +4,21 @@ import { webApiService } from '../../services/apiService';
 import type { User } from '@handy-platform/shared';
 import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
 import { Logo } from '../common/Logo';
+import { IoPersonCircleOutline } from 'react-icons/io5';
+import { FiShoppingBag } from 'react-icons/fi';
 
 export function MainHeader({
   cartCount,
   onCart,
   onGo,
+  currentPath,
   onAuthStateChange,
   authLoading = false
 }: {
   cartCount:number;
   onCart:()=>void;
   onGo:(to:string)=>void;
+  currentPath?: string;
   onAuthStateChange?: (user: User | null) => void;
   authLoading?: boolean;
 }) {
@@ -27,13 +31,33 @@ export function MainHeader({
   const searchRef = useRef<HTMLDivElement>(null);
   const gnb = [
     {label:"랭킹", to:"/ranking"},
-    {label:"세일", to:"/sale"},
     {label:"브랜드", to:"/brands"},
-    {label:"추천", to:"/recommend"},
     {label:"신상", to:"/new"},
-    {label:"트렌드", to:"/trend"},
+    {label:"추천", to:"/recommend"},
+    {label:"이벤트", to:"/event"},
     {label:"판매자센터", to:"/seller"},
   ];
+
+  // 활성화 상태 판단 함수
+  const isActive = (menuPath: string) => {
+    if (!currentPath) return false;
+    if (menuPath === '/') return currentPath === '/';
+    return currentPath.startsWith(menuPath);
+  };
+
+  // 링크 클래스명 생성 함수
+  const getLinkClassName = (menuPath: string, isMobile = false) => {
+    const baseClass = isMobile
+      ? "text-sm whitespace-nowrap py-1 no-underline"
+      : "no-underline";
+
+    const activeClass = isActive(menuPath)
+      ? "font-bold text-black"
+      : "text-gray-700 hover:font-bold hover:no-underline";
+
+    return `${baseClass} ${activeClass}`.trim();
+  };
+
   // 최근 검색어 로드
   const loadRecentSearches = () => {
     try {
@@ -96,7 +120,7 @@ export function MainHeader({
     if (!authLoading) {
       getCurrentUser();
     }
-    
+
     loadRecentSearches();
   }, [authLoading]);
 
@@ -159,7 +183,8 @@ export function MainHeader({
 
   const handleSearchInputChange = (value: string) => {
     setQ(value);
-    if (value.trim() && !showSearchSuggestions) {
+    // 검색어가 있거나 포커스 상태일 때 제안 표시
+    if (!showSearchSuggestions) {
       setShowSearchSuggestions(true);
     }
   };
@@ -219,16 +244,18 @@ export function MainHeader({
             </a>
           </div>
 
-          <div className="justify-self-center w-full max-w-2xl">
-            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-gray-100 px-3 py-2 focus-within:border-gray-500 focus-within:bg-white transition-all">
-              <SearchIcon size={16} color="#666" />
+          <div className="justify-self-center w-full max-w-2xl relative" ref={searchRef}>
+            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 transition-all">
+              <button onClick={handleSearchInputFocus} className="flex items-center">
+                <SearchIcon size={16} color="#666" />
+              </button>
               <input
                 value={q}
                 onChange={e=>handleSearchInputChange(e.target.value)}
                 onFocus={handleSearchInputFocus}
                 onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                 placeholder="검색어를 입력하세요"
-                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700"
+                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700 focus:border-transparent focus:shadow-none"
               />
               {q && (
                 <button
@@ -290,7 +317,7 @@ export function MainHeader({
                 <div className="p-3">
                   <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
                   <div className="space-y-1">
-                    {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일'].map((keyword, index) => (
+                    {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일', '네일스티커', '베이스코트', '탑코트', '글리터', '홀로그램'].map((keyword, index) => (
                       <button
                         key={index}
                         onClick={() => handleRecentSearchClick(keyword)}
@@ -428,9 +455,7 @@ export function MainHeader({
               className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors relative"
             >
               <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h8a2 2 0 002-2v-8" />
-                </svg>
+                <FiShoppingBag className="w-4 h-4" />
                 <span className="hidden sm:inline">장바구니</span>
                 {cartCount > 0 && (
                   <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
@@ -445,7 +470,14 @@ export function MainHeader({
         <div className="mx-auto max-w-7xl px-4 overflow-x-auto">
           <div className="flex gap-4 py-2 text-sm whitespace-nowrap">
             {gnb.map(x=>(
-              <a key={x.label} href={x.to} onClick={(e)=>{e.preventDefault(); onGo(x.to);}} className="text-gray-700 hover:text-black">{x.label}</a>
+              <a
+                key={x.label}
+                href={x.to}
+                onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
+                className={getLinkClassName(x.to)}
+              >
+                {x.label}
+              </a>
             ))}
           </div>
         </div>
@@ -549,9 +581,7 @@ export function MainHeader({
                 onClick={handleLogin}
                 className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <IoPersonCircleOutline className="w-6 h-6" />
               </button>
             )}
 
@@ -560,9 +590,7 @@ export function MainHeader({
               onClick={onCart}
               className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors relative"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h8a2 2 0 002-2v-8" />
-              </svg>
+              <FiShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                   {cartCount > 99 ? '99+' : cartCount}
@@ -590,17 +618,19 @@ export function MainHeader({
 
         {/* 검색바 */}
         <div className="px-4 pb-3 relative">
-          <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-gray-50">
-            <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
-              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
-            </svg>
+          <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-white">
+            <button onClick={handleSearchInputFocus} className="flex items-center">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
+              </svg>
+            </button>
             <input
               value={q}
               onChange={e=>handleSearchInputChange(e.target.value)}
               onFocus={handleSearchInputFocus}
               onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
               placeholder="검색어를 입력하세요"
-              className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent"
+              className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent focus:border-transparent focus:shadow-none"
             />
             {q && (
               <button
@@ -661,7 +691,7 @@ export function MainHeader({
               <div className="p-3">
                 <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
                 <div className="flex flex-wrap gap-2">
-                  {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일'].map((keyword, index) => (
+                  {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일', '네일스티커', '베이스코트', '탑코트'].map((keyword, index) => (
                     <button
                       key={index}
                       onClick={() => handleRecentSearchClick(keyword)}
@@ -698,7 +728,7 @@ export function MainHeader({
                 key={x.label}
                 href={x.to}
                 onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
-                className="text-sm text-gray-700 hover:text-black whitespace-nowrap py-1 border-b-2 border-transparent hover:border-gray-300"
+                className={getLinkClassName(x.to, true)}
               >
                 {x.label}
               </a>

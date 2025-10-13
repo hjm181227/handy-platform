@@ -3,6 +3,9 @@ import { Product, User } from '@handy-platform/shared';
 import { productService, cartService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
+import { Stars } from '../ui';
+import { IoMdStar } from 'react-icons/io';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
 
 export function Detail({
   id,
@@ -238,7 +241,10 @@ export function Detail({
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-4 pb-4 border-b">
-              <div className="text-2xl font-bold">⭐ {p.rating.average.toFixed(1)}</div>
+              <div className="flex items-center gap-2">
+                <IoMdStar className="w-8 h-8 text-yellow-400" />
+                <span className="text-2xl font-bold">{p.rating.average.toFixed(1)}</span>
+              </div>
               <div className="text-sm text-gray-600">
                 총 {p.rating.count.toLocaleString()}개의 리뷰
               </div>
@@ -253,7 +259,7 @@ export function Detail({
                 <div key={index} className="border-b pb-4 last:border-b-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-medium text-sm">{review.user}</span>
-                    <span className="text-yellow-400">{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span>
+                    <Stars v={review.rating} />
                     <span className="text-xs text-gray-500">{review.date}</span>
                   </div>
                   <p className="text-sm text-gray-700">{review.comment}</p>
@@ -435,7 +441,10 @@ export function Detail({
 
           {/* 간단 메타 */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>⭐ {p.rating.average.toFixed(1)}</span>
+            <div className="flex items-center gap-1">
+              <IoMdStar className="w-4 h-4 text-yellow-400" />
+              <span>{p.rating.average.toFixed(1)}</span>
+            </div>
             <span className="text-gray-400">|</span>
             <span>리뷰 {p.rating.count.toLocaleString()}개</span>
             <span className="text-gray-400">|</span>
@@ -562,7 +571,10 @@ export function Detail({
 
           {/* 도구 */}
           <div className="flex items-center gap-3 text-sm pt-1">
-            <button onClick={() => setLiked((v) => !v)} className="hover:text-gray-600">{liked ? "♥ 찜됨" : "♡ 찜하기"}</button>
+            <button onClick={() => setLiked((v) => !v)} className="flex items-center gap-1 hover:text-gray-600">
+              {liked ? <FaHeart className="w-4 h-4 text-red-500" /> : <FaRegHeart className="w-4 h-4" />}
+              <span>{liked ? "찜됨" : "찜하기"}</span>
+            </button>
             <button onClick={share} className="hover:text-gray-600">공유</button>
             <button
               onClick={() => { try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "open-sizing", productId: product.id })); } catch {} }}

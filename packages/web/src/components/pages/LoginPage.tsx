@@ -3,6 +3,7 @@ import { webApiService } from '../../services/apiService';
 import { getErrorMessageFromApiError } from '@handy-platform/shared';
 import { initKakaoSdk, executeKakaoLogin, getKakaoUserInfo } from '../../utils/kakaoSdk';
 import { setSocialAuthState, normalizeKakaoUser, getSocialSignupUrl } from '../../utils/socialAuthState';
+import { VscEye, VscEyeClosed } from 'react-icons/vsc';
 
 export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [email, setEmail] = useState("");
@@ -287,7 +288,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             aria-label="비밀번호 표시 전환"
             disabled={loading}
           >
-            {showPw ? "🙈" : "👁️"}
+            {showPw ? <VscEye className="w-5 h-5" /> : <VscEyeClosed className="w-5 h-5" />}
           </button>
         </div>
 

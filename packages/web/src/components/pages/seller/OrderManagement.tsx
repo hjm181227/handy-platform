@@ -73,13 +73,9 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
         sortBy: appliedFilter.sortBy || 'create-desc'
       };
 
-      // 검색 타입에 따라 적절한 파라미터 설정
+      // 검색어가 있으면 search 파라미터에 전달 (주문번호와 상품명 모두 search로 처리)
       if (appliedFilter.searchQuery.trim()) {
-        if (appliedFilter.searchType === 'orderNumber') {
-          searchParams.orderNumber = appliedFilter.searchQuery;
-        } else if (appliedFilter.searchType === 'productName') {
-          searchParams.search = appliedFilter.searchQuery;
-        }
+        searchParams.search = appliedFilter.searchQuery;
       }
 
       const response = await webApiService.seller.getSellerOrders(searchParams);

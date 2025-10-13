@@ -20,6 +20,9 @@ import { Detail } from './components/product/Detail';
 // Page Components
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
 import { BrandsPage } from './components/pages/BrandsPage';
+import { BrandDetailPage } from './components/pages/BrandDetailPage';
+import { RankingPage } from './components/pages/RankingPage';
+import { RecommendPage } from './components/pages/RecommendPage';
 import { SearchResultsPage } from './components/pages/SearchResultsPage';
 import { LoginPage } from './components/pages/LoginPage';
 import { SignupPage } from './components/pages/SignupPage';
@@ -29,25 +32,28 @@ import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 import { CartContent } from './components/cart/CartContent';
 
 // MyPage Components
-import { 
-  OrdersPage, 
-  ShippingPage, 
-  ClaimsPage, 
-  CancelPage, 
-  ReviewsPage, 
-  CouponsPage, 
-  PointsPage, 
-  PaymentsPage 
+import {
+  OrdersPage,
+  ShippingPage,
+  ClaimsPage,
+  CancelPage,
+  ReviewsPage,
+  CouponsPage,
+  PointsPage,
+  PaymentsPage
 } from './components/pages/MyPages';
 
 // Support Components
-import { 
-  ContactPage, 
-  FaqPage, 
-  NotificationsPage, 
+import {
+  ContactPage,
+  FaqPage,
+  NotificationsPage,
   SettingsPage,
-  PromoPage 
+  PromoPage
 } from './components/pages/SupportPages';
+
+// Seller Components
+import { SellerRegistrationPage } from './components/pages/SellerRegistrationPage';
 
 // Checkout and Order Components
 import { CheckoutPage } from './components/pages/CheckoutPage';
@@ -119,7 +125,7 @@ export default function App() {
   const [cartCount, setCartCount] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
-  
+
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
@@ -128,11 +134,14 @@ export default function App() {
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [loadingNewProducts, setLoadingNewProducts] = useState(false);
 
+  // Like state
+  const [likedProducts, setLikedProducts] = useState<string[]>([]);
+
   // Toast 표시 함수
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
     setToastType(type);
-    
+
     // 3초 후 자동 숨김
     setTimeout(() => {
       setToastMessage(null);
@@ -144,9 +153,9 @@ export default function App() {
     try {
       console.log('Loading cart count...');
       const response = await cartService.getCartCount();
-      
+
       console.log('Cart count response:', response);
-      
+
       if (response.success && response.data) {
         setCartCount(response.data.count || 0);
       } else {
@@ -215,18 +224,18 @@ export default function App() {
     const initializeAuth = async () => {
       try {
         setAuthLoading(true);
-        
+
         // WebView 환경에서는 Native 토큰 동기화 먼저 수행
         if ((window as any).ReactNativeWebView) {
           await webApiService.initializeFromNative();
           console.log('✅ Native 토큰 동기화 완료');
         }
-        
+
         // 현재 사용자 정보 복원 시도
         const user = await webApiService.getCurrentUser();
         console.log('🔍 토큰에서 복원된 사용자:', user);
         setCurrentUser(user);
-        
+
       } catch (error) {
         console.warn('⚠️ 인증 상태 초기화 실패:', error);
         setCurrentUser(null);
@@ -254,7 +263,7 @@ export default function App() {
       } else {
         throw new Error('장바구니 추가에 실패했습니다.');
       }
-      
+
       // 성공 피드백
       const message = options ? `옵션과 함께 장바구니에 추가되었습니다` : `장바구니에 추가되었습니다`;
       showToast(message, 'success');
@@ -277,10 +286,10 @@ export default function App() {
     // 체크아웃 페이지로 이동
     nav('/checkout');
     setDrawer(false);
-    
+
     // WebView 환경에서 네이티브 알림
-    try { 
-      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"})); 
+    try {
+      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"}));
     } catch {}
   };
 
@@ -297,29 +306,54 @@ export default function App() {
   const openProduct = (id:string)=> nav(`/product/${id}`);
   const addProduct = (id:string)=> addToCart(id);
 
+  // Like handler
+  const handleLike = (productId: string) => {
+    setLikedProducts(prev => {
+      if (prev.includes(productId)) {
+        // 이미 좋아요한 경우 제거
+        return prev.filter(id => id !== productId);
+      } else {
+        // 좋아요 추가
+        return [...prev, productId];
+      }
+    });
+  };
+
   let screen: React.ReactNode;
-  
-  // DEBUG: 현재 path와 pathname 확인
-  console.log("Current path:", path);
-  console.log("Current pathname:", pathname);
-  console.log("Path changed, triggering re-render");
+
 
   // Product detail
   const mDetail = pathname.match(/^\/product\/(.+)$/);
   if (mDetail) {
-    screen = <Detail 
-      id={decodeURIComponent(mDetail[1])} 
-      onBack={()=>history.back()} 
+    screen = <Detail
+      id={decodeURIComponent(mDetail[1])}
+      onBack={()=>history.back()}
       onAdd={addProduct}
       onCartUpdate={loadCartCount}
       currentUser={currentUser}
     />;
+  } else if (pathname.startsWith("/brand/") && pathname.split("/").length === 3) {
+    // 브랜드 상세 페이지: /brand/{brandName}
+    const brandName = pathname.split("/")[2];
+    screen = (
+      <BrandDetailPage
+        brandName={brandName}
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
+      />
+    );
   } else if (pathname.startsWith("/brands")) {
+    // 브랜드 목록 페이지: /brands
     screen = (
       <BrandsPage
         onGo={nav}
         onOpen={openProduct}
         onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
       />
     );
   } else if (pathname.startsWith("/snap")) {
@@ -334,32 +368,50 @@ export default function App() {
       screen = <NewsPage onGo={nav} onOpenProduct={openProduct} />;
     }
   } else if (pathname.startsWith("/ranking")) {
-    screen = (<><TitleBar title="랭킹"/><ProductGrid title="Top Rated" items={[...products].sort((a,b)=>(b.rating??0)-(a.rating??0))} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (
+      <RankingPage
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
+      />
+    );
   } else if (pathname.startsWith("/sale")) {
-    screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/recommend")) {
-    screen = (<><TitleBar title="추천"/><ProductGrid title="회원님을 위한 추천" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (
+      <RecommendPage
+        currentUser={currentUser}
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
+      />
+    );
   } else if (pathname.startsWith("/new")) {
-    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNew)} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNewProduct)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/trend")) {
-    screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/promo/")) {
     const slug = pathname.split("/").pop();
-    screen = (<><TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전"/><SectionRow title="기획전 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전"/><SectionRow title="기획전 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/cat/")) {
     const parts = pathname.split("/").slice(2).map(decodeURIComponent);
     const [group, name] = parts;
-    screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct}/></>);
+    screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/search")) {
     const keyword = q.get("q") ?? "";
-    screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} />;
+    screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />;
   } else if (pathname.startsWith("/cart")) {
-    screen = <CartContent 
+    screen = <CartContent
       key={pathname} // 페이지 진입할 때마다 새로고침
-      mode="page" 
-      onBack={() => history.back()} 
-      onCheckout={handleCheckout} 
-      onCartUpdate={loadCartCount} 
+      mode="page"
+      onBack={() => history.back()}
+      onCheckout={handleCheckout}
+      onCartUpdate={loadCartCount}
+      currentUser={currentUser}
     />;
   } else if (pathname === "/checkout") {
     screen = <CheckoutPage onGo={nav} />;
@@ -400,6 +452,12 @@ export default function App() {
     screen = <NotificationsPage onGo={nav} />;
   } else if (pathname === "/my/settings") {
     screen = <SettingsPage onGo={nav} />;
+  } else if (pathname === "/seller/register") {
+    screen = <SellerRegistrationPage onGo={nav} />;
+  } else if (pathname === "/support/contact") {
+    screen = <ContactPage onGo={nav} />;
+  } else if (pathname === "/support/faq") {
+    screen = <FaqPage onGo={nav} />;
   } else if (pathname === "/promo/plus") {
     screen = <PromoPage onGo={nav} />;
   } else if (pathname === "/about/회사 소개") {
@@ -435,7 +493,7 @@ export default function App() {
   } else if (pathname.startsWith("/sns/")) {
     const platform = pathname.split("/").pop() || "";
     screen = <SnsPage onGo={nav} platform={platform} />;
-  
+
   // 판매자 센터 라우팅
   } else if (pathname === "/seller") {
     screen = <SellerDashboard onGo={nav} />;
@@ -462,7 +520,7 @@ export default function App() {
     screen = <ProductionManage onGo={nav} />;
   } else if (pathname === "/seller/production/status") {
     screen = <ProductionStatus onGo={nav} />;
-    
+
   // Admin routes
   } else if (pathname.startsWith("/admin")) {
     if (pathname === "/admin" || pathname === "/admin/") {
@@ -500,7 +558,7 @@ export default function App() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">사용자 관리</h3>
                 <p className="text-gray-600 text-sm mb-4">사용자 계정 및 권한을 관리합니다</p>
-                <button 
+                <button
                   onClick={() => nav('/admin/users')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium"
                 >
@@ -523,7 +581,7 @@ export default function App() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">판매자 관리</h3>
                 <p className="text-gray-600 text-sm mb-4">판매자 승인 및 관리를 합니다</p>
-                <button 
+                <button
                   onClick={() => nav('/admin/sellers')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 font-medium"
                 >
@@ -546,7 +604,7 @@ export default function App() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">주문 관리</h3>
                 <p className="text-gray-600 text-sm mb-4">전체 주문을 관리합니다</p>
-                <button 
+                <button
                   onClick={() => nav('/admin/orders')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium"
                 >
@@ -569,7 +627,7 @@ export default function App() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">상품 관리</h3>
                 <p className="text-gray-600 text-sm mb-4">전체 상품을 관리합니다</p>
-                <button 
+                <button
                   onClick={() => nav('/admin/products')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all duration-200 font-medium"
                 >
@@ -582,7 +640,7 @@ export default function App() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">빠른 액세스</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button 
+                <button
                   onClick={() => nav('/admin/users')}
                   className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors group"
                 >
@@ -593,7 +651,7 @@ export default function App() {
                   </div>
                   <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">사용자 목록</span>
                 </button>
-                <button 
+                <button
                   onClick={() => nav('/admin/sellers')}
                   className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-purple-50 hover:border-purple-300 transition-colors group"
                 >
@@ -604,7 +662,7 @@ export default function App() {
                   </div>
                   <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">판매자 관리</span>
                 </button>
-                <button 
+                <button
                   onClick={() => nav('/admin/orders')}
                   className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors group"
                 >
@@ -615,7 +673,7 @@ export default function App() {
                   </div>
                   <span className="text-sm font-medium text-gray-700 group-hover:text-green-700">주문 관리</span>
                 </button>
-                <button 
+                <button
                   onClick={() => nav('/admin/products')}
                   className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 transition-colors group"
                 >
@@ -668,7 +726,7 @@ export default function App() {
           <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">페이지를 찾을 수 없습니다</h1>
             <p className="text-gray-600 mb-4">요청하신 관리자 페이지를 찾을 수 없습니다.</p>
-            <button 
+            <button
               onClick={() => nav('/admin')}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
@@ -693,39 +751,46 @@ export default function App() {
     screen = (
       <>
         <Hero3 onGo={nav}/>
-        <SectionRow 
-          title="신상 제품" 
-          items={newProducts} 
+        <SectionRow
+          title="신상 제품"
+          items={newProducts}
           loading={loadingNewProducts}
-          onOpen={openProduct} 
+          onOpen={openProduct}
           onAdd={addProduct}
+          onLike={handleLike}
+          likedProducts={likedProducts}
         />
-        <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct}/>
-        <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct}/>
+        <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
+        <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
       </>
     );
   }
 
   // 판매자 센터 페이지인지 확인
   const isSellerPage = pathname.startsWith("/seller");
-  
+
   // 어드민 센터 페이지인지 확인
   const isAdminPage = pathname.startsWith("/admin");
+
+  // 홈화면에서는 헤더를 표시, 다른 페이지에서는 숨김
+  const isHomePage = pathname === '/';
+  const shouldShowHeader = !isSellerPage && !isAdminPage;
 
   return (
     <AlertProvider>
       {/* 판매자 센터와 어드민 센터가 아닐 때만 헤더 표시 */}
-      {!isSellerPage && !isAdminPage && (
+      {shouldShowHeader && (
         <>
-          {/* 앱(WebView)에서만 숨길 요소 */}
-          <div data-apphide="true">
+          {/* 홈페이지에서는 헤더 표시, 다른 페이지에서는 앱에서만 숨김 */}
+          <div data-apphide={isHomePage ? "false" : "true"}>
             <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
           </div>
-          <div data-apphide="true">
-            <MainHeader 
-              cartCount={cartCount} 
-              onCart={handleCartClick} 
+          <div data-apphide={isHomePage ? "false" : "true"}>
+            <MainHeader
+              cartCount={cartCount}
+              onCart={handleCartClick}
               onGo={nav}
+              currentPath={pathname}
               onAuthStateChange={setCurrentUser}
               authLoading={authLoading}
             />
@@ -745,6 +810,7 @@ export default function App() {
             onClose={() => setDrawer(false)}
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
+            currentUser={currentUser}
           />
           <CategoryDrawer
             open={catOpen}
@@ -765,12 +831,12 @@ export default function App() {
         `}>
           <div className="flex items-center gap-3">
             <span className="text-xl">
-              {toastType === 'success' ? '✅' : 
-               toastType === 'error' ? '❌' : 
+              {toastType === 'success' ? '✅' :
+               toastType === 'error' ? '❌' :
                'ℹ️'}
             </span>
             {toastMessage}
-            <button 
+            <button
               onClick={() => setToastMessage(null)}
               className="ml-2 text-white/70 hover:text-white"
             >

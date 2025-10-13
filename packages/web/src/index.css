@@ -5,23 +5,23 @@
 /* 힙한 핑크/흰색 테마 글로벌 스타일 */
 :root {
   /* 메인 브랜드 색상 */
-  --color-primary: #ec4899;
-  --color-primary-light: #f9a8d4;
-  --color-primary-dark: #db2777;
-  
+  --color-primary: #374151;
+  --color-primary-light: #9ca3af;
+  --color-primary-dark: #111827;
+
   /* 배경 색상 */
   --color-bg-primary: #ffffff;
-  --color-bg-secondary: #fdf2f8;
-  --color-bg-tertiary: #fce7f3;
-  
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+
   /* 텍스트 색상 */
   --color-text-primary: #171717;
   --color-text-secondary: #525252;
   --color-text-brand: #171717;
-  
+
   /* 보더 색상 */
-  --color-border: #f9a8d4;
-  --color-border-light: #fbcfe8;
+  --color-border: #d1d5db;
+  --color-border-light: #e5e7eb;
 }
 
 /* 기본 스타일 리셋 및 개선 */
@@ -31,7 +31,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'system-ui', sans-serif;
-  background: linear-gradient(135deg, #ffffff 0%, #fdf2f8 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   color: var(--color-text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -93,7 +93,7 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
 }
 
 /* 링크 스타일 */
@@ -112,36 +112,57 @@ a:hover {
 .card {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 15px -3px rgba(236, 72, 153, 0.1);
+  box-shadow: 0 2px 15px -3px rgba(55, 65, 81, 0.1);
   transition: all 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 25px -5px rgba(236, 72, 153, 0.2);
+  box-shadow: 0 4px 25px -5px rgba(55, 65, 81, 0.2);
 }
 
 /* 그라데이션 배경 클래스 */
-.bg-gradient-pink {
-  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+.bg-gradient-gray {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%, #e5e7eb 100%);
 }
 
 .bg-gradient-primary {
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  background: linear-gradient(135deg, #374151 0%, #111827 100%);
 }
 
 /* 애니메이션 */
-@keyframes pulse-pink {
+@keyframes pulse-gray {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.4);
+    box-shadow: 0 0 0 0 rgba(55, 65, 81, 0.4);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(236, 72, 153, 0);
+    box-shadow: 0 0 0 10px rgba(55, 65, 81, 0);
   }
 }
 
-.animate-pulse-pink {
-  animation: pulse-pink 2s infinite;
+.animate-pulse-gray {
+  animation: pulse-gray 2s infinite;
+}
+
+/* WebView 환경에서 앱 전용 요소 숨김 */
+body.webview-mode [data-apphide="true"] {
+  display: none !important;
+}
+
+/* 스크롤바 숨기기 유틸리티 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 부드러운 스크롤 */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }

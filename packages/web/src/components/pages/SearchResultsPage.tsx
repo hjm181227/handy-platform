@@ -7,9 +7,11 @@ interface SearchResultsPageProps {
   searchQuery: string;
   onOpen: (productId: string) => void;
   onAdd: (productId: string) => void;
+  onLike?: (productId: string) => void;
+  likedProducts?: string[];
 }
 
-export function SearchResultsPage({ searchQuery, onOpen, onAdd }: SearchResultsPageProps) {
+export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedProducts = [] }: SearchResultsPageProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -245,11 +247,13 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd }: SearchResultsP
       </div>
       
       {/* 검색 결과 그리드 */}
-      <ProductGrid 
+      <ProductGrid
         title="" // 제목은 이미 TitleBar에서 표시했으므로 빈 문자열
-        items={products} 
-        onOpen={onOpen} 
+        items={products}
+        onOpen={onOpen}
         onAdd={onAdd}
+        onLike={onLike}
+        likedProducts={likedProducts}
       />
 
       {/* 검색 결과가 적을 때 추가 안내 */}

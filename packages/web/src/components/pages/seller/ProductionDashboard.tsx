@@ -13,6 +13,7 @@ interface ProductionDashboardProps {
 }
 
 export function ProductionDashboard({ onGo }: ProductionDashboardProps) {
+  console.log('ProductionDashboard 렌더링됨');
   const { alert, error: showError, resetRetryCounter } = useAlert();
   const [currentCapacity, setCurrentCapacity] = useState<ProductionCapacity | null>(null);
   const [settings, setSettings] = useState<ProductionSettings | null>(null);
@@ -31,6 +32,7 @@ export function ProductionDashboard({ onGo }: ProductionDashboardProps) {
   // 현재 생산 현황 로드
   const loadProductionData = async () => {
     try {
+      console.log('생산 데이터 로드 시작');
       setLoading(true);
       setError('');
 
@@ -39,13 +41,18 @@ export function ProductionDashboard({ onGo }: ProductionDashboardProps) {
         webApiService.production.getProductionSettings()
       ]);
 
+      console.log('capacityResponse:', capacityResponse);
+      console.log('settingsResponse:', settingsResponse);
+
       setCurrentCapacity(capacityResponse.data);
       setSettings(settingsResponse.productionSettings);
+      console.log('데이터 설정 완료');
     } catch (err: any) {
       console.error('생산 데이터 로드 실패:', err);
       setError('생산 현황을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+      console.log('로딩 완료');
     }
   };
 
@@ -279,6 +286,8 @@ export function ProductionDashboard({ onGo }: ProductionDashboardProps) {
 
 
   const utilizationRate = currentCapacity?.utilizationRate || 0;
+
+  console.log('렌더 상태:', { loading, error, currentCapacity, settings });
 
   return (
     <SellerLayout title="생산 관리" onGo={onGo}>

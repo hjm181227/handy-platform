@@ -1,4 +1,55 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { webApiService } from '../../services/apiService';
+import { User } from '@handy-platform/shared';
+
+// 정보 입력 항목 컴포넌트
+const InfoItem = ({
+  label,
+  value,
+  editable = true,
+  type = "text",
+  options,
+  field,
+  isEditing,
+  loading,
+  onChange
+}: {
+  label: string;
+  value: string;
+  editable?: boolean;
+  type?: string;
+  options?: string[];
+  field: string;
+  isEditing: boolean;
+  loading: boolean;
+  onChange: (field: string, value: string) => void;
+}) => (
+  <div className="flex items-center justify-between py-3 border-b">
+    <div className="text-sm text-gray-600 min-w-[80px]">{label}</div>
+    {isEditing && editable ? (
+      type === "select" && options ? (
+        <select
+          value={value}
+          disabled={loading}
+          className="text-sm border rounded px-2 py-1 disabled:bg-gray-100"
+          onChange={(e) => onChange(field, e.target.value)}
+        >
+          {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+      ) : (
+        <input
+          type={type}
+          value={value}
+          disabled={loading}
+          className="text-sm border rounded px-2 py-1 disabled:bg-gray-100"
+          onChange={(e) => onChange(field, e.target.value)}
+        />
+      )
+    ) : (
+      <div className="text-sm font-medium">{value}</div>
+    )}
+  </div>
+);
 
 // 공통 컴포넌트
 const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) => (
@@ -337,88 +388,294 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
 // 회원정보 수정 페이지
 export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   const [userInfo, setUserInfo] = useState({
-    nickname: "speed1",
-    email: "speed1@example.com",
-    phone: "010-1234-5678",
-    birthYear: "1990",
+    name: "",
+    email: "",
+    phone: "",
+    birthYear: "",
     gender: "남성",
-    address: "서울시 강남구 테헤란로 123",
+    address: "",
     marketingConsent: true,
+    avatar: "",
+    membershipLevel: "",
+    points: 0,
+    totalOrders: 0,
+    joinedDate: "",
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    setIsEditing(false);
-    alert("회원정보가 수정되었습니다.");
+  // 페이지 로드 시 사용자 정보 불러오기
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        setInitialLoading(true);
+        setError(null);
+
+        const response = await webApiService.getCurrentUserProfile();
+        console.log('🔍 사용자 프로필 API 응답:', response);
+
+        if (response.user) {
+          const user = response.user;
+          setUserInfo({
+            name: user.name || "",
+            email: user.email || "",
+            phone: user.phone || "",
+            birthYear: "", // API에서 제공하지 않는 필드
+            gender: "남성", // API에서 제공하지 않는 필드
+            address: user.address?.street || "",
+            marketingConsent: true, // 기본값
+            avatar: user.avatar || "",
+            membershipLevel: user.membershipLevel || "",
+            points: user.points?.balance || 0,
+            totalOrders: user.stats?.totalOrders || 0,
+            joinedDate: user.stats?.joinedDate || user.createdAt || "",
+          });
+        }
+      } catch (error: any) {
+        console.error('🚨 사용자 정보 로드 실패:', error);
+        console.error('🚨 에러 상세:', {
+          status: error.status,
+          message: error.message,
+          stack: error.stack
+        });
+
+        let errorMessage = '사용자 정보를 불러오는데 실패했습니다.';
+
+        if (error.status === 401) {
+          errorMessage = '로그인이 만료되었습니다. 다시 로그인해주세요.';
+        } else if (error.status === 403) {
+          errorMessage = '접근 권한이 없습니다.';
+        } else if (error.status >= 500) {
+          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        } else if (!navigator.onLine) {
+          errorMessage = '인터넷 연결을 확인해주세요.';
+        }
+
+        setError(errorMessage);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  const handleSave = async () => {
+    // 입력 검증
+    if (!userInfo.name.trim()) {
+      alert("이름을 입력해주세요.");
+      return;
+    }
+
+    if (!userInfo.phone.trim()) {
+      alert("연락처를 입력해주세요.");
+      return;
+    }
+
+    // 간단한 휴대폰 번호 형식 검증
+    const phoneRegex = /^010-\d{4}-\d{4}$/;
+    if (!phoneRegex.test(userInfo.phone)) {
+      alert("연락처는 010-0000-0000 형식으로 입력해주세요.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 실제 API 호출로 회원정보 수정
+      const updateData: Partial<User> = {
+        name: userInfo.name.trim(),
+        phone: userInfo.phone.trim(),
+        address: userInfo.address ? {
+          street: userInfo.address.trim(),
+          city: "",
+          state: "",
+          zipCode: "",
+          country: "KR"
+        } : undefined
+      };
+
+      const response = await webApiService.updateUserProfile(updateData);
+      console.log('🔍 프로필 업데이트 API 응답:', response);
+
+      if (response.user) {
+        // 서버에서 받은 최신 정보로 업데이트
+        const user = response.user;
+        setUserInfo(prev => ({
+          ...prev,
+          name: user.name || prev.name,
+          phone: user.phone || prev.phone,
+          address: user.address?.street || prev.address,
+          avatar: user.avatar || prev.avatar,
+          membershipLevel: user.membershipLevel || prev.membershipLevel,
+          points: user.points?.balance || prev.points,
+          totalOrders: user.stats?.totalOrders || prev.totalOrders,
+        }));
+      }
+
+      setIsEditing(false);
+      alert("회원정보가 성공적으로 수정되었습니다.");
+    } catch (error: any) {
+      console.error('🚨 회원정보 수정 실패:', error);
+      console.error('🚨 수정 시도 데이터:', updateData);
+      console.error('🚨 에러 상세:', {
+        status: error.status,
+        message: error.message,
+        stack: error.stack
+      });
+
+      let errorMessage = "회원정보 수정에 실패했습니다. 다시 시도해주세요.";
+
+      if (error.status === 401) {
+        errorMessage = "로그인이 만료되었습니다. 다시 로그인해주세요.";
+      } else if (error.status === 400) {
+        errorMessage = error.message || "입력 정보를 확인해주세요.";
+      } else if (error.status === 403) {
+        errorMessage = "수정 권한이 없습니다.";
+      } else if (error.status >= 500) {
+        errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      } else if (!navigator.onLine) {
+        errorMessage = "인터넷 연결을 확인해주세요.";
+      }
+
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const InfoItem = ({ 
-    label, 
-    value, 
-    editable = true, 
-    type = "text",
-    options 
-  }: { 
-    label: string; 
-    value: string; 
-    editable?: boolean; 
-    type?: string;
-    options?: string[];
-  }) => (
-    <div className="flex items-center justify-between py-3 border-b">
-      <div className="text-sm text-gray-600 min-w-[80px]">{label}</div>
-      {isEditing && editable ? (
-        type === "select" && options ? (
-          <select 
-            value={value} 
-            className="text-sm border rounded px-2 py-1"
-            onChange={(e) => setUserInfo(prev => ({ ...prev, [label.toLowerCase()]: e.target.value }))}
-          >
-            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-        ) : (
-          <input 
-            type={type}
-            value={value} 
-            className="text-sm border rounded px-2 py-1"
-            onChange={(e) => setUserInfo(prev => ({ ...prev, [label.toLowerCase()]: e.target.value }))}
-          />
-        )
-      ) : (
-        <div className="text-sm font-medium">{value}</div>
-      )}
-    </div>
-  );
+  const handleInputChange = useCallback((field: string, value: string) => {
+    setUserInfo(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  // 초기 로딩 중
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <BackButton onBack={() => onGo("/my")} title="회원정보 수정" />
+        <div className="p-4 flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-gray-500">사용자 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <BackButton onBack={() => onGo("/my")} title="회원정보 수정" />
+        <div className="p-4 flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <BackButton onBack={() => onGo("/my")} title="회원정보 수정" />
-      
+
       <div className="p-4">
+        {/* 사용자 요약 정보 */}
+        {userInfo.avatar && (
+          <div className="bg-white rounded-lg border mb-4 p-4">
+            <div className="flex items-center gap-4">
+              <img
+                src={userInfo.avatar}
+                alt="프로필 이미지"
+                className="w-16 h-16 rounded-full border"
+              />
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold">{userInfo.name}</h2>
+                <div className="text-sm text-gray-600">
+                  {userInfo.membershipLevel} 등급 • 포인트: {userInfo.points.toLocaleString()}P
+                </div>
+                <div className="text-xs text-gray-500">
+                  총 주문: {userInfo.totalOrders}회
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg border">
           <div className="p-4 border-b flex justify-between items-center">
             <h3 className="font-medium">기본 정보</h3>
             <button
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-              className="text-sm text-blue-600 hover:underline"
+              disabled={loading}
+              className="text-sm text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isEditing ? "저장" : "수정"}
+              {loading ? "저장 중..." : isEditing ? "저장" : "수정"}
             </button>
           </div>
           
           <div className="p-4">
-            <InfoItem label="닉네임" value={userInfo.nickname} />
-            <InfoItem label="이메일" value={userInfo.email} editable={false} />
-            <InfoItem label="연락처" value={userInfo.phone} />
-            <InfoItem label="출생년도" value={userInfo.birthYear} />
-            <InfoItem 
-              label="성별" 
-              value={userInfo.gender} 
-              type="select" 
-              options={["남성", "여성", "선택안함"]}
+            <InfoItem
+              label="이름"
+              value={userInfo.name}
+              field="name"
+              isEditing={isEditing}
+              loading={loading}
+              onChange={handleInputChange}
             />
-            <InfoItem label="주소" value={userInfo.address} />
+            <InfoItem
+              label="이메일"
+              value={userInfo.email}
+              field="email"
+              editable={false}
+              isEditing={isEditing}
+              loading={loading}
+              onChange={handleInputChange}
+            />
+            <InfoItem
+              label="연락처"
+              value={userInfo.phone}
+              field="phone"
+              isEditing={isEditing}
+              loading={loading}
+              onChange={handleInputChange}
+            />
+            <InfoItem
+              label="출생년도"
+              value={userInfo.birthYear}
+              field="birthYear"
+              isEditing={isEditing}
+              loading={loading}
+              onChange={handleInputChange}
+            />
+            <InfoItem
+              label="성별"
+              value={userInfo.gender}
+              field="gender"
+              type="select"
+              options={["남성", "여성", "선택안함"]}
+              isEditing={isEditing}
+              loading={loading}
+              onChange={handleInputChange}
+            />
+            <InfoItem
+              label="주소"
+              value={userInfo.address}
+              field="address"
+              isEditing={isEditing}
+              loading={loading}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
 
@@ -431,7 +688,8 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               <span className="text-sm">마케팅 정보 수신 동의</span>
               <button
                 onClick={() => setUserInfo(prev => ({ ...prev, marketingConsent: !prev.marketingConsent }))}
-                className={`w-12 h-6 rounded-full transition-colors ${
+                disabled={loading}
+                className={`w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
                   userInfo.marketingConsent ? 'bg-blue-600' : 'bg-gray-300'
                 }`}
               >
@@ -444,15 +702,27 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         <div className="mt-6 space-y-3">
-          <button 
+          <button
             onClick={() => alert("비밀번호 변경 페이지로 이동")}
             className="w-full bg-white border rounded-lg p-4 text-left hover:bg-gray-50"
           >
             <div className="font-medium">비밀번호 변경</div>
             <div className="text-sm text-gray-600">계정 보안을 위해 정기적으로 변경하세요</div>
           </button>
-          
-          <button 
+
+          <button
+            onClick={() => {
+              if (confirm("판매자로 전환하시겠습니까? 승인 후 상품 등록 및 판매가 가능합니다.")) {
+                onGo("/seller/register");
+              }
+            }}
+            className="w-full bg-white border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-50"
+          >
+            <div className="font-medium text-blue-600">판매자 전환</div>
+            <div className="text-sm text-gray-600">상품을 판매하고 수익을 창출하세요</div>
+          </button>
+
+          <button
             onClick={() => {
               if (confirm("정말 탈퇴하시겠습니까? 탈퇴 시 모든 데이터가 삭제됩니다.")) {
                 alert("탈퇴 처리가 완료되었습니다.");
