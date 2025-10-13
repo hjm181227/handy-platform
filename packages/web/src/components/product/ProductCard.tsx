@@ -40,7 +40,7 @@ export function ProductCard({
             {p.discountRate && p.discountRate > 0 && <Badge tone="red">할인</Badge>}
           </div>
         </div>
-      </button>
+    </button>
       <div className="mt-2 space-y-0.5">
         <div className="text-[11px] text-gray-500">{p.seller?.name || 'HANDY'}</div>
         <div className="text-[13px] leading-snug h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>

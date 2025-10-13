@@ -1,5 +1,5 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { ApiResponse } from '../../types';
+import { ApiResponse, SellerApplication } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
 // 어드민 전용 사용자 타입
@@ -90,6 +90,67 @@ export interface AdminDashboardData {
       price: number;
     };
   }>;
+}
+
+// SellerApplication은 types/index.ts에서 import
+
+export interface SellerApplicationDetail extends SellerApplication {
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  businessAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  bankAccount: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+  };
+  verificationDocuments: Array<{
+    type: string;
+    url: string;
+    uploadedAt: string;
+  }>;
+  isVerified: boolean;
+  isActive: boolean;
+  commission: number;
+  verificationNote?: string;
+  stats: {
+    totalProducts: number;
+    totalOrders: number;
+    totalRevenue: number;
+    averageRating: number;
+    responseRate: number;
+    fulfillmentRate: number;
+    lastActiveAt: string;
+  };
+}
+
+export interface SellerApplicationListResponse {
+  success: boolean;
+  data: {
+    items: SellerApplication[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+}
+
+export interface SellerApplicationDetailResponse {
+  success: boolean;
+  data: SellerApplicationDetail;
 }
 
 export abstract class BaseAdminService extends BaseApiService {
@@ -258,6 +319,64 @@ export abstract class BaseAdminService extends BaseApiService {
 
   async getProductAnalytics(): Promise<any> {
     return this.request<any>(API_ENDPOINTS.ADMIN.ANALYTICS_PRODUCTS);
+  }
+
+  // === 판매자 신청 관리 ===
+  
+  async getSellerApplications(params: {
+    page?: number;
+    limit?: number;
+    status?: 'pending' | 'approved' | 'rejected';
+    search?: string;
+    sortBy?: 'created' | 'updated' | 'brandName';
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<SellerApplicationListResponse> {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+    
+    const url = `/api/admin/seller-applications?${queryParams.toString()}`;
+    return this.request<SellerApplicationListResponse>(url);
+  }
+
+  async getSellerApplicationDetail(sellerInfoId: string): Promise<SellerApplicationDetailResponse> {
+    return this.request<SellerApplicationDetailResponse>(`/api/admin/seller-applications/${sellerInfoId}`);
+  }
+
+  async approveSellerApplication(
+    sellerInfoId: string, 
+    verificationNote?: string
+  ): Promise<ApiResponse<{
+    sellerInfoId: string;
+    userId: string;
+    status: string;
+    approvedAt: string;
+  }>> {
+    return this.request<ApiResponse<any>>(`/api/admin/seller-applications/${sellerInfoId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ verificationNote }),
+    });
+  }
+
+  async rejectSellerApplication(
+    sellerInfoId: string, 
+    rejectionReason: string,
+    verificationNote?: string
+  ): Promise<ApiResponse<{
+    sellerInfoId: string;
+    userId: string;
+    status: string;
+    rejectionReason: string;
+    rejectedAt: string;
+  }>> {
+    return this.request<ApiResponse<any>>(`/api/admin/seller-applications/${sellerInfoId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason, verificationNote }),
+    });
   }
 }
 

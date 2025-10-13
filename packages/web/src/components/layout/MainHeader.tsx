@@ -12,17 +12,18 @@ export function MainHeader({
   onCart,
   onGo,
   currentPath,
-  onAuthStateChange
+  onAuthStateChange,
+  authLoading = false
 }: {
   cartCount:number;
   onCart:()=>void;
   onGo:(to:string)=>void;
   currentPath?: string;
   onAuthStateChange?: (user: User | null) => void;
+  authLoading?: boolean;
 }) {
   const [q,setQ]=useState("");
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -103,32 +104,38 @@ export function MainHeader({
     }
   };
 
-  // 로그인 상태 확인
-  const checkAuthStatus = async () => {
-    try {
-      const currentUser = await webApiService.getCurrentUser();
-      console.log('Current user from checkAuthStatus:', currentUser);
-      setUser(currentUser);
-      onAuthStateChange?.(currentUser);
-    } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
-      setUser(null);
-      onAuthStateChange?.(null);
-    } finally {
-      setIsLoading(false);
+  // 사용자 상태를 App에서 전달받은 상태와 동기화
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const currentUser = await webApiService.getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.warn('MainHeader: 사용자 정보 조회 실패:', error);
+        setUser(null);
+      }
+    };
+
+    // authLoading이 false가 되면 (인증 초기화 완료) 사용자 정보 동기화
+    if (!authLoading) {
+      getCurrentUser();
     }
-  };
 
-  useEffect(() => {
-    checkAuthStatus();
     loadRecentSearches();
-  }, []);
+  }, [authLoading]);
 
-  // 전역에서 인증 상태 변경을 감지하는 이벤트 리스너
+  // 전역에서 인증 상태 변경을 감지하는 이벤트 리스너 (로그아웃 시에만)
   useEffect(() => {
-    const handleAuthChange = () => {
+    const handleAuthChange = async () => {
       console.log('MainHeader: Auth state change detected');
-      checkAuthStatus();
+      try {
+        const currentUser = await webApiService.getCurrentUser();
+        setUser(currentUser);
+        onAuthStateChange?.(currentUser);
+      } catch (error) {
+        setUser(null);
+        onAuthStateChange?.(null);
+      }
     };
 
     // 커스텀 이벤트로 로그인/로그아웃 상태 변경 감지 (여러 이벤트명 지원)
@@ -139,7 +146,7 @@ export function MainHeader({
       window.removeEventListener('authStateChanged', handleAuthChange);
       window.removeEventListener('auth-state-changed', handleAuthChange);
     };
-  }, []);
+  }, [onAuthStateChange]);
 
   // 외부 클릭 시 메뉴 및 검색 제안 닫기
   useEffect(() => {
@@ -343,7 +350,7 @@ export function MainHeader({
           </div>
 
           <div className="justify-self-end flex items-center gap-3">
-            {isLoading ? (
+            {authLoading ? (
               // 로딩 상태
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
@@ -495,7 +502,7 @@ export function MainHeader({
 
           {/* 액션 버튼들 */}
           <div className="flex items-center gap-2">
-            {isLoading ? (
+            {authLoading ? (
               // 로딩 상태
               <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
             ) : user ? (

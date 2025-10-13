@@ -44,11 +44,11 @@ export class ApiConnectionTester {
     testFn: () => Promise<any>
   ): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const response = await testFn();
       const duration = Date.now() - startTime;
-      
+
       return {
         service,
         method,
@@ -58,7 +58,7 @@ export class ApiConnectionTester {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         service,
         method,
@@ -71,7 +71,7 @@ export class ApiConnectionTester {
 
   async testBasicConnection(): Promise<TestResult[]> {
     console.log('🔌 Testing basic API connection...');
-    
+
     const tests = [
       // 기본 연결 테스트
       this.runTest('connection', 'healthCheck', async () => {
@@ -113,7 +113,7 @@ export class ApiConnectionTester {
     password: string;
   }): Promise<TestResult[]> {
     console.log('🔐 Testing authenticated endpoints...');
-    
+
     if (!credentials) {
       console.log('⚠️ No credentials provided, skipping authenticated tests');
       return [];
@@ -148,31 +148,6 @@ export class ApiConnectionTester {
       // 포인트 잔액 조회
       this.runTest('loyalty', 'getPointsBalance', async () => {
         return await this.apiService.loyalty.getPointsBalance();
-      }),
-    ];
-
-    const results = await Promise.all(tests);
-    this.results.push(...results);
-    return results;
-  }
-
-  async testSellerEndpoints(): Promise<TestResult[]> {
-    console.log('🏪 Testing seller endpoints...');
-
-    const tests = [
-      // 판매자 대시보드
-      this.runTest('seller', 'getSellerDashboard', async () => {
-        return await this.apiService.seller.getSellerDashboard();
-      }),
-
-      // 판매자 상품 목록
-      this.runTest('seller', 'getSellerProducts', async () => {
-        return await this.apiService.seller.getSellerProducts({ limit: 1 });
-      }),
-
-      // 판매자 주문 목록
-      this.runTest('seller', 'getSellerOrders', async () => {
-        return await this.apiService.seller.getSellerOrders({ limit: 1 });
       }),
     ];
 
@@ -225,7 +200,7 @@ export class ApiConnectionTester {
 
   printReport(): void {
     const report = this.generateReport();
-    
+
     console.log('\n📊 API Connection Test Report');
     console.log('='.repeat(50));
     console.log(`🌍 Environment: ${report.environment}`);
@@ -248,7 +223,7 @@ export class ApiConnectionTester {
       const status = result.success ? '✅' : '❌';
       const duration = result.duration ? `(${result.duration}ms)` : '';
       console.log(`  ${index + 1}. ${status} ${result.service}.${result.method} ${duration}`);
-      
+
       if (!result.success && result.error) {
         console.log(`     Error: ${result.error}`);
       }
@@ -270,13 +245,13 @@ export async function runFullApiTest(credentials?: {
   password: string;
 }): Promise<ConnectionTestResults> {
   const tester = new ApiConnectionTester();
-  
+
   await tester.testBasicConnection();
   if (credentials) {
     await tester.testAuthenticatedEndpoints(credentials);
     // await tester.testSellerEndpoints(); // 판매자 계정일 때만
   }
-  
+
   tester.printReport();
   return tester.generateReport();
 }

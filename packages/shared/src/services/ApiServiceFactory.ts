@@ -6,6 +6,7 @@ import { BaseCartService, CartServiceFactory } from './commerce/CartService';
 import { BaseOrderService, OrderServiceFactory } from './commerce/OrderService';
 import { BasePaymentService, PaymentServiceFactory } from './commerce/PaymentService';
 import { BaseSellerService, SellerServiceFactory } from './seller/SellerService';
+import { BaseSellerApplicationService, SellerApplicationServiceFactory } from './seller/SellerApplicationService';
 import { BaseProductionService, ProductionServiceFactory } from './seller/ProductionService';
 import { BaseAdminService, AdminServiceFactory } from './admin/AdminService';
 import { BaseLoyaltyService, LoyaltyServiceFactory } from './loyalty/LoyaltyService';
@@ -24,6 +25,7 @@ export interface IntegratedApiService {
   order: BaseOrderService;
   payment: BasePaymentService;
   seller: BaseSellerService;
+  sellerApplication: BaseSellerApplicationService;
   production: BaseProductionService;
   admin: BaseAdminService;
   loyalty: BaseLoyaltyService;
@@ -49,6 +51,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public order: BaseOrderService;
   public payment: BasePaymentService;
   public seller: BaseSellerService;
+  public sellerApplication: BaseSellerApplicationService;
   public production: BaseProductionService;
   public admin: BaseAdminService;
   public loyalty: BaseLoyaltyService;
@@ -76,6 +79,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.order = OrderServiceFactory.create(baseURL, getAuthHeaders);
     this.payment = PaymentServiceFactory.create(baseURL, getAuthHeaders);
     this.seller = SellerServiceFactory.create(baseURL, getAuthHeaders);
+    this.sellerApplication = SellerApplicationServiceFactory.create(baseURL, getAuthHeaders);
     this.production = ProductionServiceFactory.create(baseURL, getAuthHeaders);
     this.admin = AdminServiceFactory.create(baseURL, getAuthHeaders);
     this.loyalty = LoyaltyServiceFactory.create(baseURL, getAuthHeaders);
@@ -97,6 +101,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'order',
         'payment',
         'seller',
+        'sellerApplication',
         'production',
         'admin',
         'loyalty',
@@ -178,6 +183,7 @@ export type {
   BaseOrderService,
   BasePaymentService,
   BaseSellerService,
+  BaseSellerApplicationService,
   BaseAdminService,
   BaseLoyaltyService,
   BaseImageService,

@@ -32,15 +32,15 @@ import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 import { CartContent } from './components/cart/CartContent';
 
 // MyPage Components
-import { 
-  OrdersPage, 
-  ShippingPage, 
-  ClaimsPage, 
-  CancelPage, 
-  ReviewsPage, 
-  CouponsPage, 
-  PointsPage, 
-  PaymentsPage 
+import {
+  OrdersPage,
+  ShippingPage,
+  ClaimsPage,
+  CancelPage,
+  ReviewsPage,
+  CouponsPage,
+  PointsPage,
+  PaymentsPage
 } from './components/pages/MyPages';
 
 // Support Components
@@ -107,6 +107,11 @@ import {
 // Admin Components
 import AdminLayout from './components/admin/AdminLayout';
 import UserManagement from './components/admin/UserManagement';
+import SellerManagement from './components/admin/SellerManagement';
+import AdminOrderManagement from './components/admin/AdminOrderManagement';
+import AdminProductManagement from './components/admin/AdminProductManagement';
+import SellerApplicationManagement from './components/admin/SellerApplicationManagement';
+import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 export default function App() {
   const { path, nav } = useMiniRouter();
@@ -114,12 +119,13 @@ export default function App() {
 
   // Auth state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Cart state
   const [cartCount, setCartCount] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
-  
+
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
@@ -135,7 +141,7 @@ export default function App() {
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
     setToastType(type);
-    
+
     // 3초 후 자동 숨김
     setTimeout(() => {
       setToastMessage(null);
@@ -147,9 +153,9 @@ export default function App() {
     try {
       console.log('Loading cart count...');
       const response = await cartService.getCartCount();
-      
+
       console.log('Cart count response:', response);
-      
+
       if (response.success && response.data) {
         setCartCount(response.data.count || 0);
       } else {
@@ -213,21 +219,32 @@ export default function App() {
     }
   };
 
-  // Native에서 토큰 초기화 (WebView 환경에서만)
+  // 인증 상태 초기화 (앱 시작 시 토큰 복원)
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        await webApiService.initializeFromNative();
-        console.log('✅ Native 토큰 동기화 완료');
+        setAuthLoading(true);
+
+        // WebView 환경에서는 Native 토큰 동기화 먼저 수행
+        if ((window as any).ReactNativeWebView) {
+          await webApiService.initializeFromNative();
+          console.log('✅ Native 토큰 동기화 완료');
+        }
+
+        // 현재 사용자 정보 복원 시도
+        const user = await webApiService.getCurrentUser();
+        console.log('🔍 토큰에서 복원된 사용자:', user);
+        setCurrentUser(user);
+
       } catch (error) {
-        console.warn('⚠️ Native 토큰 동기화 실패:', error);
+        console.warn('⚠️ 인증 상태 초기화 실패:', error);
+        setCurrentUser(null);
+      } finally {
+        setAuthLoading(false);
       }
     };
 
-    // WebView 환경에서만 실행
-    if ((window as any).ReactNativeWebView) {
-      initializeAuth();
-    }
+    initializeAuth();
   }, []);
 
   // 장바구니에 상품 추가 (로그인된 사용자만)
@@ -246,7 +263,7 @@ export default function App() {
       } else {
         throw new Error('장바구니 추가에 실패했습니다.');
       }
-      
+
       // 성공 피드백
       const message = options ? `옵션과 함께 장바구니에 추가되었습니다` : `장바구니에 추가되었습니다`;
       showToast(message, 'success');
@@ -269,17 +286,18 @@ export default function App() {
     // 체크아웃 페이지로 이동
     nav('/checkout');
     setDrawer(false);
-    
+
     // WebView 환경에서 네이티브 알림
-    try { 
-      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"})); 
+    try {
+      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"}));
     } catch {}
   };
 
   // Routing
   const [pathname, search] = useMemo(()=>{
-    const u = new URL(window.location.href);
-    return [u.pathname, u.search] as const;
+    // path 상태를 직접 파싱하여 pathname과 search 분리
+    const [pathPart, searchPart = ''] = path.split('?');
+    return [pathPart, searchPart ? `?${searchPart}` : ''] as const;
   }, [path]);
 
   const q = useMemo(()=> new URLSearchParams(search), [search]);
@@ -302,14 +320,14 @@ export default function App() {
   };
 
   let screen: React.ReactNode;
-  
+
 
   // Product detail
   const mDetail = pathname.match(/^\/product\/(.+)$/);
   if (mDetail) {
-    screen = <Detail 
-      id={decodeURIComponent(mDetail[1])} 
-      onBack={()=>history.back()} 
+    screen = <Detail
+      id={decodeURIComponent(mDetail[1])}
+      onBack={()=>history.back()}
       onAdd={addProduct}
       onCartUpdate={loadCartCount}
       currentUser={currentUser}
@@ -387,11 +405,11 @@ export default function App() {
     const keyword = q.get("q") ?? "";
     screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />;
   } else if (pathname.startsWith("/cart")) {
-    screen = <CartContent 
+    screen = <CartContent
       key={pathname} // 페이지 진입할 때마다 새로고침
-      mode="page" 
-      onBack={() => history.back()} 
-      onCheckout={handleCheckout} 
+      mode="page"
+      onBack={() => history.back()}
+      onCheckout={handleCheckout}
       onCartUpdate={loadCartCount}
       currentUser={currentUser}
     />;
@@ -475,7 +493,7 @@ export default function App() {
   } else if (pathname.startsWith("/sns/")) {
     const platform = pathname.split("/").pop() || "";
     screen = <SnsPage onGo={nav} platform={platform} />;
-  
+
   // 판매자 센터 라우팅
   } else if (pathname === "/seller") {
     screen = <SellerDashboard onGo={nav} />;
@@ -502,12 +520,12 @@ export default function App() {
     screen = <ProductionManage onGo={nav} />;
   } else if (pathname === "/seller/production/status") {
     screen = <ProductionStatus onGo={nav} />;
-    
+
   // Admin routes
   } else if (pathname.startsWith("/admin")) {
     if (pathname === "/admin" || pathname === "/admin/") {
       screen = (
-        <AdminLayout currentUser={currentUser}>
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <div className="p-6 space-y-6">
             {/* 대시보드 헤더 */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg text-white p-8">
@@ -540,7 +558,7 @@ export default function App() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">사용자 관리</h3>
                 <p className="text-gray-600 text-sm mb-4">사용자 계정 및 권한을 관리합니다</p>
-                <button 
+                <button
                   onClick={() => nav('/admin/users')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium"
                 >
@@ -548,63 +566,72 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group opacity-75">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group">
                 <div className="flex items-center mb-4">
-                  <div className="p-3 bg-purple-100 rounded-lg">
+                  <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
                     <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
                   <div className="ml-auto">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      준비 중
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      활성
                     </span>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">판매자 관리</h3>
-                <p className="text-gray-500 text-sm mb-4">판매자 승인 및 관리를 합니다</p>
-                <button className="w-full px-4 py-2.5 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium">
-                  준비 중
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">판매자 관리</h3>
+                <p className="text-gray-600 text-sm mb-4">판매자 승인 및 관리를 합니다</p>
+                <button
+                  onClick={() => nav('/admin/sellers')}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 font-medium"
+                >
+                  관리하기
                 </button>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group opacity-75">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group">
                 <div className="flex items-center mb-4">
-                  <div className="p-3 bg-green-100 rounded-lg">
+                  <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   </div>
                   <div className="ml-auto">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      준비 중
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      활성
                     </span>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">주문 관리</h3>
-                <p className="text-gray-500 text-sm mb-4">전체 주문을 관리합니다</p>
-                <button className="w-full px-4 py-2.5 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium">
-                  준비 중
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">주문 관리</h3>
+                <p className="text-gray-600 text-sm mb-4">전체 주문을 관리합니다</p>
+                <button
+                  onClick={() => nav('/admin/orders')}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium"
+                >
+                  관리하기
                 </button>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group opacity-75">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group">
                 <div className="flex items-center mb-4">
-                  <div className="p-3 bg-yellow-100 rounded-lg">
+                  <div className="p-3 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
                     <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </div>
                   <div className="ml-auto">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      준비 중
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      활성
                     </span>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">상품 관리</h3>
-                <p className="text-gray-500 text-sm mb-4">전체 상품을 관리합니다</p>
-                <button className="w-full px-4 py-2.5 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium">
-                  준비 중
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">상품 관리</h3>
+                <p className="text-gray-600 text-sm mb-4">전체 상품을 관리합니다</p>
+                <button
+                  onClick={() => nav('/admin/products')}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all duration-200 font-medium"
+                >
+                  관리하기
                 </button>
               </div>
             </div>
@@ -613,7 +640,7 @@ export default function App() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">빠른 액세스</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button 
+                <button
                   onClick={() => nav('/admin/users')}
                   className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors group"
                 >
@@ -624,31 +651,39 @@ export default function App() {
                   </div>
                   <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">사용자 목록</span>
                 </button>
-                <div className="flex items-center p-3 text-left rounded-lg border border-gray-200 opacity-50 cursor-not-allowed">
-                  <div className="p-2 bg-gray-100 rounded-lg mr-3">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <button
+                  onClick={() => nav('/admin/sellers')}
+                  className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-purple-50 hover:border-purple-300 transition-colors group"
+                >
+                  <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 mr-3">
+                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <span className="text-sm font-medium text-gray-400">통계 보기</span>
-                </div>
-                <div className="flex items-center p-3 text-left rounded-lg border border-gray-200 opacity-50 cursor-not-allowed">
-                  <div className="p-2 bg-gray-100 rounded-lg mr-3">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">판매자 관리</span>
+                </button>
+                <button
+                  onClick={() => nav('/admin/orders')}
+                  className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors group"
+                >
+                  <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 mr-3">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   </div>
-                  <span className="text-sm font-medium text-gray-400">시스템 설정</span>
-                </div>
-                <div className="flex items-center p-3 text-left rounded-lg border border-gray-200 opacity-50 cursor-not-allowed">
-                  <div className="p-2 bg-gray-100 rounded-lg mr-3">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-green-700">주문 관리</span>
+                </button>
+                <button
+                  onClick={() => nav('/admin/products')}
+                  className="flex items-center p-3 text-left rounded-lg border border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 transition-colors group"
+                >
+                  <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 mr-3">
+                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </div>
-                  <span className="text-sm font-medium text-gray-400">리포트</span>
-                </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-yellow-700">상품 관리</span>
+                </button>
               </div>
             </div>
           </div>
@@ -656,18 +691,42 @@ export default function App() {
       );
     } else if (pathname === "/admin/users") {
       screen = (
-        <AdminLayout currentUser={currentUser}>
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <UserManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === "/admin/sellers") {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <SellerManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === "/admin/orders") {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <AdminOrderManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === "/admin/products") {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <AdminProductManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === "/admin/seller-applications") {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <SellerApplicationManagement />
         </AdminLayout>
       );
     } else {
       // Admin 404 - redirect to admin dashboard
       screen = (
-        <AdminLayout currentUser={currentUser}>
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">페이지를 찾을 수 없습니다</h1>
             <p className="text-gray-600 mb-4">요청하신 관리자 페이지를 찾을 수 없습니다.</p>
-            <button 
+            <button
               onClick={() => nav('/admin')}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
@@ -679,6 +738,8 @@ export default function App() {
     }
   } else if (pathname.startsWith("/my")) {
     screen = <MyPage onGo={nav} onOpen={openProduct} />;
+  } else if (pathname === "/seller/apply") {
+    screen = <SellerApplicationForm onGo={nav} />;
   } else if (pathname.startsWith("/login")) {
     screen = <LoginPage onGo={nav} />;
   } else if (pathname.startsWith("/auth/social/signup")) {
@@ -707,7 +768,7 @@ export default function App() {
 
   // 판매자 센터 페이지인지 확인
   const isSellerPage = pathname.startsWith("/seller");
-  
+
   // 어드민 센터 페이지인지 확인
   const isAdminPage = pathname.startsWith("/admin");
 
@@ -731,6 +792,7 @@ export default function App() {
               onGo={nav}
               currentPath={pathname}
               onAuthStateChange={setCurrentUser}
+              authLoading={authLoading}
             />
           </div>
         </>
@@ -769,12 +831,12 @@ export default function App() {
         `}>
           <div className="flex items-center gap-3">
             <span className="text-xl">
-              {toastType === 'success' ? '✅' : 
-               toastType === 'error' ? '❌' : 
+              {toastType === 'success' ? '✅' :
+               toastType === 'error' ? '❌' :
                'ℹ️'}
             </span>
             {toastMessage}
-            <button 
+            <button
               onClick={() => setToastMessage(null)}
               className="ml-2 text-white/70 hover:text-white"
             >
