@@ -14,6 +14,7 @@ import { BaseImageService, ImageServiceFactory } from './utils/ImageService';
 import { BaseShippingService, ShippingServiceFactory } from './utils/ShippingService';
 import { BaseQRService, QRServiceFactory } from './utils/QRService';
 import { BaseAddressService, AddressServiceFactory } from './utils/AddressService';
+import { BaseBrandService, createBrandService } from './brand/BrandService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -33,6 +34,7 @@ export interface IntegratedApiService {
   shipping: BaseShippingService;
   qr: BaseQRService;
   address: BaseAddressService;
+  brand: BaseBrandService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -59,6 +61,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public shipping: BaseShippingService;
   public qr: BaseQRService;
   public address: BaseAddressService;
+  public brand: BaseBrandService;
 
   protected baseURL: string;
   protected platform: string;
@@ -87,6 +90,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.shipping = ShippingServiceFactory.create(baseURL, getAuthHeaders);
     this.qr = QRServiceFactory.create(baseURL, getAuthHeaders);
     this.address = AddressServiceFactory.create(baseURL, getAuthHeaders);
+    this.brand = createBrandService(baseURL, getAuthHeaders, platform as 'web' | 'mobile');
   }
 
   getEnvironmentInfo() {
@@ -108,7 +112,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'image',
         'shipping',
         'qr',
-        'address'
+        'address',
+        'brand'
       ],
     };
   }
@@ -174,6 +179,14 @@ export const createSellerService = (
   return SellerServiceFactory.create(baseURL, getAuthHeaders);
 };
 
+export const createBrandServiceFactory = (
+  baseURL: string,
+  getAuthHeaders: () => Promise<Record<string, string>>,
+  platform: 'web' | 'mobile' = 'web'
+): BaseBrandService => {
+  return createBrandService(baseURL, getAuthHeaders, platform);
+};
+
 // 타입 내보내기
 export type {
   BaseAuthService,
@@ -190,4 +203,5 @@ export type {
   BaseShippingService,
   BaseQRService,
   BaseAddressService,
+  BaseBrandService,
 };

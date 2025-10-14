@@ -8,7 +8,7 @@ interface AdminOrder {
   customerName: string;
   customerEmail: string;
   sellerName: string;
-  sellerId: string;
+  sellerUuid: string;
   status: string;
   totalAmount: number;
   itemCount: number;
@@ -79,7 +79,7 @@ const AdminOrderManagement: React.FC = () => {
           customerName: '김고객',
           customerEmail: 'customer@example.com',
           sellerName: '네일아트 스튜디오',
-          sellerId: 'seller1',
+          sellerUuid: 'seller1',
           status: 'shipped',
           totalAmount: 85000,
           itemCount: 2,
@@ -114,7 +114,7 @@ const AdminOrderManagement: React.FC = () => {
           customerName: '이고객',
           customerEmail: 'customer2@example.com',
           sellerName: '뷰티 네일샵',
-          sellerId: 'seller2',
+          sellerUuid: 'seller2',
           status: 'processing',
           totalAmount: 120000,
           itemCount: 3,
@@ -344,7 +344,7 @@ const AdminOrderManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{order.sellerName}</div>
-                      <div className="text-xs text-gray-500">ID: {order.sellerId}</div>
+                      <div className="text-xs text-gray-500">ID: {order.sellerUuid}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">

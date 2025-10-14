@@ -9,7 +9,7 @@ interface AdminProduct {
   price: number;
   category: string;
   brand: string;
-  sellerId: string;
+  sellerUuid: string;
   sellerName: string;
   isActive: boolean;
   isApproved: boolean;
@@ -73,7 +73,7 @@ const AdminProductManagement: React.FC = () => {
           price: 50000,
           category: 'nail-art',
           brand: '네일마스터',
-          sellerId: 'seller1',
+          sellerUuid: 'seller1',
           sellerName: '네일아트 스튜디오',
           isActive: true,
           isApproved: true,
@@ -98,7 +98,7 @@ const AdminProductManagement: React.FC = () => {
           price: 120000,
           category: 'nail-tools',
           brand: '젤네일프로',
-          sellerId: 'seller2',
+          sellerUuid: 'seller2',
           sellerName: '뷰티 네일샵',
           isActive: true,
           isApproved: false,
@@ -123,7 +123,7 @@ const AdminProductManagement: React.FC = () => {
           price: 15000,
           category: 'nail-accessories',
           brand: '네일데코',
-          sellerId: 'seller1',
+          sellerUuid: 'seller1',
           sellerName: '네일아트 스튜디오',
           isActive: false,
           isApproved: true,
@@ -379,7 +379,7 @@ const AdminProductManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{product.sellerName}</div>
-                      <div className="text-xs text-gray-500">ID: {product.sellerId}</div>
+                      <div className="text-xs text-gray-500">ID: {product.sellerUuid}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -529,7 +529,7 @@ const AdminProductManagement: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-500">판매자 ID:</span>
-                    <span className="ml-2 text-gray-900">{selectedProduct.sellerId}</span>
+                    <span className="ml-2 text-gray-900">{selectedProduct.sellerUuid}</span>
                   </div>
                 </div>
               </div>

@@ -106,7 +106,7 @@ export const getApiConfig = (): ApiConfig => {
 };
 
 // API Base URL (편의용) - Vite 환경변수 우선 사용
-export const API_BASE_URL = 
+export const API_BASE_URL =
   (typeof window !== 'undefined' && (globalThis as any).__VITE_API_BASE_URL__) ||
   getApiConfig().baseURL;
 
@@ -321,6 +321,13 @@ export const API_ENDPOINTS = {
   QR: {
     GENERATE: '/api/qr/generate',
     PROCESS: '/api/qr/process',
+  },
+
+  // 브랜드 관리
+  BRANDS: {
+    LIST: '/api/brands/list',                                                    // GET / - 브랜드 목록 조회
+    UPDATE_NAME: (sellerUuid: string) => `/api/brands/${sellerUuid}/name`,  // PUT /:sellerUuid/name - 브랜드명 변경
+    UPDATE_PROFILE: (sellerUuid: string) => `/api/brands/${sellerUuid}/profile`, // PUT /:sellerUuid/profile - 브랜드 프로필 변경
   },
 
   // 배송지 관리 (한국 주소 시스템)

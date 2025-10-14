@@ -139,7 +139,7 @@ export interface NailCategories {
 // 네일 옵션 타입
 export interface NailOptions {
   lengthCustomizable: boolean;    // 길이 커스터마이징 가능 여부
-  shapeCustomizable: boolean;     // 모양 커스터마이징 가능 여부  
+  shapeCustomizable: boolean;     // 모양 커스터마이징 가능 여부
   designCustomizable: boolean;    // 디자인 커스터마이징 가능 여부
 }
 
@@ -226,7 +226,7 @@ export interface ProductsResponse {
     hasPrev: boolean;
   };
   filters: {
-    sellerId: string | null;
+    sellerUuid: string | null;
     search: string | null;
     priceRange: {
       min: number | null;
@@ -280,7 +280,7 @@ export interface UpdateProductRequest extends Partial<CreateProductRequest> {
 export interface ProductFilters {
   page?: string;           // "1", "2", ... (서버에서 string으로 받음)
   limit?: string;          // "12", "20", ... (서버에서 string으로 받음)
-  sellerId?: string;
+  sellerUuid?: string;
   search?: string;         // 텍스트 검색 (제품명, 설명, 태그)
   minPrice?: string;       // 최소 가격 필터
   maxPrice?: string;       // 최대 가격 필터
@@ -291,7 +291,7 @@ export interface ProductFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-// 판매자별 상품 조회 필터 (ProductFilters에서 sellerId 제외) - 서버 API 스펙에 맞게 변경
+// 판매자별 상품 조회 필터 (ProductFilters에서 sellerUuid 제외) - 서버 API 스펙에 맞게 변경
 export interface SellerProductFilters {
   page?: number;                 // 페이지 번호 (기본값: 1) - 서버는 number 타입 요구
   limit?: number;                // 페이지당 항목 수 (기본값: 20)
@@ -379,7 +379,7 @@ export interface SellerApplication {
 
 // 판매자별 배송 정보
 export interface SellerShipping {
-  sellerId: string;
+  sellerUuid: string;
   sellerName: string;
   subtotal: number;
   baseShippingCost: number;
@@ -398,7 +398,7 @@ export interface SellerShipping {
 
 // 판매자별 그룹화된 장바구니 아이템
 export interface CartItemsBySeller {
-  sellerId: string;
+  sellerUuid: string;
   sellerName: string;
   sellerInfo: SellerInfo;
   items: CartItem[];
@@ -437,7 +437,7 @@ export interface CartSummary {
 
 // 제작 용량 경고
 export interface CapacityWarning {
-  sellerId: string;
+  sellerUuid: string;
   sellerName: string;
   currentMonth: string;
   remainingCapacity: number;
@@ -564,10 +564,10 @@ export interface CustomerOrder extends BaseOrder {
     addressDetail?: string;       // 상세주소
     memo?: string;                // 배송메모
   };
-  
+
   // 다중 판매자 배송 정보 - 각 판매자별로 다른 배송 정보를 가질 수 있음
   sellerShippings?: Array<{
-    sellerId: string;             // 판매자 ID
+    sellerUuid: string;           // 판매자 UUID
     sellerName: string;           // 판매자명
     items: OrderItem[];           // 해당 판매자의 상품들
     shipping: ShippingDetails;    // 배송 정보
@@ -582,12 +582,12 @@ export interface SellerOrderItem {
   size?: string;
   quantity: number;
   price: number;
-  
+
   // 주문 시점 스냅샷 정보
   productName: string;
   sellerName: string;
   productImage?: string;
-  
+
   // 상세 조회 시 추가 정보
   options?: Record<string, any>;
   sku?: string;
@@ -649,7 +649,7 @@ export interface Order extends CustomerOrder {}
 
 // Order Group for Seller Management - 판매자별 주문 그룹핑
 export interface SellerOrderGroup {
-  sellerId: string;
+  sellerUuid: string;
   sellerName: string;
   orders: SellerOrder[];
   totalOrders: number;
@@ -993,7 +993,7 @@ export interface SellerRegistration {
 // 판매자 상품 목록 필터 (서버 API 스펙에 맞게 업데이트)
 export interface SellerProductFilters {
   page?: number;                 // 페이지 번호 (기본값: 1)
-  limit?: number;                // 페이지당 항목 수 (기본값: 20)  
+  limit?: number;                // 페이지당 항목 수 (기본값: 20)
   isActive?: boolean;            // 활성 상태별 필터링
   lowStock?: boolean;            // 저재고 제품 필터링 (≤10)
   search?: string;               // 제품명 또는 SKU 검색
@@ -1072,7 +1072,7 @@ export interface SellerOrderAnalytics {
 
 export interface SettlementInfo {
   id: string;
-  sellerId: string;
+  sellerUuid: string;
   period: {
     startDate: string;
     endDate: string;
@@ -1192,7 +1192,7 @@ export interface ProductionSettings {
 }
 
 export interface ProductionCapacity {
-  capacityId: string;               // 생산량 ID (형식: sellerId_year_month)
+  capacityId: string;               // 생산량 ID (형식: sellerUuid_year_month)
   year: number;                     // 년도 (2024-2030)
   month: number;                    // 월 (1-12)
   maxOrders: number;                // 최대 주문 수
@@ -1307,4 +1307,69 @@ export interface ProductionCapacityResponse {
 export interface ProductionHistoryApiResponse {
   success: boolean;
   data: ProductionHistoryResponse;
+}
+
+// ===== BRAND API TYPES =====
+
+// 브랜드 객체 (서버 API에서 반환되는 브랜드 정보)
+export interface Brand {
+  sellerUuid: string;           // 판매자 UUID
+  sellerInfoId: string;         // 판매자 정보 ID (내부 사용)
+  brandName: string;            // 브랜드명
+  brandProfile: string | null;  // 브랜드 프로필 이미지 URL
+  stats: {
+    averageRating: number;      // 평균 평점 (0-5)
+    totalProducts: number;      // 총 상품 수
+    totalOrders: number;        // 총 주문 수
+  };
+  createdAt: string;            // ISO 8601 형식 생성일
+  products?: Product[];         // 상품 목록 (withItems=true일 때만)
+}
+
+// 브랜드 목록 API 응답
+export interface BrandsResponse {
+  brands: Brand[];
+  pagination: PaginationInfo;
+  filters: BrandFilters;
+}
+
+// 브랜드 필터 파라미터
+export interface BrandFilters {
+  withItems: boolean;           // 각 브랜드의 상품 포함 여부
+  itemListNum: number;          // 브랜드별 상품 수
+  search: string | null;        // 브랜드명 검색
+  sortBy: string;              // 정렬 기준
+  sortOrder: string;           // 정렬 순서
+}
+
+// 브랜드 목록 조회 요청 파라미터
+export interface BrandListParams {
+  page?: string;               // 페이지 번호 (기본값: "1")
+  listNum?: string;           // 페이지당 브랜드 수 (기본값: "10")
+  withItems?: boolean;         // 상품 포함 여부 ("true" | "false", 기본값: "false")
+  itemListNum?: string;       // 브랜드별 상품 수 (기본값: "4")
+  search?: string;            // 브랜드명 검색
+  sortBy?: 'brandName' | 'averageRating' | 'totalProducts' | 'totalOrders' | 'createdAt'; // 정렬 기준
+  sortOrder?: 'asc' | 'desc'; // 정렬 순서 (기본값: "desc")
+}
+
+// 브랜드명 변경 요청
+export interface UpdateBrandNameRequest {
+  brandName: string;           // 새로운 브랜드명 (1-200자)
+}
+
+// 브랜드 프로필 이미지 변경 요청
+export interface UpdateBrandProfileRequest {
+  brandProfile: string;        // 브랜드 프로필 이미지 URL
+}
+
+// 브랜드 업데이트 응답
+export interface BrandUpdateResponse {
+  success: boolean;
+  message: string;
+  data: {
+    sellerUuid: string;
+    brandName: string;
+    brandProfile: string | null;
+  };
 }

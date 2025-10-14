@@ -333,11 +333,11 @@ export default function App() {
       currentUser={currentUser}
     />;
   } else if (pathname.startsWith("/brand/") && pathname.split("/").length === 3) {
-    // 브랜드 상세 페이지: /brand/{brandName}
-    const brandName = pathname.split("/")[2];
+    // 브랜드 상세 페이지: /brand/{sellerUuid}
+    const sellerUuid = pathname.split("/")[2];
     screen = (
       <BrandDetailPage
-        brandName={brandName}
+        sellerUuid={sellerUuid}
         onGo={nav}
         onOpen={openProduct}
         onAdd={addProduct}
