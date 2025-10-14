@@ -231,4 +231,4 @@ export const isAuthenticated = () => webApiService.isAuthenticated();
 export const getCurrentUser = () => webApiService.getCurrentUser();
 
 // 타입 내보내기
-export type { IntegratedApiService, User };
+export type { BaseIntegratedApiService as IntegratedApiService, User };
