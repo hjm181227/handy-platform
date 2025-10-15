@@ -32,7 +32,7 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
   const handleMessage = async (event: any) => {
     try {
       const message: WebViewMessage = JSON.parse(event.nativeEvent.data);
-      
+
       switch (message.type) {
         case 'API_CALL':
           await handleApiCall(message.data);
@@ -90,10 +90,10 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
     } catch (error) {
       sendMessageToWebView({
         type: 'API_RESPONSE',
-        data: { 
-          success: false, 
+        data: {
+          success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     }
@@ -157,9 +157,9 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
     } catch (error) {
       sendMessageToWebView({
         type: 'AUTH_RESPONSE',
-        data: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Authentication failed' 
+        data: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Authentication failed'
         },
       });
     }
@@ -191,9 +191,9 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
     } catch (error) {
       sendMessageToWebView({
         type: 'CART_RESPONSE',
-        data: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Cart operation failed' 
+        data: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Cart operation failed'
         },
       });
     }
@@ -264,10 +264,10 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
     } catch (error) {
       sendMessageToWebView({
         type: 'CAMERA_RESPONSE',
-        data: { 
-          success: false, 
+        data: {
+          success: false,
           error: error instanceof Error ? error.message : 'Camera error',
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     }
@@ -276,7 +276,7 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
   const handlePayment = async (data: any) => {
     try {
       let result;
-      
+
       switch (data.method) {
         case 'card':
           // Integrate with payment gateway (e.g., Iamport, Toss Payments)
@@ -304,10 +304,10 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
     } catch (error) {
       sendMessageToWebView({
         type: 'PAYMENT_RESPONSE',
-        data: { 
-          success: false, 
+        data: {
+          success: false,
           error: error instanceof Error ? error.message : 'Payment failed',
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     }
@@ -316,7 +316,7 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
   const handlePermissions = async (data: any) => {
     try {
       let granted = false;
-      
+
       switch (data.type) {
         case 'camera':
           granted = await cameraService.requestCameraPermission();
@@ -333,20 +333,20 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
 
       sendMessageToWebView({
         type: 'PERMISSIONS_RESPONSE',
-        data: { 
-          success: true, 
+        data: {
+          success: true,
           granted,
           type: data.type,
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     } catch (error) {
       sendMessageToWebView({
         type: 'PERMISSIONS_RESPONSE',
-        data: { 
-          success: false, 
+        data: {
+          success: false,
           error: error instanceof Error ? error.message : 'Permission error',
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     }
@@ -576,6 +576,8 @@ const WebViewBridge: React.FC<WebViewBridgeProps> = ({
       domStorageEnabled={true}
       startInLoadingState={true}
       scalesPageToFit={true}
+      mixedContentMode={"compatibility"}
+      originWhitelist={['*']}
       allowsBackForwardNavigationGestures={Platform.OS === 'ios'}
     />
   );

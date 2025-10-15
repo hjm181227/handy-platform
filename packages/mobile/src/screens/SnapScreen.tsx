@@ -1,22 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { getCurrentEnvironment } from '@handy-platform/shared';
+import { View, StyleSheet } from 'react-native';
+import { getWebURL } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
 
 const SnapScreen: React.FC = () => {
-  // 환경별 웹 URL 설정 (스냅 페이지)
-  const getWebURL = () => {
-    const env = getCurrentEnvironment();
-    const baseURL = env === 'development'
-      ? (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003')
-      : (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003');
-    
-    return `${baseURL}/snap`;
+  // 중앙화된 웹 URL 사용 (스냅 페이지)
+  const getSnapPageURL = () => {
+    return `${getWebURL()}/snap`;
   };
 
   return (
     <View style={styles.container}>
-      <WebViewBridge url={getWebURL()} />
+      <WebViewBridge url={getSnapPageURL()} />
     </View>
   );
 };

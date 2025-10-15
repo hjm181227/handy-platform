@@ -9,6 +9,7 @@ import {
   DeviceEventEmitter,
 } from 'react-native';
 import { getCurrentEnvironment } from '@handy-platform/shared';
+import { getWebURL, logWebUrlInfo } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
@@ -18,23 +19,13 @@ const HomeScreen: React.FC = () => {
   const webViewBridgeRef = useRef<WebView>(null);
   const navigation = useNavigation();
   
-  // 환경별 웹 URL 설정
-  const getWebURL = () => {
-    const env = getCurrentEnvironment();
-
-    if (env === 'development') {
-      return Platform.OS === 'android'
-        ? 'http://10.0.2.2:3003' // Android 에뮬레이터용 IP:포트
-        : 'http://localhost:3003'; // iOS 시뮬레이터용
-    } else {
-      // 프로덕션 환경
-      return Platform.OS === 'android'
-        ? 'http://10.0.2.2:3003' // Android 에뮬레이터용 IP:포트
-        : 'http://localhost:3003'; // iOS 시뮬레이터용
-    }
-  };
-
+  // 중앙화된 웹 URL 사용
   const webURL = getWebURL();
+  
+  // 디버깅용 URL 정보 로깅
+  useEffect(() => {
+    logWebUrlInfo();
+  }, []);
 
   // 홈 탭 클릭 이벤트 리스너 - Updated
   useEffect(() => {

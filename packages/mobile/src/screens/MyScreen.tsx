@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentEnvironment } from '@handy-platform/shared';
+import { getWebURL } from '../config/webUrl';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import WebViewBridge from '../components/WebViewBridge';
 import ARCameraScreen from './ARCameraScreen';
@@ -66,13 +67,9 @@ const MyScreen: React.FC = () => {
     }
   };
 
-  const getWebURL = () => {
-    const env = getCurrentEnvironment();
-    const baseURL = env === 'development'
-      ? (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003')
-      : (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003');
-
-    return `${baseURL}/my`;
+  // 중앙화된 웹 URL 사용 (마이페이지)
+  const getMyPageURL = () => {
+    return `${getWebURL()}/my`;
   };
 
   const formatDate = (timestamp: string) => {
@@ -100,7 +97,7 @@ const MyScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <WebViewBridge 
-          url={getWebURL()} 
+          url={getMyPageURL()} 
           onShowNativeFeatures={() => {
             console.log('🟢 [MYSCREEN] 사이즈 측정 버튼으로 네이티브로 전환');
             setShowWebView(false);

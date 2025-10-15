@@ -1,22 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { getCurrentEnvironment } from '@handy-platform/shared';
+import { View, StyleSheet } from 'react-native';
+import { getWebURL } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
 
 const LikeScreen: React.FC = () => {
-  // 환경별 웹 URL 설정 (찜 목록 페이지)
-  const getWebURL = () => {
-    const env = getCurrentEnvironment();
-    const baseURL = env === 'development'
-      ? (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003')
-      : (Platform.OS === 'android' ? 'http://10.0.2.2:3003' : 'http://localhost:3003');
-    
-    return `${baseURL}/likes`;
+  // 중앙화된 웹 URL 사용 (찜 목록 페이지)
+  const getLikesPageURL = () => {
+    return `${getWebURL()}/likes`;
   };
 
   return (
     <View style={styles.container}>
-      <WebViewBridge url={getWebURL()} />
+      <WebViewBridge url={getLikesPageURL()} />
     </View>
   );
 };
