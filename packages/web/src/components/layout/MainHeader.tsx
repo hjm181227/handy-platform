@@ -6,6 +6,7 @@ import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/compone
 import { Logo } from '../common/Logo';
 import { IoPersonCircleOutline } from 'react-icons/io5';
 import { FiShoppingBag } from 'react-icons/fi';
+import { FaSearch, FaTimes } from 'react-icons/fa';
 
 export function MainHeader({
   cartCount,
@@ -245,30 +246,35 @@ export function MainHeader({
           </div>
 
           <div className="justify-self-center w-full max-w-2xl relative" ref={searchRef}>
-            <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 transition-all">
-              <button onClick={handleSearchInputFocus} className="flex items-center">
-                <SearchIcon size={16} color="#666" />
-              </button>
-              <input
-                value={q}
-                onChange={e=>handleSearchInputChange(e.target.value)}
-                onFocus={handleSearchInputFocus}
-                onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
-                placeholder="검색어를 입력하세요"
-                className="w-full text-sm outline-none placeholder:text-gray-500 text-gray-700 focus:border-transparent focus:shadow-none"
-              />
-              {q && (
-                <button
-                  onClick={() => setQ("")}
-                  className="text-gray-400 hover:text-gray-600 p-1"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-              <button onClick={() => submitSearch()} className="text-xs rounded border px-2 py-1 hover:bg-gray-50">Search</button>
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); submitSearch(); }}>
+              <div className="relative">
+                <input
+                  value={q}
+                  onChange={e=>handleSearchInputChange(e.target.value)}
+                  onFocus={handleSearchInputFocus}
+                  onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
+                  placeholder="검색어를 입력하세요"
+                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-gray-700"
+                />
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                  {q && (
+                    <button
+                      type="button"
+                      onClick={() => setQ("")}
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <FaTimes className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <FaSearch className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </form>
 
             {/* 검색 제안 드롭다운 */}
             {showSearchSuggestions && (
@@ -618,31 +624,35 @@ export function MainHeader({
 
         {/* 검색바 */}
         <div className="px-4 pb-3 relative">
-          <div className="flex items-center gap-2 rounded-full border px-4 py-3 bg-white">
-            <button onClick={handleSearchInputFocus} className="flex items-center">
-              <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-gray-500" strokeWidth="2" fill="none">
-                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
-              </svg>
-            </button>
-            <input
-              value={q}
-              onChange={e=>handleSearchInputChange(e.target.value)}
-              onFocus={handleSearchInputFocus}
-              onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
-              placeholder="검색어를 입력하세요"
-              className="w-full text-sm outline-none placeholder:text-gray-400 bg-transparent focus:border-transparent focus:shadow-none"
-            />
-            {q && (
-              <button
-                onClick={() => setQ("")}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
+          <form onSubmit={(e) => { e.preventDefault(); submitSearch(); }}>
+            <div className="relative">
+              <input
+                value={q}
+                onChange={e=>handleSearchInputChange(e.target.value)}
+                onFocus={handleSearchInputFocus}
+                onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
+                placeholder="검색어를 입력하세요"
+                className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-gray-700"
+              />
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                {q && (
+                  <button
+                    type="button"
+                    onClick={() => setQ("")}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <FaTimes className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FaSearch className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </form>
 
           {/* 모바일 검색 제안 드롭다운 */}
           {showSearchSuggestions && (

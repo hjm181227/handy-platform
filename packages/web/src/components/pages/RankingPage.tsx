@@ -86,14 +86,7 @@ export function RankingPage({
   }, [activeFilter]);
 
   const getFilterTitle = () => {
-    switch (activeFilter) {
-      case 'weekly':
-        return '이주의 베스트';
-      case 'monthly':
-        return '이달의 베스트';
-      default:
-        return '평점 기준 인기 상품 랭킹';
-    }
+    return '';
   };
 
   return (

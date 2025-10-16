@@ -308,6 +308,7 @@ export function SnapPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen:
     <div className="mx-auto max-w-4xl px-4 py-6">
       <h1 className="text-2xl font-semibold">SNAP</h1>
       <p className="text-sm text-gray-600">네일 아트 갤러리</p>
+      <div className="mt-4 mb-2 border-t border-black"></div>
       <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({length: 8}).map((_, i) => (
           <div key={i} className="aspect-square rounded-lg bg-gray-100 overflow-hidden">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -32,8 +32,7 @@ interface ARCameraScreenProps {
 }
 
 const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSizes }) => {
-  
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [measuringStep, setMeasuringStep] = useState<'waiting' | 'measuring' | 'complete'>('waiting');
   const [selectedFinger, setSelectedFinger] = useState<string>('엄지');
@@ -41,34 +40,49 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
 
   const fingers = ['엄지', '검지', '중지', '약지', '새끼'];
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      try {
-        const granted = await cameraService.requestCameraPermission();
-        setHasPermission(granted);
-      } catch (error) {
-        console.error('권한 확인 실패:', error);
-        setHasPermission(false);
+  const startMeasurement = async () => {
+    try {
+      // 권한 요청 (사용자가 실제로 측정하려는 시점에)
+      const granted = await cameraService.requestCameraPermission();
+
+      if (!granted) {
+        Alert.alert(
+          '카메라 권한 필요',
+          '손톱 크기를 AR로 정확히 측정하려면 카메라 접근 권한이 필요합니다.\n\n설정에서 권한을 허용해주세요.',
+          [
+            { text: '취소', style: 'cancel' },
+            {
+              text: '설정으로 이동',
+              onPress: () => {
+                import('react-native').then(({ Linking }) => {
+                  Linking.openSettings();
+                });
+              },
+            },
+          ]
+        );
+        return;
       }
-    };
 
-    checkPermissions();
-  }, []);
+      // 권한 허용됨 - 측정 시작
+      setMeasuringStep('measuring');
+      setIsLoading(true);
 
-  const startMeasurement = () => {
-    setMeasuringStep('measuring');
-    setIsLoading(true);
+      // AR 측정 시뮬레이션 (실제로는 ML Kit이나 ARCore/ARKit 사용)
+      setTimeout(() => {
+        // 실제 측정값 시뮬레이션
+        const width = Math.round((Math.random() * 5 + 8) * 10) / 10; // 8.0-13.0mm
+        const length = Math.round((Math.random() * 8 + 15) * 10) / 10; // 15.0-23.0mm
 
-    // AR 측정 시뮬레이션 (실제로는 ML Kit이나 ARCore/ARKit 사용)
-    setTimeout(() => {
-      // 실제 측정값 시뮬레이션
-      const width = Math.round((Math.random() * 5 + 8) * 10) / 10; // 8.0-13.0mm
-      const length = Math.round((Math.random() * 8 + 15) * 10) / 10; // 15.0-23.0mm
-      
-      setCurrentMeasurement({ width, length });
-      setMeasuringStep('complete');
+        setCurrentMeasurement({ width, length });
+        setMeasuringStep('complete');
+        setIsLoading(false);
+      }, 3000);
+    } catch (error) {
+      console.error('측정 시작 실패:', error);
+      Alert.alert('오류', '측정을 시작할 수 없습니다.');
       setIsLoading(false);
-    }, 3000);
+    }
   };
 
   const saveMeasurement = async () => {
@@ -111,29 +125,6 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
       Alert.alert('오류', '측정값 저장에 실패했습니다.');
     }
   };
-
-  if (hasPermission === null) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>카메라 권한 확인 중...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>카메라 권한이 필요합니다</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={onClose}
-        >
-          <Text style={styles.buttonText}>돌아가기</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>

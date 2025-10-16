@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { webApiService } from '../../services/apiService';
+import { webApiService, brandService } from '../../services/apiService';
 import { TitleBar, ProductGrid } from '../product/ProductGrid';
-import type { Product } from '@handy-platform/shared';
+import { Stars } from '../ui';
+import type { Product, Brand } from '@handy-platform/shared';
 
 interface SearchResultsPageProps {
   searchQuery: string;
@@ -12,73 +13,146 @@ interface SearchResultsPageProps {
 }
 
 export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedProducts = [] }: SearchResultsPageProps) {
+  // 상품 검색 상태
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  // 브랜드 검색 상태
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(false);
+
+  // 공통 상태
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
+
+  // 브랜드 카드 컴포넌트 (BrandsPage와 동일)
+  const BrandCard = ({ brand }: { brand: Brand }) => {
+    const isHot = brand.stats.totalProducts >= 5 || brand.stats.totalOrders > 100;
+
+    return (
+      <div className="rounded-lg border bg-white p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+              {brand.brandProfile ? (
+                <img
+                  src={brand.brandProfile}
+                  alt={`${brand.brandName} 브랜드 로고`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-lg font-bold text-gray-600">
+                  {brand.brandName.charAt(0)}
+                </span>
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">{brand.brandName}</h3>
+              <p className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</p>
+            </div>
+          </div>
+          {isHot && (
+            <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-600 font-medium">
+              HOT
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+          <div className="flex items-center gap-1">
+            <Stars v={brand.stats.averageRating} />
+            <span className="text-sm font-medium">{brand.stats.averageRating.toFixed(1)}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-blue-600 font-medium">{brand.stats.totalOrders}</span>
+            <span>주문</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => window.location.href = `/brand/${encodeURIComponent(brand.sellerUuid)}`}
+          className="w-full rounded-md bg-gray-900 text-white py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+        >
+          브랜드 보기
+        </button>
+      </div>
+    );
+  };
 
   // 검색 실행
   const performSearch = async (query: string) => {
     if (!query.trim() && hasSearched) {
-      // 빈 검색어이고 이미 검색한 적이 있다면 그대로 유지
       return;
     }
 
     try {
-      setLoading(true);
       setError(null);
       setHasSearched(true);
 
       console.log('🔍 Performing search with query:', query);
 
-      if (!query.trim()) {
-        // 빈 검색어인 경우 전체 상품 조회
-        const response = await webApiService.product.getProducts({
-          page: '1',
-          limit: '20',
-          sortBy: 'createdAt',
-          sortOrder: 'desc'
-        });
+      // 브랜드와 상품 동시 검색
+      const searchPromises = [];
 
-        console.log('🔍 Search response (all products):', response);
+      // 브랜드 검색
+      setBrandsLoading(true);
+      const brandPromise = query.trim()
+        ? brandService.getBrands({
+            search: query,
+            page: '1',
+            listNum: '6',
+            withItems: false
+          })
+        : Promise.resolve({ brands: [], pagination: null });
+      searchPromises.push(brandPromise);
 
-        if (response.success && response.data) {
-          setProducts(response.data);
-          setTotalCount(response.data.length);
-        } else {
-          setProducts([]);
-          setTotalCount(0);
-        }
+      // 상품 검색
+      setProductsLoading(true);
+      const productPromise = query.trim()
+        ? webApiService.product.searchProducts(query, {
+            page: '1',
+            limit: '20',
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+          })
+        : webApiService.product.getProducts({
+            page: '1',
+            limit: '20',
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+          });
+      searchPromises.push(productPromise);
+
+      const [brandResponse, productResponse] = await Promise.all(searchPromises);
+
+      // 브랜드 결과 처리
+      if (brandResponse.brands) {
+        setBrands(brandResponse.brands);
       } else {
-        // 검색어가 있는 경우 검색 수행
-        const response = await webApiService.product.searchProducts(query, {
-          page: '1',
-          limit: '20',
-          sortBy: 'createdAt',
-          sortOrder: 'desc'
-        });
+        setBrands([]);
+      }
+      setBrandsLoading(false);
 
-        console.log('🔍 Search response:', response);
-
-        if (response.success && response.data) {
-          setProducts(response.data);
-          setTotalCount(response.data.length);
-        } else {
-          // API 응답은 성공했지만 데이터가 없는 경우
-          setProducts([]);
-          setTotalCount(0);
-          
-          if (response.error) {
-            setError(`검색 중 오류가 발생했습니다: ${response.error}`);
-          }
+      // 상품 결과 처리
+      if (productResponse.success && productResponse.data) {
+        setProducts(productResponse.data);
+      } else {
+        setProducts([]);
+        if (productResponse.error) {
+          setError(`검색 중 오류가 발생했습니다: ${productResponse.error}`);
         }
       }
+      setProductsLoading(false);
+
+      console.log('🔍 Search results - Brands:', brandResponse.brands?.length || 0, 'Products:', productResponse.data?.length || 0);
+
     } catch (error: any) {
       console.error('🔍 Search failed:', error);
+      setBrands([]);
       setProducts([]);
-      setTotalCount(0);
-      
+      setBrandsLoading(false);
+      setProductsLoading(false);
+
       // 사용자 친화적 에러 메시지 설정
       if (error.message?.includes('fetch')) {
         setError('네트워크 연결을 확인해주세요.');
@@ -89,8 +163,6 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
       } else {
         setError('검색 중 오류가 발생했습니다.');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -104,8 +176,13 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
     performSearch(searchQuery);
   };
 
+  const loading = brandsLoading || productsLoading;
+  const totalCount = brands.length + products.length;
+  const hasBrands = brands.length > 0;
+  const hasProducts = products.length > 0;
+
   // 로딩 상태
-  if (loading) {
+  if (loading && !hasSearched) {
     return (
       <>
         <TitleBar title={`검색: ${searchQuery || "전체"}`} desc="검색 중..." />
@@ -155,12 +232,12 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
   }
 
   // 빈 결과 상태
-  if (hasSearched && products.length === 0 && !loading && !error) {
+  if (hasSearched && !hasBrands && !hasProducts && !loading) {
     return (
       <>
-        <TitleBar 
-          title={`검색: ${searchQuery || "전체"}`} 
-          desc={searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다` : "등록된 상품이 없습니다"} 
+        <TitleBar
+          title={`검색: ${searchQuery || "전체"}`}
+          desc={searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다` : "등록된 결과가 없습니다"}
         />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center py-12">
@@ -177,7 +254,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
                   <br />다른 키워드로 다시 검색해보세요.
                 </>
               ) : (
-                '등록된 상품이 없습니다.'
+                '등록된 결과가 없습니다.'
               )}
             </p>
             <div className="flex gap-3">
@@ -186,7 +263,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
                   onClick={() => performSearch('')}
                   className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
-                  전체 상품 보기
+                  전체 보기
                 </button>
               )}
               <button
@@ -203,84 +280,126 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
   }
 
   // 검색 결과 표시
-  const resultText = totalCount > 0 
-    ? `${totalCount}개의 결과`
-    : '';
-
-  const titleDesc = searchQuery 
-    ? `'${searchQuery}'에 대한 ${resultText}` 
-    : `전체 상품 ${resultText}`;
+  const titleDesc = searchQuery
+    ? `'${searchQuery}'에 대한 검색 결과`
+    : '전체 결과';
 
   return (
     <>
-      <TitleBar 
-        title={`검색: ${searchQuery || "전체"}`} 
+      <TitleBar
+        title={`검색: ${searchQuery || "전체"}`}
         desc={titleDesc}
       />
-      
-      {/* 검색 결과 정보 */}
-      <div className="container mx-auto px-4 py-4 border-b border-gray-200">
+
+      {/* 검색 결과 요약 */}
+      <div className="mx-auto max-w-7xl px-4 py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm">
             {searchQuery && (
-              <>
-                <span className="font-medium text-gray-900">'{searchQuery}'</span> 검색 결과 
-              </>
+              <span className="text-gray-600">
+                검색어: <span className="font-semibold text-gray-900">'{searchQuery}'</span>
+              </span>
             )}
-            <span className="font-medium text-blue-600">{totalCount}개</span>
-            {searchQuery && totalCount === 0 && (
-              <span className="ml-2 text-gray-500">
-                • 다른 키워드로 검색해보세요
+            <span className="text-gray-600">
+              총 <span className="font-semibold text-blue-600">{totalCount}개</span> 결과
+            </span>
+            {hasBrands && (
+              <span className="text-gray-500">
+                브랜드 <span className="font-medium text-gray-700">{brands.length}개</span>
+              </span>
+            )}
+            {hasProducts && (
+              <span className="text-gray-500">
+                상품 <span className="font-medium text-gray-700">{products.length}개</span>
               </span>
             )}
           </div>
-          
+
           {searchQuery && totalCount > 0 && (
             <button
               onClick={() => performSearch('')}
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
-              전체 상품 보기
+              전체 보기
             </button>
           )}
         </div>
       </div>
-      
-      {/* 검색 결과 그리드 */}
-      <ProductGrid
-        title="" // 제목은 이미 TitleBar에서 표시했으므로 빈 문자열
-        items={products}
-        onOpen={onOpen}
-        onAdd={onAdd}
-        onLike={onLike}
-        likedProducts={likedProducts}
-      />
 
-      {/* 검색 결과가 적을 때 추가 안내 */}
-      {products.length > 0 && products.length < 5 && (
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-blue-50 rounded-lg p-6 text-center">
-            <h4 className="text-lg font-medium text-blue-900 mb-2">더 많은 상품을 찾고 계신가요?</h4>
-            <p className="text-blue-700 mb-4">
-              다양한 키워드로 검색하거나 카테고리를 둘러보세요.
-            </p>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => performSearch('')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-              >
-                전체 상품 보기
-              </button>
-              <button
-                onClick={() => window.location.href = '/brands'}
-                className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-              >
-                브랜드 둘러보기
-              </button>
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        {/* 브랜드 섹션 */}
+        {hasBrands && (
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span>브랜드</span>
+                <span className="text-lg font-medium text-gray-500">({brands.length}개)</span>
+              </h2>
+              {brands.length > 6 && (
+                <button
+                  onClick={() => window.location.href = '/brands'}
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  브랜드 전체 보기 →
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {brands.map((brand) => (
+                <BrandCard key={brand.sellerUuid} brand={brand} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 상품 섹션 */}
+        {hasProducts && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span>상품</span>
+                <span className="text-lg font-medium text-gray-500">({products.length}개)</span>
+              </h2>
+            </div>
+
+            <ProductGrid
+              title=""
+              items={products}
+              onOpen={onOpen}
+              onAdd={onAdd}
+              onLike={onLike}
+              likedProducts={likedProducts}
+            />
+          </section>
+        )}
+
+        {/* 검색 결과가 적을 때 추가 안내 */}
+        {totalCount > 0 && totalCount < 5 && (
+          <div className="mt-8">
+            <div className="bg-blue-50 rounded-lg p-6 text-center">
+              <h4 className="text-lg font-medium text-blue-900 mb-2">더 많은 결과를 찾고 계신가요?</h4>
+              <p className="text-blue-700 mb-4">
+                다양한 키워드로 검색하거나 카테고리를 둘러보세요.
+              </p>
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => performSearch('')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  전체 보기
+                </button>
+                <button
+                  onClick={() => window.location.href = '/brands'}
+                  className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                >
+                  브랜드 둘러보기
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

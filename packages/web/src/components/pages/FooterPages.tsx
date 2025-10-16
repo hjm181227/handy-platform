@@ -1,3 +1,6 @@
+import React from 'react';
+import { PrivacyPolicy, TermsOfService } from './PolicyPages';
+
 // 공통 컴포넌트
 const PageLayout = ({ 
   title, 
@@ -238,32 +241,17 @@ export function PartnerInquiryPage({ onGo, type }: { onGo: (to: string) => void;
 
 // 정책 페이지들
 export function PolicyPage({ onGo, type }: { onGo: (to: string) => void; type: string }) {
+  // 개인정보처리방침과 이용약관은 상세 컴포넌트 사용
+  if (type === 'privacy') {
+    return <PrivacyPolicy onClose={() => onGo("/")} />;
+  }
+
+  if (type === 'terms') {
+    return <TermsOfService onClose={() => onGo("/")} />;
+  }
+
+  // 나머지 정책들은 기존 방식 유지
   const contents: { [key: string]: { title: string; content: string } } = {
-    privacy: {
-      title: "개인정보처리방침",
-      content: `
-1. 개인정보의 처리 목적
-에르모세아르('핸디')는 다음의 목적을 위하여 개인정보를 처리하고 있으며, 다음의 목적 이외의 용도로는 이용하지 않습니다.
-- 고객 가입의사 확인, 고객에 대한 서비스 제공에 따른 본인 식별·인증, 회원자격 유지·관리
-- 물품 또는 서비스 공급에 따른 금액 결제, 물품 또는 서비스의 공급·배송 등
-
-2. 개인정보의 처리 및 보유 기간
-① 에르모세아르는 정보주체로부터 개인정보를 수집할 때 동의받은 개인정보 보유·이용기간 또는 법령에 따른 개인정보 보유·이용기간 내에서 개인정보를 처리·보유합니다.
-
-3. 개인정보의 제3자 제공
-① 에르모세아르는 정보주체의 동의, 법률의 특별한 규정 등 개인정보 보호법 제17조 및 제18조에 해당하는 경우에만 개인정보를 제3자에게 제공합니다.
-      `
-    },
-    terms: {
-      title: "이용약관",
-      content: `
-제1조 (목적)
-이 약관은 에르모세아르(전자상거래 사업자)가 운영하는 핸디 쇼핑몰(이하 "몰"이라 한다)에서 제공하는 인터넷 관련 서비스(이하 "서비스"라 한다)를 이용함에 있어 사이버 몰과 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
-
-제2조 (정의)
-① "몰"이란 에르모세아르가 재화 또는 용역(이하 "재화 등"이라 함)을 이용자에게 제공하기 위하여 컴퓨터 등 정보통신설비를 이용하여 재화 등을 거래할 수 있도록 설정한 가상의 영업장을 말하며, 아울러 사이버몰을 운영하는 사업자의 의미로도 사용합니다.
-      `
-    },
     pg: {
       title: "결제대행 위탁사",
       content: `

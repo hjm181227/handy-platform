@@ -33,8 +33,8 @@ class CameraService {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
-            title: '카메라 권한',
-            message: '사진을 촬영하기 위해 카메라 권한이 필요합니다.',
+            title: '카메라 권한 필요',
+            message: '네일 아트 상품의 사진을 촬영하고, 손톱 크기를 AR로 정확히 측정하기 위해 카메라 접근 권한이 필요합니다.',
             buttonNeutral: '나중에',
             buttonNegative: '거부',
             buttonPositive: '허용',
@@ -55,8 +55,8 @@ class CameraService {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           {
-            title: '저장소 권한',
-            message: '사진을 저장하기 위해 저장소 권한이 필요합니다.',
+            title: '저장소 권한 필요',
+            message: '갤러리에서 네일 디자인 이미지를 선택하고, 촬영한 사진을 저장하기 위해 저장소 접근 권한이 필요합니다.',
             buttonNeutral: '나중에',
             buttonNegative: '거부',
             buttonPositive: '허용',
