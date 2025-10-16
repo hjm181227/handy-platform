@@ -1363,6 +1363,60 @@ export interface UpdateBrandProfileRequest {
   brandProfile: string;        // 브랜드 프로필 이미지 URL
 }
 
+// 브랜드 상세 정보 (서버 API 스펙)
+export interface BrandDetail {
+  sellerUuid: string;                    // 판매자 UUID
+  brandName: string;                     // 브랜드명
+  brandProfile: string | null;           // 브랜드 프로필 이미지 URL
+  representativeName: string;            // 대표자명
+  description: string | null;            // 브랜드 설명
+  contact: {
+    email: string;                       // 연락처 이메일
+    phone: string | null;                // 연락처 전화번호
+    businessAddress: Address | null;     // 사업자 주소
+  };
+  business: {
+    businessType: string;                // 업태
+    businessCategory: string;            // 업종
+    businessNumber: string | null;       // 사업자등록번호
+    isVerified: boolean;                 // 검증 상태
+  };
+  stats: {
+    totalProducts: number;               // 총 상품 수
+    activeProducts: number;              // 활성 상품 수
+    averageRating: number;               // 평균 평점 (0-5)
+    totalReviews: number;                // 총 리뷰 수
+    totalLikes: number;                  // 총 좋아요 수
+    totalOrders: number;                 // 총 주문 수
+    totalRevenue: number;                // 총 매출
+    responseRate: number;                // 응답률 (0-100)
+    fulfillmentRate: number;             // 주문 이행률 (0-100)
+  };
+  shippingPolicy: {
+    baseShippingCost: number;            // 기본 배송비
+    freeShippingThreshold: number;       // 무료배송 기준금액
+    estimatedDeliveryDays: {
+      min: number;                       // 최소 배송일
+      max: number;                       // 최대 배송일
+    };
+  };
+  production: {
+    averageProcessingDays: number;       // 평균 제작일
+    isAvailableForOrders: boolean;       // 주문 접수 가능 여부
+    vacationMode: boolean;               // 휴가 모드
+    specialNotice: string | null;        // 특별 공지사항
+  };
+  recentProducts: Product[];             // 최근 상품 목록 (최대 4개)
+  memberSince: string;                   // 판매자 가입일 (ISO 8601)
+  lastActiveAt: string;                  // 마지막 활동 시간 (ISO 8601)
+}
+
+// 브랜드 상세 정보 응답
+export interface BrandDetailResponse {
+  success: boolean;
+  data: BrandDetail;
+}
+
 // 브랜드 업데이트 응답
 export interface BrandUpdateResponse {
   success: boolean;

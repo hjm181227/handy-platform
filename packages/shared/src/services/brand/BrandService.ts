@@ -4,7 +4,8 @@ import {
   BrandListParams,
   UpdateBrandNameRequest,
   UpdateBrandProfileRequest,
-  BrandUpdateResponse
+  BrandUpdateResponse,
+  BrandDetailResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -29,6 +30,21 @@ export abstract class BaseBrandService extends BaseApiService {
     const response = await this.request<BrandsResponse>(API_ENDPOINTS.BRANDS.LIST, {
       method: 'POST',
       body: JSON.stringify(requestBody),
+    });
+
+    return response;
+  }
+
+  /**
+   * 특정 브랜드의 상세 정보를 조회합니다
+   * @param sellerUuid 판매자 UUID
+   * @returns 브랜드 상세 정보
+   */
+  async getBrandDetail(sellerUuid: string): Promise<BrandDetailResponse> {
+    const endpoint = API_ENDPOINTS.BRANDS.DETAIL(sellerUuid);
+
+    const response = await this.request<BrandDetailResponse>(endpoint, {
+      method: 'GET',
     });
 
     return response;

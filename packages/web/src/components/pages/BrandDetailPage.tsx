@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '../product/ProductCard';
-import { productService } from '../../services/apiService';
-import type { Product, ProductsResponse } from '@handy-platform/shared';
+import { productService, brandService } from '../../services/apiService';
+import type { Product, ProductsResponse, BrandDetail } from '@handy-platform/shared';
 
 // 브랜드별 이미지 매핑 및 테마 설정
 interface BrandTheme {
@@ -82,19 +82,23 @@ export function BrandDetailPage({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   
-  // API 상태
+  // 브랜드 정보 상태 (독립적)
+  const [brandInfo, setBrandInfo] = useState<BrandDetail | null>(null);
+  const [brandLoading, setBrandLoading] = useState(true);
+  const [brandError, setBrandError] = useState<string | null>(null);
+  
+  // 상품 목록 상태 (독립적)
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [brandName, setBrandName] = useState<string>('');
   
   // URL 디코딩 대신 seller UUID 사용
   const decodedSellerUuid = decodeURIComponent(sellerUuid);
   
-  // 브랜드 테마 가져오기 (브랜드명을 통해)
-  const brandTheme = BRAND_THEMES[brandName] || DEFAULT_BRAND_THEME;
+  // 브랜드 테마 가져오기 (brandInfo의 브랜드명을 통해)
+  const brandTheme = BRAND_THEMES[brandInfo?.brandName || ''] || DEFAULT_BRAND_THEME;
   
   // 반응형 이미지 선택
   const [isMobile, setIsMobile] = React.useState(false);
@@ -130,12 +134,37 @@ export function BrandDetailPage({
     };
   }, [currentBackgroundImage]);
 
-  // API에서 상품 데이터 가져오기
+  // 브랜드 정보 가져오기 (독립적)
+  useEffect(() => {
+    const fetchBrandInfo = async () => {
+      try {
+        setBrandLoading(true);
+        setBrandError(null);
+        
+        const response = await brandService.getBrandDetail(decodedSellerUuid);
+        
+        if (response.success && response.data) {
+          setBrandInfo(response.data);
+        } else {
+          setBrandError('브랜드 정보를 불러오는 데 실패했습니다.');
+        }
+      } catch (err) {
+        console.error('Brand info fetch error:', err);
+        setBrandError('브랜드 정보를 불러오는 데 오류가 발생했습니다.');
+      } finally {
+        setBrandLoading(false);
+      }
+    };
+
+    fetchBrandInfo();
+  }, [decodedSellerUuid]);
+
+  // 상품 목록 가져오기 (독립적)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        setProductsLoading(true);
+        setProductsError(null);
         
         const filters = {
           sellerUuid: decodedSellerUuid,
@@ -157,91 +186,47 @@ export function BrandDetailPage({
         if (response.success && response.data) {
           setProducts(response.data);
           setPagination(response.pagination);
-          
-          // 브랜드명을 첫 번째 상품에서 가져오기
-          if (response.data.length > 0 && response.data[0].brand) {
-            setBrandName(response.data[0].brand);
-          }
         } else {
-          setError('상품을 불러오는 데 실패했습니다.');
+          setProductsError('상품을 불러오는 데 실패했습니다.');
           setProducts([]);
         }
       } catch (err) {
         console.error('Product fetch error:', err);
-        setError('상품을 불러오는 데 오류가 발생했습니다.');
+        setProductsError('상품을 불러오는 데 오류가 발생했습니다.');
         setProducts([]);
       } finally {
-        setLoading(false);
+        setProductsLoading(false);
       }
     };
 
     fetchProducts();
   }, [decodedSellerUuid, currentPage, sortBy, priceFilter, categoryFilter]);
 
-  // 브랜드 통계 계산
+  // 브랜드 통계 계산 (brandInfo의 서버 데이터 우선 사용)
   const brandStats = React.useMemo(() => {
-    if (products.length === 0) return null;
+    if (!brandInfo) return null;
 
+    // 서버에서 제공하는 정확한 통계 사용
+    const stats = brandInfo.stats;
+    const hasProducts = products.length > 0;
+    
     return {
-      name: brandName || '브랜드',
-      totalProducts: pagination?.totalItems || products.length,
-      avgRating: products.reduce((sum, p) => sum + (p.rating?.average || 0), 0) / products.length,
-      totalLikes: products.reduce((sum, p) => sum + (p.likesCount || 0), 0),
-      totalOrders: products.reduce((sum, p) => sum + (p.stats?.ordersCount || 0), 0),
-      priceRange: {
+      name: brandInfo.brandName,
+      totalProducts: stats.totalProducts,
+      activeProducts: stats.activeProducts,
+      avgRating: stats.averageRating,
+      totalLikes: stats.totalLikes,
+      totalOrders: stats.totalOrders,
+      totalReviews: stats.totalReviews,
+      totalRevenue: stats.totalRevenue,
+      responseRate: stats.responseRate,
+      fulfillmentRate: stats.fulfillmentRate,
+      priceRange: hasProducts ? {
         min: Math.min(...products.map(p => p.discountedPrice || p.price)),
         max: Math.max(...products.map(p => p.discountedPrice || p.price))
-      }
+      } : { min: 0, max: 0 }
     };
-  }, [products, brandName, pagination]);
-
-  // 로딩 상태
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        <div className="text-center py-20">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 에러 상태
-  if (error) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        <div className="text-center py-20">
-          <h1 className="text-2xl font-semibold mb-2 text-red-600">오류가 발생했습니다</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => onGo('/brands')}
-            className="rounded-lg bg-black text-white px-6 py-2 hover:bg-gray-800"
-          >
-            브랜드 목록으로 돌아가기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 브랜드가 존재하지 않는 경우
-  if (!brandStats || products.length === 0) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        <div className="text-center py-20">
-          <h1 className="text-2xl font-semibold mb-2">브랜드를 찾을 수 없습니다</h1>
-          <p className="text-gray-600 mb-4">해당 브랜드의 상품이 없습니다.</p>
-          <button
-            onClick={() => onGo('/brands')}
-            className="rounded-lg bg-black text-white px-6 py-2 hover:bg-gray-800"
-          >
-            브랜드 목록으로 돌아가기
-          </button>
-        </div>
-      </div>
-    );
-  }
+  }, [brandInfo, products]);
 
   // 정렬된 상품 목록 (필터링은 API 레벨에서 처리됨)
   const sortedProducts = products;
@@ -275,6 +260,36 @@ export function BrandDetailPage({
     return Array.from(categories);
   }, [products]);
 
+  // 브랜드 정보 로딩 상태
+  if (brandLoading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-6">
+        <div className="text-center py-20">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 브랜드 정보 에러 상태
+  if (brandError || !brandInfo) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-6">
+        <div className="text-center py-20">
+          <h1 className="text-2xl font-semibold mb-2 text-red-600">브랜드를 찾을 수 없습니다</h1>
+          <p className="text-gray-600 mb-4">{brandError || '해당 브랜드가 존재하지 않습니다.'}</p>
+          <button
+            onClick={() => onGo('/brands')}
+            className="rounded-lg bg-black text-white px-6 py-2 hover:bg-gray-800"
+          >
+            브랜드 목록으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       {/* 뒤로가기 버튼 */}
@@ -305,7 +320,7 @@ export function BrandDetailPage({
           {/* 이미지 프리로딩 및 에러 처리 */}
           <img
             src={currentBackgroundImage}
-            alt={`${decodedBrandName} 브랜드 대표 이미지 - ${brandTheme.description}`}
+            alt={`${brandInfo?.brandName} 브랜드 대표 이미지 - ${brandTheme.description}`}
             className="hidden"
             loading="eager"
             onLoad={() => setImageLoaded(true)}
@@ -314,7 +329,7 @@ export function BrandDetailPage({
           
           {/* 접근성을 위한 브랜드 정보 */}
           <div className="sr-only">
-            <h2>{decodedBrandName} 브랜드 페이지</h2>
+            <h2>{brandInfo?.brandName} 브랜드 페이지</h2>
             <p>{brandTheme.description}</p>
           </div>
           
@@ -611,13 +626,32 @@ export function BrandDetailPage({
 
       {/* 상품 목록 */}
       <div className="mb-8">
-        {sortedProducts.length === 0 ? (
+        {productsLoading ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">상품 목록을 불러오는 중...</p>
+          </div>
+        ) : productsError ? (
+          <div className="text-center py-20">
+            <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3 className="text-lg font-medium text-red-900 mb-2">상품 목록을 불러오지 못했습니다</h3>
+            <p className="text-gray-600 mb-4">{productsError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-lg bg-blue-600 text-white px-6 py-2 hover:bg-blue-700"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : sortedProducts.length === 0 ? (
           <div className="text-center py-20">
             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">조건에 맞는 상품이 없습니다</h3>
-            <p className="text-gray-600">다른 필터 조건을 선택해보세요.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 상품이 없습니다</h3>
+            <p className="text-gray-600">이 브랜드는 아직 상품을 등록하지 않았습니다.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
