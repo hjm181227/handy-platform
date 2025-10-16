@@ -38,6 +38,9 @@
     "build:all:stage": "npm run build:shared && npm run web:build:stage",
     "build:all:prod": "npm run build:shared && npm run web:build:prod",
     "build:mobile": "npm run build:android --workspace=packages/mobile",
+    "deploy:stage": "npm run build:shared && npm run web:build:stage && npm run deploy:stage --workspace=packages/web",
+    "deploy:prod": "npm run build:shared && npm run web:build:prod && npm run deploy:prod --workspace=packages/web",
+    "deploy:stage:quick": "npm run deploy:stage --workspace=packages/web",
     "workspace:install": "npm install --workspaces",
     "workspace:clean": "npm run clean --workspaces --if-present"
   },

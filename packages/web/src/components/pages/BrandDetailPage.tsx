@@ -101,9 +101,9 @@ export function BrandDetailPage({
   const brandTheme = BRAND_THEMES[brandInfo?.brandName || ''] || DEFAULT_BRAND_THEME;
   
   // 반응형 이미지 선택
-  const [isMobile, setIsMobile] = React.useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
-  React.useEffect(() => {
+  useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -119,7 +119,7 @@ export function BrandDetailPage({
     : brandTheme.backgroundImage;
   
   // 이미지 preload를 위한 useEffect
-  React.useEffect(() => {
+  useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'preload';
     link.href = currentBackgroundImage;
@@ -203,8 +203,22 @@ export function BrandDetailPage({
   }, [decodedSellerUuid, currentPage, sortBy, priceFilter, categoryFilter]);
 
   // 브랜드 통계 계산 (brandInfo의 서버 데이터 우선 사용)
-  const brandStats = React.useMemo(() => {
-    if (!brandInfo) return null;
+  const brandStats = useMemo(() => {
+    if (!brandInfo) {
+      return {
+        name: '',
+        totalProducts: 0,
+        activeProducts: 0,
+        avgRating: 0,
+        totalLikes: 0,
+        totalOrders: 0,
+        totalReviews: 0,
+        totalRevenue: 0,
+        responseRate: 0,
+        fulfillmentRate: 0,
+        priceRange: { min: 0, max: 0 }
+      };
+    }
 
     // 서버에서 제공하는 정확한 통계 사용
     const stats = brandInfo.stats;
@@ -232,7 +246,7 @@ export function BrandDetailPage({
   const sortedProducts = products;
 
   // 카테고리별 상품 분류
-  const categoryGroups = React.useMemo(() => {
+  const categoryGroups = useMemo(() => {
     const groups = new Map<string, Product[]>();
 
     products.forEach(product => {
