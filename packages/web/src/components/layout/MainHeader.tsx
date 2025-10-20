@@ -36,7 +36,6 @@ export function MainHeader({
     {label:"신상", to:"/new"},
     {label:"추천", to:"/recommend"},
     {label:"이벤트", to:"/event"},
-    {label:"판매자센터", to:"/seller"},
   ];
 
   // 활성화 상태 판단 함수
@@ -230,6 +229,11 @@ export function MainHeader({
     onGo('/admin');
   };
 
+  const handleSellerCenter = () => {
+    setShowUserMenu(false);
+    onGo('/seller');
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
       {/* 데스크톱 레이아웃 */}
@@ -408,6 +412,24 @@ export function MainHeader({
                         마이페이지
                       </button>
 
+                      {/* 판매자 사용자에게만 판매자 센터 메뉴 표시 */}
+                      {user.role === 'seller' && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Seller Center button clicked');
+                            handleSellerCenter();
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          판매자 센터
+                        </button>
+                      )}
+
                       {/* 어드민 사용자에게만 어드민 센터 메뉴 표시 */}
                       {user.role === 'admin' && (
                         <button
@@ -543,6 +565,24 @@ export function MainHeader({
                       </svg>
                       마이페이지
                     </button>
+
+                    {/* 모바일 - 판매자 사용자에게만 판매자 센터 메뉴 표시 */}
+                    {user.role === 'seller' && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Mobile Seller Center button clicked');
+                          handleSellerCenter();
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        판매자 센터
+                      </button>
+                    )}
 
                     {/* 모바일 - 어드민 사용자에게만 어드민 센터 메뉴 표시 */}
                     {user.role === 'admin' && (

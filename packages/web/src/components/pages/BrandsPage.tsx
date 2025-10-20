@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProductCard } from '../product/ProductCard';
 import { Stars } from '../ui';
-import { FaHeart, FaArrowUp, FaSearch, FaTimes } from 'react-icons/fa';
+import { FaHeart, FaArrowUp, FaSearch } from 'react-icons/fa';
 import { brandService } from '../../services/apiService';
 import type { Brand, BrandsResponse, BrandListParams } from '@handy-platform/shared';
 
@@ -25,23 +25,12 @@ export function BrandsPage({
   const [pagination, setPagination] = useState<any>(null);
 
   // 검색 및 필터 상태
-  const [inputValue, setInputValue] = useState(''); // 사용자 입력값
-  const [searchQuery, setSearchQuery] = useState(''); // 실제 검색 쿼리 (디바운스됨)
+  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'brandName' | 'averageRating' | 'totalProducts' | 'totalOrders' | 'createdAt'>('totalProducts');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [showProducts, setShowProducts] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
 
-  // 디바운싱: inputValue 변경 후 500ms 후 searchQuery 업데이트
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(inputValue);
-      setCurrentPage(1);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [inputValue]);
 
   // API에서 브랜드 데이터 가져오기
   useEffect(() => {
@@ -66,44 +55,8 @@ export function BrandsPage({
         setPagination(response.pagination);
       } catch (err) {
         console.error('Brand fetch error:', err);
-        // API 오류 시 더미 데이터로 대체 (개발 환경)
-        const dummyBrands: Brand[] = [
-          {
-            sellerUuid: 'dummy-1',
-            brandName: '네일 아트 스튜디오',
-            brandProfile: 'https://picsum.photos/seed/brand1/200',
-            stats: {
-              totalProducts: 15,
-              totalOrders: 234,
-              averageRating: 4.8
-            },
-            products: []
-          },
-          {
-            sellerUuid: 'dummy-2',
-            brandName: '프리미엄 네일',
-            brandProfile: 'https://picsum.photos/seed/brand2/200',
-            stats: {
-              totalProducts: 8,
-              totalOrders: 156,
-              averageRating: 4.6
-            },
-            products: []
-          },
-          {
-            sellerUuid: 'dummy-3',
-            brandName: '럭셔리 네일 살롱',
-            brandProfile: 'https://picsum.photos/seed/brand3/200',
-            stats: {
-              totalProducts: 22,
-              totalOrders: 412,
-              averageRating: 4.9
-            },
-            products: []
-          }
-        ];
-        setBrands(dummyBrands);
-        setError(null); // 더미 데이터 사용 시 에러 숨김
+        setError('브랜드 목록을 불러오는 데 오류가 발생했습니다.');
+        setBrands([]);
       } finally {
         setLoading(false);
       }
@@ -113,17 +66,9 @@ export function BrandsPage({
   }, [currentPage, searchQuery, sortBy, sortOrder, showProducts]);
 
   // 검색 제출 처리
-  const handleSearch = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setSearchQuery(inputValue);
-    setCurrentPage(1);
-  };
-
-  // 검색어 초기화
-  const handleClearSearch = () => {
-    setInputValue('');
-    setSearchQuery('');
-    setCurrentPage(1);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1); // 검색 시 페이지 초기화
   };
 
   // 정렬 변경 처리
@@ -271,28 +216,12 @@ export function BrandsPage({
               <div className="relative">
                 <input
                   type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="브랜드명 검색"
-                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="브랜드명 검색..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                  {inputValue && (
-                    <button
-                      type="button"
-                      onClick={handleClearSearch}
-                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <FaTimes className="w-4 h-4" />
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <FaSearch className="w-4 h-4" />
-                  </button>
-                </div>
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               </div>
             </form>
 
@@ -340,21 +269,7 @@ export function BrandsPage({
 
           {brands.length === 0 ? (
             <div className="text-center py-12">
-              {searchQuery ? (
-                <>
-                  <p className="text-gray-600 mb-2">
-                    '<span className="font-semibold">{searchQuery}</span>'에 대한 검색 결과가 없습니다.
-                  </p>
-                  <button
-                    onClick={handleClearSearch}
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    전체 브랜드 보기
-                  </button>
-                </>
-              ) : (
-                <p className="text-gray-500">등록된 브랜드가 없습니다.</p>
-              )}
+              <p className="text-gray-500">검색 결과가 없습니다.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

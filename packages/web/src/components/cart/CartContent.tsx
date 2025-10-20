@@ -441,7 +441,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
   // 판매자별 그룹화된 장바구니 아이템 렌더링
   const renderSellerGroup = (seller: CartItemsBySeller) => (
-    <div key={seller.sellerId} className="border rounded-lg mb-6 overflow-hidden">
+    <div key={seller.sellerUuid} className="border rounded-lg mb-6 overflow-hidden">
       {/* 판매자 헤더 */}
       <div className="bg-gray-50 border-b p-5">
         <div className="flex items-center justify-between">

@@ -835,15 +835,6 @@ export default function App() {
             toastType === 'error' ? 'border-red-100' :
             'border-blue-100'}
         `}>
-<<<<<<< HEAD
-          <div className="flex items-center gap-3">
-            <span className="text-xl">
-              {toastType === 'success' ? '✅' :
-               toastType === 'error' ? '❌' :
-               'ℹ️'}
-            </span>
-            {toastMessage}
-=======
           <div className="flex items-center gap-4 px-5 py-4">
             <div className={`
               flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
@@ -867,7 +858,6 @@ export default function App() {
                 {toastMessage}
               </p>
             </div>
->>>>>>> 395f6e83 (refactor(web/cart): improve cart UX and fix empty state bug)
             <button
               onClick={() => setToastMessage(null)}
               className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"

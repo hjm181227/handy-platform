@@ -77,6 +77,19 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     </svg>
   );
 
+  // 사용자 역할에 따른 라벨 반환
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'seller':
+        return '판매자';
+      case 'admin':
+        return '관리자';
+      case 'user':
+      default:
+        return '';
+    }
+  };
+
   const Stat = ({
     label,
     value,
@@ -182,7 +195,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             <div className="text-sm text-gray-600">내 정보</div>
             <div className="mt-1 text-lg font-semibold">
               {user?.name || '사용자'} <span className="text-gray-400">/</span>{" "}
-              <span className="text-blue-600">HANDY+</span>
+              {getRoleLabel(user?.role || 'user') && (
+                <span className="text-blue-600">{getRoleLabel(user?.role || 'user')}</span>
+              )}
             </div>
           </div>
           <div className="flex gap-2">
@@ -284,9 +299,16 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
       <Section title="판매자 서비스">
         <div className="divide-y">
-          <LinkRow title="판매자 신청하기" to="/seller/apply" />
+          {user?.role === 'seller' ? (
+            <LinkRow title="판매자 센터로 이동" to="/seller" />
+          ) : (
+            <LinkRow title="판매자 신청하기" to="/seller/apply" />
+          )}
           <div className="py-3 text-xs text-gray-500">
-            네일아트 상품을 판매하여 수익을 창출해보세요!
+            {user?.role === 'seller' 
+              ? '판매자 센터에서 상품과 주문을 관리해보세요!'
+              : '네일아트 상품을 판매하여 수익을 창출해보세요!'
+            }
           </div>
         </div>
       </Section>

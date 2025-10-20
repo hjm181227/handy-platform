@@ -26,6 +26,30 @@ import {
 import { API_ENDPOINTS } from '../../config/api';
 
 export abstract class BaseSellerService extends BaseApiService {
+  // 판매자 정보 조회
+  async getSellerInfo(sellerUuid: string): Promise<{
+    success: boolean;
+    data: {
+      sellerUuid: string;
+      brandName: string;
+      description?: string;
+      isActive: boolean;
+      createdAt: string;
+      // 기타 브랜드 정보
+    };
+  }> {
+    return this.request<{
+      success: boolean;
+      data: {
+        sellerUuid: string;
+        brandName: string;
+        description?: string;
+        isActive: boolean;
+        createdAt: string;
+      };
+    }>(API_ENDPOINTS.SELLER.INFO(sellerUuid));
+  }
+
   // 상품 관리 (서버 API 스펙에 완전 일치)
   async getSellerProducts(filters: {
     page?: number;                  // 페이지 번호 (기본값: 1)

@@ -95,11 +95,11 @@ const SellerManagement: React.FC = () => {
     }
   };
 
-  const handleSellerStatusChange = async (sellerId: string, newStatus: boolean) => {
+  const handleSellerStatusChange = async (sellerUuid: string, newStatus: boolean) => {
     try {
       setActionLoading(true);
       // AdminService의 updateUserRole을 사용하여 상태 변경
-      await adminService.updateUserRole(sellerId, { 
+      await adminService.updateUserRole(sellerUuid, { 
         role: 'seller',
         isActive: newStatus 
       } as any);

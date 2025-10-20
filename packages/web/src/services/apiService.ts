@@ -105,6 +105,7 @@ class WebApiService {
   get shipping() { return this.apiService.shipping; }
   get qr() { return this.apiService.qr; }
   get address() { return this.apiService.address; }
+  get brand() { return this.apiService.brand; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -216,6 +217,7 @@ export const {
   shipping: shippingService,
   qr: qrService,
   address: addressService,
+  brand: brandService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들
@@ -229,4 +231,4 @@ export const isAuthenticated = () => webApiService.isAuthenticated();
 export const getCurrentUser = () => webApiService.getCurrentUser();
 
 // 타입 내보내기
-export type { IntegratedApiService, User };
+export type { BaseIntegratedApiService as IntegratedApiService, User };
