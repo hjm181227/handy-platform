@@ -74,6 +74,13 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:r250231'
 
 /**
+ * Configure react-native-vector-icons font path for monorepo structure
+ */
+project.ext.vectoricons = [
+    iconFontsDir: "../../../../node_modules/react-native-vector-icons/Fonts"
+]
+
+/**
  * The react-native plugin reads the keystore.properties file automatically.
  * This file should contain the keystore information. If it doesn't exist,
  * release builds will fail.
