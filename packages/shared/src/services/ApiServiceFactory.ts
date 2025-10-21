@@ -15,6 +15,7 @@ import { BaseShippingService, ShippingServiceFactory } from './utils/ShippingSer
 import { BaseQRService, QRServiceFactory } from './utils/QRService';
 import { BaseAddressService, AddressServiceFactory } from './utils/AddressService';
 import { BaseBrandService, createBrandService } from './brand/BrandService';
+import { BaseUserService, UserServiceFactory } from './user/UserService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -35,6 +36,7 @@ export interface IntegratedApiService {
   qr: BaseQRService;
   address: BaseAddressService;
   brand: BaseBrandService;
+  user: BaseUserService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -62,6 +64,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public qr: BaseQRService;
   public address: BaseAddressService;
   public brand: BaseBrandService;
+  public user: BaseUserService;
 
   protected baseURL: string;
   protected platform: string;
@@ -91,6 +94,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.qr = QRServiceFactory.create(baseURL, getAuthHeaders);
     this.address = AddressServiceFactory.create(baseURL, getAuthHeaders);
     this.brand = createBrandService(baseURL, getAuthHeaders, platform as 'web' | 'mobile');
+    this.user = UserServiceFactory.create(baseURL, getAuthHeaders);
   }
 
   getEnvironmentInfo() {
@@ -99,7 +103,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
       baseURL: this.baseURL,
       services: [
         'auth',
-        'product', 
+        'product',
         'review',
         'cart',
         'order',
@@ -113,7 +117,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'shipping',
         'qr',
         'address',
-        'brand'
+        'brand',
+        'user'
       ],
     };
   }
@@ -204,4 +209,5 @@ export type {
   BaseQRService,
   BaseAddressService,
   BaseBrandService,
+  BaseUserService,
 };

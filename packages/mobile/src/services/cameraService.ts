@@ -1,5 +1,6 @@
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, ImagePickerOptions } from 'react-native-image-picker';
 import { PermissionsAndroid, Platform, Alert } from 'react-native';
+import { requestCameraPermission, requestStoragePermission } from '../utils/permissions';
 
 export interface CameraResult {
   uri: string;
@@ -26,55 +27,20 @@ class CameraService {
     includeBase64: false,
   };
 
-  // Permission methods
+  // Permission methods - now using centralized permission utils
   async requestCameraPermission(): Promise<boolean> {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: '카메라 권한',
-            message: '사진을 촬영하기 위해 카메라 권한이 필요합니다.',
-            buttonNeutral: '나중에',
-            buttonNegative: '거부',
-            buttonPositive: '허용',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn('Camera permission error:', err);
-        return false;
-      }
-    }
-    return true; // iOS handles permissions automatically
+    return await requestCameraPermission();
   }
 
   async requestStoragePermission(): Promise<boolean> {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: '저장소 권한',
-            message: '사진을 저장하기 위해 저장소 권한이 필요합니다.',
-            buttonNeutral: '나중에',
-            buttonNegative: '거부',
-            buttonPositive: '허용',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn('Storage permission error:', err);
-        return false;
-      }
-    }
-    return true;
+    return await requestStoragePermission();
   }
 
   // Camera methods
   async takePhoto(options?: Partial<ImagePickerOptions>): Promise<CameraResult> {
     const hasPermission = await this.requestCameraPermission();
     if (!hasPermission) {
+      Alert.alert('권한 필요', '사진 촬영을 위해 카메라 권한이 필요합니다.');
       throw new Error('카메라 권한이 필요합니다.');
     }
 
@@ -114,6 +80,7 @@ class CameraService {
   async chooseFromGallery(options?: Partial<ImagePickerOptions>): Promise<CameraResult> {
     const hasPermission = await this.requestStoragePermission();
     if (!hasPermission) {
+      Alert.alert('권한 필요', '갤러리 접근을 위해 저장소 권한이 필요합니다.');
       throw new Error('저장소 권한이 필요합니다.');
     }
 

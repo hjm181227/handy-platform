@@ -1,10 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   PanResponder,
-  Animated,
   Dimensions,
 } from 'react-native';
 
@@ -25,35 +24,36 @@ const DraggableReferenceLine: React.FC<DraggableReferenceLineProps> = ({
   containerWidth,
   isVertical = true,
 }) => {
-  const pan = useRef(new Animated.Value(initialPosition)).current;
   const [currentPosition, setCurrentPosition] = useState(initialPosition);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.setOffset(currentPosition);
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        const newPosition = gestureState.dx;
-        const boundedPosition = Math.max(0, Math.min(containerWidth, currentPosition + newPosition));
-        pan.setValue(boundedPosition - currentPosition);
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        const newPosition = Math.max(0, Math.min(containerWidth, currentPosition + gestureState.dx));
-        pan.flattenOffset();
-        setCurrentPosition(newPosition);
-        onPositionChange(newPosition);
-      },
-    })
-  ).current;
+  // initialPosition이 변경될 때 위치 업데이트
+  useEffect(() => {
+    setCurrentPosition(initialPosition);
+  }, [initialPosition]);
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      // 새로운 위치 계산 (현재 위치 + 드래그 거리)
+      const newPosition = currentPosition + gestureState.dx;
+      const boundedPosition = Math.max(0, Math.min(containerWidth, newPosition));
+      
+      // 실시간 위치 업데이트
+      setCurrentPosition(boundedPosition);
+      onPositionChange(boundedPosition);
+    },
+    onPanResponderRelease: () => {
+      // 드래그 종료 시 아무것도 하지 않음 (이미 실시간으로 업데이트됨)
+    },
+  });
 
   return (
-    <Animated.View
+    <View
       style={[
         styles.container,
         {
-          transform: [{ translateX: pan }],
+          left: currentPosition, // 직접 위치 설정
         },
       ]}
       {...panResponder.panHandlers}
@@ -62,7 +62,9 @@ const DraggableReferenceLine: React.FC<DraggableReferenceLineProps> = ({
       <View style={[styles.handle, { backgroundColor: lineColor }]}>
         <Text style={styles.handleText}>{label}</Text>
       </View>
-    </Animated.View>
+      {/* 터치 영역 확장용 투명 영역 */}
+      <View style={styles.touchArea} />
+    </View>
   );
 };
 
@@ -70,38 +72,49 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     alignItems: 'center',
-    width: 20,
+    width: 60,
     height: '100%',
-    zIndex: 10,
+    zIndex: 100,
+    elevation: 100,
   },
   line: {
-    width: 2,
+    width: 4,
     height: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 2,
-    elevation: 5,
+    elevation: 50,
   },
   handle: {
     position: 'absolute',
     top: '50%',
-    width: 40,
-    height: 30,
-    borderRadius: 15,
+    width: 50,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -15,
+    marginTop: -20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 50,
+    borderWidth: 2,
+    borderColor: '#FFF',
   },
   handleText: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
+  },
+  touchArea: {
+    position: 'absolute',
+    top: 0,
+    left: -30,
+    right: -30,
+    bottom: 0,
+    backgroundColor: 'transparent',
   },
 });
 
