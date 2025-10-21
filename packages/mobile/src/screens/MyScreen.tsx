@@ -15,7 +15,7 @@ import { getCurrentEnvironment } from '@handy-platform/shared';
 import { getWebURL } from '../config/webUrl';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import WebViewBridge from '../components/WebViewBridge';
-import ARCameraScreen from './ARCameraScreen';
+import NailMeasurement from './NailMeasurement';
 import NailSizesScreen from './NailSizesScreen';
 
 interface NailMeasurement {
@@ -242,7 +242,7 @@ const MyScreen: React.FC = () => {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowARCamera(false)}
       >
-        <ARCameraScreen 
+        <NailMeasurement 
           onClose={() => setShowARCamera(false)}
           onNavigateToSizes={() => {
             setShowARCamera(false);
