@@ -231,6 +231,11 @@ export const API_ENDPOINTS = {
     REVIEWS: '/api/user/reviews',
   },
 
+  // 사용자 정보 및 프로필
+  USERS: {
+    NAIL_SIZE: '/api/users/me/nail-size',  // GET, PATCH
+  },
+
   // 관리자
   ADMIN: {
     DASHBOARD: '/api/admin/dashboard',

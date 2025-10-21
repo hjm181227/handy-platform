@@ -75,6 +75,7 @@ class CameraService {
   async takePhoto(options?: Partial<ImagePickerOptions>): Promise<CameraResult> {
     const hasPermission = await this.requestCameraPermission();
     if (!hasPermission) {
+      Alert.alert('권한 필요', '사진 촬영을 위해 카메라 권한이 필요합니다.');
       throw new Error('카메라 권한이 필요합니다.');
     }
 
@@ -114,6 +115,7 @@ class CameraService {
   async chooseFromGallery(options?: Partial<ImagePickerOptions>): Promise<CameraResult> {
     const hasPermission = await this.requestStoragePermission();
     if (!hasPermission) {
+      Alert.alert('권한 필요', '갤러리 접근을 위해 저장소 권한이 필요합니다.');
       throw new Error('저장소 권한이 필요합니다.');
     }
 
@@ -225,7 +227,7 @@ class CameraService {
   // Utility methods
   getImageSizeText(fileSize?: number): string {
     if (!fileSize) return '';
-    
+
     if (fileSize < 1024) {
       return `${fileSize}B`;
     } else if (fileSize < 1024 * 1024) {

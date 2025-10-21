@@ -10,7 +10,7 @@
     "android:dev": "npm run android:dev --workspace=packages/mobile",
     "android:stage": "npm run android:stage --workspace=packages/mobile",
     "android:prod": "npm run android:prod --workspace=packages/mobile",
-    "ios": "npm run ios --workspace=packages/mobile", 
+    "ios": "npm run ios --workspace=packages/mobile",
     "ios:dev": "npm run ios:dev --workspace=packages/mobile",
     "ios:stage": "npm run ios:stage --workspace=packages/mobile",
     "ios:prod": "npm run ios:prod --workspace=packages/mobile",
@@ -42,7 +42,8 @@
     "deploy:prod": "npm run build:shared && npm run web:build:prod && npm run deploy:prod --workspace=packages/web",
     "deploy:stage:quick": "npm run deploy:stage --workspace=packages/web",
     "workspace:install": "npm install --workspaces",
-    "workspace:clean": "npm run clean --workspaces --if-present"
+    "workspace:clean": "npm run clean --workspaces --if-present",
+    "bundle:build": "cd packages/mobile/android && ./gradlew bundleRelease"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",

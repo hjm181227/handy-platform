@@ -883,4 +883,73 @@ API 연동 작업 시 다음 항목들을 **반드시** 확인하세요:
 
 ---
 
+## 📋 TODO & 향후 계획
+
+### 🎥 React Native Vision Camera 구현 (고급 카메라 기능)
+
+**현재 상태**: 기본 ImagePicker 구현 완료, Vision Camera는 Kotlin 호환성 문제로 보류
+
+**목표**: 실시간 카메라 미리보기와 오버레이 가이드를 통한 더 나은 UX 제공
+
+#### 해결해야 할 기술적 과제들
+
+1. **Kotlin 호환성 문제**
+   - 에러: `kotlinx.coroutines.CoroutineDispatcher` 메타데이터 버전 충돌 (2.0.0 vs 1.8.0 expected)
+   - react-native-vision-camera 4.7.2가 요구하는 Kotlin 버전과 프로젝트 설정 간 불일치
+   - 해결 방안: 
+     - Kotlin 버전 통일 (2.0.20)
+     - kotlinx-coroutines 버전 강제 지정 (1.8.1)
+     - 메타데이터 버전 체크 스킵 옵션 적용
+
+2. **모노레포 환경에서의 React Native 경로 설정**
+   - 에러: React Native gradle.properties 파일 경로 불일치
+   - packages/node_modules vs root/node_modules 경로 문제
+   - 해결 방안: 심링크 생성 또는 gradle 설정 수정
+
+3. **구현 계획**
+   ```typescript
+   // 목표 구현 코드 (CameraScreen.tsx)
+   import { Camera, useCameraDevices, useCameraPermission } from 'react-native-vision-camera';
+   
+   const CameraScreen = () => {
+     const devices = useCameraDevices();
+     const { hasPermission, requestPermission } = useCameraPermission();
+     const device = devices.back;
+
+     return (
+       <View style={StyleSheet.absoluteFill}>
+         {/* 실시간 카메라 미리보기 */}
+         <Camera
+           ref={cameraRef}
+           style={StyleSheet.absoluteFill}
+           device={device}
+           isActive={true}
+           photo={true}
+         />
+         
+         {/* 가이드 오버레이 */}
+         <CameraGuideOverlay visible={true} />
+         
+         {/* 촬영 버튼 */}
+         <TouchableOpacity onPress={handleTakePhoto}>
+           <Text>📸 촬영</Text>
+         </TouchableOpacity>
+       </View>
+     );
+   };
+   ```
+
+4. **장점**
+   - 실시간 카메라 미리보기로 더 정확한 손톱 위치 확인
+   - 오버레이 가이드를 통한 직관적인 촬영 가이드
+   - 더 나은 사용자 경험
+
+5. **우선순위**: 중간 (기본 기능 완성 후 진행)
+
+6. **참고 자료**
+   - [React Native Vision Camera 공식 문서](https://react-native-vision-camera.com/)
+   - [Kotlin 호환성 가이드](https://kotlinlang.org/docs/compatibility-modes.html)
+
+---
+
 **Note**: This CLAUDE.md file should be updated as the project structure, dependencies, and architecture are established.

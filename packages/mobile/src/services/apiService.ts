@@ -1,10 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
+import {
   createApiService,
   IntegratedApiService,
   User
 } from '@handy-platform/shared';
-import { API_BASE_URL } from '@handy-platform/shared/src/config/api';
+import { API_CONFIG } from '@handy-platform/shared/src/config/api';
+
+// 모바일 앱은 스테이지 서버 사용 (localhost는 React Native에서 작동하지 않음)
+const MOBILE_API_BASE_URL = API_CONFIG.stage.baseURL;
 
 // 모바일 전용 토큰 관리
 class MobileTokenManager {
@@ -67,8 +70,9 @@ class MobileApiService {
   private apiService: IntegratedApiService;
 
   constructor() {
+    console.log('🔵 [MobileApiService] Initializing with base URL:', MOBILE_API_BASE_URL);
     this.apiService = createApiService(
-      API_BASE_URL,
+      MOBILE_API_BASE_URL,
       getMobileAuthHeaders,
       'mobile'
     );
@@ -117,6 +121,7 @@ class MobileApiService {
   get shipping() { return this.apiService.shipping; }
   get qr() { return this.apiService.qr; }
   get address() { return this.apiService.address; }
+  get user() { return this.apiService.user; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -204,6 +209,7 @@ export const {
   shipping: shippingService,
   qr: qrService,
   address: addressService,
+  user: userService,
 } = mobileApiService;
 
 // 레거시 호환성을 위한 기본 함수들
