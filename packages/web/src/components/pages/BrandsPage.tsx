@@ -31,6 +31,7 @@ export function BrandsPage({
   const [currentPage, setCurrentPage] = useState(1);
   const [showProducts, setShowProducts] = useState(true);
 
+
   // API에서 브랜드 데이터 가져오기
   useEffect(() => {
     const fetchBrands = async () => {

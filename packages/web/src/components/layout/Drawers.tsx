@@ -9,22 +9,25 @@ export function CartDrawer({
   onCheckout,
   onCartUpdate,
   currentUser,
+  showToast,
 }: {
   open: boolean;
   onClose: () => void;
   onCheckout: () => void;
   onCartUpdate?: () => void;
   currentUser?: User | null;
+  showToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }) {
   return (
     <Drawer open={open} onClose={onClose} side="right">
-      <CartContent 
+      <CartContent
         mode="drawer"
         onClose={onClose}
         onCheckout={onCheckout}
         onCartUpdate={onCartUpdate}
         refreshTrigger={open} // drawer가 열릴 때마다 새로고침
         currentUser={currentUser}
+        showToast={showToast}
       />
     </Drawer>
   );

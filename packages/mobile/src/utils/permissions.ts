@@ -6,12 +6,12 @@ export const requestCameraPermission = async (): Promise<boolean> => {
     try {
       const permission = PermissionsAndroid.PERMISSIONS.CAMERA;
       if (!permission) return false;
-      
+
       const granted = await PermissionsAndroid.request(
         permission,
         {
-          title: '카메라 권한 요청',
-          message: '상품 사진을 촬영하기 위해 카메라 권한이 필요합니다.',
+          title: '카메라 권한 필요',
+          message: '네일 아트 상품의 사진을 촬영하고, 손톱 크기를 AR로 정확히 측정하기 위해 카메라 접근 권한이 필요합니다.',
           buttonNeutral: '나중에',
           buttonNegative: '거부',
           buttonPositive: '허용',
@@ -38,12 +38,12 @@ export const requestStoragePermission = async (): Promise<boolean> => {
     try {
       const permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
       if (!permission) return false;
-      
+
       const granted = await PermissionsAndroid.request(
         permission,
         {
-          title: '저장소 권한 요청',
-          message: '이미지를 불러오기 위해 저장소 권한이 필요합니다.',
+          title: '저장소 권한 필요',
+          message: '갤러리에서 네일 디자인 이미지를 선택하고, 촬영한 사진을 저장하기 위해 저장소 접근 권한이 필요합니다.',
           buttonNeutral: '나중에',
           buttonNegative: '거부',
           buttonPositive: '허용',
@@ -86,8 +86,8 @@ export const requestLocationPermission = async (): Promise<boolean> => {
       const granted = await PermissionsAndroid.request(
         permission,
         {
-          title: '위치 권한 요청',
-          message: '배송지 설정을 위해 위치 권한이 필요합니다.',
+          title: '위치 권한 필요',
+          message: '가까운 네일샵을 찾고, 정확한 배송 주소를 자동으로 입력하기 위해 위치 정보 접근 권한이 필요합니다.',
           buttonNeutral: '나중에',
           buttonNegative: '거부',
           buttonPositive: '허용',
@@ -115,12 +115,12 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
     try {
       const permission = PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;
       if (!permission) return true; // 이전 버전에서는 권한 불필요
-      
+
       const granted = await PermissionsAndroid.request(
         permission,
         {
-          title: '알림 권한 요청',
-          message: '주문 상태 알림을 받기 위해 알림 권한이 필요합니다.',
+          title: '알림 권한 필요',
+          message: '주문 배송 상태, 제작 진행 상황, 특가 할인 소식을 실시간으로 받기 위해 알림 권한이 필요합니다.',
           buttonNeutral: '나중에',
           buttonNegative: '거부',
           buttonPositive: '허용',

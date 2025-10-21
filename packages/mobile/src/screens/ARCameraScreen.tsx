@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -35,8 +35,7 @@ interface ARCameraScreenProps {
 }
 
 const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSizes }) => {
-  
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [measuringStep, setMeasuringStep] = useState<'guide' | 'camera' | 'card_calibration' | 'nail_measurement' | 'result'>('guide');
   const [selectedFinger, setSelectedFinger] = useState<string>('엄지');
@@ -48,23 +47,52 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
 
   const fingers = ['엄지', '검지', '중지', '약지', '새끼'];
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      try {
-        const granted = await cameraService.requestCameraPermission();
-        setHasPermission(granted);
-      } catch (error) {
-        console.error('권한 확인 실패:', error);
-        setHasPermission(false);
+  const startMeasurement = async () => {
+    try {
+      // 권한 요청 (사용자가 실제로 측정하려는 시점에)
+      const granted = await cameraService.requestCameraPermission();
+
+      if (!granted) {
+        Alert.alert(
+          '카메라 권한 필요',
+          '손톱 크기를 AR로 정확히 측정하려면 카메라 접근 권한이 필요합니다.\n\n설정에서 권한을 허용해주세요.',
+          [
+            { text: '취소', style: 'cancel' },
+            {
+              text: '설정으로 이동',
+              onPress: () => {
+                import('react-native').then(({ Linking }) => {
+                  Linking.openSettings();
+                });
+              },
+            },
+          ]
+        );
+        return;
       }
-    };
 
-    checkPermissions();
-  }, []);
+      // 권한 허용됨 - 측정 시작
+      setMeasuringStep('measuring');
+      setIsLoading(true);
 
+      // AR 측정 시뮬레이션 (실제로는 ML Kit이나 ARCore/ARKit 사용)
+      setTimeout(() => {
+        // 실제 측정값 시뮬레이션
+        const width = Math.round((Math.random() * 5 + 8) * 10) / 10; // 8.0-13.0mm
+        const length = Math.round((Math.random() * 8 + 15) * 10) / 10; // 15.0-23.0mm
+
+        setCurrentMeasurement({ width, length });
+        setMeasuringStep('complete');
+        setIsLoading(false);
+      }, 3000);
+    } catch (error) {
+      console.error('측정 시작 실패:', error);
+      Alert.alert('오류', '측정을 시작할 수 없습니다.');
+      setIsLoading(false);
+    }
   const simulateCameraCapture = async () => {
     setIsLoading(true);
-    
+
     try {
       // 실제 카메라 촬영
       const result = await cameraService.takePhoto({
@@ -94,7 +122,7 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
       return;
     }
 
-    if (!cardReferenceLines.left || !cardReferenceLines.right || 
+    if (!cardReferenceLines.left || !cardReferenceLines.right ||
         !nailReferenceLines.left || !nailReferenceLines.right) {
       Alert.alert('오류', '모든 기준선을 올바르게 설정해주세요.');
       return;
@@ -102,28 +130,28 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
 
     // 신용카드 표준 크기: 85.60mm (가로)
     const CARD_WIDTH_MM = 85.60;
-    
+
     // 픽셀 거리 계산
     const cardPixelDistance = Math.abs(cardReferenceLines.right - cardReferenceLines.left);
     const nailPixelDistance = Math.abs(nailReferenceLines.right - nailReferenceLines.left);
-    
+
     // 기준선이 너무 가까우면 측정 불가
     if (cardPixelDistance < 50) {
       Alert.alert('오류', '카드 기준선이 너무 가깝습니다. 카드의 양끝에 맞춰주세요.');
       return;
     }
-    
+
     if (nailPixelDistance < 10) {
       Alert.alert('오류', '손톱 기준선이 너무 가깝습니다. 손톱의 양끝에 맞춰주세요.');
       return;
     }
-    
+
     // mm당 픽셀 비율 계산
     const pixelsPerMm = cardPixelDistance / CARD_WIDTH_MM;
-    
+
     // 손톱 실제 크기 계산 (소수점 첫째 자리까지)
     const nailWidthMm = Math.round((nailPixelDistance / pixelsPerMm) * 10) / 10;
-    
+
     // 일반적인 손톱 크기 범위 검증 (3-20mm)
     if (nailWidthMm < 3 || nailWidthMm > 20) {
       Alert.alert(
@@ -139,9 +167,9 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
       );
       return;
     }
-    
-    setCurrentMeasurement({ 
-      width: nailWidthMm, 
+
+    setCurrentMeasurement({
+      width: nailWidthMm,
       length: 0 // 현재는 가로 길이만 측정
     });
     setMeasuringStep('result');
@@ -164,9 +192,9 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
       const existing = await AsyncStorage.getItem('nail_measurements');
       const measurements: NailMeasurement[] = existing ? JSON.parse(existing) : [];
       measurements.unshift(measurement); // 최신순으로 저장
-      
+
       await AsyncStorage.setItem('nail_measurements', JSON.stringify(measurements));
-      
+
       Alert.alert(
         '측정 완료! 📏',
         `${selectedHand === 'left' ? '왼손' : '오른손'} ${selectedFinger} 손가락 측정이 완료되었습니다.\n\n너비: ${currentMeasurement.width}mm\n길이: ${currentMeasurement.length}mm`,
@@ -190,33 +218,10 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
     }
   };
 
-  if (hasPermission === null) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>카메라 권한 확인 중...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>카메라 권한이 필요합니다</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={onClose}
-        >
-          <Text style={styles.buttonText}>돌아가기</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
+
       {/* 카메라 시뮬레이션 배경 */}
       <View style={styles.cameraSimulation}>
         {measuringStep === 'guide' && (
@@ -242,7 +247,7 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
             <Text style={styles.simulationText}>
               {measuringStep === 'card_calibration' ? '💳 카드 기준선 설정' : '💅 손톱 기준선 설정'}
             </Text>
-            
+
             {/* 카드 기준선 */}
             {measuringStep === 'card_calibration' && (
               <View style={styles.referenceLineContainer}>
@@ -251,9 +256,9 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
                   lineColor="#FFD700"
                   label="L"
                   onPositionChange={(position) => {
-                    setCardReferenceLines(prev => ({ 
-                      left: position, 
-                      right: prev?.right ?? width * 0.65 
+                    setCardReferenceLines(prev => ({
+                      left: position,
+                      right: prev?.right ?? width * 0.65
                     }));
                   }}
                   containerWidth={width * 0.8}
@@ -263,9 +268,9 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
                   lineColor="#FFD700"
                   label="R"
                   onPositionChange={(position) => {
-                    setCardReferenceLines(prev => ({ 
-                      left: prev?.left ?? width * 0.25, 
-                      right: position 
+                    setCardReferenceLines(prev => ({
+                      left: prev?.left ?? width * 0.25,
+                      right: position
                     }));
                   }}
                   containerWidth={width * 0.8}
@@ -281,9 +286,9 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
                   lineColor="#FF6B6B"
                   label="L"
                   onPositionChange={(position) => {
-                    setNailReferenceLines(prev => ({ 
-                      left: position, 
-                      right: prev?.right ?? width * 0.5 
+                    setNailReferenceLines(prev => ({
+                      left: position,
+                      right: prev?.right ?? width * 0.5
                     }));
                   }}
                   containerWidth={width * 0.8}
@@ -293,9 +298,9 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
                   lineColor="#FF6B6B"
                   label="R"
                   onPositionChange={(position) => {
-                    setNailReferenceLines(prev => ({ 
-                      left: prev?.left ?? width * 0.4, 
-                      right: position 
+                    setNailReferenceLines(prev => ({
+                      left: prev?.left ?? width * 0.4,
+                      right: position
                     }));
                   }}
                   containerWidth={width * 0.8}
@@ -315,7 +320,7 @@ const ARCameraScreen: React.FC<ARCameraScreenProps> = ({ onClose, onNavigateToSi
           </>
         )}
       </View>
-      
+
       {/* 오버레이 UI */}
       <View style={styles.overlay}>
         {/* 상단 헤더 */}

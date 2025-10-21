@@ -22,19 +22,6 @@ export function RankedProductCard({
   const productId = p.id || p.productUuid;
   const salePrice = p.discountedPrice;
 
-  // 랭킹 배지 색상 결정 (1-3위는 특별 색상)
-  const getRankBadgeStyle = (rank: number) => {
-    if (rank === 1) {
-      return "bg-yellow-500 text-white"; // 금색 (1위)
-    } else if (rank === 2) {
-      return "bg-gray-400 text-white"; // 은색 (2위)
-    } else if (rank === 3) {
-      return "bg-amber-600 text-white"; // 동색 (3위)
-    } else {
-      return "bg-gray-900 text-white"; // 일반 (4위 이하)
-    }
-  };
-
   return (
     <div className="w-full md:w-[200px] shrink-0">
       <button onClick={()=>onOpen(productId)} className="block w-full text-left">
@@ -52,18 +39,10 @@ export function RankedProductCard({
           />
 
           {/* 랭킹 번호 배지 */}
-          <div className="absolute left-2 top-2 flex gap-1">
-            <div className={`
-              w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg
-              ${getRankBadgeStyle(rank)}
-            `}>
+          <div className="absolute left-2 top-2">
+            <div className="w-5 h-5 rounded bg-black text-white flex items-center justify-center text-xs font-bold shadow-lg">
               {rank}
             </div>
-
-            {/* 기존 배지들 */}
-            {p.isNewProduct && <Badge tone="blue">NEW</Badge>}
-            {p.isFeatured && <Badge tone="red">HOT</Badge>}
-            {p.discountRate && p.discountRate > 0 && <Badge tone="red">할인</Badge>}
           </div>
         </div>
       </button>
@@ -82,11 +61,11 @@ export function RankedProductCard({
           </div>
           <div className="flex items-center gap-1">
             {onLike && (
-              <button onClick={()=>onLike(productId)} className="rounded-full border p-1.5 text-sm bg-white hover:bg-gray-50">
+              <button onClick={(e)=>{e.stopPropagation(); onLike(productId);}} className="rounded-full border p-1.5 text-sm bg-white hover:bg-gray-50">
                 {isLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
               </button>
             )}
-            <button onClick={()=>onAdd(productId)} className="rounded-full border p-1.5 text-sm bg-white hover:bg-gray-50">
+            <button onClick={(e)=>{e.stopPropagation(); onAdd(productId);}} className="rounded-full border p-1.5 text-sm bg-white hover:bg-gray-50">
               <FaCartArrowDown />
             </button>
           </div>

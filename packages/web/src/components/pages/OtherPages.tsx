@@ -326,21 +326,248 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 }
 
 export function SnapPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
+  const [snaps, setSnaps] = useState<any[]>([]);
+  const [selectedSnap, setSelectedSnap] = useState<any | null>(null);
+  const [likedSnaps, setLikedSnaps] = useState<Set<string>>(new Set());
+
+  // 스냅 데이터 로드
+  useEffect(() => {
+    import('../../data').then((module) => {
+      setSnaps(module.snaps || []);
+    });
+  }, []);
+
+  // 좋아요 토글
+  const handleLike = (snapId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLikedSnaps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(snapId)) {
+        newSet.delete(snapId);
+      } else {
+        newSet.add(snapId);
+      }
+      return newSet;
+    });
+  };
+
+  // 스냅 클릭 - 모달 열기
+  const handleSnapClick = (snap: any) => {
+    setSelectedSnap(snap);
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setSelectedSnap(null);
+  };
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="text-2xl font-semibold">SNAP</h1>
-      <p className="text-sm text-gray-600">네일 아트 갤러리</p>
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Array.from({length: 8}).map((_, i) => (
-          <div key={i} className="aspect-square rounded-lg bg-gray-100 overflow-hidden">
-            <img 
-              src={`https://picsum.photos/seed/snap-${i}/400/400`} 
-              className="w-full h-full object-cover" 
-              alt={`Snap ${i + 1}`}
-            />
+    <>
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        {/* 헤더 */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">SNAP</h1>
+          <p className="mt-2 text-gray-600">네일 아트 갤러리 - 실제 고객들의 네일 디자인을 만나보세요</p>
+          <div className="mt-4 border-t-2 border-gray-900"></div>
+        </div>
+
+        {/* 그리드 - 반응형 */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {snaps.map((snap) => (
+            <button
+              key={snap.id}
+              onClick={() => handleSnapClick(snap)}
+              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              {/* 이미지 */}
+              <img
+                src={snap.imageUrl}
+                className="w-full h-full object-cover"
+                alt={snap.title || 'Nail snap'}
+              />
+
+              {/* 호버 오버레이 */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {/* 하단 정보 */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  {snap.title && (
+                    <h3 className="font-semibold text-sm line-clamp-1">{snap.title}</h3>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      {snap.creator.avatar && (
+                        <img
+                          src={snap.creator.avatar}
+                          className="w-5 h-5 rounded-full border border-white/50"
+                          alt={snap.creator.name}
+                        />
+                      )}
+                      <span className="opacity-90">{snap.creator.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="opacity-90">{snap.likesCount}</span>
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 좋아요 버튼 */}
+              <button
+                onClick={(e) => handleLike(snap.id, e)}
+                className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+              >
+                <svg
+                  className={`w-5 h-5 transition-colors ${likedSnaps.has(snap.id) ? 'fill-red-500 text-red-500' : 'fill-none text-gray-700'}`}
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </button>
+            </button>
+          ))}
+        </div>
+
+        {/* 빈 상태 */}
+        {snaps.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-gray-500">스냅 이미지를 준비 중입니다.</p>
           </div>
-        ))}
+        )}
       </div>
-    </div>
+
+      {/* 이미지 모달 */}
+      {selectedSnap && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="relative max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 닫기 버튼 */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* 이미지 */}
+              <div className="bg-gray-100">
+                <img
+                  src={selectedSnap.imageUrl}
+                  className="w-full h-full object-cover max-h-[70vh]"
+                  alt={selectedSnap.title || 'Nail snap'}
+                />
+              </div>
+
+              {/* 상세 정보 */}
+              <div className="p-6 flex flex-col">
+                {/* 작성자 정보 */}
+                <div className="flex items-center gap-3 mb-4">
+                  {selectedSnap.creator.avatar && (
+                    <img
+                      src={selectedSnap.creator.avatar}
+                      className="w-12 h-12 rounded-full border-2 border-gray-200"
+                      alt={selectedSnap.creator.name}
+                    />
+                  )}
+                  <div>
+                    <p className="font-semibold text-gray-900">{selectedSnap.creator.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(selectedSnap.createdAt).toLocaleDateString('ko-KR')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 제목 & 설명 */}
+                {selectedSnap.title && (
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedSnap.title}</h2>
+                )}
+                {selectedSnap.description && (
+                  <p className="text-gray-600 mb-4">{selectedSnap.description}</p>
+                )}
+
+                {/* 좋아요 */}
+                <div className="flex items-center gap-4 mb-6">
+                  <button
+                    onClick={() => handleLike(selectedSnap.id, {} as any)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    <svg
+                      className={`w-5 h-5 ${likedSnaps.has(selectedSnap.id) ? 'fill-red-500 text-red-500' : 'fill-none text-gray-700'}`}
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span className="font-medium">{selectedSnap.likesCount + (likedSnaps.has(selectedSnap.id) ? 1 : 0)}</span>
+                  </button>
+                </div>
+
+                {/* 태그 */}
+                {selectedSnap.tags && selectedSnap.tags.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">태그</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSnap.tags.map((tag: string, index: number) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 연관 상품 */}
+                {selectedSnap.relatedProducts && selectedSnap.relatedProducts.length > 0 && (
+                  <div className="mt-auto">
+                    <p className="text-sm font-semibold text-gray-700 mb-3">이 디자인과 어울리는 상품</p>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {selectedSnap.relatedProducts.map((productId: string) => (
+                        <button
+                          key={productId}
+                          onClick={() => {
+                            onOpen(productId);
+                            handleCloseModal();
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                        >
+                          상품 보기
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

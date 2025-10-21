@@ -265,7 +265,7 @@ export default function App() {
       }
 
       // 성공 피드백
-      const message = options ? `옵션과 함께 장바구니에 추가되었습니다` : `장바구니에 추가되었습니다`;
+      const message = options ? `선택한 옵션과 함께 장바구니에 담았어요` : `장바구니에 담았어요`;
       showToast(message, 'success');
     } catch (error: any) {
       console.error('Add to cart failed:', error);
@@ -412,6 +412,7 @@ export default function App() {
       onCheckout={handleCheckout}
       onCartUpdate={loadCartCount}
       currentUser={currentUser}
+      showToast={showToast}
     />;
   } else if (pathname === "/checkout") {
     screen = <CheckoutPage onGo={nav} />;
@@ -811,6 +812,7 @@ export default function App() {
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
             currentUser={currentUser}
+            showToast={showToast}
           />
           <CategoryDrawer
             open={catOpen}
@@ -823,24 +825,46 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && (
         <div className={`
-          fixed bottom-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium
-          transform transition-all duration-300 ease-in-out
-          ${toastType === 'success' ? 'bg-green-500' : 
-            toastType === 'error' ? 'bg-red-500' : 
-            'bg-blue-500'}
+          fixed bottom-6 right-6 z-50 max-w-sm
+          transform transition-all duration-300 ease-in-out animate-slide-up
+          ${toastType === 'success' ? 'bg-white' :
+            toastType === 'error' ? 'bg-white' :
+            'bg-white'}
+          rounded-2xl shadow-2xl border
+          ${toastType === 'success' ? 'border-green-100' :
+            toastType === 'error' ? 'border-red-100' :
+            'border-blue-100'}
         `}>
-          <div className="flex items-center gap-3">
-            <span className="text-xl">
-              {toastType === 'success' ? '✅' :
-               toastType === 'error' ? '❌' :
-               'ℹ️'}
-            </span>
-            {toastMessage}
+          <div className="flex items-center gap-4 px-5 py-4">
+            <div className={`
+              flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
+              ${toastType === 'success' ? 'bg-green-50' :
+                toastType === 'error' ? 'bg-red-50' :
+                'bg-blue-50'}
+            `}>
+              <span className="text-xl">
+                {toastType === 'success' ? '✓' :
+                 toastType === 'error' ? '⚠' :
+                 'ℹ'}
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className={`
+                text-sm font-medium
+                ${toastType === 'success' ? 'text-gray-900' :
+                  toastType === 'error' ? 'text-gray-900' :
+                  'text-gray-900'}
+              `}>
+                {toastMessage}
+              </p>
+            </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="ml-2 text-white/70 hover:text-white"
+              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
             >
-              ✕
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>

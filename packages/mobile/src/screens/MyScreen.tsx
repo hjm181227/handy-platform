@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   SafeAreaView,
   Alert,
   Platform,
-  Modal 
+  Modal,
+  BackHandler,
+  ToastAndroid
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentEnvironment } from '@handy-platform/shared';
 import { getWebURL } from '../config/webUrl';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import WebViewBridge from '../components/WebViewBridge';
+import { WebView } from 'react-native-webview';
 import NailMeasurement from './NailMeasurement';
 import NailSizesScreen from './NailSizesScreen';
 
@@ -34,6 +37,11 @@ const MyScreen: React.FC = () => {
   const [showNailSizes, setShowNailSizes] = useState(false);
   const navigation = useNavigation();
 
+  // BackHandler 관련 state 및 ref
+  const [canGoBack, setCanGoBack] = useState(false);
+  const webViewBridgeRef = useRef<WebView>(null);
+  const lastBackPressed = useRef<number>(0);
+
   useEffect(() => {
     loadRecentMeasurements();
   }, []);
@@ -42,17 +50,54 @@ const MyScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       console.log('👤 [MYSCREEN] MyScreen focused');
-      
+
       // 현재 활성화된 탭이 My인지 확인
       const state = navigation.getState();
       const currentRoute = state.routes[state.index];
       console.log('👤 [MYSCREEN] Current route:', currentRoute.name);
       console.log('👤 [MYSCREEN] Current showWebView state:', showWebView);
-      
+
       return () => {
         console.log('👤 [MYSCREEN] MyScreen blurred');
       };
     }, [showWebView])
+  );
+
+  // 하드웨어 뒤로가기 처리
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        // Native UI 모드일 때는 WebView 모드로 전환
+        if (!showWebView) {
+          setShowWebView(true);
+          return true;
+        }
+
+        // WebView 모드일 때
+        if (canGoBack && webViewBridgeRef.current) {
+          // WebView에 히스토리가 있으면 뒤로가기
+          webViewBridgeRef.current.goBack();
+          return true;
+        } else {
+          // WebView 초기 페이지이거나 히스토리가 없을 때 - 2번 탭하면 앱 종료
+          const currentTime = Date.now();
+          if (currentTime - lastBackPressed.current < 2000) {
+            // 2초 이내에 두 번째 뒤로가기 - 앱 종료
+            BackHandler.exitApp();
+            return true;
+          } else {
+            // 첫 번째 뒤로가기 - 토스트 메시지
+            lastBackPressed.current = currentTime;
+            if (Platform.OS === 'android') {
+              ToastAndroid.show('한 번 더 누르면 종료됩니다', ToastAndroid.SHORT);
+            }
+            return true;
+          }
+        }
+      });
+
+      return () => backHandler.remove();
+    }, [canGoBack, showWebView])
   );
 
   const loadRecentMeasurements = async () => {
@@ -93,11 +138,17 @@ const MyScreen: React.FC = () => {
     return emojiMap[finger] || '✋';
   };
 
+  const handleNavigationStateChange = (navState: any) => {
+    setCanGoBack(navState.canGoBack);
+  };
+
   if (showWebView) {
     return (
       <View style={styles.container}>
-        <WebViewBridge 
-          url={getMyPageURL()} 
+        <WebViewBridge
+          ref={webViewBridgeRef}
+          url={getMyPageURL()}
+          onNavigationStateChange={handleNavigationStateChange}
           onShowNativeFeatures={() => {
             console.log('🟢 [MYSCREEN] 사이즈 측정 버튼으로 네이티브로 전환');
             setShowWebView(false);
@@ -140,7 +191,7 @@ const MyScreen: React.FC = () => {
         {showNailFeatures && (
           <View style={styles.nailSection}>
             <Text style={styles.sectionTitle}>측정 시작하기</Text>
-            
+
             <View style={styles.buttonColumn}>
               <TouchableOpacity
                 style={[styles.actionButton, styles.primaryButton]}
@@ -157,7 +208,7 @@ const MyScreen: React.FC = () => {
                   <Text style={styles.arrowText}>→</Text>
                 </View>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => setShowNailSizes(true)}
@@ -182,14 +233,14 @@ const MyScreen: React.FC = () => {
               <View style={styles.recentMeasurements}>
                 <View style={styles.recentHeader}>
                   <Text style={styles.recentTitle}>최근 측정 결과</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.viewAllMiniButton}
                     onPress={() => setShowNailSizes(true)}
                   >
                     <Text style={styles.viewAllMiniButtonText}>전체보기</Text>
                   </TouchableOpacity>
                 </View>
-                
+
                 {recentMeasurements.slice(0, 3).map((measurement, index) => (
                   <View key={measurement.id} style={styles.recentCard}>
                     <View style={styles.recentCardLeft}>
@@ -205,7 +256,7 @@ const MyScreen: React.FC = () => {
                     </View>
                   </View>
                 ))}
-                
+
                 <TouchableOpacity
                   style={styles.viewAllButton}
                   onPress={() => setShowNailSizes(true)}
@@ -215,7 +266,7 @@ const MyScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
             )}
-            
+
             {/* 측정이 없을 때 안내 */}
             {recentMeasurements.length === 0 && (
               <View style={styles.emptyState}>
@@ -242,7 +293,7 @@ const MyScreen: React.FC = () => {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowARCamera(false)}
       >
-        <NailMeasurement 
+        <NailMeasurement
           onClose={() => setShowARCamera(false)}
           onNavigateToSizes={() => {
             setShowARCamera(false);
@@ -258,7 +309,7 @@ const MyScreen: React.FC = () => {
         presentationStyle="formSheet"
         onRequestClose={() => setShowNailSizes(false)}
       >
-        <NailSizesScreen 
+        <NailSizesScreen
           onClose={() => setShowNailSizes(false)}
           onNavigateToCamera={() => {
             setShowNailSizes(false);
@@ -491,7 +542,7 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: 'bold',
   },
-  
+
   // 새로운 UI 스타일들
   welcomeSection: {
     backgroundColor: '#fff',
@@ -528,7 +579,7 @@ const styles = StyleSheet.create({
   welcomeEmoji: {
     fontSize: 48,
   },
-  
+
   // 통계 섹션
   statsSection: {
     backgroundColor: '#fff',
@@ -579,7 +630,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.3,
   },
-  
+
   // 개선된 버튼 스타일
   buttonIconWrapper: {
     width: 50,
@@ -601,7 +652,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  
+
   // 최근 측정 결과 개선
   recentHeader: {
     flexDirection: 'row',
@@ -677,7 +728,7 @@ const styles = StyleSheet.create({
   viewAllButtonIcon: {
     fontSize: 16,
   },
-  
+
   // 빈 상태 스타일
   emptyState: {
     backgroundColor: '#f8f9fa',

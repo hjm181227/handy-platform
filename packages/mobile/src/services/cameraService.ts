@@ -1,6 +1,5 @@
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, ImagePickerOptions } from 'react-native-image-picker';
 import { PermissionsAndroid, Platform, Alert } from 'react-native';
-import { requestCameraPermission, requestStoragePermission } from '../utils/permissions';
 
 export interface CameraResult {
   uri: string;
@@ -27,13 +26,49 @@ class CameraService {
     includeBase64: false,
   };
 
-  // Permission methods - now using centralized permission utils
+  // Permission methods
   async requestCameraPermission(): Promise<boolean> {
-    return await requestCameraPermission();
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: '카메라 권한 필요',
+            message: '네일 아트 상품의 사진을 촬영하고, 손톱 크기를 AR로 정확히 측정하기 위해 카메라 접근 권한이 필요합니다.',
+            buttonNeutral: '나중에',
+            buttonNegative: '거부',
+            buttonPositive: '허용',
+          }
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn('Camera permission error:', err);
+        return false;
+      }
+    }
+    return true; // iOS handles permissions automatically
   }
 
   async requestStoragePermission(): Promise<boolean> {
-    return await requestStoragePermission();
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: '저장소 권한 필요',
+            message: '갤러리에서 네일 디자인 이미지를 선택하고, 촬영한 사진을 저장하기 위해 저장소 접근 권한이 필요합니다.',
+            buttonNeutral: '나중에',
+            buttonNegative: '거부',
+            buttonPositive: '허용',
+          }
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn('Storage permission error:', err);
+        return false;
+      }
+    }
+    return true;
   }
 
   // Camera methods
@@ -192,7 +227,7 @@ class CameraService {
   // Utility methods
   getImageSizeText(fileSize?: number): string {
     if (!fileSize) return '';
-    
+
     if (fileSize < 1024) {
       return `${fileSize}B`;
     } else if (fileSize < 1024 * 1024) {

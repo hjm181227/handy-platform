@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
 import { money } from '../../utils';
@@ -18,19 +18,28 @@ interface CartContentProps {
   refreshTrigger?: any;
   /** 현재 로그인한 사용자 정보 */
   currentUser?: User | null;
+  /** 토스트 메시지 표시 핸들러 (App.tsx에서 전달) */
+  showToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, refreshTrigger, currentUser }: CartContentProps) {
+export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, refreshTrigger, currentUser, showToast }: CartContentProps) {
   // 상태 관리
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
-  
+
   // 제작 용량 관련 상태
   const [removedItems, setRemovedItems] = useState<RemovedItem[]>([]);
   const [capacityWarnings, setCapacityWarnings] = useState<CapacityWarning[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+
+  // 아이템 제거 관련 상태
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<{ productId: string; options?: Record<string, string>; name: string } | null>(null);
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+  const [pendingUndo, setPendingUndo] = useState<{ productId: string; options?: Record<string, string>; previousCart: Cart } | null>(null);
+  const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 장바구니 데이터 로딩
   const loadCart = async () => {
@@ -127,48 +136,124 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     }
   };
 
-  // 아이템 제거
-  const removeItem = async (productId: string, options?: Record<string, string>) => {
-    if (!confirm('이 상품을 장바구니에서 제거하시겠습니까?')) return;
-    
-    try {
-      setUpdatingItems(prev => new Set(prev).add(productId));
-      
-      console.log('Removing cart item:', { productId, options });
-      const response = await cartService.removeFromCart(productId, options);
-      
-      console.log('Remove cart response:', response);
-      
-      if (response.success && response.data) {
-        // 새로운 응답 구조 처리
-        const cartData = {
-          items: response.data.items || [],
-          totals: response.data.totals || {},
-          user: response.data.user
-        };
-        
-        setCart(cartData);
-        
-        // 제작 용량 관련 정보도 업데이트
-        setRemovedItems(response.removedItems || []);
-        setCapacityWarnings(response.capacityWarnings || []);
-        setMessage(response.message || null);
-        
-        onCartUpdate?.();
-      } else {
-        throw new Error('상품 제거에 실패했습니다.');
-      }
-    } catch (err: any) {
-      console.error('Remove cart item failed:', err);
-      alert(err.message || '상품 제거에 실패했습니다.');
-    } finally {
-      setUpdatingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(productId);
-        return newSet;
+  // 아이템 제거 - 개선된 버전
+  const removeItem = (productId: string, options?: Record<string, string>, itemName?: string) => {
+    setItemToRemove({ productId, options, name: itemName || '상품' });
+    setShowRemoveModal(true);
+  };
+
+  // 실제 아이템 제거 처리 (낙관적 업데이트 + Undo 기능)
+  const confirmRemoveItem = async () => {
+    if (!itemToRemove || !cart) return;
+
+    const { productId, options, name } = itemToRemove;
+    setShowRemoveModal(false);
+
+    // 이전 장바구니 상태 저장
+    const previousCart = { ...cart };
+
+    // 낙관적 UI 업데이트 - 즉시 아이템 제거 표시
+    setRemovingItems(prev => new Set(prev).add(productId));
+
+    // 이전 장바구니 상태를 저장하기 전에 현재 상태 기반으로 필터링
+    setCart(prev => {
+      if (!prev) return null;
+
+      // prev.items를 사용하여 최신 상태에서 필터링 (stale closure 방지)
+      const updatedItems = prev.items.filter(item => {
+        if (item.product.id !== productId) return true;
+        if (options && JSON.stringify(item.options) !== JSON.stringify(options)) return true;
+        return false;
       });
+
+      return { ...prev, items: updatedItems };
+    });
+
+    // Undo 상태 설정
+    setPendingUndo({ productId, options, previousCart });
+
+    // 토스트 메시지 표시 (fallback)
+    if (showToast) {
+      showToast(`${name}이(가) 장바구니에서 제거되었어요`, 'info');
+    }
+
+    // 3초 후 API 호출
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+    }
+
+    undoTimerRef.current = setTimeout(async () => {
+      try {
+        console.log('Removing cart item:', { productId, options });
+        const response = await cartService.removeFromCart(productId, options);
+
+        console.log('Remove cart response:', response);
+
+        if (response.success && response.data) {
+          const cartData = {
+            items: response.data.items || [],
+            totals: response.data.totals || {},
+            user: response.data.user
+          };
+
+          setCart(cartData);
+          setRemovedItems(response.removedItems || []);
+          setCapacityWarnings(response.capacityWarnings || []);
+          setMessage(response.message || null);
+          onCartUpdate?.();
+        } else {
+          throw new Error('상품 제거에 실패했습니다.');
+        }
+      } catch (err: any) {
+        console.error('Remove cart item failed:', err);
+        // 실패 시 이전 상태로 복원
+        setCart(previousCart);
+        if (showToast) {
+          showToast(err.message || '상품 제거에 실패했습니다', 'error');
+        }
+      } finally {
+        setRemovingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(productId);
+          return newSet;
+        });
+        setPendingUndo(null);
+      }
+    }, 3000);
+  };
+
+  // Undo 처리
+  const handleUndo = () => {
+    if (!pendingUndo) return;
+
+    // 타이머 취소
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+
+    // 이전 상태로 복원
+    setCart(pendingUndo.previousCart);
+    setRemovingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(pendingUndo.productId);
+      return newSet;
+    });
+    setPendingUndo(null);
+
+    if (showToast) {
+      showToast('취소되었습니다', 'info');
     }
   };
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+      }
+    };
+  }, []);
 
   // 전체 장바구니 비우기 (page 모드에서만)
   const clearAllItems = async () => {
@@ -358,11 +443,11 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
   const renderSellerGroup = (seller: CartItemsBySeller) => (
     <div key={seller.sellerUuid} className="border rounded-lg mb-6 overflow-hidden">
       {/* 판매자 헤더 */}
-      <div className="bg-gray-50 border-b p-4">
+      <div className="bg-gray-50 border-b p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h3 className="font-semibold text-lg">{seller.sellerName}</h3>
+              <h3 className="font-semibold text-xl">{seller.sellerName}</h3>
               <div className="flex items-center gap-2 mt-1">
                 {seller.sellerInfo.isVerified && (
                   <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
@@ -379,19 +464,20 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       </div>
 
       {/* 판매자의 상품 목록 */}
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-5">
         {seller.items.map((item: CartItem) => {
           const productId = item.product.id; // 새 API는 id 필드 사용
           const isUpdating = updatingItems.has(productId);
+          const isRemoving = removingItems.has(productId);
           const itemKey = `${productId}-${JSON.stringify(item.options)}`;
-          
+
           return (
-            <div 
+            <div
               key={itemKey}
-              className={`flex gap-4 transition-all duration-200 ${isUpdating ? 'opacity-50' : ''}`}
+              className={`flex gap-6 transition-all duration-300 ${isUpdating ? 'opacity-50' : ''} ${isRemoving ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
             >
               {/* 상품 이미지 */}
-              <div className="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+              <div className="w-28 h-28 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                 {item.product.mainImageUrl ? (
                   <img 
                     src={item.product.mainImageUrl} 
@@ -420,8 +506,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
               {/* 상품 정보 */}
               <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 pr-4">
                     <h4 className="font-semibold">{item.product.name}</h4>
                     <div className="text-gray-500 text-sm mt-1">
                       {item.product.seller?.name}
@@ -437,43 +523,43 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(productId, item.options)}
+                    onClick={() => removeItem(productId, item.options, item.product.name)}
                     disabled={isUpdating}
-                    className="text-gray-400 hover:text-red-500 p-1"
+                    className="text-gray-400 hover:text-red-500 p-1 ml-auto flex-shrink-0"
                     title="상품 제거"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center gap-4 mt-4">
                   {/* 수량 조절 */}
-                  <div className="flex items-center border rounded">
+                  <div className="flex items-center border rounded-lg">
                     <button
                       onClick={() => updateQuantity(productId, item.quantity - 1, item.options)}
                       disabled={isUpdating || item.quantity <= 1}
-                      className="px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
+                      className="px-4 py-2.5 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                     >
                       -
                     </button>
-                    <div className="px-4 py-2 min-w-[50px] text-center border-x">
+                    <div className="px-5 py-2.5 min-w-[60px] text-center border-x font-medium">
                       {isUpdating ? '...' : item.quantity}
                     </div>
                     <button
                       onClick={() => updateQuantity(productId, item.quantity + 1, item.options)}
                       disabled={isUpdating}
-                      className="px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
+                      className="px-4 py-2.5 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                     >
                       +
                     </button>
                   </div>
 
                   {/* 가격 정보 */}
-                  <div className="text-right">
-                    <div className="font-semibold">
+                  <div className="text-right ml-auto">
+                    <div className="font-bold text-lg">
                       {money(item.subtotal)}원
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm text-gray-500">
                       개당 {money(item.price)}원
                     </div>
                   </div>
@@ -525,25 +611,26 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
     // 기존 렌더링 방식 (하위 호환성)
     return (
-      <div className={mode === 'drawer' ? 'space-y-4' : 'space-y-4'}>
+      <div className={mode === 'drawer' ? 'space-y-4' : 'space-y-5'}>
         {cartItems.map((item: CartItem) => {
           const productId = item.product.id; // 새 API는 id 필드 사용
           const isUpdating = updatingItems.has(productId);
+          const isRemoving = removingItems.has(productId);
           const itemKey = `${productId}-${JSON.stringify(item.options)}`;
-        
+
         return (
-          <div 
+          <div
             key={itemKey}
             className={`${
-              mode === 'drawer' 
-                ? 'flex gap-3 border-b pb-4 transition-all duration-200 hover:bg-gray-50 p-2 rounded-lg -m-2' 
-                : 'border rounded-lg p-4'
-            } ${isUpdating ? 'opacity-50' : ''}`}
+              mode === 'drawer'
+                ? 'flex gap-4 border-b pb-4 transition-all duration-300 hover:bg-gray-50 p-3 rounded-lg -m-3'
+                : 'border rounded-lg p-6 transition-all duration-300'
+            } ${isUpdating ? 'opacity-50' : ''} ${isRemoving ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
           >
-            <div className={mode === 'drawer' ? 'flex gap-3' : 'flex gap-4'}>
+            <div className={mode === 'drawer' ? 'flex gap-4' : 'flex gap-6'}>
               {/* 상품 이미지 */}
               <div className={`rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 ${
-                mode === 'drawer' ? 'w-16 h-16' : 'w-20 h-20'
+                mode === 'drawer' ? 'w-24 h-24' : 'w-28 h-28'
               }`}>
                 {item.product.mainImageUrl ? (
                   <img 
@@ -573,9 +660,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
               {/* 상품 정보 */}
               <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className={`font-semibold ${mode === 'drawer' ? 'text-sm' : 'text-base'}`}>
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 pr-4">
+                    <h4 className={`font-semibold ${mode === 'drawer' ? 'text-base' : 'text-lg'}`}>
                       {item.product.name}
                     </h4>
                     <div className={`text-gray-500 mt-1 ${mode === 'drawer' ? 'text-xs' : 'text-sm'}`}>
@@ -592,43 +679,43 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(productId, item.options)}
+                    onClick={() => removeItem(productId, item.options, item.product.name)}
                     disabled={isUpdating}
-                    className="text-gray-400 hover:text-red-500 p-1"
+                    className="text-gray-400 hover:text-red-500 p-1 ml-auto flex-shrink-0"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className={`flex items-center justify-between ${mode === 'drawer' ? 'mt-2' : 'mt-3'}`}>
+                <div className={`flex items-center gap-4 ${mode === 'drawer' ? 'mt-3' : 'mt-4'}`}>
                   {/* 수량 조절 */}
-                  <div className="flex items-center border rounded">
+                  <div className={`flex items-center border rounded-lg ${mode === 'drawer' ? '' : 'border-2'}`}>
                     <button
                       onClick={() => updateQuantity(productId, item.quantity - 1, item.options)}
                       disabled={isUpdating || item.quantity <= 1}
-                      className="px-2 py-1 hover:bg-gray-50 disabled:opacity-50"
+                      className={`${mode === 'drawer' ? 'px-3 py-2' : 'px-4 py-2.5'} hover:bg-gray-50 disabled:opacity-50 transition-colors`}
                     >
                       -
                     </button>
-                    <div className="px-3 py-1 min-w-[40px] text-center">
+                    <div className={`${mode === 'drawer' ? 'px-4 py-2 min-w-[50px]' : 'px-5 py-2.5 min-w-[60px]'} text-center border-x font-medium`}>
                       {isUpdating ? '...' : item.quantity}
                     </div>
                     <button
                       onClick={() => updateQuantity(productId, item.quantity + 1, item.options)}
                       disabled={isUpdating}
-                      className="px-2 py-1 hover:bg-gray-50 disabled:opacity-50"
+                      className={`${mode === 'drawer' ? 'px-3 py-2' : 'px-4 py-2.5'} hover:bg-gray-50 disabled:opacity-50 transition-colors`}
                     >
                       +
                     </button>
                   </div>
 
                   {/* 가격 */}
-                  <div className="text-right">
-                    <div className="font-semibold">
+                  <div className="text-right ml-auto">
+                    <div className={`font-bold ${mode === 'drawer' ? 'text-base' : 'text-lg'}`}>
                       {money(item.subtotal)}원
                     </div>
                     {mode === 'page' && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm text-gray-500">
                         개당 {money(item.price)}원
                       </div>
                     )}
@@ -750,38 +837,116 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     );
   };
 
+  // 확인 모달 렌더링
+  const renderConfirmModal = () => {
+    if (!showRemoveModal || !itemToRemove) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden animate-fadeIn">
+          {/* 헤더 */}
+          <div className="px-6 py-4 border-b">
+            <h3 className="text-lg font-semibold text-gray-900">상품 제거</h3>
+          </div>
+
+          {/* 본문 */}
+          <div className="px-6 py-6">
+            <p className="text-gray-700 leading-relaxed">
+              <span className="font-medium text-gray-900">{itemToRemove.name}</span>을(를) 장바구니에서 제거하시겠어요?
+            </p>
+          </div>
+
+          {/* 버튼 */}
+          <div className="px-6 py-4 bg-gray-50 flex gap-3 justify-end">
+            <button
+              onClick={() => {
+                setShowRemoveModal(false);
+                setItemToRemove(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={confirmRemoveItem}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              제거하기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Undo 토스트 렌더링
+  const renderUndoToast = () => {
+    if (!pendingUndo) return null;
+
+    return (
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-slideUp">
+        <div className="bg-gray-900 text-white rounded-lg shadow-2xl px-5 py-4 flex items-center gap-4 min-w-[320px]">
+          <div className="flex-1">
+            <p className="text-sm font-medium">장바구니에서 제거되었어요</p>
+          </div>
+          <button
+            onClick={handleUndo}
+            className="px-3 py-1.5 text-sm font-medium bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-all"
+          >
+            실행취소
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // 메인 콘텐츠 렌더링
   const renderContent = () => {
     if (loading) return renderLoading();
     if (error) return renderError();
-    if (!cart || cartItems.length === 0) return renderEmpty();
+
+    // 빈 장바구니 체크: 아이템이 없고, 제거 중인 아이템도 없고, 대기 중인 취소도 없는 경우에만 빈 상태 표시
+    const hasItemsBeingRemoved = removingItems.size > 0;
+    const hasPendingUndo = pendingUndo !== null;
+
+    if (!cart || (cartItems.length === 0 && !hasItemsBeingRemoved && !hasPendingUndo)) {
+      return renderEmpty();
+    }
 
     if (mode === 'drawer') {
       return (
-        <div className="flex h-full flex-col">
-          {renderHeader()}
-          <div className="flex-1 overflow-y-auto p-4">
-            {renderNotifications()}
-            {renderCartItems()}
+        <>
+          <div className="flex h-full flex-col">
+            {renderHeader()}
+            <div className="flex-1 overflow-y-auto p-4">
+              {renderNotifications()}
+              {renderCartItems()}
+            </div>
+            {renderOrderSummary()}
           </div>
-          {renderOrderSummary()}
-        </div>
+          {renderConfirmModal()}
+          {renderUndoToast()}
+        </>
       );
     }
 
     return (
-      <div className="mx-auto max-w-6xl px-4 py-6">
-        {renderHeader()}
-        {renderNotifications()}
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            {renderCartItems()}
-          </div>
-          <div className="lg:col-span-1">
-            {renderOrderSummary()}
+      <>
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          {renderHeader()}
+          {renderNotifications()}
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              {renderCartItems()}
+            </div>
+            <div className="lg:col-span-1">
+              {renderOrderSummary()}
+            </div>
           </div>
         </div>
-      </div>
+        {renderConfirmModal()}
+        {renderUndoToast()}
+      </>
     );
   };
 
