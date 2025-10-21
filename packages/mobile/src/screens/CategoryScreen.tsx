@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, DeviceEventEmitter, BackHandler, ToastAndroid, Platform } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCurrentEnvironment } from '@handy-platform/shared';
 
 const CategoryScreen: React.FC = () => {
   const navigation = useNavigation();
+  const lastBackPressed = useRef<number>(0);
 
   // 웹의 실제 CategoryDrawer와 동일한 카테고리 데이터
   const categories = {
@@ -67,17 +68,46 @@ const CategoryScreen: React.FC = () => {
     ],
   };
 
+  // 하드웨어 뒤로가기 처리 - 홈 탭으로 이동
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        // 카테고리 화면에서 뒤로가기 시 홈 탭으로 이동
+        const currentTime = Date.now();
+        if (currentTime - lastBackPressed.current < 2000) {
+          // 2초 이내에 두 번째 뒤로가기 - 앱 종료
+          BackHandler.exitApp();
+          return true;
+        } else {
+          // 첫 번째 뒤로가기 - 홈 탭으로 이동
+          lastBackPressed.current = currentTime;
+          navigation.navigate('Home' as never);
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('홈으로 이동합니다', ToastAndroid.SHORT);
+          }
+          return true;
+        }
+      });
+
+      return () => backHandler.remove();
+    }, [])
+  );
+
   const handleCategoryPress = (path: string) => {
     // 해당 카테고리 페이지로 WebView 네비게이션
-    const env = getCurrentEnvironment();
-    const baseURL = env === 'development'
-      ? 'http://10.0.2.2:3003'
-      : 'http://10.0.2.2:3003';
-    
+    const baseURL = 'https://www.stage-handy.com';
     const fullUrl = `${baseURL}${path}`;
-    
-    // 홈 탭으로 이동하면서 해당 URL 로드
-    navigation.navigate('Home' as never, { url: fullUrl } as never);
+
+    console.log('📂 [CATEGORY] Category selected:', path);
+    console.log('📂 [CATEGORY] Full URL:', fullUrl);
+
+    // 1. 먼저 URL 변경 이벤트 발송
+    DeviceEventEmitter.emit('navigateToUrl', { url: fullUrl });
+
+    // 2. 짧은 딜레이 후 홈 탭으로 전환 (더 자연스러운 전환)
+    setTimeout(() => {
+      navigation.navigate('Home' as never);
+    }, 50);
   };
 
   return (

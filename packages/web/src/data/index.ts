@@ -1,4 +1,4 @@
-import { Product, NewsPost, NewsCategory, Faq } from '@handy-platform/shared';
+import { Product, NewsPost, NewsCategory, Faq, Snap } from '@handy-platform/shared';
 
 export const products: Product[] = [
   { 
@@ -338,9 +338,237 @@ export const faqs: Faq[] = [
     answer: "주문 시 손가락별 사이즈를 측정하여 선택하실 수 있습니다. 사이즈 가이드를 참고해 주세요."
   },
   {
-    id: "3", 
+    id: "3",
     category: "사용법",
     question: "네일팁 제거는 어떻게 하나요?",
     answer: "전용 리무버나 아세톤을 사용하여 천천히 제거하시면 됩니다. 무리하게 제거하지 마세요."
+  }
+];
+
+// 스냅 (네일 갤러리) 더미 데이터
+export const snaps: Snap[] = [
+  {
+    id: "snap-1",
+    imageUrl: "https://picsum.photos/seed/nail-1/600/800",
+    title: "Glossy Pink Gradient",
+    description: "핑크 그라데이션 글로시 네일 디자인",
+    creator: {
+      name: "민지",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-1"
+    },
+    likesCount: 234,
+    createdAt: "2024-08-20T10:30:00Z",
+    tags: ["핑크", "그라데이션", "글로시", "데일리"],
+    relatedProducts: ["1", "4"]
+  },
+  {
+    id: "snap-2",
+    imageUrl: "https://picsum.photos/seed/nail-2/600/800",
+    title: "French Manicure",
+    description: "클래식 프렌치 매니큐어",
+    creator: {
+      name: "수현",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-2"
+    },
+    likesCount: 412,
+    createdAt: "2024-08-19T14:20:00Z",
+    tags: ["프렌치", "클래식", "화이트", "웨딩"],
+    relatedProducts: ["5"]
+  },
+  {
+    id: "snap-3",
+    imageUrl: "https://picsum.photos/seed/nail-3/600/800",
+    title: "Black & Gold Glitter",
+    description: "블랙 베이스에 골드 글리터 포인트",
+    creator: {
+      name: "지은",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-3"
+    },
+    likesCount: 567,
+    createdAt: "2024-08-18T09:15:00Z",
+    tags: ["블랙", "골드", "글리터", "파티"],
+    relatedProducts: ["3"]
+  },
+  {
+    id: "snap-4",
+    imageUrl: "https://picsum.photos/seed/nail-4/600/800",
+    title: "Nude Marble",
+    description: "은은한 누드 마블 패턴",
+    creator: {
+      name: "유진",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-4"
+    },
+    likesCount: 189,
+    createdAt: "2024-08-17T16:45:00Z",
+    tags: ["누드", "마블", "심플", "오피스"],
+    relatedProducts: ["2"]
+  },
+  {
+    id: "snap-5",
+    imageUrl: "https://picsum.photos/seed/nail-5/600/800",
+    title: "Cherry Blossom Art",
+    description: "벚꽃 디자인의 봄 네일",
+    creator: {
+      name: "혜진",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-5"
+    },
+    likesCount: 623,
+    createdAt: "2024-08-16T11:00:00Z",
+    tags: ["벚꽃", "봄", "핑크", "아트"],
+    relatedProducts: ["1", "4"]
+  },
+  {
+    id: "snap-6",
+    imageUrl: "https://picsum.photos/seed/nail-6/600/800",
+    title: "Matte Brown Minimalist",
+    description: "매트 브라운 미니멀 디자인",
+    creator: {
+      name: "서연",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-6"
+    },
+    likesCount: 345,
+    createdAt: "2024-08-15T13:30:00Z",
+    tags: ["매트", "브라운", "미니멀", "데일리"],
+    relatedProducts: ["2"]
+  },
+  {
+    id: "snap-7",
+    imageUrl: "https://picsum.photos/seed/nail-7/600/800",
+    title: "Holographic Chrome",
+    description: "홀로그램 크롬 네일",
+    creator: {
+      name: "다은",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-7"
+    },
+    likesCount: 789,
+    createdAt: "2024-08-14T10:20:00Z",
+    tags: ["홀로그램", "크롬", "트렌디", "파티"],
+    relatedProducts: ["3"]
+  },
+  {
+    id: "snap-8",
+    imageUrl: "https://picsum.photos/seed/nail-8/600/800",
+    title: "Pastel Rainbow",
+    description: "파스텔 무지개 색상 믹스",
+    creator: {
+      name: "채원",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-8"
+    },
+    likesCount: 456,
+    createdAt: "2024-08-13T15:40:00Z",
+    tags: ["파스텔", "무지개", "여름", "키치"],
+    relatedProducts: ["1", "4", "5"]
+  },
+  {
+    id: "snap-9",
+    imageUrl: "https://picsum.photos/seed/nail-9/600/800",
+    title: "Burgundy Velvet",
+    description: "버건디 벨벳 텍스처",
+    creator: {
+      name: "하은",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-9"
+    },
+    likesCount: 298,
+    createdAt: "2024-08-12T12:10:00Z",
+    tags: ["버건디", "벨벳", "가을", "우아"],
+    relatedProducts: ["3"]
+  },
+  {
+    id: "snap-10",
+    imageUrl: "https://picsum.photos/seed/nail-10/600/800",
+    title: "Pearl White Elegance",
+    description: "화이트 펄 우아한 스타일",
+    creator: {
+      name: "소은",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-10"
+    },
+    likesCount: 512,
+    createdAt: "2024-08-11T09:25:00Z",
+    tags: ["화이트", "펄", "우아", "웨딩"],
+    relatedProducts: ["5"]
+  },
+  {
+    id: "snap-11",
+    imageUrl: "https://picsum.photos/seed/nail-11/600/800",
+    title: "Geometric Patterns",
+    description: "기하학 패턴 디자인",
+    creator: {
+      name: "예린",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-11"
+    },
+    likesCount: 367,
+    createdAt: "2024-08-10T14:50:00Z",
+    tags: ["기하학", "패턴", "모던", "트렌디"],
+    relatedProducts: ["2"]
+  },
+  {
+    id: "snap-12",
+    imageUrl: "https://picsum.photos/seed/nail-12/600/800",
+    title: "Ocean Blue Wave",
+    description: "바다 파도 블루 그라데이션",
+    creator: {
+      name: "아린",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-12"
+    },
+    likesCount: 441,
+    createdAt: "2024-08-09T11:35:00Z",
+    tags: ["블루", "그라데이션", "여름", "시원"],
+    relatedProducts: ["1"]
+  },
+  {
+    id: "snap-13",
+    imageUrl: "https://picsum.photos/seed/nail-13/600/800",
+    title: "Rose Gold Glam",
+    description: "로즈골드 글램 스타일",
+    creator: {
+      name: "나은",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-13"
+    },
+    likesCount: 678,
+    createdAt: "2024-08-08T16:20:00Z",
+    tags: ["로즈골드", "글램", "파티", "화려"],
+    relatedProducts: ["3", "4"]
+  },
+  {
+    id: "snap-14",
+    imageUrl: "https://picsum.photos/seed/nail-14/600/800",
+    title: "Mint Green Fresh",
+    description: "민트 그린 청량한 느낌",
+    creator: {
+      name: "윤아",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-14"
+    },
+    likesCount: 223,
+    createdAt: "2024-08-07T10:05:00Z",
+    tags: ["민트", "그린", "청량", "봄"],
+    relatedProducts: ["1", "5"]
+  },
+  {
+    id: "snap-15",
+    imageUrl: "https://picsum.photos/seed/nail-15/600/800",
+    title: "Purple Galaxy",
+    description: "퍼플 갤럭시 우주 디자인",
+    creator: {
+      name: "시은",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-15"
+    },
+    likesCount: 556,
+    createdAt: "2024-08-06T13:45:00Z",
+    tags: ["퍼플", "갤럭시", "우주", "신비"],
+    relatedProducts: ["3"]
+  },
+  {
+    id: "snap-16",
+    imageUrl: "https://picsum.photos/seed/nail-16/600/800",
+    title: "Peach Ombre",
+    description: "복숭아 옹브레 그라데이션",
+    creator: {
+      name: "은지",
+      avatar: "https://i.pravatar.cc/150?u=nail-artist-16"
+    },
+    likesCount: 392,
+    createdAt: "2024-08-05T15:15:00Z",
+    tags: ["복숭아", "옹브레", "그라데이션", "여름"],
+    relatedProducts: ["1", "4"]
   }
 ];

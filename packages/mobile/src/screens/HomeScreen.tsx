@@ -7,24 +7,70 @@ import {
   SafeAreaView,
   Alert,
   DeviceEventEmitter,
+  BackHandler,
+  ToastAndroid,
 } from 'react-native';
 import { getCurrentEnvironment } from '@handy-platform/shared';
 import { getWebURL, logWebUrlInfo } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
 
-const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  route?: {
+    params?: {
+      url?: string;
+    };
+  };
+}
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
   const [canGoBack, setCanGoBack] = useState(false);
   const webViewBridgeRef = useRef<WebView>(null);
   const navigation = useNavigation();
-  
+  const lastBackPressed = useRef<number>(0);
+
   // 중앙화된 웹 URL 사용
   const webURL = getWebURL();
-  
+
   // 디버깅용 URL 정보 로깅
   useEffect(() => {
     logWebUrlInfo();
+  }, []);
+
+  // URL 파라미터로 네비게이션 처리
+  useEffect(() => {
+    const targetUrl = route?.params?.url;
+    if (targetUrl && webViewBridgeRef.current) {
+      console.log('📍 [HOMESCREEN] Navigating to URL from route params:', targetUrl);
+      // 전체 URL을 직접 사용
+      webViewBridgeRef.current.injectJavaScript(`
+        console.log('Navigating to:', '${targetUrl}');
+        window.location.href = '${targetUrl}';
+        true;
+      `);
+    }
+  }, [route?.params?.url]);
+
+  // DeviceEventEmitter로 URL 네비게이션 수신
+  useEffect(() => {
+    const urlNavigationListener = DeviceEventEmitter.addListener(
+      'navigateToUrl',
+      ({ url }: { url: string }) => {
+        console.log('📍 [HOMESCREEN] Navigating to URL from event:', url);
+        if (webViewBridgeRef.current) {
+          webViewBridgeRef.current.injectJavaScript(`
+            console.log('Navigating to:', '${url}');
+            window.location.href = '${url}';
+            true;
+          `);
+        }
+      }
+    );
+
+    return () => {
+      urlNavigationListener.remove();
+    };
   }, []);
 
   // 홈 탭 클릭 이벤트 리스너 - Updated
@@ -46,45 +92,37 @@ const HomeScreen: React.FC = () => {
     };
   }, []);
 
-  // 홈 탭을 누를 때마다 메인 홈으로 이동
+  // useFocusEffect 제거 - 카테고리 네비게이션 방해하지 않도록
+  // 홈 탭을 두 번 누르면 homeTabPressed 이벤트로 홈으로 이동
+
+  // 하드웨어 뒤로가기 처리
   useFocusEffect(
     React.useCallback(() => {
-      console.log('🏠 [HOMESCREEN] HomeScreen useFocusEffect triggered');
-      console.log('🏠 [HOMESCREEN] Current navigation state:', navigation.getState());
-      
-      // 현재 활성화된 탭이 Home인지 확인
-      const state = navigation.getState();
-      const currentRoute = state.routes[state.index];
-      console.log('🏠 [HOMESCREEN] Current route:', currentRoute.name);
-      
-      if (currentRoute.name !== 'Home') {
-        console.log('🏠 [HOMESCREEN] Current tab is not Home, skipping navigation');
-        return;
-      }
-      
-      const timer = setTimeout(() => {
-        if (webViewBridgeRef.current && navigation.isFocused() && currentRoute.name === 'Home') {
-          console.log('🏠 [HOMESCREEN] All checks passed - navigating to home');
-          // 홈 페이지로 강제 이동
-          webViewBridgeRef.current.injectJavaScript(`
-            console.log('Current URL:', window.location.href);
-            console.log('Current pathname:', window.location.pathname);
-            
-            // 강제로 홈으로 이동
-            window.location.href = '/';
-            
-            true;
-          `);
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (canGoBack && webViewBridgeRef.current) {
+          // WebView에 히스토리가 있으면 뒤로가기
+          webViewBridgeRef.current.goBack();
+          return true;
         } else {
-          console.log('🏠 [HOMESCREEN] Checks failed - skipping navigation');
-          console.log('🏠 [HOMESCREEN] WebView ref:', !!webViewBridgeRef.current);
-          console.log('🏠 [HOMESCREEN] Is focused:', navigation.isFocused());
-          console.log('🏠 [HOMESCREEN] Current route:', currentRoute.name);
+          // WebView 초기 페이지이거나 히스토리가 없을 때 - 2번 탭하면 앱 종료
+          const currentTime = Date.now();
+          if (currentTime - lastBackPressed.current < 2000) {
+            // 2초 이내에 두 번째 뒤로가기 - 앱 종료
+            BackHandler.exitApp();
+            return true;
+          } else {
+            // 첫 번째 뒤로가기 - 토스트 메시지
+            lastBackPressed.current = currentTime;
+            if (Platform.OS === 'android') {
+              ToastAndroid.show('한 번 더 누르면 종료됩니다', ToastAndroid.SHORT);
+            }
+            return true;
+          }
         }
-      }, 100); // 100ms 지연 후 실행
+      });
 
-      return () => clearTimeout(timer);
-    }, [navigation])
+      return () => backHandler.remove();
+    }, [canGoBack])
   );
 
   const handleNavigationStateChange = (navState: any) => {

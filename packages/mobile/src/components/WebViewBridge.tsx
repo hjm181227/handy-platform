@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Alert, BackHandler, Platform, PermissionsAndroid, Linking } from 'react-native';
+import { Alert, Platform, PermissionsAndroid, Linking } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
@@ -21,18 +21,6 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   
   // forwardRef로 전달받은 ref를 내부 ref와 동기화
   React.useImperativeHandle(ref, () => webViewRef.current as WebView);
-
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (webViewRef.current) {
-        webViewRef.current.goBack();
-        return true;
-      }
-      return false;
-    });
-
-    return () => backHandler.remove();
-  }, []);
 
   const handleMessage = async (event: any) => {
     try {

@@ -1427,3 +1427,21 @@ export interface BrandUpdateResponse {
     brandProfile: string | null;
   };
 }
+
+// ===== SNAP (네일 갤러리) TYPES =====
+
+// 스냅 (네일 아트 갤러리 이미지)
+export interface Snap {
+  id: string;
+  imageUrl: string;
+  title?: string;
+  description?: string;
+  creator: {
+    name: string;
+    avatar?: string;
+  };
+  likesCount: number;
+  createdAt: string;
+  tags?: string[];
+  relatedProducts?: string[]; // 연관 상품 ID 목록
+}
