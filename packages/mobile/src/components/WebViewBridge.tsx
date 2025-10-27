@@ -515,6 +515,42 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     if (window.ReactNativeWebView) {
       document.body.classList.add('webview-mode');
       console.log('🟢 [INJECT] WebView 모드 활성화: webview-mode 클래스 추가됨');
+      
+      // Safe area 설정을 위한 CSS 변수 추가
+      const style = document.createElement('style');
+      style.textContent = \`
+        :root {
+          --safe-area-inset-top: env(safe-area-inset-top);
+          --safe-area-inset-right: env(safe-area-inset-right);
+          --safe-area-inset-bottom: env(safe-area-inset-bottom);
+          --safe-area-inset-left: env(safe-area-inset-left);
+        }
+        
+        .webview-mode {
+          /* 하단 탭바를 위한 여백 추가 */
+          padding-bottom: max(60px, env(safe-area-inset-bottom));
+          /* 상단 상태바/노치를 위한 여백 */
+          padding-top: env(safe-area-inset-top);
+        }
+        
+        /* 전체 화면 컨텐츠가 있는 경우 */
+        .webview-mode .fullscreen-content {
+          padding-bottom: max(60px, env(safe-area-inset-bottom));
+          padding-top: env(safe-area-inset-top);
+        }
+        
+        /* 하단 고정 버튼/바가 있는 경우 */
+        .webview-mode .bottom-fixed {
+          bottom: max(60px, env(safe-area-inset-bottom));
+        }
+        
+        /* 상단 고정 헤더가 있는 경우 */
+        .webview-mode .top-fixed {
+          top: env(safe-area-inset-top);
+        }
+      \`;
+      document.head.appendChild(style);
+      console.log('🟢 [INJECT] Safe area CSS 변수 추가됨');
     }
 
     // localStorage.setItem을 후킹하여 토큰 자동 동기화

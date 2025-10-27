@@ -44,9 +44,31 @@ export const getCurrentEnvironment = (): string => {
     return 'local';
   }
 
-  // React Native 환경
-  if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
-    return process.env.REACT_NATIVE_ENV;
+  // React Native 환경 - BuildConfig 우선 확인 (최우선!)
+  // React Native인지 감지: navigator.product === 'ReactNative'
+  if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+    try {
+      // @ts-ignore - React Native 전용 코드
+      const { NativeModules } = require('react-native');
+      if (NativeModules && NativeModules.BuildConfig) {
+        const buildEnv = NativeModules.BuildConfig.APP_ENV;
+        if (buildEnv) {
+          console.log('🟢 [API_CONFIG] React Native BuildConfig.APP_ENV:', buildEnv);
+          return buildEnv; // 'stage' 또는 'production'
+        }
+      }
+    } catch (error) {
+      console.warn('🔴 [API_CONFIG] Failed to read BuildConfig:', error);
+    }
+
+    // BuildConfig를 읽지 못한 경우, process.env 확인
+    if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
+      return process.env.REACT_NATIVE_ENV;
+    }
+
+    // React Native이지만 환경 변수가 없는 경우 - stage 기본값 사용
+    console.log('🟡 [API_CONFIG] React Native detected but no BuildConfig, using stage as fallback');
+    return 'stage';
   }
 
   // Vite 환경 (웹) - 전역 변수 사용

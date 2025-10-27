@@ -8,3 +8,10 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# Keep BuildConfig (환경 변수 보호)
+-keep class com.handyapp.BuildConfig { *; }
+
+# Keep React Native NativeModules (BuildConfig 접근을 위해 필요)
+-keep class com.facebook.react.modules.** { *; }
+-keep class com.facebook.react.bridge.NativeModule { *; }
