@@ -683,7 +683,10 @@ export type WebViewMessageType =
   | 'CART_RESPONSE'
   | 'CAMERA_RESPONSE'
   | 'PAYMENT_RESPONSE'
-  | 'PERMISSIONS_RESPONSE';
+  | 'PERMISSIONS_RESPONSE'
+  | 'NAVIGATE_TO_MEASUREMENT'   // 손톱 사이즈 측정 화면으로 이동
+  | 'NAVIGATE_TO_SIZES'         // 손톱 사이즈 목록 화면으로 이동
+  | 'NAVIGATE_BACK';            // 뒤로가기
 
 export interface WebViewMessage {
   type: WebViewMessageType;

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { webApiService } from '../../services/apiService';
 import type { User } from '@handy-platform/shared';
+import navigateService from '@handy-platform/shared/src/services/navigate';
 
 // 간단한 더미 페이지들
 export function LikesPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
@@ -164,22 +165,19 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     return !!(window as any).ReactNativeWebView;
   };
 
-  // 앱 기능 보기로 돌아가기
-  const goToNativeApp = () => {
+  // 손톱 사이즈 측정 화면으로 이동
+  const goToMeasureSize = () => {
     console.log('🔵 [WEB] 사이즈 측정 버튼 클릭됨');
-    
-    // URL을 변경하여 네이티브에서 감지하도록 함
-    console.log('🔵 [WEB] URL 변경으로 네이티브 전환 시도');
-    window.location.href = 'about:blank?action=goToNative';
+    navigateService.goToMeasureSize();
   };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-5">
-      {/* 앱 기능 보기 버튼 (WebView에서만 표시) */}
+      {/* 사이즈 측정 버튼 (WebView에서만 표시) */}
       {isWebViewEnvironment() && (
         <div className="mb-4">
           <button
-            onClick={goToNativeApp}
+            onClick={goToMeasureSize}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             <span>📏</span>

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Alert, Platform, PermissionsAndroid, Linking } from 'react-native';
+import { Alert, Platform, PermissionsAndroid, Linking, DeviceEventEmitter } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
@@ -64,6 +64,15 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'REQUEST_TOKEN':
           await handleRequestToken();
+          break;
+        case 'NAVIGATE_TO_MEASUREMENT':
+          handleNavigateToMeasurement(message.data);
+          break;
+        case 'NAVIGATE_TO_SIZES':
+          handleNavigateToSizes(message.data);
+          break;
+        case 'NAVIGATE_BACK':
+          handleNavigateBack();
           break;
         default:
           console.log('🔴 [BRIDGE] 알 수 없는 메시지 타입:', message.type);
@@ -212,6 +221,30 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         },
       });
     }
+  };
+
+  /**
+   * 손톱 사이즈 측정 화면으로 네비게이션
+   */
+  const handleNavigateToMeasurement = (data: any) => {
+    console.log('🔵 [BRIDGE] Navigate to Measurement screen:', data);
+    DeviceEventEmitter.emit('navigateToMeasurement', data);
+  };
+
+  /**
+   * 손톱 사이즈 목록 화면으로 네비게이션
+   */
+  const handleNavigateToSizes = (data: any) => {
+    console.log('🔵 [BRIDGE] Navigate to Sizes screen:', data);
+    DeviceEventEmitter.emit('navigateToSizes', data);
+  };
+
+  /**
+   * 뒤로가기
+   */
+  const handleNavigateBack = () => {
+    console.log('🔵 [BRIDGE] Navigate back');
+    DeviceEventEmitter.emit('navigateBack');
   };
 
   const handleCart = async (data: any) => {

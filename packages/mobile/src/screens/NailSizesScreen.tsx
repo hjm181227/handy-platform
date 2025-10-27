@@ -15,7 +15,17 @@ import { userService } from '../services/apiService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 
-const NailSizesScreen: React.FC = () => {
+interface NailSizesScreenProps {
+  onClose?: () => void;
+  onNavigateToCamera?: () => void;
+  onMeasurementUpdate?: () => void;
+}
+
+const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
+  onClose,
+  onNavigateToCamera,
+  onMeasurementUpdate
+}) => {
   const navigation = useNavigation<any>();
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +47,10 @@ const NailSizesScreen: React.FC = () => {
 
       if (response.success) {
         setNailSizeData(response.data || null);
+        // 데이터 로드 완료 시 onMeasurementUpdate 호출 (MyScreen의 최근 측정 결과 업데이트)
+        if (onMeasurementUpdate) {
+          onMeasurementUpdate();
+        }
       } else {
         throw new Error(response.error || '데이터를 불러오는데 실패했습니다.');
       }
@@ -123,7 +137,16 @@ const NailSizesScreen: React.FC = () => {
 
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            if (onClose) {
+              onClose();
+            } else {
+              navigation.goBack();
+            }
+          }}
+        >
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>손톱 사이즈</Text>
@@ -148,7 +171,13 @@ const NailSizesScreen: React.FC = () => {
             <Text style={styles.emptyText}>아직 측정된 손톱 사이즈가 없습니다</Text>
             <TouchableOpacity
               style={styles.startMeasureButton}
-              onPress={() => navigation.navigate('NailMeasurement')}
+              onPress={() => {
+                if (onNavigateToCamera) {
+                  onNavigateToCamera();
+                } else {
+                  navigation.navigate('NailMeasurement');
+                }
+              }}
             >
               <Text style={styles.startMeasureButtonText}>측정 시작하기</Text>
             </TouchableOpacity>
@@ -190,7 +219,13 @@ const NailSizesScreen: React.FC = () => {
       <View style={styles.bottomButton}>
         <TouchableOpacity
           style={styles.newMeasureButton}
-          onPress={() => navigation.navigate('NailMeasurement')}
+          onPress={() => {
+            if (onNavigateToCamera) {
+              onNavigateToCamera();
+            } else {
+              navigation.navigate('NailMeasurement');
+            }
+          }}
         >
           <Text style={styles.newMeasureButtonText}>📏 새로 측정하기</Text>
         </TouchableOpacity>

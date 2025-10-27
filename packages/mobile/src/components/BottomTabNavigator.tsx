@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors';
 import { DeviceEventEmitter } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -18,6 +19,8 @@ import MyScreen from '../screens/MyScreen';
 const Tab = createBottomTabNavigator();
 
 const BottomTabNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -29,9 +32,9 @@ const BottomTabNavigator: React.FC = () => {
           backgroundColor: colors.white,
           borderTopWidth: 1,
           borderTopColor: colors.primary[100],
-          paddingBottom: 5,
+          paddingBottom: 5 + insets.bottom,
           paddingTop: 5,
-          height: 60,
+          height: 60 + insets.bottom,
           shadowColor: colors.primary[500],
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
@@ -115,11 +118,11 @@ const BottomTabNavigator: React.FC = () => {
           tabPress: (e) => {
             console.log('🔵 [NAVIGATOR] MY tab pressed!');
             console.log('🔵 [NAVIGATOR] Navigation state:', navigation.getState());
-            
+
             const state = navigation.getState();
             const currentRoute = state.routes[state.index];
             console.log('🔵 [NAVIGATOR] Current route before MY tab press:', currentRoute.name);
-            console.log('🔵 [NAVIGATOR] Switching to MY tab');
+            console.log('🔵 [NAVIGATOR] Switching to MY tab (MyScreen WebView)');
           },
         })}
       />
