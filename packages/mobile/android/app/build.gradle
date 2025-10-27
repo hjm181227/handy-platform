@@ -128,8 +128,9 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            // Debug 빌드는 항상 스테이지 환경 사용
-            buildConfigField "String", "APP_ENV", "\"stage\""
+            // 환경 변수에서 APP_ENV 읽기 (기본값: stage)
+            def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "stage"
+            buildConfigField "String", "APP_ENV", "\"${appEnv}\""
         }
         release {
             // Using our production keystore for release builds
@@ -137,9 +138,9 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
 
-            // 환경 설정 (주석 전환으로 쉽게 변경 가능)
-            buildConfigField "String", "APP_ENV", "\"stage\""        // 현재: 스테이지 (QA용)
-            // buildConfigField "String", "APP_ENV", "\"production\""  // 프로덕션 배포 시 위 줄 주석처리하고 이 줄 활성화
+            // 환경 변수에서 APP_ENV 읽기 (기본값: stage)
+            def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "stage"
+            buildConfigField "String", "APP_ENV", "\"${appEnv}\""
         }
     }
 }

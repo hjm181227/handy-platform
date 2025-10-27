@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, BackHandler, ToastAndroid, Platform } from 'react-native';
+import { StyleSheet, BackHandler, ToastAndroid, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getWebURL } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
 import { useFocusEffect } from '@react-navigation/native';
@@ -50,13 +51,13 @@ const LikeScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <WebViewBridge
         ref={webViewBridgeRef}
         url={getLikesPageURL()}
         onNavigationStateChange={handleNavigationStateChange}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

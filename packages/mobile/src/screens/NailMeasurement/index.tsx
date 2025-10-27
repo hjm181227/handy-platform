@@ -9,15 +9,19 @@ type MeasurementStep = 'selection' | 'camera' | 'measurement';
 interface NailMeasurementProps {
   onClose?: () => void;
   onNavigateToSizes?: () => void;
+  preselectedHand?: 'left' | 'right';
+  preselectedFinger?: string;
 }
 
-const NailMeasurement: React.FC<NailMeasurementProps> = ({ 
-  onClose, 
-  onNavigateToSizes 
+const NailMeasurement: React.FC<NailMeasurementProps> = ({
+  onClose,
+  onNavigateToSizes,
+  preselectedHand,
+  preselectedFinger
 }) => {
   const [currentStep, setCurrentStep] = useState<MeasurementStep>('selection');
-  const [selectedHand, setSelectedHand] = useState<'left' | 'right'>('right');
-  const [selectedFinger, setSelectedFinger] = useState<string>('엄지');
+  const [selectedHand, setSelectedHand] = useState<'left' | 'right'>(preselectedHand || 'right');
+  const [selectedFinger, setSelectedFinger] = useState<string>(preselectedFinger || '엄지');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 

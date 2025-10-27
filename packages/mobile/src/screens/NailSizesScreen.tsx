@@ -10,14 +10,14 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { userService } from '../services/apiService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 
 interface NailSizesScreenProps {
   onClose?: () => void;
-  onNavigateToCamera?: () => void;
+  onNavigateToCamera?: (hand?: 'left' | 'right', finger?: string) => void;
   onMeasurementUpdate?: () => void;
 }
 
@@ -26,7 +26,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   onNavigateToCamera,
   onMeasurementUpdate
 }) => {
-  const navigation = useNavigation<any>();
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +62,9 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   };
 
   const handleMeasureNail = (hand: 'left' | 'right', finger: string) => {
-    navigation.navigate('NailMeasurement', {
-      preselectedHand: hand,
-      preselectedFinger: englishToKoreanFinger(finger),
-    });
+    if (onNavigateToCamera) {
+      onNavigateToCamera(hand, finger);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -108,7 +106,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.loadingText}>불러오는 중...</Text>
@@ -120,7 +118,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
         <View style={styles.centerContainer}>
           <Text style={styles.errorText}>❌ {error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadNailSizeData}>
@@ -133,7 +131,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
       {/* 헤더 */}
       <View style={styles.header}>
@@ -156,6 +154,26 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
       </View>
 
       <ScrollView style={styles.content}>
+        {/* AR 측정하기 버튼 */}
+        <TouchableOpacity
+          style={styles.arMeasureButton}
+          onPress={() => {
+            if (onNavigateToCamera) {
+              onNavigateToCamera();
+            } else {
+              navigation.navigate('NailMeasurement');
+            }
+          }}
+        >
+          <View style={styles.arButtonContent}>
+            <Text style={styles.arButtonIcon}>📱</Text>
+            <View style={styles.arButtonTexts}>
+              <Text style={styles.arButtonTitle}>AR 측정하기</Text>
+              <Text style={styles.arButtonSubtitle}>카메라로 정확한 측정</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
         {/* 측정 일시 */}
         {nailSizeData && (
           <View style={styles.infoBox}>
@@ -237,7 +255,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFF',
   },
   centerContainer: {
     flex: 1,
@@ -246,7 +264,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   loadingText: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 16,
     marginTop: 15,
   },
@@ -279,17 +297,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
   backButtonText: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
   },
   title: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 20,
     fontWeight: 'bold',
     flex: 1,
@@ -299,7 +317,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -311,7 +329,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   infoBox: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#F5F5F5',
     borderRadius: 10,
     padding: 15,
     marginTop: 20,
@@ -319,12 +337,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoLabel: {
-    color: '#AAA',
+    color: '#999',
     fontSize: 12,
     marginBottom: 5,
   },
   infoValue: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -337,7 +355,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   emptyText: {
-    color: '#AAA',
+    color: '#999',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 30,
@@ -367,12 +385,12 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   handTitle: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
   },
   fingersContainer: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#F5F5F5',
     borderRadius: 10,
     padding: 15,
   },
@@ -382,10 +400,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: '#E0E0E0',
   },
   fingerName: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -434,6 +452,39 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  arMeasureButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 15,
+    padding: 20,
+    marginTop: 20,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  arButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  arButtonIcon: {
+    fontSize: 40,
+    marginRight: 15,
+  },
+  arButtonTexts: {
+    flex: 1,
+  },
+  arButtonTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  arButtonSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
   },
 });
 

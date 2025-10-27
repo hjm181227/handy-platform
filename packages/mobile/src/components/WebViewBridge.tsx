@@ -129,8 +129,38 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           result = await mobileApiService.registerAndStoreToken(data);
           break;
         case 'logout':
+          console.log('🔵 [BRIDGE] 로그아웃 처리 시작');
           await mobileApiService.logoutAndClearToken();
           result = { success: true };
+
+          // WebView의 인증 정보만 클리어 (리다이렉트는 네이티브에서 처리)
+          console.log('🔵 [BRIDGE] WebView 인증 정보 클리어');
+          if (webViewRef.current) {
+            webViewRef.current.injectJavaScript(`
+              (function() {
+                console.log('🔵 [WEBVIEW] 인증 정보 클리어 시작');
+
+                // 인증 관련 키만 삭제 (다른 설정/캐시는 유지)
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+
+                // sessionStorage의 인증 관련 정보도 삭제
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('user');
+
+                console.log('✅ [WEBVIEW] 인증 정보 클리어 완료');
+
+                // authStateChanged 이벤트 발생
+                window.dispatchEvent(new CustomEvent('authStateChanged'));
+              })();
+              true;
+            `);
+          }
+
+          // 홈 탭으로 이동 및 로그인 화면 표시 이벤트 발생
+          console.log('🔵 [BRIDGE] navigateToHomeAndLogin 이벤트 발생');
+          DeviceEventEmitter.emit('navigateToHomeAndLogin');
+          console.log('✅ [BRIDGE] 로그아웃 처리 완료');
           break;
         default:
           throw new Error(`Unknown auth action: ${data.action}`);
@@ -544,6 +574,22 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   const injectedJavaScript = `
     console.log('🟢 [INJECT] JavaScript 주입됨');
 
+    // 줌 방지를 위한 viewport 메타 태그 강제 설정
+    (function() {
+      const metaTag = document.querySelector('meta[name="viewport"]');
+      if (metaTag) {
+        metaTag.setAttribute('content',
+          'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no'
+        );
+      } else {
+        const newMeta = document.createElement('meta');
+        newMeta.name = 'viewport';
+        newMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no';
+        document.head.appendChild(newMeta);
+      }
+      console.log('🔒 [INJECT] Zoom disabled');
+    })();
+
     // WebView 환경 감지하여 body에 클래스 추가
     if (window.ReactNativeWebView) {
       document.body.classList.add('webview-mode');
@@ -560,21 +606,21 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         }
         
         .webview-mode {
-          /* 하단 탭바를 위한 여백 추가 */
-          padding-bottom: max(60px, env(safe-area-inset-bottom));
+          /* 네이티브 SafeAreaView가 탭바를 이미 처리하므로 iOS safe area만 적용 */
+          padding-bottom: env(safe-area-inset-bottom);
           /* 상단 상태바/노치를 위한 여백 */
           padding-top: env(safe-area-inset-top);
         }
-        
+
         /* 전체 화면 컨텐츠가 있는 경우 */
         .webview-mode .fullscreen-content {
-          padding-bottom: max(60px, env(safe-area-inset-bottom));
+          padding-bottom: env(safe-area-inset-bottom);
           padding-top: env(safe-area-inset-top);
         }
-        
+
         /* 하단 고정 버튼/바가 있는 경우 */
         .webview-mode .bottom-fixed {
-          bottom: max(60px, env(safe-area-inset-bottom));
+          bottom: env(safe-area-inset-bottom);
         }
         
         /* 상단 고정 헤더가 있는 경우 */
@@ -704,79 +750,71 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       }
     };
     
-    window.ReactNativeWebView = {
-      postMessage: window.ReactNativeWebView.postMessage,
+    // 네이티브 postMessage를 바인딩하여 저장 (this 컨텍스트 보존)
+    const nativePostMessage = window.ReactNativeWebView.postMessage.bind(window.ReactNativeWebView);
 
-      // API 호출 헬퍼
-      callAPI: function(endpoint, data = {}, requestId = Date.now()) {
-        this.postMessage(JSON.stringify({
-          type: 'API_CALL',
-          data: { endpoint, ...data, requestId }
-        }));
-      },
+    // 기존 객체에 헬퍼 메서드 추가 (네이티브 객체를 덮어쓰지 않음)
+    window.ReactNativeWebView.callAPI = function(endpoint, data = {}, requestId = Date.now()) {
+      nativePostMessage(JSON.stringify({
+        type: 'API_CALL',
+        data: { endpoint, ...data, requestId }
+      }));
+    };
 
-      // 인증 헬퍼
-      auth: function(action, data = {}) {
-        this.postMessage(JSON.stringify({
-          type: 'AUTH',
-          data: { action, ...data }
-        }));
-      },
+    window.ReactNativeWebView.auth = function(action, data = {}) {
+      nativePostMessage(JSON.stringify({
+        type: 'AUTH',
+        data: { action, ...data }
+      }));
+    };
 
-      // 웹 로그인 후 토큰을 네이티브에 저장
-      storeAuthToken: function(token, user) {
-        console.log('🟢 [WEB→NATIVE] 토큰 저장 요청:', { hasToken: !!token, hasUser: !!user });
-        this.postMessage(JSON.stringify({
-          type: 'STORE_AUTH_TOKEN',
-          data: { token, user }
-        }));
-      },
-      
-      // 카트 헬퍼
-      cart: function(action, data = {}) {
-        this.postMessage(JSON.stringify({
-          type: 'CART',
-          data: { action, ...data }
-        }));
-      },
-      
-      // 알림 헬퍼
-      showNotification: function(title, message) {
-        this.postMessage(JSON.stringify({
-          type: 'NOTIFICATION',
-          data: { title, message }
-        }));
-      },
-      
-      // 카메라 헬퍼
-      camera: function(action, data = {}) {
-        const requestId = Date.now().toString();
-        this.postMessage(JSON.stringify({
-          type: 'CAMERA',
-          data: { action, ...data, requestId }
-        }));
-        return requestId;
-      },
-      
-      // 결제 헬퍼
-      payment: function(method, data = {}) {
-        const requestId = Date.now().toString();
-        this.postMessage(JSON.stringify({
-          type: 'PAYMENT',
-          data: { method, ...data, requestId }
-        }));
-        return requestId;
-      },
-      
-      // 권한 헬퍼
-      requestPermission: function(type) {
-        const requestId = Date.now().toString();
-        this.postMessage(JSON.stringify({
-          type: 'PERMISSIONS',
-          data: { type, requestId }
-        }));
-        return requestId;
-      }
+    window.ReactNativeWebView.storeAuthToken = function(token, user) {
+      console.log('🟢 [WEB→NATIVE] 토큰 저장 요청:', { hasToken: !!token, hasUser: !!user });
+      nativePostMessage(JSON.stringify({
+        type: 'STORE_AUTH_TOKEN',
+        data: { token, user }
+      }));
+    };
+
+    window.ReactNativeWebView.cart = function(action, data = {}) {
+      nativePostMessage(JSON.stringify({
+        type: 'CART',
+        data: { action, ...data }
+      }));
+    };
+
+    window.ReactNativeWebView.showNotification = function(title, message) {
+      nativePostMessage(JSON.stringify({
+        type: 'NOTIFICATION',
+        data: { title, message }
+      }));
+    };
+
+    window.ReactNativeWebView.camera = function(action, data = {}) {
+      const requestId = Date.now().toString();
+      nativePostMessage(JSON.stringify({
+        type: 'CAMERA',
+        data: { action, ...data, requestId }
+      }));
+      return requestId;
+    };
+
+    window.ReactNativeWebView.payment = function(method, data = {}) {
+      const requestId = Date.now().toString();
+      nativePostMessage(JSON.stringify({
+        type: 'PAYMENT',
+        data: { method, ...data, requestId }
+      }));
+      return requestId;
+    };
+
+    window.ReactNativeWebView.requestPermission = function(type) {
+      const requestId = Date.now().toString();
+      nativePostMessage(JSON.stringify({
+        type: 'PERMISSIONS',
+        data: { type, requestId }
+      }));
+      return requestId;
     };
     
     // 응답 리스너 등록
@@ -806,7 +844,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           }
           return; // 실제 페이지 이동은 하지 않음
         }
-        
+
         if (onNavigationStateChange) {
           onNavigationStateChange(navState);
         }
@@ -814,8 +852,15 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       javaScriptEnabled={true}
       domStorageEnabled={true}
       startInLoadingState={true}
-      scalesPageToFit={true}
+      scalesPageToFit={false}
       allowsBackForwardNavigationGestures={Platform.OS === 'ios'}
+      {...Platform.select({
+        android: {
+          setSupportZoom: false,
+          builtInZoomControls: false,
+          displayZoomControls: false,
+        }
+      })}
     />
   );
 });

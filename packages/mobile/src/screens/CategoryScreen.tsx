@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, DeviceEventEmitter, BackHandler, ToastAndroid, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCurrentEnvironment } from '@handy-platform/shared';
 
@@ -111,11 +112,12 @@ const CategoryScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>🗂️ 카테고리</Text>
-        <Text style={styles.subtitle}>원하는 스타일과 브랜드를 찾아보세요</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>🗂️ 카테고리</Text>
+          <Text style={styles.subtitle}>원하는 스타일과 브랜드를 찾아보세요</Text>
+        </View>
 
       {/* 스타일 카테고리 */}
       <View style={styles.section}>
@@ -252,14 +254,18 @@ const CategoryScreen: React.FC = () => {
           ))}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  container: {
+    flex: 1,
   },
   header: {
     padding: 20,

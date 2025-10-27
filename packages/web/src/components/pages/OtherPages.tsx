@@ -165,23 +165,60 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     return !!(window as any).ReactNativeWebView;
   };
 
-  // 손톱 사이즈 측정 화면으로 이동
-  const goToMeasureSize = () => {
-    console.log('🔵 [WEB] 사이즈 측정 버튼 클릭됨');
-    navigateService.goToMeasureSize();
+  // 손톱 사이즈 목록 화면으로 이동
+  const goToNailSizes = () => {
+    console.log('🔵 [WEB] 사이즈 목록 버튼 클릭됨');
+    navigateService.goToNailSizes();
+  };
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    try {
+      console.log('🔵 [WEB] 로그아웃 시작');
+
+      if (isWebViewEnvironment()) {
+        // WebView 환경: 네이티브 로그아웃 사용 (네이티브가 모든 것을 처리)
+        console.log('🔵 [WEB] WebView 환경 - 네이티브 로그아웃 호출');
+        (window as any).ReactNativeWebView.auth('logout');
+
+        // 네이티브가 localStorage 클리어 + 홈으로 리다이렉트를 자동으로 처리
+        // 추가 처리 불필요
+        console.log('✅ [WEB] 네이티브에게 로그아웃 요청 전송 완료 (네이티브가 나머지 처리)');
+      } else {
+        // 일반 웹 환경: 웹 로그아웃 사용
+        console.log('🔵 [WEB] 웹 브라우저 환경 - 웹 로그아웃 호출');
+        await webApiService.logoutAndClearToken();
+
+        // 인증 상태 변경 이벤트 발생
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
+
+        // 로그인 페이지로 이동
+        console.log('🔵 [WEB] 로그인 페이지로 이동');
+        onGo('/login');
+        console.log('✅ [WEB] 웹 로그아웃 성공');
+      }
+    } catch (error) {
+      console.error('🔴 [WEB] 로그아웃 실패:', error);
+
+      if (!isWebViewEnvironment()) {
+        // 웹 환경에서만 에러 처리
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
+        onGo('/login');
+      }
+    }
   };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-5">
-      {/* 사이즈 측정 버튼 (WebView에서만 표시) */}
+      {/* 사이즈 목록 버튼 (WebView에서만 표시) */}
       {isWebViewEnvironment() && (
         <div className="mb-4">
           <button
-            onClick={goToMeasureSize}
+            onClick={goToNailSizes}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             <span>📏</span>
-            <span>사이즈 측정</span>
+            <span>내 손톱 사이즈</span>
           </button>
         </div>
       )}
@@ -209,16 +246,15 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             >
               회원정보 수정
             </a>
-            <a
-              href="/logout"
+            <button
               onClick={(e) => {
                 e.preventDefault();
-                alert("로그아웃(데모)");
+                handleLogout();
               }}
               className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
             >
               로그아웃
-            </a>
+            </button>
           </div>
         </div>
 

@@ -21,8 +21,9 @@ class NavigateServiceWeb implements INavigateService {
    */
   private sendMessageToWebView(message: { type: string; data?: any }): void {
     if (this.isWebViewEnvironment()) {
-      const webview = (window as any).ReactNativeWebView;
-      webview.postMessage(JSON.stringify(message));
+      // 네이티브 메서드를 직접 호출하여 this 컨텍스트 유지
+      // 변수에 저장하면 this 바인딩이 손실되므로 직접 호출
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify(message));
       console.log('[NavigateService.web] Message sent to WebView:', message);
     } else {
       console.warn('[NavigateService.web] Not in WebView environment');
