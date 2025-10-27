@@ -404,6 +404,13 @@ export const API_ENDPOINTS = {
     REFUND_PARTIAL: (paymentId: string) => `/api/payments/${paymentId}/refund/partial`,
     WEBHOOK: '/api/payments/webhook',
   },
+
+  // 좋아요
+  LIKES: {
+    LIKE: '/api/likes/like',                    // POST - 좋아요 추가
+    UNLIKE: '/api/likes/unlike',                // POST - 좋아요 제거
+    LIST: '/api/likes',                         // POST - 사용자 좋아요 목록
+  },
 };
 
 // 환경별 디버그 설정

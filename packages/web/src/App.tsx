@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
 import { products } from './data';
-import { webApiService, cartService } from './services/apiService';
+import { webApiService, cartService, likesService } from './services/apiService';
 import { useResponsiveCart } from './hooks/useResponsiveCart';
 import type { User, Product } from '@handy-platform/shared';
 import { AlertProvider } from './components/common';
@@ -187,19 +187,37 @@ export default function App() {
     }
   };
 
+  // 좋아요한 상품 목록 로딩 (로그인된 사용자만)
+  const loadLikedProducts = async () => {
+    try {
+      const response = await likesService.getUserLikes('product');
+      if (response.success && response.data) {
+        // targetUuid 배열로 변환
+        const likedUuids = response.data.map(item => item.targetUuid);
+        setLikedProducts(likedUuids);
+      }
+    } catch (error: any) {
+      console.warn('Failed to load liked products:', error);
+      // 에러 발생 시 빈 배열 유지
+      setLikedProducts([]);
+    }
+  };
+
   // 초기 데이터 로딩 (신상 제품만, 장바구니는 로그인 후)
   useEffect(() => {
     loadNewProducts();
   }, []);
 
-  // 로그인 상태 변경 시 장바구니 로딩
+  // 로그인 상태 변경 시 장바구니와 좋아요 로딩
   useEffect(() => {
     if (currentUser) {
-      // 로그인된 경우에만 장바구니 카운트 로드
+      // 로그인된 경우 장바구니 카운트와 좋아요 목록 로드
       loadCartCount();
+      loadLikedProducts();
     } else {
-      // 로그아웃된 경우 카운트 초기화
+      // 로그아웃된 경우 초기화
       setCartCount(0);
+      setLikedProducts([]);
     }
   }, [currentUser]);
 
@@ -306,17 +324,55 @@ export default function App() {
   const openProduct = (id:string)=> nav(`/product/${id}`);
   const addProduct = (id:string)=> addToCart(id);
 
-  // Like handler
-  const handleLike = (productId: string) => {
+  // Like handler with API integration (optimistic updates)
+  const handleLike = async (productId: string) => {
+    // 로그인 확인
+    if (!currentUser) {
+      showToast('로그인이 필요한 서비스입니다.', 'error');
+      nav('/login');
+      return;
+    }
+
+    const isCurrentlyLiked = likedProducts.includes(productId);
+
+    // 1. 낙관적 업데이트 (즉시 UI 변경)
     setLikedProducts(prev => {
-      if (prev.includes(productId)) {
-        // 이미 좋아요한 경우 제거
+      if (isCurrentlyLiked) {
         return prev.filter(id => id !== productId);
       } else {
-        // 좋아요 추가
         return [...prev, productId];
       }
     });
+
+    try {
+      // 2. API 호출
+      if (isCurrentlyLiked) {
+        // 좋아요 제거
+        await likesService.unlike('product', productId);
+      } else {
+        // 좋아요 추가
+        await likesService.like('product', productId);
+      }
+
+      // 성공 - 이미 낙관적 업데이트 완료, 추가 작업 없음
+    } catch (error: any) {
+      console.error('Like operation failed:', error);
+
+      // 3. 실패 시 롤백
+      setLikedProducts(prev => {
+        if (isCurrentlyLiked) {
+          // 제거 실패 -> 다시 추가
+          return [...prev, productId];
+        } else {
+          // 추가 실패 -> 다시 제거
+          return prev.filter(id => id !== productId);
+        }
+      });
+
+      // 에러 메시지 표시
+      const errorMessage = error.message || '좋아요 처리에 실패했습니다.';
+      showToast(errorMessage, 'error');
+    }
   };
 
   let screen: React.ReactNode;
@@ -430,7 +486,7 @@ export default function App() {
   } else if (pathname.startsWith("/help")) {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
-    screen = <LikesPage onGo={nav} onOpen={openProduct} />;
+    screen = <LikesPage onGo={nav} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} />;
   } else if (pathname === "/my/orders") {
     screen = <OrdersPage onGo={nav} />;
   } else if (pathname === "/my/shipping-address") {

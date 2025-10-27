@@ -29,9 +29,10 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
       {loading ? renderLoadingSkeleton() : (
         <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
           {items.map((p, index) => {
-            const productId = p.id || p.productUuid;
+            // 좋아요 API는 UUID를 요구하므로 productUuid 우선 사용
+            const productId = p.productUuid || p.id;
             return (
-              <div key={p.id || p.productUuid || `product-${index}`} className="md:snap-start md:flex-shrink-0">
+              <div key={p.productUuid || p.id || `product-${index}`} className="md:snap-start md:flex-shrink-0">
                 <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
               </div>
             );
@@ -50,9 +51,10 @@ export function ProductGrid({ title, items, onOpen, onAdd, onLike, likedProducts
       <h2 className="text-base md:text-lg font-semibold mb-3">{title}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {items.map((p, index) => {
-          const productId = p.id || p.productUuid;
+          // 좋아요 API는 UUID를 요구하므로 productUuid 우선 사용
+          const productId = p.productUuid || p.id;
           return (
-            <div key={p.id || p.productUuid || `grid-product-${index}`}>
+            <div key={p.productUuid || p.id || `grid-product-${index}`}>
               <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
             </div>
           );

@@ -1,19 +1,206 @@
 
 import { useState, useEffect } from 'react';
 import { products } from '../../data';
-import { webApiService } from '../../services/apiService';
-import type { User } from '@handy-platform/shared';
+import { webApiService, likesService } from '../../services/apiService';
+import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
 import navigateService from '@handy-platform/shared/src/services/navigate';
+import { ProductCard } from '../product/ProductCard';
 
-// 간단한 더미 페이지들
-export function LikesPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
+// 좋아요 페이지
+export function LikesPage({
+  onGo,
+  onOpen,
+  onAdd,
+  onLike
+}: {
+  onGo: (to: string) => void;
+  onOpen: (id: string) => void;
+  onAdd: (id: string) => void;
+  onLike: (id: string) => void;
+}) {
+  const [selectedTab, setSelectedTab] = useState<TargetType>('product');
+  const [likedItems, setLikedItems] = useState<LikeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 좋아요 목록 로딩
+  const loadLikes = async (targetType: TargetType) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await likesService.getUserLikes(targetType);
+
+      if (response.success && response.data) {
+        setLikedItems(response.data);
+      } else {
+        setLikedItems([]);
+      }
+    } catch (error: any) {
+      console.error('Failed to load likes:', error);
+      setError(error.message || '좋아요 목록을 불러오는데 실패했습니다.');
+      setLikedItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 탭 변경 시 데이터 로드
+  useEffect(() => {
+    loadLikes(selectedTab);
+  }, [selectedTab]);
+
+  // LikesPage 내부에서 좋아요 해제 처리
+  const handleLikeInPage = async (productId: string) => {
+    // 1. 낙관적 업데이트: 즉시 목록에서 제거
+    setLikedItems(prev => prev.filter(item => item.targetUuid !== productId));
+
+    try {
+      // 2. 상위 handleLike 호출 (API 호출 + likedProducts 상태 업데이트)
+      await onLike(productId);
+    } catch (error) {
+      // 3. 실패 시 목록 새로고침으로 정확한 상태 복구
+      console.error('Failed to unlike in LikesPage:', error);
+      loadLikes(selectedTab);
+    }
+  };
+
+  // 로딩 스켈레톤
+  const renderLoading = () => (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <ProductCard key={`skeleton-${index}`} isLoading={true} />
+      ))}
+    </div>
+  );
+
+  // 에러 상태
+  const renderError = () => (
+    <div className="mt-8 text-center py-20">
+      <p className="text-red-600 mb-4">{error}</p>
+      <button
+        onClick={() => loadLikes(selectedTab)}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+      >
+        다시 시도
+      </button>
+    </div>
+  );
+
+  // 빈 상태
+  const renderEmpty = () => (
+    <div className="mt-8 text-center py-20 text-gray-500">
+      <p className="mb-4">
+        {selectedTab === 'product' && '찜한 상품이 없습니다.'}
+        {selectedTab === 'brand' && '찜한 브랜드가 없습니다.'}
+        {selectedTab === 'post' && '찜한 게시물이 없습니다.'}
+      </p>
+      <button
+        onClick={() => onGo("/")}
+        className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+      >
+        쇼핑하러 가기
+      </button>
+    </div>
+  );
+
+  // LikeItem을 Product 형식으로 변환
+  const convertLikeItemToProduct = (item: LikeItem): Product => {
+    const price = item.target?.price ?? 0;
+    const salePrice = item.target?.salePrice ?? price;
+
+    return {
+      productUuid: item.targetUuid,
+      id: item.targetId,
+      name: item.target?.name || '',
+      mainImageUrl: item.target?.mainImageUrl || '',
+      price: price,
+      discountedPrice: salePrice,
+      discountRate: price > 0 && salePrice < price ? Math.round((1 - salePrice / price) * 100) : 0,
+      seller: {
+        name: item.target?.brand || 'HANDY',
+        id: '',
+        email: '',
+        businessName: '',
+        businessNumber: '',
+        status: 'active' as const,
+        createdAt: '',
+        updatedAt: ''
+      },
+      rating: {
+        average: 0,
+        count: 0
+      },
+      description: '',
+      category: '',
+      stock: 0,
+      status: 'active' as const,
+      isNewProduct: false,
+      isFeatured: false,
+      createdAt: item.likedAt,
+      updatedAt: item.likedAt
+    } as Product;
+  };
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="text-2xl font-semibold">찜한 상품</h1>
-      <div className="mt-4 text-center py-20 text-gray-500">
-        <p>찜한 상품이 없습니다.</p>
-        <button onClick={() => onGo("/")} className="mt-4 rounded border px-4 py-2 text-sm">쇼핑하러 가기</button>
+    <div className="mx-auto max-w-7xl px-4 py-6">
+      {/* 헤더 */}
+      <h1 className="text-2xl font-semibold mb-6">찜한 목록</h1>
+
+      {/* Segment Selector - iOS Style */}
+      <div className="inline-flex p-1 bg-gray-100 rounded-lg mb-6">
+        <button
+          onClick={() => setSelectedTab('product')}
+          className={`px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            selectedTab === 'product'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          상품
+        </button>
+        <button
+          onClick={() => setSelectedTab('brand')}
+          className={`px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            selectedTab === 'brand'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          브랜드
+        </button>
+        <button
+          onClick={() => setSelectedTab('post')}
+          className={`px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            selectedTab === 'post'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          게시물
+        </button>
       </div>
+
+      {/* 컨텐츠 */}
+      {loading && renderLoading()}
+      {!loading && error && renderError()}
+      {!loading && !error && likedItems.length === 0 && renderEmpty()}
+      {!loading && !error && likedItems.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+          {likedItems.map(item => {
+            const product = convertLikeItemToProduct(item);
+            return (
+              <ProductCard
+                key={item.targetUuid}
+                p={product}
+                onOpen={onOpen}
+                onAdd={onAdd}
+                onLike={handleLikeInPage}
+                isLiked={true}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
