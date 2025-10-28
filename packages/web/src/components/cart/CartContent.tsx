@@ -510,7 +510,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                   <div className="flex-1 pr-4">
                     <h4 className="font-semibold">{item.product.name}</h4>
                     <div className="text-gray-500 text-sm mt-1">
-                      {item.product.seller?.name}
+                      {item.product.brand || ''}
                       {item.options && (
                         <div className="mt-1 space-x-1">
                           {Object.entries(item.options).map(([key, value]) => (
@@ -666,7 +666,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                       {item.product.name}
                     </h4>
                     <div className={`text-gray-500 mt-1 ${mode === 'drawer' ? 'text-xs' : 'text-sm'}`}>
-                      {item.product.seller?.name}
+                      {item.product.brand || ''}
                       {item.options && (
                         <div className="mt-1">
                           {Object.entries(item.options).map(([key, value]) => (

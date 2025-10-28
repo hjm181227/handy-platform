@@ -17,10 +17,10 @@ const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) =>
   </div>
 );
 
-const EmptyState = ({ title, description, actionText, onAction }: { 
-  title: string; 
-  description: string; 
-  actionText?: string; 
+const EmptyState = ({ title, description, actionText, onAction }: {
+  title: string;
+  description: string;
+  actionText?: string;
   onAction?: () => void;
 }) => (
   <div className="mx-auto max-w-sm px-6 py-20 text-center">
@@ -28,7 +28,7 @@ const EmptyState = ({ title, description, actionText, onAction }: {
     <h3 className="mb-2 text-lg font-semibold text-gray-900">{title}</h3>
     <p className="mb-6 text-sm text-gray-500">{description}</p>
     {actionText && onAction && (
-      <button 
+      <button
         onClick={onAction}
         className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
       >
@@ -45,7 +45,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // 필터 상태
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -58,7 +58,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await purchaseApiService.getOrders({
         page,
         limit: 10,
@@ -66,9 +66,9 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
         sortBy: filterOptions.sortBy,
         sortOrder: filterOptions.sortOrder
       });
-      
+
       console.log('Orders API Response:', response);
-      
+
       if (response.success && response.orders) {
         setOrders(response.orders);
         setPagination(response.pagination);
@@ -142,7 +142,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
@@ -157,7 +157,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <BackButton onBack={() => onGo("/my")} title="주문 내역" />
-      
+
       {/* 필터 영역 */}
       <div className="bg-white border-b px-4 py-3">
         <div className="space-y-3">
@@ -176,8 +176,8 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                 <button
                   key={status.value}
                   onClick={() => {
-                    const newStatus = status.value === '' 
-                      ? [] 
+                    const newStatus = status.value === ''
+                      ? []
                       : filters.status.includes(status.value)
                         ? filters.status.filter(s => s !== status.value)
                         : [...filters.status, status.value];
@@ -200,9 +200,9 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-700">정렬</label>
             <button
-              onClick={() => handleFilterChange({ 
-                ...filters, 
-                sortOrder: filters.sortOrder === 'desc' ? 'asc' : 'desc' 
+              onClick={() => handleFilterChange({
+                ...filters,
+                sortOrder: filters.sortOrder === 'desc' ? 'asc' : 'desc'
               })}
               className="px-3 py-1 text-sm border border-gray-300 rounded bg-white hover:bg-gray-50 flex items-center gap-1"
             >
@@ -305,12 +305,12 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                   {getStatusText(order.status)}
                 </span>
               </div>
-              
+
               <div className="mb-3">
                 <div className="font-medium mb-1">
                   주문번호: {order.orderNumber || order.id}
                 </div>
-                
+
                 {/* 주문 상품 목록 */}
                 <div className="mb-2">
                   {order.items && order.items.length > 0 ? (
@@ -341,7 +341,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                               <span>수량 {item.quantity}개</span>
                             </div>
                             <p className="text-sm text-gray-600">
-                              {item.sellerName || 'HANDY'}
+                              {item.sellerName || ''}
                             </p>
                           </div>
                         </div>
@@ -356,21 +356,21 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                     <div className="text-sm text-gray-500 py-2">상품 정보 없음</div>
                   )}
                 </div>
-                
+
                 <div className="font-semibold text-lg text-blue-600">
                   {order.totalAmount?.toLocaleString() || 0}원
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => onGo(`/orders/${order.id}`)}
                   className="flex-1 py-2 px-4 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   주문상세
                 </button>
                 {order.status === 'shipped' && (
-                  <button 
+                  <button
                     onClick={() => onGo(`/orders/${order.id}/track`)}
                     className="flex-1 py-2 px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
@@ -386,7 +386,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
             </div>
           ))
         )}
-        
+
         {/* 페이지네이션 */}
         {pagination && pagination.totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-6 pb-4">
@@ -397,13 +397,13 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
             >
               이전
             </button>
-            
+
             <div className="flex gap-1">
               {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                 const startPage = Math.max(1, currentPage - 2);
                 const page = startPage + i;
                 if (page > pagination.totalPages) return null;
-                
+
                 return (
                   <button
                     key={page}
@@ -419,7 +419,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                 );
               })}
             </div>
-            
+
             <button
               onClick={() => loadOrders(currentPage + 1, filters)}
               disabled={!pagination.hasNext}
@@ -427,7 +427,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
             >
               다음
             </button>
-            
+
             <div className="text-sm text-gray-500 ml-4">
               {pagination.totalItems}개 중 {((currentPage - 1) * 10) + 1}-{Math.min(currentPage * 10, pagination.totalItems)}개
             </div>
@@ -441,8 +441,8 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
 // 배송중 주문 페이지
 export function ShippingPage({ onGo }: { onGo: (to: string) => void }) {
   const shippingOrders = [
-    { 
-      id: "2024081801", 
+    {
+      id: "2024081801",
       date: "2024-08-18",
       items: ["Glossy Almond Tip – Milk Beige"],
       trackingNumber: "123456789",
@@ -628,7 +628,7 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <BackButton onBack={() => onGo("/my")} title="포인트" />
-      
+
       {/* 포인트 요약 */}
       <div className="bg-white border-b p-6">
         <div className="text-center">
@@ -679,7 +679,7 @@ export function PaymentsPage({ onGo }: { onGo: (to: string) => void }) {
           <h3 className="font-medium">등록된 카드</h3>
           <button className="text-sm text-blue-600 hover:underline">+ 카드 추가</button>
         </div>
-        
+
         <div className="space-y-3">
           {cards.map(card => (
             <div key={card.id} className="bg-white rounded-lg border p-4">

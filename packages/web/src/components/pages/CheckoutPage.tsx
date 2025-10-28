@@ -366,7 +366,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     <div className="flex-1">
                       <h3 className="font-medium">{item.product?.name || '상품명 없음'}</h3>
                       <div className="text-xs text-gray-500 mt-1">
-                        판매자: {item.product?.seller?.name || 'HANDY'}
+                        판매자: {item.product?.brand || ''}
                       </div>
                       {item.options && Object.keys(item.options).length > 0 && (
                         <div className="text-sm text-gray-600 mt-1">

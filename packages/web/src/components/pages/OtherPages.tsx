@@ -117,7 +117,7 @@ export function LikesPage({
       discountedPrice: salePrice,
       discountRate: price > 0 && salePrice < price ? Math.round((1 - salePrice / price) * 100) : 0,
       seller: {
-        name: item.target?.brand || 'HANDY',
+        name: item.target?.brand || '',
         id: '',
         email: '',
         businessName: '',
@@ -526,7 +526,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             <LinkRow title="판매자 신청하기" to="/seller/apply" />
           )}
           <div className="py-3 text-xs text-gray-500">
-            {user?.role === 'seller' 
+            {user?.role === 'seller'
               ? '판매자 센터에서 상품과 주문을 관리해보세요!'
               : '네일아트 상품을 판매하여 수익을 창출해보세요!'
             }
