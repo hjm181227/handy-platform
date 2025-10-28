@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
 import { products } from './data';
-import { webApiService, cartService, likesService } from './services/apiService';
+import { webApiService, cartService, likesService, brandService } from './services/apiService';
 import { useResponsiveCart } from './hooks/useResponsiveCart';
-import type { User, Product } from '@handy-platform/shared';
+import type { User, Product, Brand } from '@handy-platform/shared';
 import { AlertProvider } from './components/common';
 
 // Layout Components
@@ -15,6 +15,7 @@ import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
 
 // Product Components
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
+import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
 
 // Page Components
@@ -137,6 +138,10 @@ export default function App() {
   // Like state
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
 
+  // Brands state
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
   // Toast 표시 함수
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
@@ -203,9 +208,31 @@ export default function App() {
     }
   };
 
-  // 초기 데이터 로딩 (신상 제품만, 장바구니는 로그인 후)
+  // 브랜드별 상품 로딩
+  const loadBrands = async () => {
+    try {
+      setLoadingBrands(true);
+      const response = await brandService.getBrands({
+        page: '1',
+        listNum: '5',      // 상위 5개 브랜드만
+        withItems: true,   // 상품 포함
+        itemListNum: '6',  // 브랜드당 6개 상품
+        sortBy: 'totalProducts',
+        sortOrder: 'desc'
+      });
+      setBrands(response.brands);
+    } catch (error) {
+      console.error('Failed to load brands:', error);
+      setBrands([]);
+    } finally {
+      setLoadingBrands(false);
+    }
+  };
+
+  // 초기 데이터 로딩 (신상 제품과 브랜드, 장바구니는 로그인 후)
   useEffect(() => {
     loadNewProducts();
+    loadBrands();
   }, []);
 
   // 로그인 상태 변경 시 장바구니와 좋아요 로딩
@@ -817,8 +844,48 @@ export default function App() {
           onLike={handleLike}
           likedProducts={likedProducts}
         />
-        <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
-        <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
+
+        {/* 브랜드별 상품 섹션 */}
+        {loadingBrands ? (
+          <div className="mx-auto max-w-7xl px-4 py-6">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            </div>
+          </div>
+        ) : (
+          brands.map(brand => (
+            <section key={brand.sellerUuid} className="mx-auto max-w-7xl px-4 mt-6">
+              <div className="mb-3 flex items-baseline justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base md:text-lg font-semibold">{brand.brandName}</h2>
+                  <span className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</span>
+                </div>
+                <button
+                  onClick={() => nav(`/brand/${encodeURIComponent(brand.sellerUuid)}`)}
+                  className="text-xs text-gray-500 hover:text-blue-600"
+                >
+                  더보기
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
+                {brand.products?.slice(0, 6).map(p => {
+                  const productId = p.productUuid || p.id;
+                  return (
+                    <div key={p.productUuid || p.id} className="md:snap-start md:flex-shrink-0">
+                      <ProductCard
+                        p={p}
+                        onOpen={openProduct}
+                        onAdd={addProduct}
+                        onLike={handleLike}
+                        isLiked={likedProducts.includes(productId)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))
+        )}
       </>
     );
   }
