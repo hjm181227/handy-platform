@@ -4,12 +4,12 @@ import {
   StyleSheet,
   StatusBar,
   Platform,
-  SafeAreaView,
   Alert,
   DeviceEventEmitter,
   BackHandler,
   ToastAndroid,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCurrentEnvironment } from '@handy-platform/shared';
 import { getWebURL, logWebUrlInfo } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
@@ -135,7 +135,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar
         barStyle={Platform.OS === 'ios' ? 'dark-content' : 'light-content'}
         backgroundColor="#fff"

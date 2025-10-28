@@ -16,6 +16,7 @@ import { BaseQRService, QRServiceFactory } from './utils/QRService';
 import { BaseAddressService, AddressServiceFactory } from './utils/AddressService';
 import { BaseBrandService, createBrandService } from './brand/BrandService';
 import { BaseUserService, UserServiceFactory } from './user/UserService';
+import { BaseLikesService, LikesServiceFactory } from './likes/LikesService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -37,6 +38,7 @@ export interface IntegratedApiService {
   address: BaseAddressService;
   brand: BaseBrandService;
   user: BaseUserService;
+  likes: BaseLikesService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -65,6 +67,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public address: BaseAddressService;
   public brand: BaseBrandService;
   public user: BaseUserService;
+  public likes: BaseLikesService;
 
   protected baseURL: string;
   protected platform: string;
@@ -95,6 +98,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.address = AddressServiceFactory.create(baseURL, getAuthHeaders);
     this.brand = createBrandService(baseURL, getAuthHeaders, platform as 'web' | 'mobile');
     this.user = UserServiceFactory.create(baseURL, getAuthHeaders);
+    this.likes = LikesServiceFactory.create(baseURL, getAuthHeaders);
   }
 
   getEnvironmentInfo() {
@@ -118,7 +122,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'qr',
         'address',
         'brand',
-        'user'
+        'user',
+        'likes'
       ],
     };
   }
@@ -210,4 +215,5 @@ export type {
   BaseAddressService,
   BaseBrandService,
   BaseUserService,
+  BaseLikesService,
 };

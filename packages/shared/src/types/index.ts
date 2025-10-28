@@ -201,6 +201,7 @@ export interface Product {
   nailOptions: NailOptions;
   rating: ProductRating;
   likesCount: number;
+  isLiked?: boolean;              // 현재 사용자의 좋아요 여부 (로그인 시에만)
   postsCount?: number;
   isFeatured: boolean;
   isNewProduct: boolean;
@@ -683,7 +684,10 @@ export type WebViewMessageType =
   | 'CART_RESPONSE'
   | 'CAMERA_RESPONSE'
   | 'PAYMENT_RESPONSE'
-  | 'PERMISSIONS_RESPONSE';
+  | 'PERMISSIONS_RESPONSE'
+  | 'NAVIGATE_TO_MEASUREMENT'   // 손톱 사이즈 측정 화면으로 이동
+  | 'NAVIGATE_TO_SIZES'         // 손톱 사이즈 목록 화면으로 이동
+  | 'NAVIGATE_BACK';            // 뒤로가기
 
 export interface WebViewMessage {
   type: WebViewMessageType;
@@ -1444,4 +1448,43 @@ export interface Snap {
   createdAt: string;
   tags?: string[];
   relatedProducts?: string[]; // 연관 상품 ID 목록
+}
+
+// ===== LIKES (좋아요) TYPES =====
+
+// 좋아요 타겟 타입
+export type TargetType = 'product' | 'brand' | 'post';
+
+// 좋아요 응답 (추가/제거 시)
+export interface LikeResponse {
+  success: boolean;
+  data: {
+    isLiked: boolean;
+    targetType: TargetType;
+    targetUuid: string;
+    likesCount: number;
+  };
+  error?: string;
+}
+
+// 좋아요 아이템 (목록 조회 시)
+export interface LikeItem {
+  targetType: TargetType;
+  targetUuid: string;
+  targetId: string;
+  likedAt: string;
+  target: {
+    name: string;
+    mainImageUrl: string;
+    price: number;
+    salePrice: number;
+    brand: string;
+  };
+}
+
+// 좋아요 목록 응답
+export interface LikesListResponse {
+  success: boolean;
+  data: LikeItem[];
+  error?: string;
 }

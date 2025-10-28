@@ -3,8 +3,8 @@ buildscript {
         buildToolsVersion = "34.0.0"
         minSdkVersion = 21
         compileSdkVersion = 35
-        targetSdkVersion = 34
-        ndkVersion = "25.1.8937393"
+        targetSdkVersion = 35
+        ndkVersion = "26.1.10909125"  // NDK r26c - 16KB 페이지 크기 완전 지원
         kotlinVersion = "1.9.10"
     }
     repositories {

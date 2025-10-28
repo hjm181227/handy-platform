@@ -106,6 +106,7 @@ class WebApiService {
   get qr() { return this.apiService.qr; }
   get address() { return this.apiService.address; }
   get brand() { return this.apiService.brand; }
+  get likes() { return this.apiService.likes; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -218,6 +219,7 @@ export const {
   qr: qrService,
   address: addressService,
   brand: brandService,
+  likes: likesService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들

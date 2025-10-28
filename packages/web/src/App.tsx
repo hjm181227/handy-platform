@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
 import { products } from './data';
-import { webApiService, cartService } from './services/apiService';
+import { webApiService, cartService, likesService, brandService } from './services/apiService';
 import { useResponsiveCart } from './hooks/useResponsiveCart';
-import type { User, Product } from '@handy-platform/shared';
+import type { User, Product, Brand } from '@handy-platform/shared';
 import { AlertProvider } from './components/common';
 
 // Layout Components
@@ -15,6 +15,7 @@ import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
 
 // Product Components
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
+import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
 
 // Page Components
@@ -137,6 +138,10 @@ export default function App() {
   // Like state
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
 
+  // Brands state
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
   // Toast 표시 함수
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
@@ -187,19 +192,59 @@ export default function App() {
     }
   };
 
-  // 초기 데이터 로딩 (신상 제품만, 장바구니는 로그인 후)
+  // 좋아요한 상품 목록 로딩 (로그인된 사용자만)
+  const loadLikedProducts = async () => {
+    try {
+      const response = await likesService.getUserLikes('product');
+      if (response.success && response.data) {
+        // targetUuid 배열로 변환
+        const likedUuids = response.data.map(item => item.targetUuid);
+        setLikedProducts(likedUuids);
+      }
+    } catch (error: any) {
+      console.warn('Failed to load liked products:', error);
+      // 에러 발생 시 빈 배열 유지
+      setLikedProducts([]);
+    }
+  };
+
+  // 브랜드별 상품 로딩
+  const loadBrands = async () => {
+    try {
+      setLoadingBrands(true);
+      const response = await brandService.getBrands({
+        page: '1',
+        listNum: '5',      // 상위 5개 브랜드만
+        withItems: true,   // 상품 포함
+        itemListNum: '6',  // 브랜드당 6개 상품
+        sortBy: 'totalProducts',
+        sortOrder: 'desc'
+      });
+      setBrands(response.brands);
+    } catch (error) {
+      console.error('Failed to load brands:', error);
+      setBrands([]);
+    } finally {
+      setLoadingBrands(false);
+    }
+  };
+
+  // 초기 데이터 로딩 (신상 제품과 브랜드, 장바구니는 로그인 후)
   useEffect(() => {
     loadNewProducts();
+    loadBrands();
   }, []);
 
-  // 로그인 상태 변경 시 장바구니 로딩
+  // 로그인 상태 변경 시 장바구니와 좋아요 로딩
   useEffect(() => {
     if (currentUser) {
-      // 로그인된 경우에만 장바구니 카운트 로드
+      // 로그인된 경우 장바구니 카운트와 좋아요 목록 로드
       loadCartCount();
+      loadLikedProducts();
     } else {
-      // 로그아웃된 경우 카운트 초기화
+      // 로그아웃된 경우 초기화
       setCartCount(0);
+      setLikedProducts([]);
     }
   }, [currentUser]);
 
@@ -306,17 +351,55 @@ export default function App() {
   const openProduct = (id:string)=> nav(`/product/${id}`);
   const addProduct = (id:string)=> addToCart(id);
 
-  // Like handler
-  const handleLike = (productId: string) => {
+  // Like handler with API integration (optimistic updates)
+  const handleLike = async (productId: string) => {
+    // 로그인 확인
+    if (!currentUser) {
+      showToast('로그인이 필요한 서비스입니다.', 'error');
+      nav('/login');
+      return;
+    }
+
+    const isCurrentlyLiked = likedProducts.includes(productId);
+
+    // 1. 낙관적 업데이트 (즉시 UI 변경)
     setLikedProducts(prev => {
-      if (prev.includes(productId)) {
-        // 이미 좋아요한 경우 제거
+      if (isCurrentlyLiked) {
         return prev.filter(id => id !== productId);
       } else {
-        // 좋아요 추가
         return [...prev, productId];
       }
     });
+
+    try {
+      // 2. API 호출
+      if (isCurrentlyLiked) {
+        // 좋아요 제거
+        await likesService.unlike('product', productId);
+      } else {
+        // 좋아요 추가
+        await likesService.like('product', productId);
+      }
+
+      // 성공 - 이미 낙관적 업데이트 완료, 추가 작업 없음
+    } catch (error: any) {
+      console.error('Like operation failed:', error);
+
+      // 3. 실패 시 롤백
+      setLikedProducts(prev => {
+        if (isCurrentlyLiked) {
+          // 제거 실패 -> 다시 추가
+          return [...prev, productId];
+        } else {
+          // 추가 실패 -> 다시 제거
+          return prev.filter(id => id !== productId);
+        }
+      });
+
+      // 에러 메시지 표시
+      const errorMessage = error.message || '좋아요 처리에 실패했습니다.';
+      showToast(errorMessage, 'error');
+    }
   };
 
   let screen: React.ReactNode;
@@ -430,7 +513,7 @@ export default function App() {
   } else if (pathname.startsWith("/help")) {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
-    screen = <LikesPage onGo={nav} onOpen={openProduct} />;
+    screen = <LikesPage onGo={nav} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} />;
   } else if (pathname === "/my/orders") {
     screen = <OrdersPage onGo={nav} />;
   } else if (pathname === "/my/shipping-address") {
@@ -761,8 +844,48 @@ export default function App() {
           onLike={handleLike}
           likedProducts={likedProducts}
         />
-        <SectionRow title="회원님을 위한 추천상품" items={products} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
-        <SectionRow title="시즌 트렌드 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />
+
+        {/* 브랜드별 상품 섹션 */}
+        {loadingBrands ? (
+          <div className="mx-auto max-w-7xl px-4 py-6">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            </div>
+          </div>
+        ) : (
+          brands.map(brand => (
+            <section key={brand.sellerUuid} className="mx-auto max-w-7xl px-4 mt-6">
+              <div className="mb-3 flex items-baseline justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base md:text-lg font-semibold">{brand.brandName}</h2>
+                  <span className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</span>
+                </div>
+                <button
+                  onClick={() => nav(`/brand/${encodeURIComponent(brand.sellerUuid)}`)}
+                  className="text-xs text-gray-500 hover:text-blue-600"
+                >
+                  더보기
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
+                {brand.products?.slice(0, 6).map(p => {
+                  const productId = p.productUuid || p.id;
+                  return (
+                    <div key={p.productUuid || p.id} className="md:snap-start md:flex-shrink-0">
+                      <ProductCard
+                        p={p}
+                        onOpen={openProduct}
+                        onAdd={addProduct}
+                        onLike={handleLike}
+                        isLiked={likedProducts.includes(productId)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))
+        )}
       </>
     );
   }
