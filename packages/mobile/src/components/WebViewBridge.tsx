@@ -35,6 +35,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'AUTH':
           await handleAuth(message.data);
           break;
+        case 'STORE_AUTH_TOKEN':
+          await handleStoreAuthToken(message.data);
+          break;
         case 'CART':
           await handleCart(message.data);
           break;
@@ -58,6 +61,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           } else {
             console.log('🔴 [BRIDGE] onShowNativeFeatures 콜백이 없음');
           }
+          break;
+        case 'REQUEST_TOKEN':
+          await handleRequestToken();
           break;
         default:
           console.log('🔴 [BRIDGE] 알 수 없는 메시지 타입:', message.type);
@@ -128,9 +134,81 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     } catch (error) {
       sendMessageToWebView({
         type: 'AUTH_RESPONSE',
-        data: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Authentication failed' 
+        data: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Authentication failed'
+        },
+      });
+    }
+  };
+
+  const handleStoreAuthToken = async (data: any) => {
+    try {
+      console.log('🟢 [BRIDGE] 웹에서 토큰 저장 요청:', { hasToken: !!data.token, hasUser: !!data.user });
+
+      if (!data.token) {
+        throw new Error('Token is required');
+      }
+
+      // AsyncStorage에 토큰과 사용자 정보 저장
+      await AsyncStorage.setItem('@handy_platform:accessToken', data.token);
+
+      if (data.user) {
+        await AsyncStorage.setItem('@handy_platform:user', JSON.stringify(data.user));
+      }
+
+      console.log('🟢 [BRIDGE] 토큰이 AsyncStorage에 저장됨');
+
+      sendMessageToWebView({
+        type: 'STORE_AUTH_TOKEN_RESPONSE',
+        data: { success: true },
+      });
+    } catch (error) {
+      console.error('🔴 [BRIDGE] 토큰 저장 실패:', error);
+      sendMessageToWebView({
+        type: 'STORE_AUTH_TOKEN_RESPONSE',
+        data: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to store token'
+        },
+      });
+    }
+  };
+
+  const handleRequestToken = async () => {
+    try {
+      console.log('🟢 [BRIDGE] 웹에서 토큰 요청');
+
+      // AsyncStorage에서 토큰과 사용자 정보 조회
+      const token = await AsyncStorage.getItem('@handy_platform:accessToken');
+      const userStr = await AsyncStorage.getItem('@handy_platform:user');
+
+      let user = null;
+      if (userStr) {
+        try {
+          user = JSON.parse(userStr);
+        } catch (e) {
+          console.warn('🔴 [BRIDGE] 사용자 정보 파싱 실패:', e);
+        }
+      }
+
+      console.log('🟢 [BRIDGE] 토큰 응답:', { hasToken: !!token, hasUser: !!user });
+
+      sendMessageToWebView({
+        type: 'TOKEN_RESPONSE',
+        data: {
+          success: true,
+          token,
+          user
+        },
+      });
+    } catch (error) {
+      console.error('🔴 [BRIDGE] 토큰 조회 실패:', error);
+      sendMessageToWebView({
+        type: 'TOKEN_RESPONSE',
+        data: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get token'
         },
       });
     }
@@ -439,6 +517,110 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       console.log('🟢 [INJECT] WebView 모드 활성화: webview-mode 클래스 추가됨');
     }
 
+    // localStorage.setItem을 후킹하여 토큰 자동 동기화
+    (function() {
+      const originalSetItem = localStorage.setItem.bind(localStorage);
+
+      localStorage.setItem = function(key, value) {
+        // 1단계: 원본 localStorage 저장 (최우선, 반드시 성공해야 함)
+        try {
+          originalSetItem(key, value);
+          console.log('🟢 [INJECT] localStorage 저장 성공:', key);
+        } catch (e) {
+          console.error('🔴 [INJECT] localStorage 저장 실패:', e);
+          throw e; // 원본 에러는 그대로 throw - 웹 앱이 에러를 처리하도록
+        }
+
+        // 2단계: 네이티브 동기화 (선택적, 실패해도 웹 저장은 이미 성공함)
+        try {
+          // accessToken 저장 감지
+          if (key === 'accessToken' || key === '@handy_platform:accessToken') {
+            console.log('🟢 [INJECT] accessToken 저장 감지, 네이티브로 동기화 시작');
+
+            const token = value;
+            let user = null;
+
+            // 사용자 정보 가져오기 시도
+            try {
+              const userStr = localStorage.getItem('user') || localStorage.getItem('@handy_platform:user');
+              if (userStr) {
+                user = JSON.parse(userStr);
+              }
+            } catch (e) {
+              console.warn('🔴 [INJECT] 사용자 정보 파싱 실패 (네이티브 동기화는 계속):', e);
+            }
+
+            // 네이티브로 토큰 전송
+            if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'STORE_AUTH_TOKEN',
+                data: { token, user }
+              }));
+              console.log('🟢 [INJECT] 토큰 네이티브 동기화 완료');
+            }
+          }
+          // user 저장 감지
+          else if (key === 'user' || key === '@handy_platform:user') {
+            console.log('🟢 [INJECT] user 저장 감지, 네이티브로 동기화 시작');
+
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('@handy_platform:accessToken');
+            let user = null;
+
+            // 사용자 정보 파싱 시도
+            try {
+              user = JSON.parse(value);
+            } catch (e) {
+              console.warn('🔴 [INJECT] 사용자 정보 파싱 실패 (네이티브 동기화는 계속):', e);
+            }
+
+            // 토큰이 있으면 네이티브로 전송
+            if (token && window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'STORE_AUTH_TOKEN',
+                data: { token, user }
+              }));
+              console.log('🟢 [INJECT] 사용자 정보 네이티브 동기화 완료');
+            }
+          }
+        } catch (e) {
+          // 네이티브 동기화 실패는 무시 (웹 저장은 이미 성공했으므로)
+          console.warn('🔴 [INJECT] 네이티브 동기화 실패 (웹 저장은 성공):', e);
+        }
+      };
+
+      console.log('🟢 [INJECT] localStorage 후킹 완료 - 토큰 자동 동기화 활성화');
+
+      // 페이지 로드 시 기존 토큰 동기화
+      try {
+        const existingToken = localStorage.getItem('accessToken') || localStorage.getItem('@handy_platform:accessToken');
+        if (existingToken) {
+          console.log('🟢 [INJECT] 기존 토큰 발견, 네이티브로 동기화');
+
+          let user = null;
+          try {
+            const userStr = localStorage.getItem('user') || localStorage.getItem('@handy_platform:user');
+            if (userStr) {
+              user = JSON.parse(userStr);
+            }
+          } catch (e) {
+            console.warn('🔴 [INJECT] 기존 사용자 정보 파싱 실패:', e);
+          }
+
+          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'STORE_AUTH_TOKEN',
+              data: { token: existingToken, user }
+            }));
+            console.log('🟢 [INJECT] 기존 토큰 동기화 완료');
+          }
+        } else {
+          console.log('🟡 [INJECT] 기존 토큰 없음');
+        }
+      } catch (e) {
+        console.warn('🔴 [INJECT] 기존 토큰 동기화 실패:', e);
+      }
+    })();
+
     // 네이티브로 돌아가기 함수 (전역으로 노출)
     window.goToNativeApp = function() {
       console.log('🟢 [INJECT] window.goToNativeApp 호출됨');
@@ -455,7 +637,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     
     window.ReactNativeWebView = {
       postMessage: window.ReactNativeWebView.postMessage,
-      
+
       // API 호출 헬퍼
       callAPI: function(endpoint, data = {}, requestId = Date.now()) {
         this.postMessage(JSON.stringify({
@@ -463,12 +645,21 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           data: { endpoint, ...data, requestId }
         }));
       },
-      
+
       // 인증 헬퍼
       auth: function(action, data = {}) {
         this.postMessage(JSON.stringify({
           type: 'AUTH',
           data: { action, ...data }
+        }));
+      },
+
+      // 웹 로그인 후 토큰을 네이티브에 저장
+      storeAuthToken: function(token, user) {
+        console.log('🟢 [WEB→NATIVE] 토큰 저장 요청:', { hasToken: !!token, hasUser: !!user });
+        this.postMessage(JSON.stringify({
+          type: 'STORE_AUTH_TOKEN',
+          data: { token, user }
         }));
       },
       

@@ -37,6 +37,17 @@ export abstract class BaseApiService {
       const url = `${this.baseURL}${endpoint}`;
       const authHeaders = await this.getAuthHeaders();
 
+      const allHeaders = {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+        ...headers,
+      };
+
+      // Generate cURL command for debugging
+      const curlCommand = this.generateCurlCommand(url, method, allHeaders, body);
+      console.log('🔵 API Request cURL:');
+      console.log(curlCommand);
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -45,17 +56,21 @@ export abstract class BaseApiService {
           method,
           body,
           signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders,
-            ...headers,
-          },
+          headers: allHeaders,
         });
 
         clearTimeout(timeoutId);
+
+        // Log response status
+        console.log(`🟢 API Response [${method} ${endpoint}]: ${response.status} ${response.statusText}`);
+
         return await this.handleResponse<T>(response);
       } catch (error) {
         clearTimeout(timeoutId);
+
+        // Log error
+        console.error(`🔴 API Error [${method} ${endpoint}]:`, error);
+
         if (error instanceof Error && error.name === 'AbortError') {
           throw new ApiError('Request timeout', 408, 'TIMEOUT');
         }
@@ -101,5 +116,28 @@ export abstract class BaseApiService {
       }
     });
     return searchParams.toString();
+  }
+
+  private generateCurlCommand(
+    url: string,
+    method: string,
+    headers: Record<string, string>,
+    body?: string
+  ): string {
+    let curl = `curl -X ${method} '${url}'`;
+
+    // Add headers
+    Object.entries(headers).forEach(([key, value]) => {
+      curl += ` \\\n  -H '${key}: ${value}'`;
+    });
+
+    // Add body if present
+    if (body) {
+      // Escape single quotes in body
+      const escapedBody = body.replace(/'/g, "'\\''");
+      curl += ` \\\n  -d '${escapedBody}'`;
+    }
+
+    return curl;
   }
 }

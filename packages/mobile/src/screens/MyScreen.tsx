@@ -18,7 +18,7 @@ import { getWebURL } from '../config/webUrl';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import WebViewBridge from '../components/WebViewBridge';
 import { WebView } from 'react-native-webview';
-import ARCameraScreen from './ARCameraScreen';
+import NailMeasurement from './NailMeasurement';
 import NailSizesScreen from './NailSizesScreen';
 
 interface NailMeasurement {
@@ -191,7 +191,7 @@ const MyScreen: React.FC = () => {
         {showNailFeatures && (
           <View style={styles.nailSection}>
             <Text style={styles.sectionTitle}>측정 시작하기</Text>
-            
+
             <View style={styles.buttonColumn}>
               <TouchableOpacity
                 style={[styles.actionButton, styles.primaryButton]}
@@ -208,7 +208,7 @@ const MyScreen: React.FC = () => {
                   <Text style={styles.arrowText}>→</Text>
                 </View>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.actionButton, styles.secondaryButton]}
                 onPress={() => setShowNailSizes(true)}
@@ -233,14 +233,14 @@ const MyScreen: React.FC = () => {
               <View style={styles.recentMeasurements}>
                 <View style={styles.recentHeader}>
                   <Text style={styles.recentTitle}>최근 측정 결과</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.viewAllMiniButton}
                     onPress={() => setShowNailSizes(true)}
                   >
                     <Text style={styles.viewAllMiniButtonText}>전체보기</Text>
                   </TouchableOpacity>
                 </View>
-                
+
                 {recentMeasurements.slice(0, 3).map((measurement, index) => (
                   <View key={measurement.id} style={styles.recentCard}>
                     <View style={styles.recentCardLeft}>
@@ -256,7 +256,7 @@ const MyScreen: React.FC = () => {
                     </View>
                   </View>
                 ))}
-                
+
                 <TouchableOpacity
                   style={styles.viewAllButton}
                   onPress={() => setShowNailSizes(true)}
@@ -266,7 +266,7 @@ const MyScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
             )}
-            
+
             {/* 측정이 없을 때 안내 */}
             {recentMeasurements.length === 0 && (
               <View style={styles.emptyState}>
@@ -293,7 +293,7 @@ const MyScreen: React.FC = () => {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowARCamera(false)}
       >
-        <ARCameraScreen 
+        <NailMeasurement
           onClose={() => setShowARCamera(false)}
           onNavigateToSizes={() => {
             setShowARCamera(false);
@@ -309,7 +309,7 @@ const MyScreen: React.FC = () => {
         presentationStyle="formSheet"
         onRequestClose={() => setShowNailSizes(false)}
       >
-        <NailSizesScreen 
+        <NailSizesScreen
           onClose={() => setShowNailSizes(false)}
           onNavigateToCamera={() => {
             setShowNailSizes(false);
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: 'bold',
   },
-  
+
   // 새로운 UI 스타일들
   welcomeSection: {
     backgroundColor: '#fff',
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
   welcomeEmoji: {
     fontSize: 48,
   },
-  
+
   // 통계 섹션
   statsSection: {
     backgroundColor: '#fff',
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.3,
   },
-  
+
   // 개선된 버튼 스타일
   buttonIconWrapper: {
     width: 50,
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  
+
   // 최근 측정 결과 개선
   recentHeader: {
     flexDirection: 'row',
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
   viewAllButtonIcon: {
     fontSize: 16,
   },
-  
+
   // 빈 상태 스타일
   emptyState: {
     backgroundColor: '#f8f9fa',
