@@ -50,7 +50,7 @@ export interface AlertState {
   id: string;
   type: AlertType;
   message: string;
-  options: BaseAlertOptions;
+  options: AlertOptions | ConfirmOptions | ErrorOptions | PromptOptions;
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
 }

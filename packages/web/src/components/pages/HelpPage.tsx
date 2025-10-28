@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { faqs } from '../../data';
 
 export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
-  const tel = "1544-7199";
-  const email = "cs@handy.com";
+  // const tel = "1544-7199"; // 고객센터 연결 제거
+  const email = "hermosear98@gmail.com";
   const mailto = `mailto:${email}?subject=${encodeURIComponent("[HANDY] 문의")}&body=${encodeURIComponent("안녕하세요, 문의드립니다.\n\n주문번호:\n내용:")}`;
 
   const openChat = () => {
@@ -15,7 +15,7 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
   const [query, setQuery] = useState("");
   const filtered = faqs.filter(f => {
     const q = query.trim();
-    return q === "" || (f.q + f.a).toLowerCase().includes(q.toLowerCase());
+    return q === "" || (f.question + f.answer).toLowerCase().includes(q.toLowerCase());
   });
 
   const ActionBtn = ({ icon, label, href, onClick }:{
@@ -44,11 +44,11 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="rounded-lg border bg-white">
         <button onClick={() => setOpen(v=>!v)} className="w-full px-4 py-3 text-left">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-sm">{f.q}</span>
+            <span className="font-medium text-sm">{f.question}</span>
             <span className="text-gray-400">{open ? "−" : "+"}</span>
           </div>
         </button>
-        {open && <div className="px-4 pb-4 text-sm text-gray-700">{f.a}</div>}
+        {open && <div className="px-4 pb-4 text-sm text-gray-700">{f.answer}</div>}
       </div>
     );
   };
@@ -59,8 +59,7 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
       <p className="text-sm text-gray-600">문의 유형을 선택하거나 FAQ에서 빠르게 답을 찾으세요.</p>
 
       {/* 핵심 액션 */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <ActionBtn icon={<PhoneI/>} label={`고객센터 연결 (${tel})`} href={`tel:${tel}`} />
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <ActionBtn icon={<MailI/>}  label="이메일 보내기" href={mailto} />
         <ActionBtn icon={<ChatI/>}  label="1:1 상담 연결" onClick={openChat} />
       </div>
@@ -100,7 +99,7 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
         <div className="text-[15px] font-semibold">해결이 안 되시나요?</div>
         <p className="mt-1 text-sm text-white/80">주문 번호를 준비하시면 더 빠르게 도와드릴 수 있어요.</p>
         <div className="mt-3 flex gap-2">
-          <a href={`tel:${tel}`} className="rounded-full bg-white px-4 py-1.5 text-sm text-black">고객센터 전화</a>
+          <a href={mailto} className="rounded-full bg-white px-4 py-1.5 text-sm text-black">이메일 문의</a>
           <button onClick={openChat} className="rounded-full bg-white/10 px-4 py-1.5 text-sm">1:1 상담</button>
         </div>
       </div>

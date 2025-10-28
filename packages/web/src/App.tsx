@@ -869,9 +869,9 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
                 {brand.products?.slice(0, 6).map(p => {
-                  const productId = p.productUuid || p.id;
+                  const productId = p.id;
                   return (
-                    <div key={p.productUuid || p.id} className="md:snap-start md:flex-shrink-0">
+                    <div key={p.id} className="md:snap-start md:flex-shrink-0">
                       <ProductCard
                         p={p}
                         onOpen={openProduct}
