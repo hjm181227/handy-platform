@@ -5,7 +5,7 @@ buildscript {
         compileSdkVersion = 35
         targetSdkVersion = 35
         ndkVersion = "26.1.10909125"  // NDK r26c - 16KB 페이지 크기 완전 지원
-        kotlinVersion = "1.9.10"
+        kotlinVersion = "1.9.0"
     }
     repositories {
         google()

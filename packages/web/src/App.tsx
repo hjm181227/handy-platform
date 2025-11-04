@@ -13,6 +13,7 @@ import { EventBanners } from './components/layout/Hero';
 import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
 import { CategoryModal } from './components/common/CategoryModal';
+import { FloatingChatButton } from './components/common/FloatingChatButton';
 
 // Product Components
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
@@ -31,6 +32,7 @@ import { SignupPage } from './components/pages/SignupPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
+import { ChatPage } from './pages/ChatPage';
 import { CartContent } from './components/cart/CartContent';
 
 // MyPage Components
@@ -539,6 +541,8 @@ export default function App() {
     screen = <NotificationsPage onGo={nav} />;
   } else if (pathname === "/my/settings") {
     screen = <SettingsPage onGo={nav} />;
+  } else if (pathname === "/chat") {
+    screen = <ChatPage nav={nav} />;
   } else if (pathname === "/seller/register") {
     screen = <SellerRegistrationPage onGo={nav} />;
   } else if (pathname === "/support/contact") {
@@ -1007,6 +1011,11 @@ export default function App() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Floating Chat Button */}
+      {!pathname.startsWith('/seller') && !pathname.startsWith('/admin') && pathname !== '/chat' && (
+        <FloatingChatButton onClick={() => nav('/chat')} />
       )}
     </AlertProvider>
   );
