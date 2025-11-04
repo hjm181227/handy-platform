@@ -297,6 +297,21 @@ export const API_ENDPOINTS = {
     SELLERS: '/api/admin/sellers',
     SELLER_VERIFY: (id: string) => `/api/admin/sellers/${id}/verify`,
     SELLER_DETAIL: (id: string) => `/api/admin/sellers/${id}`,
+
+    // 카테고리 관리
+    CATEGORIES_LIST: '/api/admin/categories',
+    CATEGORIES_CREATE: '/api/admin/categories',
+    CATEGORIES_UPDATE: (id: string) => `/api/admin/categories/${id}`,
+    CATEGORIES_DELETE: (id: string) => `/api/admin/categories/${id}`,
+    CATEGORIES_TOGGLE: (id: string) => `/api/admin/categories/${id}/activate`,
+
+    // 이벤트 배너 관리
+    EVENT_BANNERS_LIST: '/api/admin/event-banners',
+    EVENT_BANNERS_DETAIL: (id: string) => `/api/admin/event-banners/${id}`,
+    EVENT_BANNERS_CREATE: '/api/admin/event-banners',
+    EVENT_BANNERS_UPDATE: (id: string) => `/api/admin/event-banners/${id}`,
+    EVENT_BANNERS_DELETE: (id: string) => `/api/admin/event-banners/${id}`,
+    EVENT_BANNERS_TOGGLE: (id: string) => `/api/admin/event-banners/${id}/activate`,
   },
 
   // 판매자 센터 (서버 API 스펙에 완전 일치)
@@ -411,6 +426,14 @@ export const API_ENDPOINTS = {
     UNLIKE: '/api/likes/unlike',                // POST - 좋아요 제거
     LIST: '/api/likes',                         // POST - 사용자 좋아요 목록
   },
+
+  // 카테고리 아이콘
+  CATEGORIES: {
+    ICONS: '/api/categories/icons',             // GET - 카테고리 아이콘 목록 조회 (Public, 24시간 캐시)
+  },
+
+  // 이벤트 배너 (Public)
+  EVENT_BANNERS: '/api/event-banners',          // GET - 공개 이벤트 배너 목록 조회
 };
 
 // 환경별 디버그 설정

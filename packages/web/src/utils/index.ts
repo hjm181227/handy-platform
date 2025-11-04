@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 // Utility functions
 export const money = (n: number | undefined | null) => {
   if (n == null || isNaN(n)) return '0';
-  return n.toLocaleString();
+  return n.toLocaleString('ko-KR');
 };
 export const toQ = (obj: Record<string, string>) =>
   "?" + new URLSearchParams(obj).toString();

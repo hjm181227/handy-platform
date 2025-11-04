@@ -17,6 +17,8 @@ import { BaseAddressService, AddressServiceFactory } from './utils/AddressServic
 import { BaseBrandService, createBrandService } from './brand/BrandService';
 import { BaseUserService, UserServiceFactory } from './user/UserService';
 import { BaseLikesService, LikesServiceFactory } from './likes/LikesService';
+import { BaseCategoryService, CategoryServiceFactory } from './category/CategoryService';
+import { BaseBannerService, BannerServiceFactory } from './banner/BannerService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -39,6 +41,8 @@ export interface IntegratedApiService {
   brand: BaseBrandService;
   user: BaseUserService;
   likes: BaseLikesService;
+  category: BaseCategoryService;
+  banner: BaseBannerService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -68,6 +72,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public brand: BaseBrandService;
   public user: BaseUserService;
   public likes: BaseLikesService;
+  public category: BaseCategoryService;
+  public banner: BaseBannerService;
 
   protected baseURL: string;
   protected platform: string;
@@ -99,6 +105,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.brand = createBrandService(baseURL, getAuthHeaders, platform as 'web' | 'mobile');
     this.user = UserServiceFactory.create(baseURL, getAuthHeaders);
     this.likes = LikesServiceFactory.create(baseURL, getAuthHeaders);
+    this.category = CategoryServiceFactory.create(baseURL, getAuthHeaders);
+    this.banner = BannerServiceFactory.create(baseURL, getAuthHeaders);
   }
 
   getEnvironmentInfo() {
@@ -123,7 +131,9 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'address',
         'brand',
         'user',
-        'likes'
+        'likes',
+        'category',
+        'banner'
       ],
     };
   }

@@ -537,7 +537,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>상품금액</span>
-                    <span>{money(order.totalPrice)}</span>
+                    <span>{money(order.totalPrice)}원</span>
                   </div>
                   <div className="flex justify-between">
                     <span>배송비</span>
@@ -550,7 +550,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>총 결제금액</span>
-                    <span className="text-blue-600">{money(order.finalPrice)}</span>
+                    <span className="text-blue-600">{money(order.finalPrice)}원</span>
                   </div>
                 </div>
               )}
@@ -566,7 +566,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 disabled={processing || !validateCheckout()}
                 className="w-full mt-6 bg-blue-500 text-white font-semibold py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {processing ? '결제 중...' : `${money(order?.finalPrice || 0)} 결제하기`}
+                {processing ? '결제 중...' : `${money(order?.finalPrice || 0)}원 결제하기`}
               </button>
 
               <p className="text-xs text-gray-500 text-center mt-3">

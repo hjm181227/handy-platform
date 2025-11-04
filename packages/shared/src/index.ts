@@ -9,6 +9,7 @@ export * from './utils/oauthService';
 export * from './utils/apiTesting';
 export * from './utils/errorMessages';
 export * from './utils/uuidUtils';
+export * from './utils/nailConstants';
 
 
 // New Structured Services
@@ -43,6 +44,12 @@ export * from './services/utils/QRService';
 export * from './services/utils/AlertService';
 export * from './services/utils/AlertTypes';
 
+// Category Services
+export * from './services/category/CategoryService';
+
+// Banner Services
+export * from './services/banner/BannerService';
+
 // Config
 export * from './config/api';
 
@@ -71,5 +78,9 @@ export type {
   PointTransaction,
   UserPointsInfo,
   QRCodeData,
-  QRCodeResponse
+  QRCodeResponse,
+  EventBanner,
+  EventBannerListResponse,
+  BannerBrandInfo,
+  BannerCategoryInfo
 } from './types';

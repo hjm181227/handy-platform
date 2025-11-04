@@ -55,22 +55,22 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       }
       
       const response = await cartService.getCart();
-      
+
       if (response.success && response.data) {
-        // 새로운 응답 구조: data.cart가 아닌 data에 직접 장바구니 정보
+        // Cart 응답 구조: data에 직접 장바구니 정보
         const cartData = {
+          ...response.data,
           items: response.data.items || [],
-          totals: response.data.totals || {},
-          user: response.data.user
+          totals: response.data.totals || {}
         };
-        
+
         setCart(cartData);
-        
+
         // 실제 API 응답에서 제작 용량 관련 정보 처리
         setRemovedItems(response.removedItems || []);
         setCapacityWarnings(response.capacityWarnings || []);
         setMessage(response.message || null);
-        
+
       } else {
         throw new Error('장바구니 정보를 불러올 수 없습니다.');
       }
@@ -104,22 +104,22 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       const response = await cartService.updateCartItem(productId, quantity, options);
       
       console.log('Update cart response:', response);
-      
+
       if (response.success && response.data) {
-        // 새로운 응답 구조 처리
+        // Cart 응답 구조 처리: data에 직접 장바구니 정보
         const cartData = {
+          ...response.data,
           items: response.data.items || [],
-          totals: response.data.totals || {},
-          user: response.data.user
+          totals: response.data.totals || {}
         };
-        
+
         setCart(cartData);
-        
+
         // 제작 용량 관련 정보도 업데이트
         setRemovedItems(response.removedItems || []);
         setCapacityWarnings(response.capacityWarnings || []);
         setMessage(response.message || null);
-        
+
         onCartUpdate?.();
       } else {
         throw new Error('수량 변경에 실패했습니다.');
@@ -191,9 +191,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
         if (response.success && response.data) {
           const cartData = {
+            ...response.data,
             items: response.data.items || [],
-            totals: response.data.totals || {},
-            user: response.data.user
+            totals: response.data.totals || {}
           };
 
           setCart(cartData);

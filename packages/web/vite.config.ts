@@ -6,7 +6,7 @@ import path from 'path'
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
-    port: mode === 'stage' ? 3002 : 3001,
+    port: 3001,
     host: true,
     // 프록시 제거 - 직접 서버 URL로 연결
   },

@@ -460,7 +460,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             e.preventDefault();
             onGo("/promo/plus");
           }}
-          className="mt-4 block rounded-lg bg-black px-4 py-3 text-white"
+          className="mt-4 block rounded-lg bg-black px-4 py-3 text-white hover:text-white"
         >
           <div className="text-sm opacity-90">핸디플러스 멤버</div>
           <div className="text-[15px] font-semibold">

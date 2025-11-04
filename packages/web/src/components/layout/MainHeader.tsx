@@ -14,7 +14,8 @@ export function MainHeader({
   onGo,
   currentPath,
   onAuthStateChange,
-  authLoading = false
+  authLoading = false,
+  onCategoryOpen
 }: {
   cartCount:number;
   onCart:()=>void;
@@ -22,6 +23,7 @@ export function MainHeader({
   currentPath?: string;
   onAuthStateChange?: (user: User | null) => void;
   authLoading?: boolean;
+  onCategoryOpen?: () => void;
 }) {
   const [q,setQ]=useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -31,6 +33,7 @@ export function MainHeader({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const gnb = [
+    {label:"카테고리", to:"#", isModal: true},
     {label:"랭킹", to:"/ranking"},
     {label:"브랜드", to:"/brands"},
     {label:"신상", to:"/new"},
@@ -501,7 +504,14 @@ export function MainHeader({
               <a
                 key={x.label}
                 href={x.to}
-                onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
+                onClick={(e)=>{
+                  e.preventDefault();
+                  if ((x as any).isModal && onCategoryOpen) {
+                    onCategoryOpen();
+                  } else {
+                    onGo(x.to);
+                  }
+                }}
                 className={getLinkClassName(x.to)}
               >
                 {x.label}
@@ -777,7 +787,14 @@ export function MainHeader({
               <a
                 key={x.label}
                 href={x.to}
-                onClick={(e)=>{e.preventDefault(); onGo(x.to);}}
+                onClick={(e)=>{
+                  e.preventDefault();
+                  if ((x as any).isModal && onCategoryOpen) {
+                    onCategoryOpen();
+                  } else {
+                    onGo(x.to);
+                  }
+                }}
                 className={getLinkClassName(x.to, true)}
               >
                 {x.label}

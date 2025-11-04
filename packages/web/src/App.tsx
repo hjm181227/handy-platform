@@ -9,9 +9,10 @@ import { AlertProvider } from './components/common';
 // Layout Components
 import { TopDarkNav } from './components/layout/TopDarkNav';
 import { MainHeader } from './components/layout/MainHeader';
-import { Hero3 } from './components/layout/Hero';
+import { EventBanners } from './components/layout/Hero';
 import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
+import { CategoryModal } from './components/common/CategoryModal';
 
 // Product Components
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
@@ -112,6 +113,8 @@ import SellerManagement from './components/admin/SellerManagement';
 import AdminOrderManagement from './components/admin/AdminOrderManagement';
 import AdminProductManagement from './components/admin/AdminProductManagement';
 import SellerApplicationManagement from './components/admin/SellerApplicationManagement';
+import CategoryManagement from './components/admin/CategoryManagement';
+import BannerManagement from './components/admin/BannerManagement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 export default function App() {
@@ -803,6 +806,18 @@ export default function App() {
           <SellerApplicationManagement />
         </AdminLayout>
       );
+    } else if (pathname === "/admin/categories") {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <CategoryManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === "/admin/banners") {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <BannerManagement />
+        </AdminLayout>
+      );
     } else {
       // Admin 404 - redirect to admin dashboard
       screen = (
@@ -834,7 +849,7 @@ export default function App() {
     // Home
     screen = (
       <>
-        <Hero3 onGo={nav}/>
+        <EventBanners onGo={nav}/>
         <SectionRow
           title="신상 제품"
           items={newProducts}
@@ -869,9 +884,9 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
                 {brand.products?.slice(0, 6).map(p => {
-                  const productId = p.productUuid || p.id;
+                  const productId = p.id;
                   return (
-                    <div key={p.productUuid || p.id} className="md:snap-start md:flex-shrink-0">
+                    <div key={p.id} className="md:snap-start md:flex-shrink-0">
                       <ProductCard
                         p={p}
                         onOpen={openProduct}
@@ -917,6 +932,7 @@ export default function App() {
               currentPath={pathname}
               onAuthStateChange={setCurrentUser}
               authLoading={authLoading}
+              onCategoryOpen={() => setCatOpen(true)}
             />
           </div>
         </>
@@ -937,10 +953,10 @@ export default function App() {
             currentUser={currentUser}
             showToast={showToast}
           />
-          <CategoryDrawer
-            open={catOpen}
+          <CategoryModal
+            isOpen={catOpen}
             onClose={() => setCatOpen(false)}
-            onGo={nav}
+            onNavigate={nav}
           />
         </>
       )}
