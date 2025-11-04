@@ -363,7 +363,7 @@ export abstract class BaseAdminService extends BaseApiService {
   }
 
   async rejectSellerApplication(
-    sellerInfoId: string, 
+    sellerInfoId: string,
     rejectionReason: string,
     verificationNote?: string
   ): Promise<ApiResponse<{
@@ -376,6 +376,146 @@ export abstract class BaseAdminService extends BaseApiService {
     return this.request<ApiResponse<any>>(`/api/admin/seller-applications/${sellerInfoId}/reject`, {
       method: 'POST',
       body: JSON.stringify({ rejectionReason, verificationNote }),
+    });
+  }
+
+  // === 카테고리 관리 ===
+
+  async getCategories(params: {
+    page?: number;
+    limit?: number;
+    type?: string;
+    isActive?: boolean;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const url = `${API_ENDPOINTS.ADMIN.CATEGORIES_LIST}?${queryParams.toString()}`;
+    return this.request<any>(url);
+  }
+
+  async createCategory(data: {
+    type: string;
+    name: string;
+    value: string;
+    iconUrl?: string;
+    hexColor?: string;
+    description?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.CATEGORIES_CREATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCategory(
+    categoryId: string,
+    data: {
+      name?: string;
+      value?: string;
+      iconUrl?: string;
+      hexColor?: string;
+      description?: string;
+      isActive?: boolean;
+    }
+  ): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.CATEGORIES_UPDATE(categoryId), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async toggleCategory(categoryId: string, isActive: boolean): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.CATEGORIES_TOGGLE(categoryId), {
+      method: 'PUT',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  async deleteCategory(categoryId: string): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.CATEGORIES_DELETE(categoryId), {
+      method: 'DELETE',
+    });
+  }
+
+  // === 이벤트 배너 관리 ===
+
+  async getBanners(params: {
+    page?: number;
+    limit?: number;
+    isActive?: boolean;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const url = `${API_ENDPOINTS.ADMIN.EVENT_BANNERS_LIST}?${queryParams.toString()}`;
+    return this.request<any>(url);
+  }
+
+  async createBanner(data: {
+    title: string;
+    description?: string;
+    imageUrl: string;
+    redirectUrl?: string;
+    brands?: string[];
+    categories?: string[];
+    displayOrder?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_CREATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateBanner(
+    bannerId: string,
+    data: {
+      title?: string;
+      description?: string;
+      imageUrl?: string;
+      redirectUrl?: string;
+      brands?: string[];
+      categories?: string[];
+      displayOrder?: number;
+      startDate?: string;
+      endDate?: string;
+      isActive?: boolean;
+    }
+  ): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_UPDATE(bannerId), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async toggleBanner(bannerId: string, isActive: boolean): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_TOGGLE(bannerId), {
+      method: 'PUT',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  async deleteBanner(bannerId: string): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_DELETE(bannerId), {
+      method: 'DELETE',
     });
   }
 }

@@ -1,69 +1,75 @@
 import { useState } from 'react';
 import type { NailCategories } from '@handy-platform/shared';
+import { CategoryIcon } from '../common/CategoryIcon';
+import type { CategoryType } from '@handy-platform/shared';
 
 interface CategorySelectorProps {
   value: Partial<NailCategories>;
   onChange: (categories: Partial<NailCategories>) => void;
 }
 
+interface CategoryItem {
+  label: string;
+  value: string;
+}
+
 export function CategorySelector({ value, onChange }: CategorySelectorProps) {
-  const categoryData = {
+  const categoryData: Record<CategoryType, CategoryItem[]> = {
     style: [
-      { label: "신상", icon: "✨" },
-      { label: "심플", icon: "🤍" },
-      { label: "화려", icon: "💎" },
-      { label: "아트", icon: "🎨" },
-      { label: "트렌디", icon: "🔥" },
-      { label: "클래식", icon: "👑" },
-      { label: "시즌", icon: "🌸" },
-      { label: "테마", icon: "🎭" },
-      { label: "키치", icon: "🌈" },
-      { label: "네츄럴", icon: "🌿" },
+      { label: "신상", value: "new" },
+      { label: "심플", value: "simple" },
+      { label: "화려", value: "fancy" },
+      { label: "아트", value: "art" },
+      { label: "트렌디", value: "trendy" },
+      { label: "클래식", value: "classic" },
+      { label: "시즌", value: "season" },
+      { label: "테마", value: "theme" },
+      { label: "키치", value: "kitsch" },
+      { label: "네츄럴", value: "natural" },
     ],
     color: [
-      { label: "레드 계열", icon: "🔴" },
-      { label: "핑크 계열", icon: "🩷" },
-      { label: "블루 계열", icon: "🔵" },
-      { label: "그린 계열", icon: "🟢" },
-      { label: "뉴트럴", icon: "🤎" },
-      { label: "블랙/화이트", icon: "⚫" },
+      { label: "레드 계열", value: "red" },
+      { label: "핑크 계열", value: "pink" },
+      { label: "블루 계열", value: "blue" },
+      { label: "그린 계열", value: "green" },
+      { label: "뉴트럴", value: "neutral" },
+      { label: "블랙/화이트", value: "blackwhite" },
     ],
     texture: [
-      { label: "글리터", icon: "✨" },
-      { label: "크롬/메탈", icon: "🪙" },
-      { label: "매트", icon: "🎯" },
-      { label: "벨벳", icon: "🧸" },
-      { label: "젤", icon: "💧" },
-      { label: "자석", icon: "🧲" },
+      { label: "글리터", value: "glitter" },
+      { label: "크롬/메탈", value: "chrome" },
+      { label: "매트", value: "matte" },
+      { label: "벨벳", value: "velvet" },
+      { label: "젤", value: "gel" },
+      { label: "자석", value: "magnet" },
     ],
     tpo: [
-      { label: "데일리", icon: "☀️" },
-      { label: "파티", icon: "🎉" },
-      { label: "웨딩", icon: "💒" },
-      { label: "공연", icon: "🎪" },
-      { label: "Special day", icon: "🎁" },
+      { label: "데일리", value: "daily" },
+      { label: "파티", value: "party" },
+      { label: "웨딩", value: "wedding" },
+      { label: "공연", value: "performance" },
+      { label: "Special day", value: "special" },
     ],
+    shape: [],
+    length: [],
+    nation: [],
   };
 
-  const handleMultiSelect = (key: 'style' | 'color' | 'texture' | 'tpo', item: string, maxCount: number) => {
+  const handleMultiSelect = (key: CategoryType, item: string, maxCount: number) => {
     const currentItems = value[key] || [];
     const isSelected = currentItems.includes(item);
-    
+
     let newItems: string[];
     if (isSelected) {
-      // 이미 선택된 경우 제거
       newItems = currentItems.filter(i => i !== item);
     } else {
-      // 새로 선택하는 경우
       if (currentItems.length >= maxCount) {
-        // 최대 개수 초과시 첫 번째 항목 제거하고 새 항목 추가
         newItems = [...currentItems.slice(1), item];
       } else {
-        // 최대 개수 미만이면 그냥 추가
         newItems = [...currentItems, item];
       }
     }
-    
+
     onChange({
       ...value,
       [key]: newItems
@@ -71,12 +77,12 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
   };
 
   const renderMultiSelectCategory = (
-    key: 'style' | 'color' | 'texture' | 'tpo',
+    key: CategoryType,
     title: string,
     maxCount: number
   ) => {
     const selectedItems = value[key] || [];
-    
+
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -85,24 +91,29 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
             {selectedItems.length}/{maxCount}개 선택
           </span>
         </div>
-        
+
         <div className="grid grid-cols-3 gap-2">
           {categoryData[key].map(item => {
             const isSelected = selectedItems.includes(item.label);
             return (
               <button
-                key={item.label}
+                key={item.value}
                 type="button"
                 onClick={() => handleMultiSelect(key, item.label, maxCount)}
                 className={`
                   flex flex-col items-center gap-1 p-2 rounded-lg border transition-all duration-200
-                  ${isSelected 
-                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                  ${isSelected
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }
                 `}
               >
-                <span className="text-base">{item.icon}</span>
+                <CategoryIcon
+                  categoryType={key}
+                  categoryValue={item.value}
+                  className="w-5 h-5"
+                  showFallback={true}
+                />
                 <span className="text-xs font-medium text-center leading-tight">
                   {item.label}
                 </span>
@@ -128,7 +139,6 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
       {renderMultiSelectCategory('texture', '텍스쳐', 3)}
       {renderMultiSelectCategory('tpo', 'TPO', 3)}
 
-      {/* 선택된 카테고리 요약 */}
       {(value.style?.length || value.color?.length || value.texture?.length || value.tpo?.length) && (
         <div className="bg-gray-50 rounded-lg p-4">
           <h4 className="text-sm font-semibold text-gray-800 mb-2">선택된 카테고리</h4>

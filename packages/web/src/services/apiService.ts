@@ -107,6 +107,8 @@ class WebApiService {
   get address() { return this.apiService.address; }
   get brand() { return this.apiService.brand; }
   get likes() { return this.apiService.likes; }
+  get category() { return this.apiService.category; }
+  get banner() { return this.apiService.banner; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -220,6 +222,8 @@ export const {
   address: addressService,
   brand: brandService,
   likes: likesService,
+  category: categoryService,
+  banner: bannerService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들
