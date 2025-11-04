@@ -33,6 +33,7 @@ import { SocialSignupPage } from './components/pages/SocialSignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 import { ChatPage } from './pages/ChatPage';
+import { ChatRoomPage } from './pages/ChatRoomPage';
 import { CartContent } from './components/cart/CartContent';
 
 // MyPage Components
@@ -409,10 +410,14 @@ export default function App() {
 
   let screen: React.ReactNode;
 
-
+  // Chat room detail
+  const mChatRoom = pathname.match(/^\/chat\/(.+)$/);
+  if (mChatRoom) {
+    screen = <ChatRoomPage nav={nav} roomId={decodeURIComponent(mChatRoom[1])} />;
+  }
   // Product detail
-  const mDetail = pathname.match(/^\/product\/(.+)$/);
-  if (mDetail) {
+  else if (pathname.match(/^\/product\/(.+)$/)) {
+    const mDetail = pathname.match(/^\/product\/(.+)$/)!;
     screen = <Detail
       id={decodeURIComponent(mDetail[1])}
       onBack={()=>history.back()}
@@ -915,9 +920,12 @@ export default function App() {
   // 어드민 센터 페이지인지 확인
   const isAdminPage = pathname.startsWith("/admin");
 
+  // 채팅 페이지인지 확인
+  const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
+
   // 홈화면에서는 헤더를 표시, 다른 페이지에서는 숨김
   const isHomePage = pathname === '/';
-  const shouldShowHeader = !isSellerPage && !isAdminPage;
+  const shouldShowHeader = !isSellerPage && !isAdminPage && !isChatPage;
 
   return (
     <AlertProvider>
@@ -945,8 +953,8 @@ export default function App() {
       {/* 본문은 절대 숨김 래퍼 안에 넣지 않기 */}
       {screen}
 
-      {/* 판매자 센터가 아닐 때만 푸터와 드로어 표시 */}
-      {!isSellerPage && (
+      {/* 판매자 센터와 채팅 페이지가 아닐 때만 푸터와 드로어 표시 */}
+      {!isSellerPage && !isChatPage && (
         <>
           <FooterMega onGo={nav} />
           <CartDrawer
@@ -1014,7 +1022,7 @@ export default function App() {
       )}
 
       {/* Floating Chat Button */}
-      {!pathname.startsWith('/seller') && !pathname.startsWith('/admin') && pathname !== '/chat' && (
+      {!isSellerPage && !isAdminPage && !isChatPage && (
         <FloatingChatButton onClick={() => nav('/chat')} />
       )}
     </AlertProvider>
