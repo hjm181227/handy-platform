@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Product, User } from '@handy-platform/shared';
+import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS } from '@handy-platform/shared';
 import { productService, cartService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
@@ -26,23 +26,11 @@ export function Detail({
   const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
-  const [imgIdx, setImgIdx] = useState(0);
   const [shape, setShape] = useState<string>("ROUND");
   const [length, setLength] = useState<string>("SHORT");
   const [qty, setQty] = useState<number>(1);
   const [liked, setLiked] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("상세정보");
-
-  // 이미지 갤러리 (항상 호출되도록)
-  const images = useMemo(
-    () => product ? [
-      product.mainImageUrl,
-      ...(product.detailImages?.map(img => img.url) || []),
-      `https://picsum.photos/seed/${id}-1/800/800`,
-      `https://picsum.photos/seed/${id}-2/800/800`,
-    ] : [],
-    [id, product?.mainImageUrl, product?.detailImages]
-  );
 
   // 상품 데이터 로딩
   useEffect(() => {
@@ -76,18 +64,18 @@ export function Detail({
   // 장바구니 담기 함수
   const addToCart = async () => {
     if (!product) return;
-    
+
     // 로그인 체크
     if (!currentUser) {
       setCartMessage('로그인이 필요한 서비스입니다.');
       setTimeout(() => setCartMessage(null), 3000);
       return;
     }
-    
+
     try {
       setAddingToCart(true);
       setCartMessage(null);
-      
+
       const options: Record<string, string> = {};
       if (shape) options.nailShape = shape;
       if (length) options.nailLength = length;
@@ -97,18 +85,18 @@ export function Detail({
         quantity: qty,
         options
       });
-      
+
       await cartService.addToCart(product.id, qty, options);
-      
+
       setCartMessage('장바구니에 추가되었습니다!');
       // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거
-      
+
       if (onCartUpdate) {
         onCartUpdate();
       }
-      
+
       setTimeout(() => setCartMessage(null), 3000);
-      
+
     } catch (err: any) {
       console.error('Add to cart failed:', err);
       console.error('Error details:', {
@@ -116,9 +104,9 @@ export function Detail({
         message: err.message,
         data: err.data
       });
-      
+
       let errorMessage = '장바구니 추가에 실패했습니다.';
-      
+
       // 특별한 에러 코드 처리
       if (err.data?.code === 'PRODUCTION_CAPACITY_EXCEEDED') {
         errorMessage = '현재 판매자의 생산 능력을 초과하여 주문을 받을 수 없습니다. 나중에 다시 시도해주세요.';
@@ -127,14 +115,14 @@ export function Detail({
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setCartMessage(errorMessage);
       setTimeout(() => setCartMessage(null), 5000);
     } finally {
       setAddingToCart(false);
     }
   };
-  
+
   // 바로구매 함수
   const buyNow = async () => {
     try {
@@ -148,16 +136,16 @@ export function Detail({
   // 공유 함수
   const share = async () => {
     if (!product) return;
-    
+
     const url = window.location.href;
     if ((navigator as any).share) {
-      try { 
-        await (navigator as any).share({ title: product.name, url }); 
+      try {
+        await (navigator as any).share({ title: product.name, url });
       } catch {}
     } else {
-      try { 
-        await navigator.clipboard.writeText(url); 
-        alert("링크가 복사되었어요!"); 
+      try {
+        await navigator.clipboard.writeText(url);
+        alert("링크가 복사되었어요!");
       } catch {
         alert("공유를 지원하지 않는 브라우저입니다.");
       }
@@ -212,31 +200,42 @@ export function Detail({
       case "상세정보":
         return (
           <div className="space-y-6">
+            {/* 상품 정보 */}
             <div className="space-y-3">
-              <p>견고한 접착력과 편안한 착용감을 가진 핸디 네일 팁. 데일리부터 스페셜데이까지 다양한 스타일을 손쉽게 연출하세요.</p>
+              <h3 className="font-semibold text-base">상품 정보</h3>
               <table className="w-full text-left text-sm">
                 <tbody className="[&>tr>td]:py-2">
-                  <tr><td className="w-28 text-gray-500">재질</td><td>ABS, UV Gel</td></tr>
-                  <tr><td className="text-gray-500">텍스쳐</td><td>매트/글로시</td></tr>
-                  <tr><td className="text-gray-500">호환</td><td>핸디 젤/자석 악세사리</td></tr>
-                  <tr><td className="text-gray-500">크기</td><td>0-9 사이즈 포함 (총 10개)</td></tr>
-                  <tr><td className="text-gray-500">지속성</td><td>2-3주 착용 가능</td></tr>
+                  <tr><td className="w-40 text-gray-500">네일 쉐입</td><td>{NAIL_SHAPE_NAME[p.nailShape] || p.nailShape}</td></tr>
+                  <tr><td className="text-gray-500">네일 길이</td><td>{NAIL_LENGTH_NAME[p.nailLength] || p.nailLength}</td></tr>
+                  <tr><td className="text-gray-500">길이 커스터마이징</td><td>{p.nailOptions.lengthCustomizable ? '가능' : '불가능'}</td></tr>
+                  <tr><td className="text-gray-500">쉐입 커스터마이징</td><td>{p.nailOptions.shapeCustomizable ? '가능' : '불가능'}</td></tr>
+                  <tr><td className="text-gray-500">디자인 커스터마이징</td><td>{p.nailOptions.designCustomizable ? '가능' : '불가능'}</td></tr>
+                  <tr><td className="text-gray-500">제작 소요시간</td><td>{p.processingDays}일</td></tr>
+                  {p.brand && <tr><td className="text-gray-500">브랜드</td><td>{p.brand}</td></tr>}
                 </tbody>
               </table>
-              <img src={`https://picsum.photos/seed/${id}-detail/1200/600`} className="w-full rounded-lg" />
             </div>
-            <div className="space-y-3">
-              <h3 className="font-semibold text-base">제품 특징</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• 초강력 접착력으로 오래 지속되는 착용감</li>
-                <li>• 자연스러운 네일 라인으로 완벽한 핏</li>
-                <li>• 쉽고 간편한 셀프 네일 시스템</li>
-                <li>• 다양한 스타일 연출 가능</li>
-              </ul>
-            </div>
+
+            {/* 상세 이미지 */}
+            {product.detailImages && product.detailImages.length > 0 && (
+              <div className="space-y-4">
+                {product.detailImages.map((img, index) => (
+                  <div key={img._id || index} className="space-y-2">
+                    <img
+                      src={img.url}
+                      alt={img.description || `${product.name} 상세 이미지 ${index + 1}`}
+                      className="w-full rounded-lg"
+                    />
+                    {img.description && (
+                      <p className="text-center">{img.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
-      
+
       case "리뷰":
         return (
           <div className="space-y-6">
@@ -271,7 +270,7 @@ export function Detail({
             </button>
           </div>
         );
-      
+
       case "Q&A":
         return (
           <div className="space-y-6">
@@ -282,18 +281,18 @@ export function Detail({
             </div>
             <div className="space-y-4">
               {[
-                { 
-                  q: "사이즈가 맞지 않으면 교환 가능한가요?", 
+                {
+                  q: "사이즈가 맞지 않으면 교환 가능한가요?",
                   a: "네, 구매 후 7일 이내에 미사용 제품에 한해 교환이 가능합니다. 고객센터로 연락 주시면 안내해드리겠습니다.",
                   date: "2024.01.14"
                 },
-                { 
-                  q: "얼마나 오래 착용할 수 있나요?", 
+                {
+                  q: "얼마나 오래 착용할 수 있나요?",
                   a: "개인차가 있지만 일반적으로 2-3주 정도 착용 가능합니다. 관리 상태에 따라 더 오래 사용하실 수도 있어요.",
                   date: "2024.01.12"
                 },
-                { 
-                  q: "제거할 때 손톱이 상하지 않나요?", 
+                {
+                  q: "제거할 때 손톱이 상하지 않나요?",
                   a: "전용 리무버를 사용하시면 손톱에 무리 없이 안전하게 제거하실 수 있습니다.",
                   date: "2024.01.10"
                 }
@@ -313,7 +312,7 @@ export function Detail({
             </div>
           </div>
         );
-      
+
       case "배송/반품":
         return (
           <div className="space-y-6">
@@ -374,7 +373,7 @@ export function Detail({
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -383,46 +382,23 @@ export function Detail({
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
 
-      {/* 상단 그리드: 갤러리 / 정보 */}
+      {/* 상단 그리드: 이미지 / 정보 */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* 갤러리 */}
+        {/* 메인 이미지 */}
         <div>
-          <div className="relative overflow-hidden rounded-lg bg-gray-100">
+          <div className="overflow-hidden rounded-lg bg-gray-100">
             <img
-              src={images[imgIdx] || p.mainImageUrl}
+              src={p.mainImageUrl}
+              alt={p.name}
               className="w-full aspect-[3/4] object-cover"
             />
-            {/* 좌우 이동(간단) */}
-            <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
-              <button
-                onClick={() => setImgIdx((v) => (v - 1 + images.length) % images.length)}
-                className="rounded-full bg-white/80 p-2 shadow hover:bg-white"
-                aria-label="prev"
-              >‹</button>
-              <button
-                onClick={() => setImgIdx((v) => (v + 1) % images.length)}
-                className="rounded-full bg-white/80 p-2 shadow hover:bg-white"
-                aria-label="next"
-              >›</button>
-            </div>
-          </div>
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            {images.map((src, i) => (
-              <button
-                key={i}
-                onClick={() => setImgIdx(i)}
-                className={`rounded-md overflow-hidden border ${i === imgIdx ? "border-black" : "border-transparent"}`}
-              >
-                <img src={src} className="aspect-square object-cover" />
-              </button>
-            ))}
           </div>
         </div>
 
         {/* 정보 */}
         <div className="space-y-3">
-          <button 
-            className="text-xs text-gray-500 hover:text-gray-700 hover:underline text-left" 
+          <button
+            className="text-xs text-gray-500 hover:text-gray-700 hover:underline text-left"
             onClick={() => goTo("/brands")}
           >
             {p.brand}
@@ -453,69 +429,67 @@ export function Detail({
 
           {/* 옵션 */}
           <div className="pt-2 space-y-2">
+            {/* 쉐입 옵션 */}
             <div>
               <div className="mb-1 text-sm text-gray-600">쉐입</div>
-              <div className="flex flex-wrap gap-2">
-                {["ROUND", "ALMOND", "SQUARE", "OVAL", "COFFIN"].map((s) => {
-                  const koreanName = {
-                    'ROUND': '라운드',
-                    'ALMOND': '아몬드', 
-                    'SQUARE': '스퀘어',
-                    'OVAL': '오벌',
-                    'COFFIN': '코핀'
-                  }[s] || s;
-                  
-                  const isAvailable = p.nailOptions?.shapeCustomizable !== false;
-                  
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => setShape(s)}
-                      disabled={!isAvailable}
-                      className={`rounded border px-3 py-1 text-sm ${
-                        shape === s 
-                          ? "bg-black text-white border-black" 
-                          : isAvailable 
-                            ? "bg-white hover:bg-gray-50" 
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {koreanName}
-                    </button>
-                  );
-                })}
-              </div>
+              {p.nailOptions?.shapeCustomizable ? (
+                // 커스터마이징 가능: 선택 가능한 버튼들 표시
+                <div className="flex flex-wrap gap-2">
+                  {NAIL_SHAPES.map((s) => {
+                    const koreanName = NAIL_SHAPE_NAME[s] || s;
+
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setShape(s)}
+                        className={`rounded border px-3 py-1 text-sm ${
+                          shape === s
+                            ? "bg-black text-white border-black"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        {koreanName}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                // 커스터마이징 불가능: 고정값만 텍스트로 표시
+                <div className="text-sm">
+                  {NAIL_SHAPE_NAME[p.nailShape] || p.nailShape} <span className="text-gray-400">(변경 불가)</span>
+                </div>
+              )}
             </div>
+            {/* 길이 옵션 */}
             <div>
               <div className="mb-1 text-sm text-gray-600">길이</div>
-              <div className="flex flex-wrap gap-2">
-                {["SHORT", "MEDIUM", "LONG"].map((s) => {
-                  const koreanName = {
-                    'SHORT': '쇼트',
-                    'MEDIUM': '미디움',
-                    'LONG': '롱'
-                  }[s] || s;
-                  
-                  const isAvailable = p.nailOptions?.lengthCustomizable !== false;
-                  
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => setLength(s)}
-                      disabled={!isAvailable}
-                      className={`rounded border px-3 py-1 text-sm ${
-                        length === s 
-                          ? "bg-black text-white border-black" 
-                          : isAvailable 
-                            ? "bg-white hover:bg-gray-50" 
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {koreanName}
-                    </button>
-                  );
-                })}
-              </div>
+              {p.nailOptions?.lengthCustomizable ? (
+                // 커스터마이징 가능: 선택 가능한 버튼들 표시
+                <div className="flex flex-wrap gap-2">
+                  {NAIL_LENGTHS.map((s) => {
+                    const koreanName = NAIL_LENGTH_NAME[s] || s;
+
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setLength(s)}
+                        className={`rounded border px-3 py-1 text-sm ${
+                          length === s
+                            ? "bg-black text-white border-black"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        {koreanName}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                // 커스터마이징 불가능: 고정값만 텍스트로 표시
+                <div className="text-sm">
+                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength} <span className="text-gray-400">(변경 불가)</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -542,8 +516,8 @@ export function Detail({
 
           {/* 구매 버튼 */}
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <button 
-              onClick={addToCart} 
+            <button
+              onClick={addToCart}
               disabled={addingToCart || !p.isInStock}
               className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
                 addingToCart 
@@ -584,16 +558,9 @@ export function Detail({
             </button>
           </div>
 
-          {/* 간략 정보 */}
-          <ul className="list-disc pl-5 text-sm text-gray-700 pt-2 space-y-1">
-            <li>옵션: {shape} / {length}</li>
-            <li>구성품: 네일 팁 세트, 접착 젤, 파일, 프렙 패드</li>
-            <li>제조국: KR</li>
-          </ul>
-
           {/* 네일 카테고리 */}
           {p.nailCategories && (
-            <CategoryDisplay 
+            <CategoryDisplay
               categories={p.nailCategories}
               onCategoryClick={(key, value) => {
                 // 카테고리 클릭 시 해당 카테고리로 이동
@@ -637,8 +604,8 @@ export function Detail({
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
           <div className="text-base font-semibold">{money(salePrice)}원</div>
           <div className="flex gap-2">
-            <button 
-              onClick={addToCart} 
+            <button
+              onClick={addToCart}
               disabled={addingToCart || !p.isInStock}
               className={`rounded-lg border px-4 py-2 text-sm ${
                 addingToCart || !p.isInStock

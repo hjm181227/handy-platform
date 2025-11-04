@@ -1488,3 +1488,248 @@ export interface LikesListResponse {
   data: LikeItem[];
   error?: string;
 }
+
+// ============================================
+// Category Icons
+// ============================================
+
+// 카테고리 타입
+export type CategoryType = 'style' | 'color' | 'texture' | 'shape' | 'length' | 'tpo' | 'nation';
+
+// 카테고리 아이템
+export interface CategoryItem {
+  name: string;           // 표시 이름 (한글) ex: "심플"
+  value: string;          // 영문 값 (데이터 비교용, 소문자) ex: "simple"
+  iconUrl?: string;       // 아이콘 이미지 URL
+  hexColor?: string;      // 색상 코드 (color 타입만, #RRGGBB 형식)
+}
+
+// 카테고리 아이콘 응답 데이터
+export interface CategoryIconsData {
+  types: CategoryType[];                          // 카테고리 타입 목록 (순서 고정)
+  categories: Record<CategoryType, CategoryItem[]>; // 타입별로 그룹화된 카테고리
+}
+
+// 카테고리 아이콘 API 응답
+export interface CategoryIconsResponse {
+  success: boolean;
+  data: CategoryIconsData;
+  error?: string;
+}
+
+// ====================
+// Admin Category Types
+// ====================
+
+// 어드민용 카테고리 상세 정보
+export interface AdminCategory {
+  _id: string;
+  categoryId: string;
+  categoryUuid: string;
+  type: CategoryType;
+  name: string;
+  value: string;
+  iconUrl?: string;
+  iconS3Key?: string;
+  hexColor?: string;
+  description?: string;
+  isActive: boolean;
+  usageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 카테고리 목록 응답
+export interface AdminCategoryListResponse {
+  success: boolean;
+  categories: AdminCategory[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCategories: number;
+  };
+}
+
+// 카테고리 생성 요청
+export interface CreateCategoryRequest {
+  type: CategoryType;
+  name: string;
+  value: string;
+  iconUrl?: string;
+  hexColor?: string;
+  description?: string;
+}
+
+// 카테고리 수정 요청
+export interface UpdateCategoryRequest {
+  name?: string;
+  value?: string;
+  iconUrl?: string;
+  hexColor?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+// 카테고리 생성/수정 응답
+export interface AdminCategoryResponse {
+  success: boolean;
+  message?: string;
+  category?: AdminCategory;
+  error?: string;
+}
+
+// 카테고리 삭제 응답
+export interface DeleteCategoryResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  details?: string;
+}
+
+// 공개 카테고리 목록 조회 (사용자용) - CategoryItem은 line 1500에 이미 정의됨
+export interface CategoryData {
+  types: string[];
+  categories: {
+    [key: string]: CategoryItem[];
+  };
+}
+
+export interface CategoryResponse {
+  success: boolean;
+  data: CategoryData;
+}
+
+// ====================
+// Admin Banner Types
+// ====================
+
+// 어드민용 배너 상세 정보
+export interface AdminBanner {
+  _id: string;
+  bannerId: string;
+  bannerUuid: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  imageS3Key?: string;
+  redirectUrl?: string;
+  brands?: Array<{
+    _id: string;
+    name: string;
+    brandUuid: string;
+  }>;
+  categories?: Array<{
+    _id: string;
+    name: string;
+    value: string;
+    type: string;
+  }>;
+  displayOrder: number;
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+  viewCount: number;
+  clickCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 배너 목록 응답
+export interface AdminBannerListResponse {
+  success: boolean;
+  eventBanners: AdminBanner[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalEventBanners: number;
+  };
+}
+
+// 배너 생성 요청
+export interface CreateBannerRequest {
+  title: string;
+  description?: string;
+  imageUrl: string;
+  redirectUrl?: string;
+  brands?: string[];
+  categories?: string[];
+  displayOrder?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+// 배너 수정 요청
+export interface UpdateBannerRequest {
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  redirectUrl?: string;
+  brands?: string[];
+  categories?: string[];
+  displayOrder?: number;
+  startDate?: string;
+  endDate?: string;
+  isActive?: boolean;
+}
+
+// 배너 생성/수정 응답
+export interface AdminBannerResponse {
+  success: boolean;
+  message?: string;
+  eventBanner?: AdminBanner;
+  error?: string;
+}
+
+// 배너 삭제 응답
+export interface DeleteBannerResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+// ====================
+// Public Event Banner Types
+// ====================
+
+// 브랜드 정보 (배너에서 참조)
+export interface BannerBrandInfo {
+  _id: string;
+  name: string;
+  brandUuid: string;
+}
+
+// 카테고리 정보 (배너에서 참조)
+export interface BannerCategoryInfo {
+  _id: string;
+  name: string;
+  value: string;
+  type: string;
+}
+
+// 공개용 이벤트 배너 (서버 API 응답 구조와 일치)
+export interface EventBanner {
+  _id: string;
+  bannerId: string;
+  bannerUuid: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  imageS3Key?: string;
+  redirectUrl?: string;
+  brands?: BannerBrandInfo[];
+  categories?: BannerCategoryInfo[];
+  isActive: boolean;
+  displayOrder: number;
+  startDate?: string;
+  endDate?: string;
+  viewCount: number;
+  clickCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 공개용 이벤트 배너 목록 응답 (서버 API 응답 구조와 일치)
+export interface EventBannerListResponse {
+  success: boolean;
+  eventBanners: EventBanner[];
+}

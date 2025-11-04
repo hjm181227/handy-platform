@@ -1,5 +1,4 @@
 import type { NailCategories } from '@handy-platform/shared';
-import { CategoryIcon } from '../common/CategoryIcon';
 
 interface CategoryDisplayProps {
   categories: Partial<NailCategories>;
@@ -18,7 +17,7 @@ export function CategoryDisplay({ categories, onCategoryClick }: CategoryDisplay
     nation: { name: "국가별" },
   };
 
-  const hasCategories = Object.values(categories).some(cat => 
+  const hasCategories = Object.values(categories).some(cat =>
     Array.isArray(cat) ? cat.length > 0 : cat
   );
 
@@ -37,27 +36,20 @@ export function CategoryDisplay({ categories, onCategoryClick }: CategoryDisplay
   return (
     <div className="border-t pt-4 mt-4">
       <h3 className="text-sm font-semibold text-gray-800 mb-3">카테고리</h3>
-      
+
       <div className="space-y-3">
         {Object.entries(categories).map(([key, value]) => {
           if (!value || (Array.isArray(value) && value.length === 0)) return null;
-          
+
           const categoryInfo = categoryData[key as keyof typeof categoryData];
           if (!categoryInfo) return null;
 
           return (
             <div key={key} className="flex items-start gap-3">
-              <div className="flex items-center gap-1 min-w-0">
-                <CategoryIcon 
-                  categoryKey={key}
-                  categoryLabel={categoryInfo.name}
-                  className="text-sm"
-                />
-                <span className="text-sm font-medium text-gray-600">
-                  {categoryInfo.name}
-                </span>
-              </div>
-              
+              <span className="text-sm font-medium text-gray-600 min-w-[60px]">
+                {categoryInfo.name}
+              </span>
+
               <div className="flex flex-wrap gap-1 flex-1">
                 {Array.isArray(value) ? (
                   value.map(item => renderCategoryItem(item, key))

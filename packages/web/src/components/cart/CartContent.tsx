@@ -56,22 +56,21 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       
       const response = await cartService.getCart();
 
-      if (response.success && response.data && response.data.cart) {
-        // Cart 응답 구조: data.cart에 장바구니 정보
-        const cart = response.data.cart;
+      if (response.success && response.data) {
+        // Cart 응답 구조: data에 직접 장바구니 정보
         const cartData = {
-          ...cart,
-          items: cart.items || [],
-          totals: cart.totals || {}
+          ...response.data,
+          items: response.data.items || [],
+          totals: response.data.totals || {}
         };
 
         setCart(cartData);
-        
+
         // 실제 API 응답에서 제작 용량 관련 정보 처리
         setRemovedItems(response.removedItems || []);
         setCapacityWarnings(response.capacityWarnings || []);
         setMessage(response.message || null);
-        
+
       } else {
         throw new Error('장바구니 정보를 불러올 수 없습니다.');
       }
@@ -106,22 +105,21 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       
       console.log('Update cart response:', response);
 
-      if (response.success && response.data && response.data.cart) {
-        // Cart 응답 구조 처리
-        const cart = response.data.cart;
+      if (response.success && response.data) {
+        // Cart 응답 구조 처리: data에 직접 장바구니 정보
         const cartData = {
-          ...cart,
-          items: cart.items || [],
-          totals: cart.totals || {}
+          ...response.data,
+          items: response.data.items || [],
+          totals: response.data.totals || {}
         };
 
         setCart(cartData);
-        
+
         // 제작 용량 관련 정보도 업데이트
         setRemovedItems(response.removedItems || []);
         setCapacityWarnings(response.capacityWarnings || []);
         setMessage(response.message || null);
-        
+
         onCartUpdate?.();
       } else {
         throw new Error('수량 변경에 실패했습니다.');
@@ -191,12 +189,11 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
         console.log('Remove cart response:', response);
 
-        if (response.success && response.data && response.data.cart) {
-          const cart = response.data.cart;
+        if (response.success && response.data) {
           const cartData = {
-            ...cart,
-            items: cart.items || [],
-            totals: cart.totals || {}
+            ...response.data,
+            items: response.data.items || [],
+            totals: response.data.totals || {}
           };
 
           setCart(cartData);
