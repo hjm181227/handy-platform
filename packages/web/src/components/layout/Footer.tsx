@@ -14,7 +14,7 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
   ];
 
   return (
-    <footer className="mt-10 bg-[#f5f5f5] text-[#666]">
+    <footer className="mt-10 bg-[#f5f5f5] text-[#666] pb-20 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="grid gap-8 md:grid-cols-5">
           {cols.map((c) => (

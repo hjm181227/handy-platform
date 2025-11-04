@@ -12,6 +12,7 @@ import { MainHeader } from './components/layout/MainHeader';
 import { EventBanners } from './components/layout/Hero';
 import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { CategoryModal } from './components/common/CategoryModal';
 
 // Product Components
@@ -513,6 +514,16 @@ export default function App() {
   } else if (pathname.match(/^\/order-complete\/(.+)$/)) {
     const orderId = pathname.split("/")[2];
     screen = <OrderCompletePage onGo={nav} orderId={orderId} />;
+  } else if (pathname === "/category") {
+    // 카테고리 페이지 (모바일에서 페이지로 작동)
+    screen = (
+      <CategoryModal
+        isOpen={true}
+        onClose={() => history.back()}
+        onNavigate={nav}
+        isPage={true}
+      />
+    );
   } else if (pathname.startsWith("/help")) {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
@@ -957,6 +968,11 @@ export default function App() {
             isOpen={catOpen}
             onClose={() => setCatOpen(false)}
             onNavigate={nav}
+          />
+          <MobileBottomNav
+            currentPath={pathname}
+            onGo={nav}
+            onCategoryOpen={() => setCatOpen(true)}
           />
         </>
       )}
