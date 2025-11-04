@@ -48,7 +48,7 @@ export function RankedProductCard({
       </button>
 
       <div className="mt-2 space-y-0.5">
-        <div className="text-[11px] text-gray-500">{p.seller?.name || 'HANDY'}</div>
+        <div className="text-[11px] text-gray-500">{p.seller?.name || ''}</div>
         <div className="text-[13px] leading-snug h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
         <div className="flex items-baseline gap-2">
           <div className="text-[15px] font-bold">{money(salePrice)}원</div>

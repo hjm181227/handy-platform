@@ -366,13 +366,35 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     <div className="flex-1">
                       <h3 className="font-medium">{item.product?.name || '상품명 없음'}</h3>
                       <div className="text-xs text-gray-500 mt-1">
-                        판매자: {item.product?.seller?.name || 'HANDY'}
+                        판매자: {item.product?.brand || ''}
                       </div>
                       {item.options && Object.keys(item.options).length > 0 && (
                         <div className="text-sm text-gray-600 mt-1">
-                          {Object.entries(item.options).map(([key, value]) => (
-                            <span key={key}>{key}: {value} </span>
-                          ))}
+                          {Object.entries(item.options).map(([key, value]) => {
+                            const optionNames: Record<string, string> = {
+                              'nailShape': '쉐입',
+                              'nailLength': '길이',
+                              'nailSize': '사이즈'
+                            };
+
+                            const optionValues: Record<string, string> = {
+                              'ROUND': '라운드',
+                              'ALMOND': '아몬드',
+                              'SQUARE': '스퀘어',
+                              'OVAL': '오벌',
+                              'COFFIN': '코핀',
+                              'SHORT': '숏',
+                              'MEDIUM': '미디움',
+                              'LONG': '롱'
+                            };
+
+                            const displayKey = optionNames[key] || key;
+                            const displayValue = optionValues[value as string] || value;
+
+                            return (
+                              <span key={key}>{displayKey}: {displayValue} </span>
+                            );
+                          })}
                         </div>
                       )}
                       <div className="flex justify-between items-center mt-2">

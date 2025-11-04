@@ -45,7 +45,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
             paymentStatus: order.paymentStatus,
             paymentDetails: order.paymentDetails
           });
-          
+
           // 성공 알림
           await alert('결제가 완료되었습니다!', {
             variant: 'success',
@@ -120,7 +120,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           <div className="text-green-500 text-6xl mb-4">✅</div>
           <h2 className="text-2xl font-bold mb-2">결제가 완료되었습니다!</h2>
           <p className="text-gray-600 mb-6">주문이 성공적으로 처리되었습니다.</p>
-          
+
           {paymentResult && (
             <div className="space-y-6">
               {/* 주문 정보 */}
@@ -178,7 +178,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium">{item.productName || '상품명'}</h4>
-                          <p className="text-sm text-gray-500">판매자: {item.sellerName || 'HANDY'}</p>
+                          <p className="text-sm text-gray-500">판매자: {item.sellerName || ''}</p>
                           <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
                           <p className="text-sm font-medium">{money(item.price || 0)}원</p>
                           {item.subtotal && item.subtotal !== item.price && (
@@ -199,7 +199,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                     <p className="font-medium">{paymentResult.shippingAddress.name || '수령인'}</p>
                     <p className="text-gray-600">{paymentResult.shippingAddress.phone || '연락처'}</p>
                     <p className="text-gray-600">
-                      {paymentResult.shippingAddress.street || paymentResult.shippingAddress.address} 
+                      {paymentResult.shippingAddress.street || paymentResult.shippingAddress.address}
                       {paymentResult.shippingAddress.city ? `, ${paymentResult.shippingAddress.city}` : ''}
                       {paymentResult.shippingAddress.state ? `, ${paymentResult.shippingAddress.state}` : ''}
                     </p>
