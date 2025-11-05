@@ -238,7 +238,7 @@ export function MainHeader({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
+    <header className="bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
       {/* 데스크톱 레이아웃 */}
       <div className="hidden md:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center h-16 px-4">

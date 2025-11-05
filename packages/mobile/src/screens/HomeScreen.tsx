@@ -10,25 +10,16 @@ import {
   ToastAndroid,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getCurrentEnvironment } from '@handy-platform/shared';
 import { getWebURL, logWebUrlInfo } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
+import { useNativeScreen } from '../contexts/NativeScreenProvider';
 
-interface HomeScreenProps {
-  route?: {
-    params?: {
-      url?: string;
-    };
-  };
-}
-
-const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
+const HomeScreen: React.FC = () => {
   const [canGoBack, setCanGoBack] = useState(false);
   const webViewBridgeRef = useRef<WebView>(null);
-  const navigation = useNavigation();
   const lastBackPressed = useRef<number>(0);
+  const { registerWebView } = useNativeScreen();
 
   // 중앙화된 웹 URL 사용
   const webURL = getWebURL();
@@ -38,19 +29,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
     logWebUrlInfo();
   }, []);
 
-  // URL 파라미터로 네비게이션 처리
+  // WebView ref를 NativeScreenProvider에 등록
   useEffect(() => {
-    const targetUrl = route?.params?.url;
-    if (targetUrl && webViewBridgeRef.current) {
-      console.log('📍 [HOMESCREEN] Navigating to URL from route params:', targetUrl);
-      // 전체 URL을 직접 사용
-      webViewBridgeRef.current.injectJavaScript(`
-        console.log('Navigating to:', '${targetUrl}');
-        window.location.href = '${targetUrl}';
-        true;
-      `);
+    if (webViewBridgeRef.current) {
+      registerWebView(webViewBridgeRef);
+      console.log('✅ [HOMESCREEN] WebView registered to NativeScreenProvider');
     }
-  }, [route?.params?.url]);
+  }, [registerWebView]);
 
   // DeviceEventEmitter로 URL 네비게이션 수신
   useEffect(() => {
@@ -73,61 +58,37 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
     };
   }, []);
 
-  // 홈 탭 클릭 이벤트 리스너 - Updated
+  // 하드웨어 뒤로가기 처리
   useEffect(() => {
-    const homeTabListener = DeviceEventEmitter.addListener('homeTabPressed', () => {
-      console.log('Home tab pressed event received!');
-      if (webViewBridgeRef.current) {
-        console.log('Navigating webview to home...');
-        webViewBridgeRef.current.injectJavaScript(`
-          console.log('Current URL before navigation:', window.location.href);
-          window.location.href = '/';
-          true;
-        `);
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (canGoBack && webViewBridgeRef.current) {
+        // WebView에 히스토리가 있으면 뒤로가기
+        webViewBridgeRef.current.goBack();
+        return true;
+      } else {
+        // WebView 초기 페이지이거나 히스토리가 없을 때 - 2번 탭하면 앱 종료
+        const currentTime = Date.now();
+        if (currentTime - lastBackPressed.current < 2000) {
+          // 2초 이내에 두 번째 뒤로가기 - 앱 종료
+          BackHandler.exitApp();
+          return true;
+        } else {
+          // 첫 번째 뒤로가기 - 토스트 메시지
+          lastBackPressed.current = currentTime;
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('한 번 더 누르면 종료됩니다', ToastAndroid.SHORT);
+          }
+          return true;
+        }
       }
     });
 
-    return () => {
-      homeTabListener.remove();
-    };
-  }, []);
-
-  // useFocusEffect 제거 - 카테고리 네비게이션 방해하지 않도록
-  // 홈 탭을 두 번 누르면 homeTabPressed 이벤트로 홈으로 이동
-
-  // 하드웨어 뒤로가기 처리
-  useFocusEffect(
-    React.useCallback(() => {
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        if (canGoBack && webViewBridgeRef.current) {
-          // WebView에 히스토리가 있으면 뒤로가기
-          webViewBridgeRef.current.goBack();
-          return true;
-        } else {
-          // WebView 초기 페이지이거나 히스토리가 없을 때 - 2번 탭하면 앱 종료
-          const currentTime = Date.now();
-          if (currentTime - lastBackPressed.current < 2000) {
-            // 2초 이내에 두 번째 뒤로가기 - 앱 종료
-            BackHandler.exitApp();
-            return true;
-          } else {
-            // 첫 번째 뒤로가기 - 토스트 메시지
-            lastBackPressed.current = currentTime;
-            if (Platform.OS === 'android') {
-              ToastAndroid.show('한 번 더 누르면 종료됩니다', ToastAndroid.SHORT);
-            }
-            return true;
-          }
-        }
-      });
-
-      return () => backHandler.remove();
-    }, [canGoBack])
-  );
+    return () => backHandler.remove();
+  }, [canGoBack]);
 
   const handleNavigationStateChange = (navState: any) => {
     setCanGoBack(navState.canGoBack);
-    
+
     // URL 변경에 따른 특별한 처리가 필요한 경우
     if (navState.url.includes('/checkout/success')) {
       Alert.alert('주문 완료', '주문이 성공적으로 완료되었습니다!');
@@ -135,7 +96,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar
         barStyle={Platform.OS === 'ios' ? 'dark-content' : 'light-content'}
         backgroundColor="#fff"
