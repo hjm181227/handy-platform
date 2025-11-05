@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { userService } from '../services/apiService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
@@ -30,12 +29,10 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 화면에 포커스될 때마다 데이터 새로고침
-  useFocusEffect(
-    useCallback(() => {
-      loadNailSizeData();
-    }, [])
-  );
+  // 화면이 마운트될 때 데이터 로드
+  useEffect(() => {
+    loadNailSizeData();
+  }, []);
 
   const loadNailSizeData = async () => {
     try {

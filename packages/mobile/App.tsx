@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Platform, PermissionsAndroid, Permission } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import BottomTabNavigator from './src/components/BottomTabNavigator';
+import { NativeScreenProvider } from './src/contexts/NativeScreenProvider';
+import HomeScreen from './src/screens/HomeScreen';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -16,7 +16,7 @@ const App: React.FC = () => {
       if (Platform.OS === 'android') {
         await requestAndroidPermissions();
       }
-      
+
       // 스플래시 스크린 숨기기 (if splash screen package is available)
       // setTimeout(() => {
       //   SplashScreen.hide();
@@ -42,9 +42,9 @@ const App: React.FC = () => {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <BottomTabNavigator />
-      </NavigationContainer>
+      <NativeScreenProvider>
+        <HomeScreen />
+      </NativeScreenProvider>
     </SafeAreaProvider>
   );
 };

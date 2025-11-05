@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { webApiService } from '../../services/apiService';
 import type { CategoryData, CategoryItem } from '@handy-platform/shared';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSearch } from 'react-icons/fa';
+import { FiShoppingBag } from 'react-icons/fi';
 
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (path: string) => void;
   isPage?: boolean; // 페이지 모드인지 (모바일 탭에서 접근)
+  cartCount?: number; // 장바구니 아이템 개수
+  onCart?: () => void; // 장바구니 클릭 핸들러
 }
 
-export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false }: CategoryModalProps) {
+export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, cartCount = 0, onCart }: CategoryModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +21,11 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false }: C
   const [activeTab, setActiveTab] = useState<'category' | 'brand' | 'service'>('category');
   const [activeFilter, setActiveFilter] = useState<'all' | 'male' | 'female'>('all');
   const [selectedType, setSelectedType] = useState<string>('style'); // 왼쪽 사이드바에서 선택된 타입
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // 모달 열림/닫힘 애니메이션
   useEffect(() => {
@@ -79,65 +85,119 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false }: C
     onNavigate(`/cat/${categoryType}/${categoryValue}`);
   };
 
+  // 검색 핸들러
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      setShowSearchSuggestions(false);
+      onNavigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  // 외부 클릭으로 검색 제안 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (!isVisible) return null;
 
   // 페이지 모드 (모바일 탭에서 /category로 접근)
   if (isPage) {
     return (
       <div className="min-h-screen bg-white pb-20 flex flex-col">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-gray-900">카테고리</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="닫기"
-          >
-            <FaTimes className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
+        {/* 통합 Sticky 헤더: 검색바 + 탭 */}
+        <header className="handy-sticky-header">
+          {/* 검색바 + 장바구니 */}
+          <div className="flex items-center gap-3 px-4 py-2 border-b">
+            {/* 검색바 */}
+            <div className="flex-1 relative" ref={searchRef}>
+              <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(); }}>
+                <div className="relative">
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setShowSearchSuggestions(true)}
+                    placeholder="검색어를 입력하세요"
+                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-gray-700"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <FaSearch className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
 
-        {/* 탭 */}
-        <div className="flex border-b bg-white sticky top-[57px] z-10">
-          {[
-            { key: 'category' as const, label: '카테고리' },
-            { key: 'brand' as const, label: '브랜드' },
-            { key: 'service' as const, label: '서비스' }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+              {/* 검색 제안 */}
+              {showSearchSuggestions && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border z-50 max-h-60 overflow-y-auto">
+                  <div className="p-3">
+                    <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                    <div className="flex flex-wrap gap-2">
+                      {['네일아트', '젤네일', '매니큐어', '핸드크림'].map((keyword, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setSearchQuery(keyword);
+                            setShowSearchSuggestions(false);
+                            onNavigate(`/search?q=${encodeURIComponent(keyword)}`);
+                          }}
+                          className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+                        >
+                          {keyword}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-        {/* 필터 */}
-        <div className="flex gap-2 p-4 border-b bg-gray-50 sticky top-[114px] z-10">
-          {[
-            { key: 'all' as const, label: '전체' },
-            { key: 'male' as const, label: '남성' },
-            { key: 'female' as const, label: '여성' }
-          ].map((filter) => (
-            <button
-              key={filter.key}
-              onClick={() => setActiveFilter(filter.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeFilter === filter.key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
+            {/* 장바구니 버튼 */}
+            {onCart && (
+              <button
+                onClick={onCart}
+                className="relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                aria-label="장바구니"
+              >
+                <FiShoppingBag className="w-5 h-5 text-gray-700" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* 탭 */}
+          <div className="flex border-b bg-white">
+            {[
+              { key: 'category' as const, label: '카테고리' },
+              { key: 'brand' as const, label: '브랜드' },
+              { key: 'service' as const, label: '서비스' }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </header>
 
         {/* 콘텐츠 */}
         <div className="flex flex-1 overflow-hidden">
@@ -180,7 +240,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false }: C
                         onClick={() => setSelectedType(type)}
                         className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${
                           selectedType === type
-                            ? 'bg-white text-blue-600 border-r-2 border-blue-600'
+                            ? 'bg-white text-blue-600'
                             : 'text-gray-700 hover:bg-white hover:text-gray-900'
                         }`}
                       >
@@ -327,27 +387,6 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false }: C
               }`}
             >
               {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* 필터 */}
-        <div className="flex gap-2 p-4 border-b bg-gray-50 sticky top-[114px] z-10">
-          {[
-            { key: 'all' as const, label: '전체' },
-            { key: 'male' as const, label: '남성' },
-            { key: 'female' as const, label: '여성' }
-          ].map((filter) => (
-            <button
-              key={filter.key}
-              onClick={() => setActiveFilter(filter.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeFilter === filter.key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-              }`}
-            >
-              {filter.label}
             </button>
           ))}
         </div>
