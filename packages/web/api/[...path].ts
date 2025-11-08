@@ -35,6 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const queryString = new URLSearchParams(queryParams as Record<string, string>).toString();
     const targetUrl = `${apiTarget}${apiPath}${queryString ? '?' + queryString : ''}`;
 
+    console.log(`[DEBUG] path from query:`, req.query.path);
+    console.log(`[DEBUG] apiPath:`, apiPath);
+    console.log(`[DEBUG] queryString:`, queryString);
     console.log(`[Proxy] ${req.method} ${apiPath} -> ${targetUrl}`);
 
     // 백엔드로 요청 프록시
