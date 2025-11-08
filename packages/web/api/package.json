@@ -1,0 +1,8 @@
+{
+  "name": "api-functions",
+  "version": "1.0.0",
+  "dependencies": {
+    "@vercel/edge-config": "^1.4.3",
+    "@vercel/node": "^3.0.0"
+  }
+}
