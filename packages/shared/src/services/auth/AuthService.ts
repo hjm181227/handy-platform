@@ -184,7 +184,11 @@ export abstract class BaseAuthService extends BaseApiService {
 }
 
 export class AuthServiceFactory {
-  static create(baseURL: string, getAuthHeaders: () => Promise<Record<string, string>>): BaseAuthService {
+  static create(
+    baseURL: string,
+    getAuthHeaders: () => Promise<Record<string, string>>,
+    onTokenExpired?: () => void
+  ): BaseAuthService {
     return new (class extends BaseAuthService {
       async setAuthToken(token: string, user?: User): Promise<void> {
         // 플랫폼별 구현 필요
@@ -210,6 +214,6 @@ export class AuthServiceFactory {
         // 플랫폼별 구현 필요
         throw new Error('getCurrentUser method must be implemented');
       }
-    })(baseURL, getAuthHeaders);
+    })(baseURL, getAuthHeaders, onTokenExpired);
   }
 }

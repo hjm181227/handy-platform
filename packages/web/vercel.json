@@ -5,6 +5,10 @@
   "installCommand": "echo 'Skipping install - using pre-built files'",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "/api/proxy"
+    },
+    {
       "source": "/((?!api).*)",
       "destination": "/index.html"
     }

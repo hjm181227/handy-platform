@@ -1,10 +1,11 @@
-import { 
-  IAlertService, 
-  AlertOptions, 
-  ConfirmOptions, 
-  ErrorOptions, 
-  PromptOptions, 
-  AlertState, 
+import {
+  IAlertService,
+  AlertOptions,
+  ConfirmOptions,
+  ErrorOptions,
+  PromptOptions,
+  ToastOptions,
+  AlertState,
   AlertResult,
   ProcessedError
 } from './AlertTypes';
@@ -269,6 +270,54 @@ export class AlertService implements IAlertService {
       maxLength: 500,
       ...options
     });
+  }
+
+  /**
+   * 토스트 메시지 (논블로킹, 자동 사라짐)
+   * 환경에 따라 다르게 동작:
+   * - React Native: ToastAndroid (Android) 사용
+   * - Web: autoClose 옵션을 가진 alert 사용
+   */
+  public toast(message: string, options: ToastOptions = {}): void {
+    const duration = options.duration || 3000;
+    const variant = options.variant || 'default';
+
+    // React Native 환경 감지
+    const isReactNative = typeof window === 'undefined' || (typeof navigator !== 'undefined' && navigator.product === 'ReactNative');
+
+    if (isReactNative) {
+      // React Native 환경: ToastAndroid 사용
+      try {
+        // React Native에서만 동적으로 import
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { ToastAndroid, Platform } = require('react-native');
+
+        if (Platform.OS === 'android') {
+          // Android: ToastAndroid 사용
+          const toastDuration = duration > 2000 ? ToastAndroid.LONG : ToastAndroid.SHORT;
+          ToastAndroid.show(message, toastDuration);
+        } else {
+          // iOS: Alert 사용 (간단한 알림)
+          const { Alert } = require('react-native');
+          Alert.alert('알림', message);
+        }
+      } catch (error) {
+        console.warn('Toast display failed in React Native:', error);
+        // Fallback: 콘솔에만 출력
+        console.log('[Toast]', message);
+      }
+    } else {
+      // Web 환경: 기존 alert 시스템 활용하여 자동으로 닫히는 알림 생성
+      this.createAlert<void>('toast', message, {
+        variant,
+        autoClose: duration,
+        closeOnBackdrop: true,
+        closeOnEsc: true,
+        ...options
+      }).catch(() => {
+        // 토스트는 비동기적으로 처리되므로 에러 무시
+      });
+    }
   }
 
   /**

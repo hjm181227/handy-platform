@@ -78,16 +78,20 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   protected baseURL: string;
   protected platform: string;
 
+  protected onTokenExpired?: () => void;
+
   constructor(
     baseURL: string,
     getAuthHeaders: () => Promise<Record<string, string>>,
-    platform: string
+    platform: string,
+    onTokenExpired?: () => void
   ) {
     this.baseURL = baseURL;
     this.platform = platform;
+    this.onTokenExpired = onTokenExpired;
 
     // 모든 서비스 인스턴스 생성
-    this.auth = AuthServiceFactory.create(baseURL, getAuthHeaders);
+    this.auth = AuthServiceFactory.create(baseURL, getAuthHeaders, onTokenExpired);
     this.product = ProductServiceFactory.create(baseURL, getAuthHeaders);
     this.review = ReviewServiceFactory.create(baseURL, getAuthHeaders);
     this.cart = CartServiceFactory.create(baseURL, getAuthHeaders);
@@ -144,12 +148,14 @@ export class ApiServiceFactory {
   static create(
     baseURL: string,
     getAuthHeaders: () => Promise<Record<string, string>>,
-    platform: string
+    platform: string,
+    onTokenExpired?: () => void
   ): IntegratedApiService {
     return new (class extends BaseIntegratedApiService {})(
       baseURL,
       getAuthHeaders,
-      platform
+      platform,
+      onTokenExpired
     );
   }
 }
@@ -158,9 +164,10 @@ export class ApiServiceFactory {
 export const createApiService = (
   baseURL: string,
   getAuthHeaders: () => Promise<Record<string, string>>,
-  platform: string = 'web'
+  platform: string = 'web',
+  onTokenExpired?: () => void
 ): IntegratedApiService => {
-  return ApiServiceFactory.create(baseURL, getAuthHeaders, platform);
+  return ApiServiceFactory.create(baseURL, getAuthHeaders, platform, onTokenExpired);
 };
 
 // 개별 서비스 생성 함수들

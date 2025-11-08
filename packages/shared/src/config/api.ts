@@ -21,7 +21,7 @@ export const API_CONFIG: Record<string, ApiConfig> = {
     retryDelay: 1000,
   },
   stage: {
-    baseURL: 'https://api.stage-handy.com',
+    baseURL: 'https://stage-handy.com',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
