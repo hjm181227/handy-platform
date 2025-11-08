@@ -430,6 +430,213 @@ import { Product, Cart, User } from '@handy-platform/shared';
 - `packages/web/.env.production` - 웹 프로덕션환경 설정
 - `packages/shared/src/config/api.ts` - 공통 API 설정
 
+## Vercel Edge Config - 동적 API 라우팅
+
+### 개요
+Vercel Edge Config를 사용하여 **재배포 없이** API 엔드포인트를 동적으로 전환할 수 있습니다. 이는 서버 배포 시 Blue-Green 배포나 카나리 배포를 위한 트래픽 전환에 유용합니다.
+
+### 아키텍처
+- `packages/web/middleware.ts`: Edge Middleware가 `/api/*` 요청을 Edge Config에 설정된 백엔드로 프록시
+- `packages/web/vercel.json`: 기존 하드코딩된 API rewrite 제거 (middleware로 이관)
+- Vercel Dashboard: Edge Config 값 변경으로 즉시 트래픽 전환
+
+### Edge Config 설정 방법
+
+#### 1. Edge Config 생성 (Vercel Dashboard)
+1. [Vercel Dashboard](https://vercel.com) 접속
+2. 프로젝트 선택: `web`
+3. **Storage** 탭 → **Edge Config** → **Create Edge Config**
+4. Edge Config 이름: `handy-api-config` (예시)
+5. 생성 완료
+
+#### 2. Edge Config 초기 데이터 입력
+
+**스테이징 환경 (현재 설정):**
+```json
+{
+  "api_target": "http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:8080",
+  "environment": "staging",
+  "updated_at": "2025-01-15T12:00:00Z",
+  "updated_by": "manual"
+}
+```
+
+**프로덕션 환경 (향후 전환 시):**
+```json
+{
+  "api_target": "http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:80",
+  "environment": "production",
+  "updated_at": "2025-01-15T12:00:00Z",
+  "updated_by": "ci"
+}
+```
+
+**주요 필드 설명:**
+- `api_target`: 백엔드 서버 베이스 URL (포트 포함)
+  - 스테이징: `:8080`
+  - 프로덕션: `:80`
+- `environment`: 환경 식별자 (`staging` / `production`)
+- `updated_at`: 마지막 업데이트 시각 (ISO 8601 형식)
+- `updated_by`: 업데이트 주체 (`manual` / `ci` / `rollback`)
+
+#### 3. 프로젝트에 Edge Config 연결
+1. Vercel Dashboard → 프로젝트 `web` → **Settings** → **Environment Variables**
+2. 환경변수 추가:
+   - **Key**: `EDGE_CONFIG`
+   - **Value**: Edge Config connection string (자동 생성됨)
+   - **Environments**: Production, Preview, Development 모두 선택
+3. 저장
+
+#### 4. 배포 및 검증
+```bash
+# 코드 배포
+cd packages/web
+npm run deploy:prod  # 또는 deploy:stage
+
+# 배포 후 검증
+curl https://stage-handy.com/api/health
+# 정상 응답: {"status":"ok", ...}
+```
+
+**검증 체크리스트:**
+- [ ] `/api/health` 엔드포인트 정상 응답
+- [ ] 브라우저 Network 탭에서 실제 백엔드 URL 확인
+- [ ] Vercel Functions 로그에서 Middleware 로그 확인
+- [ ] Edge Config 값 변경 시 즉시 반영 확인
+
+### 트래픽 전환 절차
+
+#### Blue-Green 배포 시나리오
+1. **Blue 환경 (기존)**: `:8080` 포트
+2. **Green 환경 (신규)**: `:80` 포트 (또는 다른 서버)
+3. **전환**: Vercel Dashboard에서 `api_target` 값만 변경
+4. **롤백**: 이전 값으로 즉시 되돌림
+
+**전환 방법:**
+1. Vercel Dashboard → Storage → Edge Config → `handy-api-config`
+2. `api_target` 값 수정:
+   ```json
+   {
+     "api_target": "http://new-backend-server.com:80",
+     "environment": "production",
+     "updated_at": "2025-01-15T14:30:00Z",
+     "updated_by": "manual"
+   }
+   ```
+3. **Save** 클릭 → 즉시 반영 (재배포 불필요)
+4. 검증: `curl https://stage-handy.com/api/health`
+
+**롤백 방법:**
+1. Edge Config → `api_target` 값을 이전 서버로 되돌림
+2. 즉시 반영 (수초 내)
+
+### 로컬 개발 환경
+
+로컬 개발 시에는 Edge Config 없이도 정상 작동합니다:
+- `middleware.ts`가 `NODE_ENV=development` 체크
+- 자동으로 `localhost:11000`로 프록시
+- Edge Config 설정 불필요
+
+```bash
+# 로컬 개발
+npm run web:dev
+# → middleware가 자동으로 localhost:11000 사용
+```
+
+### Fallback 전략
+
+Edge Config 장애 시에도 서비스가 중단되지 않도록 Fallback이 구현되어 있습니다:
+
+```typescript
+// packages/web/middleware.ts
+async function getApiTarget(): Promise<string> {
+  try {
+    const apiTarget = await get<string>('api_target');
+    return apiTarget || FALLBACK_URL;
+  } catch (error) {
+    console.error('[Edge Config] Failed, using fallback');
+    return FALLBACK_URL; // 기본값으로 폴백
+  }
+}
+```
+
+**Fallback URL**: `http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:8080`
+
+### 보안 고려사항
+
+1. **Edge Config Connection String 보호**
+   - `.env.local`은 절대 Git에 커밋 금지 (`.gitignore`에 포함됨)
+   - 환경변수로만 관리
+   - 코드에 하드코딩 금지
+
+2. **CORS 설정**
+   - 백엔드 서버에 이미 Vercel CORS 설정되어 있음 (`*.vercel.app`)
+   - 추가 설정 불필요
+
+3. **API 접근 제어**
+   - Edge Config는 Vercel 프로젝트에만 접근 가능
+   - 외부에서 직접 수정 불가
+
+### 백엔드 팀 전달사항
+
+배포 자동화를 위해 백엔드 CI/CD에서 Edge Config를 업데이트할 수 있습니다:
+
+**필요 정보:**
+1. **Edge Config ID**: Vercel Dashboard에서 확인
+2. **Vercel API Token**: [Vercel Settings → Tokens](https://vercel.com/account/tokens)에서 생성
+
+**CI/CD에서 Edge Config 업데이트:**
+```bash
+# Vercel CLI 사용
+npm install -g vercel
+vercel env pull  # EDGE_CONFIG 가져오기
+
+# API로 직접 업데이트 (예시)
+curl -X PATCH "https://api.vercel.com/v1/edge-config/<config-id>/items" \
+  -H "Authorization: Bearer <vercel-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {
+        "operation": "update",
+        "key": "api_target",
+        "value": "http://new-backend.com:80"
+      },
+      {
+        "operation": "update",
+        "key": "updated_at",
+        "value": "2025-01-15T15:00:00Z"
+      },
+      {
+        "operation": "update",
+        "key": "updated_by",
+        "value": "ci"
+      }
+    ]
+  }'
+```
+
+### 문제 해결
+
+**증상: `/api` 요청이 실패함**
+- Edge Config 값 확인
+- Fallback이 작동하는지 로그 확인
+- Vercel Functions 로그에서 middleware 에러 확인
+
+**증상: 변경사항이 반영되지 않음**
+- Edge Config 저장 후 5-10초 대기 (캐시 무효화)
+- 브라우저 캐시 클리어 후 재시도
+- Vercel 배포 로그 확인
+
+**증상: 로컬 개발에서 API 호출 실패**
+- `NODE_ENV=development` 설정 확인
+- 백엔드 로컬 서버 (`localhost:11000`) 실행 여부 확인
+
+### 참고 자료
+- [Vercel Edge Config 공식 문서](https://vercel.com/docs/storage/edge-config)
+- [Vercel Middleware 가이드](https://vercel.com/docs/functions/edge-middleware)
+- [Edge Config API Reference](https://vercel.com/docs/storage/edge-config/vercel-api)
+
 ## Backend API Documentation
 
 For API integration, refer to the backend documentation:
