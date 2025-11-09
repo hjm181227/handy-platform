@@ -637,6 +637,381 @@ curl -X PATCH "https://api.vercel.com/v1/edge-config/<config-id>/items" \
 - [Vercel Middleware 가이드](https://vercel.com/docs/functions/edge-middleware)
 - [Edge Config API Reference](https://vercel.com/docs/storage/edge-config/vercel-api)
 
+## 🚀 프로덕션 배포 가이드
+
+### 배포 전략 개요
+
+**현재 구성**: 단일 Vercel 프로젝트 + 브랜치 전략
+- **프로덕션 환경**: `main` 브랜치 → https://h-andy.com
+- **스테이징 환경**: `develop` 브랜치 (또는 현재 작업 브랜치) → https://stage-handy.com
+- **Preview 환경**: 기타 브랜치/PR → Vercel 자동 생성 URL
+
+**주요 특징**:
+- 환경변수 기반 API 라우팅 (Edge Config 미사용)
+- 브랜치별 자동 배포
+- 비용 효율적 (Free tier 사용 가능)
+
+---
+
+### 1단계: Git 브랜치 전략 설정
+
+#### develop 브랜치 생성 (스테이징용)
+
+```bash
+# main 브랜치로 이동
+git checkout main
+
+# 최신 코드 가져오기
+git pull origin main
+
+# develop 브랜치 생성 및 푸시
+git checkout -b develop
+git push -u origin develop
+```
+
+**브랜치 용도**:
+- `main`: 프로덕션 배포용 (안정 버전만)
+- `develop`: 스테이징 배포용 (테스트 및 QA)
+- `feature/*`: 기능 개발용 (개발자별 작업)
+
+---
+
+### 2단계: Vercel 프로젝트 설정
+
+#### A. Production Branch 설정
+
+1. [Vercel Dashboard](https://vercel.com) 접속
+2. **web** 프로젝트 선택
+3. **Settings** → **Git** 섹션으로 이동
+4. **Production Branch** 항목을 `main`으로 설정
+5. Save 클릭
+
+이렇게 하면:
+- `main` 브랜치 푸시 → 자동으로 프로덕션 배포
+- `develop` 브랜치 푸시 → Preview 환경으로 배포
+- 기타 브랜치 → Preview 환경으로 배포
+
+---
+
+#### B. 환경변수 설정
+
+##### 방법 1: Vercel Dashboard에서 설정 (추천)
+
+1. Vercel Dashboard → **web** 프로젝트 → **Settings** → **Environment Variables**
+2. 다음 환경변수들을 추가:
+
+**프로덕션 환경 (Production):**
+```
+VITE_API_BASE_URL = https://h-andy.com
+VITE_ENVIRONMENT = production
+VITE_ENABLE_DEBUG = false
+VITE_KAKAO_APP_KEY = [프로덕션 카카오 앱 키]
+```
+
+**스테이징 환경 (Preview - develop 브랜치):**
+```
+VITE_API_BASE_URL = https://www.stage-handy.com
+VITE_ENVIRONMENT = staging
+VITE_ENABLE_DEBUG = false
+VITE_KAKAO_APP_KEY = f466bdbd818f288f370407d10da4710d
+```
+
+**중요**: 각 환경변수 추가 시 Environment 선택:
+- Production 환경변수 → **Production** 체크
+- 스테이징 환경변수 → **Preview** 체크 + **Branch**: `develop` 입력
+
+##### 방법 2: Vercel CLI로 설정
+
+```bash
+# 프로젝트 디렉토리로 이동
+cd packages/web
+
+# Production 환경변수
+vercel env add VITE_API_BASE_URL production
+# 입력: https://h-andy.com
+
+vercel env add VITE_ENVIRONMENT production
+# 입력: production
+
+# Preview (develop 브랜치) 환경변수
+vercel env add VITE_API_BASE_URL preview
+# 입력: https://www.stage-handy.com
+# Branch: develop
+
+vercel env add VITE_ENVIRONMENT preview
+# 입력: staging
+# Branch: develop
+```
+
+---
+
+#### C. 도메인 연결
+
+##### h-andy.com 도메인 추가
+
+1. Vercel Dashboard → **web** 프로젝트 → **Settings** → **Domains**
+2. **Add Domain** 클릭
+3. `h-andy.com` 입력 후 Add 클릭
+4. DNS 설정 안내 화면 표시됨
+
+##### DNS 설정 (도메인 제공자에서)
+
+**옵션 A: Vercel Nameservers 사용 (추천)**
+```
+도메인 제공자 → DNS 설정 → Nameservers 변경:
+ns1.vercel-dns.com
+ns2.vercel-dns.com
+```
+
+**옵션 B: A 레코드 사용**
+```
+Type: A
+Name: @
+Value: 76.76.21.21 (Vercel IP)
+
+Type: CNAME
+Name: www
+Value: cname.vercel-dns.com
+```
+
+##### stage-handy.com 도메인 (이미 설정됨)
+
+현재 스테이징 도메인이 이미 연결되어 있다면 추가 작업 불필요.
+`develop` 브랜치를 이 도메인에 매핑하려면:
+
+1. Domains → `stage-handy.com` 옆 **Edit** 클릭
+2. **Git Branch**: `develop` 선택
+3. Save
+
+---
+
+### 3단계: 배포 실행
+
+#### 로컬에서 빌드 및 배포
+
+##### 스테이징 배포 (develop 브랜치)
+
+```bash
+# develop 브랜치로 이동
+git checkout develop
+
+# 최신 변경사항 반영
+git pull origin develop
+
+# 루트에서 빌드 (shared 포함)
+cd /Users/heojeongmin/WebstormProjects/handy-platform
+npm run build:shared
+
+# 웹 패키지로 이동
+cd packages/web
+
+# 스테이징 빌드
+npm run build:stage
+
+# Vercel Preview 배포
+npm run deploy:stage
+# 또는
+vercel
+
+# 배포 URL 확인 및 테스트
+```
+
+##### 프로덕션 배포 (main 브랜치)
+
+```bash
+# main 브랜치로 이동
+git checkout main
+
+# develop 변경사항을 main에 병합
+git merge develop
+
+# 루트에서 빌드
+cd /Users/heojeongmin/WebstormProjects/handy-platform
+npm run build:shared
+
+# 웹 패키지로 이동
+cd packages/web
+
+# 프로덕션 빌드
+npm run build:prod
+
+# Vercel Production 배포
+npm run deploy:prod
+# 또는
+vercel --prod
+
+# 배포 URL 확인: https://h-andy.com
+```
+
+---
+
+#### Git Push를 통한 자동 배포 (추천)
+
+Vercel은 Git과 자동 연동되므로, 브랜치 푸시만으로 배포됩니다.
+
+##### 스테이징 자동 배포
+```bash
+# develop 브랜치에서 작업
+git checkout develop
+
+# 변경사항 커밋
+git add .
+git commit -m "feat: add new feature"
+
+# develop 브랜치 푸시 → 자동으로 스테이징 배포
+git push origin develop
+```
+
+##### 프로덕션 자동 배포
+```bash
+# develop을 main에 병합
+git checkout main
+git merge develop
+
+# main 브랜치 푸시 → 자동으로 프로덕션 배포
+git push origin main
+```
+
+**Vercel Dashboard에서 배포 상태 확인**:
+- Deployments 탭에서 실시간 빌드 로그 확인
+- 배포 완료 시 URL 자동 생성
+
+---
+
+### 4단계: 배포 검증
+
+#### 체크리스트
+
+##### 스테이징 환경 (https://stage-handy.com)
+- [ ] 페이지 로딩 정상
+- [ ] API 연동 정상 (백엔드 :8080 포트 연결 확인)
+- [ ] 로그인/로그아웃 기능
+- [ ] 장바구니 추가/삭제
+- [ ] 상품 검색 및 목록
+- [ ] 브라우저 콘솔에 에러 없음
+- [ ] 네트워크 탭에서 API 응답 확인
+
+##### 프로덕션 환경 (https://h-andy.com)
+- [ ] 페이지 로딩 정상
+- [ ] API 연동 정상 (백엔드 :80 포트 연결 확인)
+- [ ] 로그인/로그아웃 기능
+- [ ] 장바구니 추가/삭제
+- [ ] 상품 검색 및 목록
+- [ ] 브라우저 콘솔에 에러 없음
+- [ ] 네트워크 탭에서 API 응답 확인
+- [ ] 성능 테스트 (Lighthouse 점수 확인)
+- [ ] 모바일 반응형 확인
+
+##### 검증 방법
+
+**1. API 연동 확인**
+```bash
+# 브라우저 개발자 도구 (F12) → Network 탭
+# API 요청 URL 확인:
+# 스테이징: https://www.stage-handy.com/api/...
+# 프로덕션: https://h-andy.com/api/...
+```
+
+**2. 환경변수 확인**
+```javascript
+// 브라우저 콘솔에서 실행
+console.log(import.meta.env.VITE_API_BASE_URL);
+// 스테이징: "https://www.stage-handy.com"
+// 프로덕션: "https://h-andy.com"
+```
+
+**3. 빌드 환경 확인**
+```javascript
+console.log(import.meta.env.VITE_ENVIRONMENT);
+// 스테이징: "staging"
+// 프로덕션: "production"
+```
+
+---
+
+### 5단계: 백엔드 API 설정 확인
+
+프론트엔드 배포 후 백엔드 서버 CORS 설정을 확인하세요.
+
+#### 백엔드 CORS 설정 필요 도메인
+```javascript
+// 허용해야 할 도메인들
+const allowedOrigins = [
+  'https://h-andy.com',           // 프로덕션
+  'https://www.stage-handy.com',  // 스테이징
+  'http://localhost:3001',        // 로컬 개발
+  '*.vercel.app'                  // Vercel Preview 환경
+];
+```
+
+백엔드 팀에 전달:
+- h-andy.com CORS 허용 요청
+- 프로덕션 백엔드 포트: :80
+- 스테이징 백엔드 포트: :8080
+
+---
+
+### 배포 워크플로우 요약
+
+```
+개발 프로세스:
+1. feature/xxx 브랜치에서 개발
+2. develop 브랜치로 PR 생성 및 병합
+3. develop 푸시 → 자동 스테이징 배포 (stage-handy.com)
+4. 스테이징에서 QA 및 테스트
+5. main 브랜치로 PR 생성 및 병합
+6. main 푸시 → 자동 프로덕션 배포 (h-andy.com)
+7. 프로덕션에서 최종 검증
+```
+
+---
+
+### 배포 관련 명령어 요약
+
+```bash
+# 스테이징 배포 (로컬)
+npm run build:stage && npm run deploy:stage
+
+# 프로덕션 배포 (로컬)
+npm run build:prod && npm run deploy:prod
+
+# Git을 통한 자동 배포 (추천)
+git push origin develop  # 스테이징
+git push origin main     # 프로덕션
+
+# 배포 로그 확인
+vercel logs
+
+# 배포 목록 확인
+vercel ls
+```
+
+---
+
+### 문제 해결
+
+#### 배포 실패 시
+1. Vercel 대시보드 → Deployments → 실패한 배포 클릭
+2. 빌드 로그 확인
+3. 일반적인 원인:
+   - 환경변수 미설정
+   - TypeScript 에러
+   - 빌드 명령어 오류
+   - 메모리 부족
+
+#### API 연결 안 됨
+1. 브라우저 개발자 도구 → Network 탭
+2. API 요청 URL 확인
+3. CORS 에러 확인
+4. 백엔드 서버 상태 확인
+
+#### 도메인 연결 안 됨
+1. DNS 전파 대기 (최대 48시간)
+2. DNS 설정 확인: `nslookup h-andy.com`
+3. Vercel Domains 탭에서 상태 확인
+
+---
+
 ## Backend API Documentation
 
 For API integration, refer to the backend documentation:

@@ -161,7 +161,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
       // prev.items를 사용하여 최신 상태에서 필터링 (stale closure 방지)
       const updatedItems = prev.items.filter(item => {
-        if (item.product.id !== productId) return true;
+        const itemProductId = item.productUuid || item.product?.id;
+        if (itemProductId !== productId) return true;
         if (options && JSON.stringify(item.options) !== JSON.stringify(options)) return true;
         return false;
       });
@@ -434,7 +435,11 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       {/* 판매자의 상품 목록 */}
       <div className="p-2 sm:p-3 md:p-4 lg:p-6 space-y-2 sm:space-y-3 md:space-y-4">
         {seller.items.map((item: CartItem) => {
-          const productId = item.product.id; // 새 API는 id 필드 사용
+          // 새 API 구조: 플랫하게 productUuid 사용, 기존 구조 호환성 유지
+          const productId = item.productUuid || item.product?.id;
+          const productName = item.name || item.product?.name;
+          const productMainImageUrl = item.mainImageUrl || item.product?.mainImageUrl;
+          const productBrand = item.brand || item.product?.brand;
           const isUpdating = updatingItems.has(productId);
           const isRemoving = removingItems.has(productId);
           const itemKey = `${productId}-${JSON.stringify(item.options)}`;
@@ -446,10 +451,10 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
             >
               {/* 상품 이미지 */}
               <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                {item.product.mainImageUrl ? (
-                  <img 
-                    src={item.product.mainImageUrl} 
-                    alt={item.product.name}
+                {productMainImageUrl ? (
+                  <img
+                    src={productMainImageUrl}
+                    alt={productName}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -476,9 +481,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-1 sm:gap-2">
                   <div className="flex-1 pr-1 min-w-0">
-                    <h4 className="font-semibold text-xs sm:text-sm md:text-base truncate leading-tight">{item.product.name}</h4>
+                    <h4 className="font-semibold text-xs sm:text-sm md:text-base truncate leading-tight">{productName}</h4>
                     <div className="text-gray-500 text-[10px] sm:text-xs mt-0.5">
-                      {item.product.brand && <span className="block sm:inline">{item.product.brand}</span>}
+                      {productBrand && <span className="block sm:inline">{productBrand}</span>}
                       {item.options && (
                         <div className="mt-0.5 sm:mt-1 flex flex-wrap gap-0.5 sm:gap-1">
                           {Object.entries(item.options).map(([key, value]) => {
@@ -513,7 +518,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(productId, item.options, item.product.name)}
+                    onClick={() => removeItem(productId, item.options, productName)}
                     disabled={isUpdating}
                     className="text-gray-400 hover:text-red-500 p-1.5 sm:p-2 ml-auto flex-shrink-0 -mt-0.5 touch-manipulation"
                     title="상품 제거"

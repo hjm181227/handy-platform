@@ -21,7 +21,7 @@
     "deploy:prod": "vercel --prod"
   },
   "dependencies": {
-    "@handy-platform/shared": "*",
+    "@handy-platform/shared": "file:../shared",
     "@hookform/resolvers": "^5.2.1",
     "@tanstack/react-query": "^5.85.5",
     "@types/react-router-dom": "^5.3.3",

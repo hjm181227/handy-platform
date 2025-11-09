@@ -160,7 +160,7 @@ export function BrandsPage({
         </div>
         {brand.products && brand.products.length > 0 && (
           <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto pb-2">
-            {brand.products.map((p) => {
+            {brand.products.filter(Boolean).map((p) => {
               const productId = p.id || p.productUuid;
               return (
                 <div key={p.id || p.productId} className="md:snap-start">
