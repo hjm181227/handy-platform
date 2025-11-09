@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { toQ } from '../../utils';
 import { webApiService } from '../../services/apiService';
 import type { User } from '@handy-platform/shared';
-import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
+import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/components/icons';
 import { Logo } from '../common/Logo';
 import { IoPersonCircleOutline } from 'react-icons/io5';
 import { FiShoppingBag } from 'react-icons/fi';

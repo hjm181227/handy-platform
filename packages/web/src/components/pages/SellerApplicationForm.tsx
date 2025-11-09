@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { sellerApplicationService } from '../../services/apiService';
-import { SellerApplicationData } from '@handy-platform/shared/src/services/seller/SellerApplicationService';
+import { SellerApplicationData } from '@handy-platform/shared/services/seller/SellerApplicationService';
 import { SellerApplication } from '@handy-platform/shared';
 
 interface SellerApplicationFormProps {

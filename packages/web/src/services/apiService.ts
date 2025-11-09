@@ -3,7 +3,7 @@ import {
   BaseIntegratedApiService,
   User
 } from '@handy-platform/shared';
-import { API_BASE_URL } from '@handy-platform/shared/src/config/api';
+import { API_BASE_URL } from '@handy-platform/shared/config/api';
 
 // 웹 전용 토큰 관리
 class WebTokenManager {

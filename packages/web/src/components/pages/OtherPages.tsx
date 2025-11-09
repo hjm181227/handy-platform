@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
-import navigateService from '@handy-platform/shared/src/services/navigate';
+import navigateService from '@handy-platform/shared/services/navigate';
 import { ProductCard } from '../product/ProductCard';
 
 // 좋아요 페이지

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminUser, AdminUsersResponse, UserRoleUpdateRequest } from '@handy-platform/shared/src/services/admin/AdminService';
+import { AdminUser, AdminUsersResponse, UserRoleUpdateRequest } from '@handy-platform/shared/services/admin/AdminService';
 import { adminService } from '../../services/apiService';
 
 const UserManagement: React.FC = () => {
