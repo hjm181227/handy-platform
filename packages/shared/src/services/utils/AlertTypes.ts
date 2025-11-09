@@ -1,6 +1,6 @@
 // AlertService 관련 타입 정의
 
-export type AlertType = 'alert' | 'confirm' | 'error' | 'prompt';
+export type AlertType = 'alert' | 'confirm' | 'error' | 'prompt' | 'toast';
 
 export type AlertVariant = 'default' | 'success' | 'warning' | 'danger' | 'info';
 
@@ -46,11 +46,16 @@ export interface PromptOptions extends BaseAlertOptions {
   confirmLabel?: string;
 }
 
+export interface ToastOptions extends BaseAlertOptions {
+  duration?: number; // milliseconds (default: 3000)
+  position?: 'top' | 'bottom' | 'center'; // default: 'bottom'
+}
+
 export interface AlertState {
   id: string;
   type: AlertType;
   message: string;
-  options: AlertOptions | ConfirmOptions | ErrorOptions | PromptOptions;
+  options: AlertOptions | ConfirmOptions | ErrorOptions | PromptOptions | ToastOptions;
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
 }
@@ -78,6 +83,7 @@ export interface IAlertService {
   confirm(message: string, options?: ConfirmOptions): Promise<boolean>;
   error(error: Error | string, options?: ErrorOptions): Promise<AlertResult>;
   prompt(message: string, options?: PromptOptions): Promise<string | null>;
+  toast(message: string, options?: ToastOptions): void;
   dismiss(id?: string): void;
   dismissAll(): void;
   resetRetryCounter(error: Error | string): void;

@@ -897,7 +897,7 @@ export default function App() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
-                {brand.products?.slice(0, 6).map(p => {
+                {brand.products?.filter(Boolean).slice(0, 6).map(p => {
                   const productId = p.id;
                   return (
                     <div key={p.id} className="md:snap-start md:flex-shrink-0">

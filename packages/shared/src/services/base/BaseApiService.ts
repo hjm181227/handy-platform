@@ -13,11 +13,17 @@ export abstract class BaseApiService {
   protected baseURL: string;
   protected timeout: number;
   protected getAuthHeaders: () => Promise<Record<string, string>>;
+  protected onTokenExpired?: () => void;
 
-  constructor(baseURL: string, getAuthHeaders: () => Promise<Record<string, string>>) {
+  constructor(
+    baseURL: string,
+    getAuthHeaders: () => Promise<Record<string, string>>,
+    onTokenExpired?: () => void
+  ) {
     this.baseURL = baseURL;
     this.timeout = 15000;
     this.getAuthHeaders = getAuthHeaders;
+    this.onTokenExpired = onTokenExpired;
   }
 
   protected async request<T>(
@@ -106,6 +112,11 @@ export abstract class BaseApiService {
 
   protected async handleTokenExpiration(): Promise<void> {
     console.log('Token expired, need to re-authenticate');
+
+    // 커스텀 토큰 만료 핸들러 호출
+    if (this.onTokenExpired) {
+      this.onTokenExpired();
+    }
   }
 
   protected buildQueryString(params: Record<string, any>): string {

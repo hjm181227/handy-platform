@@ -14,10 +14,12 @@ export default defineConfig(({ mode }) => ({
     // 웹 빌드 시 .web 확장자 우선 사용
     extensions: ['.web.ts', '.web.tsx', '.web.js', '.ts', '.tsx', '.js', '.json'],
     alias: {
+      // shared 패키지 전체 매핑 - node_modules에서 먼저 찾고, 없으면 상위 디렉토리에서 찾기
+      '@handy-platform/shared': path.resolve(__dirname, 'node_modules/@handy-platform/shared/src'),
       // NavigateService를 .web.ts로 강제 매핑
       '@handy-platform/shared/src/services/navigate': path.resolve(
         __dirname,
-        '../../packages/shared/src/services/navigate/NavigateService.web.ts'
+        'node_modules/@handy-platform/shared/src/services/navigate/NavigateService.web.ts'
       ),
     },
   },
