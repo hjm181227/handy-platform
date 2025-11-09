@@ -1,5 +1,5 @@
 {
-  "buildCommand": "echo 'Using pre-built dist folder'",
-  "outputDirectory": "dist",
-  "installCommand": "echo 'Skipping npm install'"
+  "framework": "vite",
+  "buildCommand": "npm run build:stage",
+  "outputDirectory": "dist"
 }
