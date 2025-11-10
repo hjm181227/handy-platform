@@ -28,8 +28,12 @@ export default defineConfig(({ mode }) => ({
     '__VITE_MODE__': JSON.stringify(mode || 'development'),
     // API 환경 설정 (로컬 환경 우선)
     '__API_ENV__': JSON.stringify(mode === 'local' ? 'local' : mode || 'development'),
-    // API Base URL을 환경변수에서 주입 (import.meta.env는 Vite가 자동으로 처리)
-    '__VITE_API_BASE_URL__': 'import.meta.env.VITE_API_BASE_URL',
+    // API Base URL을 빌드 타임에 주입 (실제 값으로 대체)
+    '__VITE_API_BASE_URL__': JSON.stringify(
+      mode === 'stage' ? 'https://www.stage-handy.com' :
+      mode === 'production' ? 'https://h-andy.com' :
+      'http://localhost:11000'
+    ),
   },
   // 환경별 모드 설정
   mode: mode || 'development'
