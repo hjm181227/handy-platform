@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
-import navigateService from '@handy-platform/shared/services/navigate';
 import { ProductCard } from '../product/ProductCard';
 
 // 좋아요 페이지
@@ -355,7 +354,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   // 손톱 사이즈 목록 화면으로 이동
   const goToNailSizes = () => {
     console.log('🔵 [WEB] 사이즈 목록 버튼 클릭됨');
-    navigateService.goToNailSizes();
+    // TODO: Implement navigate service properly
+    // navigateService.goToNailSizes();
+    onGo('/nail-sizes');
   };
 
   // 로그아웃 처리
