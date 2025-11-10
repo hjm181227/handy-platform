@@ -1,7 +1,6 @@
 import { webApiService } from './apiService';
 import { mockApiService, USE_MOCK_API } from './mockApiService';
-import { Cart, CartItem, ShippingAddress, PaymentMethod, KoreanAddress } from '@handy-platform/shared';
-import { API_BASE_URL } from '@handy-platform/shared/config/api';
+import { Cart, CartItem, ShippingAddress, PaymentMethod, KoreanAddress, API_BASE_URL } from '@handy-platform/shared';
 import { 
   convertToShippingAddressList, 
   convertToKoreanAddress 

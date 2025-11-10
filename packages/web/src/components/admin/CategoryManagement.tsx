@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { adminService } from '../../services/apiService';
 import type { AdminCategory, CategoryType } from '@handy-platform/shared';
-import { ImageUploadManager, createImagePreview, revokeImagePreview } from '@handy-platform/shared';
-import { API_BASE_URL, getWebAuthHeaders } from '@handy-platform/shared/config/api';
+import { ImageUploadManager, createImagePreview, revokeImagePreview, API_BASE_URL, getWebAuthHeaders } from '@handy-platform/shared';
 import { FiEdit2, FiTrash2, FiPlus, FiCheck, FiX, FiSearch, FiUpload, FiImage } from 'react-icons/fi';
 
 export default function CategoryManagement() {

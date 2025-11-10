@@ -4,7 +4,7 @@ import {
   SellerApplication,
   SellerApplicationListResponse,
   SellerApplicationDetail
-} from '@handy-platform/shared/services/admin/AdminService';
+} from '@handy-platform/shared';
 
 interface SellerApplicationManagementProps {
   // 프롭스 타입 정의

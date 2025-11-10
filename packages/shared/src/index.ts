@@ -30,6 +30,7 @@ export * from './services/commerce/PaymentService';
 
 // Seller Services
 export * from './services/seller/SellerService';
+export * from './services/seller/SellerApplicationService';
 
 // Admin Services
 export * from './services/admin/AdminService';
