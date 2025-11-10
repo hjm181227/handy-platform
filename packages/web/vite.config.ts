@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
     // API Base URL을 빌드 타임에 주입 (실제 값으로 대체)
     '__VITE_API_BASE_URL__': JSON.stringify(
       mode === 'stage' ? 'https://www.stage-handy.com' :
-      mode === 'production' ? 'https://h-andy.com' :
+      mode === 'production' ? 'https://www.h-andy.com' :
       'http://localhost:11000'
     ),
   },
