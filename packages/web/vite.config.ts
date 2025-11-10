@@ -14,13 +14,13 @@ export default defineConfig(({ mode }) => ({
     // 웹 빌드 시 .web 확장자 우선 사용
     extensions: ['.web.ts', '.web.tsx', '.web.js', '.ts', '.tsx', '.js', '.json'],
     alias: {
-      // shared 패키지 전체 매핑 - node_modules의 빌드된 dist 폴더 사용
-      '@handy-platform/shared': path.resolve(__dirname, 'node_modules/@handy-platform/shared/dist'),
-      // NavigateService를 .web.ts로 강제 매핑
+      // navigate service deep import 매핑 - 더 구체적인 alias를 먼저 선언
       '@handy-platform/shared/services/navigate': path.resolve(
         __dirname,
-        'node_modules/@handy-platform/shared/dist/services/navigate/NavigateService.web.js'
+        'node_modules/@handy-platform/shared/dist/services/navigate/index.js'
       ),
+      // shared 패키지 루트 매핑 - package.json의 "main" 필드가 dist/index.js로 자동 resolve
+      '@handy-platform/shared': path.resolve(__dirname, 'node_modules/@handy-platform/shared'),
     },
   },
   optimizeDeps: {
