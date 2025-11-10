@@ -17,6 +17,12 @@
 # Ignore mobile package (not needed for web deployment)
 packages/mobile/
 
+# Ignore Ruby/iOS-related files (CocoaPods)
+Gemfile
+Gemfile.lock
+.bundle/
+vendor/bundle/
+
 # Ignore build outputs (will be regenerated)
 packages/web/dist/
 packages/shared/dist/
