@@ -19,13 +19,13 @@ let environmentName;
 // 빌드 명령어 결정 로직
 // Note: Vercel builds from repository root (no Root Directory set)
 if (vercelEnv === 'production' || gitBranch === 'main') {
-  buildCommand = 'npm run build:shared && cd packages/web && npm run build:prod';
+  buildCommand = 'npm install && npm run build:shared && cd packages/web && npm run build:prod';
   environmentName = '🚀 PRODUCTION';
 } else if (gitBranch === 'develop') {
-  buildCommand = 'npm run build:shared && cd packages/web && npm run build:stage';
+  buildCommand = 'npm install && npm run build:shared && cd packages/web && npm run build:stage';
   environmentName = '🧪 STAGING';
 } else {
-  buildCommand = 'npm run build:shared && cd packages/web && npm run build:stage';
+  buildCommand = 'npm install && npm run build:shared && cd packages/web && npm run build:stage';
   environmentName = '👀 PREVIEW (using stage config)';
 }
 
