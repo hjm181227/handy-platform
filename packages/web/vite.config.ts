@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  // Vite가 .env 파일을 찾을 디렉토리 (현재 config 파일 위치 기준)
+  envDir: '.',
   server: {
     port: 3001,
     host: true,
@@ -26,6 +28,8 @@ export default defineConfig(({ mode }) => ({
     '__VITE_MODE__': JSON.stringify(mode || 'development'),
     // API 환경 설정 (로컬 환경 우선)
     '__API_ENV__': JSON.stringify(mode === 'local' ? 'local' : mode || 'development'),
+    // API Base URL을 환경변수에서 주입 (import.meta.env는 Vite가 자동으로 처리)
+    '__VITE_API_BASE_URL__': 'import.meta.env.VITE_API_BASE_URL',
   },
   // 환경별 모드 설정
   mode: mode || 'development'
