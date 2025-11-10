@@ -17,14 +17,15 @@ let buildCommand;
 let environmentName;
 
 // 빌드 명령어 결정 로직
+// Note: Vercel Root Directory is set to packages/web
 if (vercelEnv === 'production' || gitBranch === 'main') {
-  buildCommand = 'cd ../.. && npm run build:shared && cd packages/web && npm run build:prod';
+  buildCommand = 'cd ../shared && npm run build && cd ../web && npm run build:prod';
   environmentName = '🚀 PRODUCTION';
 } else if (gitBranch === 'develop') {
-  buildCommand = 'cd ../.. && npm run build:shared && cd packages/web && npm run build:stage';
+  buildCommand = 'cd ../shared && npm run build && cd ../web && npm run build:stage';
   environmentName = '🧪 STAGING';
 } else {
-  buildCommand = 'cd ../.. && npm run build:shared && cd packages/web && npm run build:stage';
+  buildCommand = 'cd ../shared && npm run build && cd ../web && npm run build:stage';
   environmentName = '👀 PREVIEW (using stage config)';
 }
 
