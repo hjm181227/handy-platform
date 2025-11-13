@@ -2,6 +2,11 @@
   "framework": "vite",
   "buildCommand": "node packages/web/vercel-build.cjs",
   "outputDirectory": "packages/web/dist",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
