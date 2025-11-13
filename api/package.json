@@ -1,0 +1,10 @@
+{
+  "name": "handy-api-functions",
+  "version": "1.0.0",
+  "description": "Vercel Serverless Functions for Handy Platform",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  }
+}
