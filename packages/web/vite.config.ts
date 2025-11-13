@@ -29,10 +29,10 @@ export default defineConfig(({ mode }) => ({
     // API 환경 설정 (로컬 환경 우선)
     '__API_ENV__': JSON.stringify(mode === 'local' ? 'local' : mode || 'development'),
     // API Base URL을 빌드 타임에 주입 (실제 값으로 대체)
+    // 프로덕션/스테이징: Vercel Serverless Function을 통한 프록시 사용
+    // 로컬: 직접 백엔드 서버 연결
     '__VITE_API_BASE_URL__': JSON.stringify(
-      mode === 'stage' ? 'https://www.stage-handy.com' :
-      mode === 'production' ? 'https://www.h-andy.com' :
-      'http://localhost:11000'
+      mode === 'stage' || mode === 'production' ? '/api' : 'http://localhost:11000'
     ),
   },
   // 환경별 모드 설정
