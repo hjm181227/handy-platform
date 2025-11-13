@@ -11,7 +11,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * - Preview/Staging (develop branch): Port 8080
  */
 
-const ALB_BASE_URL = 'http://handy-server-prod-ALB-596032555e8c80cd.ap-northeast-2.elb.amazonaws.com';
+const ALB_BASE_URL = 'http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com';
 
 // 환경별 포트 설정
 function getBackendUrl(): string {
