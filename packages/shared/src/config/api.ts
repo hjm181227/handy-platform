@@ -21,13 +21,13 @@ export const API_CONFIG: Record<string, ApiConfig> = {
     retryDelay: 1000,
   },
   stage: {
-    baseURL: 'https://www.stage-handy.com',
+    baseURL: '',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   production: {
-    baseURL: 'https://www.h-andy.com',
+    baseURL: '',
     timeout: 15000,
     retryAttempts: 5,
     retryDelay: 2000,
