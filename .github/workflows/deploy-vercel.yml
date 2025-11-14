@@ -5,6 +5,10 @@ on:
     branches:
       - main      # Production
       - develop   # Staging (Preview)
+    paths:
+      - 'packages/web/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-vercel.yml'
 
 jobs:
   deploy:
