@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMiniRouter } from '../../utils';
+import { useAlert } from '../common';
 import { LoadingScreen } from './LoadingScreen';
-import { RedirectingScreen } from './RedirectingScreen';
 
 type UserRole = 'user' | 'seller' | 'admin';
 
@@ -16,6 +16,12 @@ interface RequireRoleProps {
   /** 미인증 시 리다이렉트할 경로 (기본값: /login) */
   loginPath?: string;
 }
+
+const roleNames: Record<UserRole, string> = {
+  user: '일반 사용자',
+  seller: '판매자',
+  admin: '관리자',
+};
 
 /**
  * 특정 역할이 필요한 페이지를 감싸는 가드 컴포넌트
@@ -42,49 +48,43 @@ export const RequireRole: React.FC<RequireRoleProps> = ({
 }) => {
   const { currentUser, authLoading, checkRole } = useAuth();
   const { nav } = useMiniRouter();
+  const { alert } = useAlert();
+  const hasShownAlert = useRef(false);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || hasShownAlert.current) return;
 
     // 미인증 사용자 → 로그인 페이지로
     if (!currentUser) {
+      hasShownAlert.current = true;
       console.warn('[RequireRole] User not authenticated, redirecting to:', loginPath);
-      nav(loginPath);
+      alert('로그인이 필요합니다').then(() => {
+        nav(loginPath);
+      });
       return;
     }
 
     // 권한 부족 → fallbackPath로
     if (!checkRole(requiredRole)) {
+      hasShownAlert.current = true;
       console.warn(
         `[RequireRole] User role "${currentUser.role}" does not match required role "${requiredRole}", redirecting to:`,
         fallbackPath
       );
-      nav(fallbackPath);
+      alert(`${roleNames[requiredRole]} 권한이 필요합니다`).then(() => {
+        nav(fallbackPath);
+      });
     }
-  }, [authLoading, currentUser, requiredRole, checkRole, loginPath, fallbackPath, nav]);
+  }, [authLoading, currentUser, requiredRole, checkRole, loginPath, fallbackPath, nav, alert]);
 
   // 인증 확인 중
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // 미인증 사용자
-  if (!currentUser) {
-    return <RedirectingScreen message="로그인이 필요합니다" />;
-  }
-
-  // 권한 부족
-  if (!checkRole(requiredRole)) {
-    const roleNames: Record<UserRole, string> = {
-      user: '일반 사용자',
-      seller: '판매자',
-      admin: '관리자',
-    };
-    return (
-      <RedirectingScreen
-        message={`${roleNames[requiredRole]} 권한이 필요합니다`}
-      />
-    );
+  // 미인증 사용자 또는 권한 부족 - null 반환 (alert가 표시되고 리다이렉트됨)
+  if (!currentUser || !checkRole(requiredRole)) {
+    return null;
   }
 
   // 권한 있음

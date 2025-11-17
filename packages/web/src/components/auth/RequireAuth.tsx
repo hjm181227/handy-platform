@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMiniRouter } from '../../utils';
+import { useAlert } from '../common';
 import { LoadingScreen } from './LoadingScreen';
-import { RedirectingScreen } from './RedirectingScreen';
 
 interface RequireAuthProps {
   /** 렌더링할 자식 컴포넌트 */
@@ -34,23 +34,30 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
 }) => {
   const { currentUser, authLoading } = useAuth();
   const { nav } = useMiniRouter();
+  const { alert } = useAlert();
+  const hasShownAlert = useRef(false);
 
   useEffect(() => {
-    // 인증 확인이 완료되고 사용자가 없으면 리다이렉트
-    if (!authLoading && !currentUser) {
+    // 인증 확인이 완료되고 사용자가 없으면 알림 후 리다이렉트
+    if (!authLoading && !currentUser && !hasShownAlert.current) {
+      hasShownAlert.current = true;
       console.warn('[RequireAuth] User not authenticated, redirecting to:', fallbackPath);
-      nav(fallbackPath);
+
+      // Alert 표시 후 로그인 페이지로 이동
+      alert('로그인이 필요합니다').then(() => {
+        nav(fallbackPath);
+      });
     }
-  }, [authLoading, currentUser, fallbackPath, nav]);
+  }, [authLoading, currentUser, fallbackPath, nav, alert]);
 
   // 인증 확인 중
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // 미인증 사용자
+  // 미인증 사용자 - null 반환 (alert가 표시되고 리다이렉트됨)
   if (!currentUser) {
-    return <RedirectingScreen message="로그인이 필요합니다" />;
+    return null;
   }
 
   // 인증된 사용자
