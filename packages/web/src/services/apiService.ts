@@ -19,8 +19,17 @@ class WebTokenManager {
   }
 
   static clearToken(): void {
+    // 토큰 및 사용자 정보 삭제
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+
+    // 자동 로그인 설정 삭제
+    localStorage.removeItem('autoLogin');
+
+    // 사용자 활동 데이터 삭제 (추천 엔진 등)
+    localStorage.removeItem('userActivity');
+
+    console.log('[WebTokenManager] All user data cleared from localStorage');
   }
 
   static getUser(): User | null {
@@ -53,13 +62,32 @@ class WebApiService {
     // Vite 환경변수 우선 사용
     const baseURL = (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL;
     console.log('🔧 Web API Service Base URL:', baseURL);
-    
+
+    // 토큰 만료 시 자동 처리 콜백
+    const handleTokenExpired = () => {
+      console.warn('🔴 [WebApiService] Token expired, clearing auth data and redirecting to login');
+
+      // 로컬 데이터 정리
+      WebTokenManager.clearToken();
+
+      // 상태 변경 이벤트 발생
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+
+      // 로그인 페이지로 리다이렉트
+      setTimeout(() => {
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }, 100);
+    };
+
     this.apiService = createApiService(
       baseURL,
       getWebAuthHeaders,
-      'web'
+      'web',
+      handleTokenExpired // 토큰 만료 콜백 등록
     );
-    
+
     // 웹 전용 AuthService 메서드 확장
     this.setupWebAuthMethods();
   }
@@ -162,7 +190,15 @@ class WebApiService {
   }
 
   async logoutAndClearToken() {
-    WebTokenManager.clearToken();
+    try {
+      // 서버에 로그아웃 요청 (선택적, 실패해도 로컬 정리는 진행)
+      await this.auth.logout();
+    } catch (error) {
+      console.warn('[WebApiService] Server logout failed, clearing local data anyway:', error);
+    } finally {
+      // 로컬 데이터 완전 정리
+      WebTokenManager.clearToken();
+    }
   }
 
   // 로그아웃 후 리다이렉트가 필요한 경우 사용
@@ -177,7 +213,33 @@ class WebApiService {
   }
 
   async updateUserProfile(userData: Partial<User>) {
-    return this.auth.updateProfile(userData);
+    const response = await this.auth.updateProfile(userData);
+
+    // 프로필 업데이트 성공 시 localStorage도 자동 갱신
+    if (response.data?.user) {
+      WebTokenManager.setUser(response.data.user);
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+      console.log('[WebApiService] User profile updated and synced to localStorage');
+    }
+
+    return response;
+  }
+
+  // 서버에서 최신 사용자 정보 가져와서 갱신
+  async refreshCurrentUser(): Promise<User | null> {
+    try {
+      const response = await this.auth.getUserProfile();
+      if (response.data?.user) {
+        WebTokenManager.setUser(response.data.user);
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
+        console.log('[WebApiService] User data refreshed from server');
+        return response.data.user;
+      }
+      return null;
+    } catch (error) {
+      console.error('[WebApiService] Failed to refresh user data:', error);
+      throw error;
+    }
   }
 
   // WebView 환경에서 네이티브 토큰 동기화
