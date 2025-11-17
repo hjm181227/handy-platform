@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { adminService } from '../../services/apiService';
+import { adminService, imageService } from '../../services/apiService';
 import type { AdminCategory, CategoryType } from '@handy-platform/shared';
-import { ImageUploadManager, createImagePreview, revokeImagePreview, API_BASE_URL, getWebAuthHeaders } from '@handy-platform/shared';
+import { createImagePreview, revokeImagePreview } from '@handy-platform/shared';
 import { FiEdit2, FiTrash2, FiPlus, FiCheck, FiX, FiSearch, FiUpload, FiImage } from 'react-icons/fi';
 
 export default function CategoryManagement() {
@@ -38,18 +38,6 @@ export default function CategoryManagement() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // ImageUploadManager 인스턴스
-  const imageUploadManager = new ImageUploadManager(
-    (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL,
-    async () => {
-      const token = localStorage.getItem('accessToken');
-      return {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      };
-    }
-  );
 
   const categoryTypes: { value: CategoryType; label: string }[] = [
     { value: 'style', label: '스타일' },
@@ -257,19 +245,58 @@ export default function CategoryManagement() {
       setIsUploading(true);
       setUploadProgress(0);
 
-      const result = await imageUploadManager.uploadImage({
-        file: imageFile,
-        uploadType: 'category',
-        onProgress: (progress) => {
-          setUploadProgress(progress);
-        },
+      // STEP 1: 백엔드에서 presigned URL 받기
+      console.log('Requesting presigned URL for category image...');
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: imageFile.name,
+        contentType: imageFile.type,
+        uploadType: 'category'
       });
 
-      if (result.success && result.imageUrl) {
-        return result.imageUrl;
-      } else {
-        throw new Error('이미지 업로드에 실패했습니다.');
-      }
+      console.log('Presigned URL received:', presignedResponse);
+
+      // STEP 2: S3에 직접 업로드 (진행률 추적 포함)
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // 업로드 진행률 추적
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const progress = (event.loaded / event.total) * 100;
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.onload = () => {
+          if (xhr.status === 200 || xhr.status === 204) {
+            console.log('S3 upload successful');
+            resolve();
+          } else {
+            reject(new Error(`S3 upload failed with status: ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error('S3 upload failed: Network error'));
+        };
+
+        xhr.open('PUT', presignedResponse.presignedUrl);
+        xhr.setRequestHeader('Content-Type', imageFile.type);
+
+        // Add any additional headers required by the presigned URL (e.g., x-amz-acl)
+        if (presignedResponse.uploadHeaders) {
+          Object.entries(presignedResponse.uploadHeaders).forEach(([key, value]) => {
+            xhr.setRequestHeader(key, value);
+          });
+        }
+
+        xhr.send(imageFile);
+      });
+
+      // STEP 3: 이미지 URL 반환
+      console.log('Image URL:', presignedResponse.imageUrl);
+      return presignedResponse.imageUrl;
+
     } catch (error: any) {
       console.error('Image upload failed:', error);
       alert(`이미지 업로드 실패: ${error.message || '알 수 없는 오류'}`);

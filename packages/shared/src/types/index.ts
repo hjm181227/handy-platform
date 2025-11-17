@@ -799,6 +799,7 @@ export interface PresignedUrlResponse {
   uploadType: string;
   maxFileSize: string;
   expiresIn: string;
+  uploadHeaders?: Record<string, string>;  // Additional headers required for upload (e.g., x-amz-acl)
   constraints: {
     allowedTypes: string[];
     maxFileSize: string;
