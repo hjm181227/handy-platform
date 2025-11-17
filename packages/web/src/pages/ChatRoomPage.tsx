@@ -1,86 +1,27 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
+import { useChat } from '../lib/chat';
 
 interface ChatRoomPageProps {
   nav: (path: string) => void;
   roomId: string;
 }
 
-interface Message {
-  id: string;
-  sender: 'me' | 'other';
-  text: string;
-  timestamp: string;
-  read?: boolean;
-}
-
-// 더미 메시지 데이터 (채팅방별)
-const DUMMY_MESSAGES: Record<string, Message[]> = {
-  '1': [
-    { id: '1', sender: 'other', text: '안녕하세요! 핸디샵 고객센터입니다.', timestamp: '오전 10:23', read: true },
-    { id: '2', sender: 'other', text: '무엇을 도와드릴까요?', timestamp: '오전 10:23', read: true },
-    { id: '3', sender: 'me', text: '주문한 상품 배송이 지연되고 있어요', timestamp: '오전 10:25', read: true },
-    { id: '4', sender: 'other', text: '주문번호를 알려주시겠어요?', timestamp: '오전 10:26', read: true },
-    { id: '5', sender: 'me', text: 'ORD-2024-001234입니다', timestamp: '오전 10:27', read: true },
-    { id: '6', sender: 'other', text: '확인해보겠습니다. 잠시만 기다려주세요.', timestamp: '오전 10:28', read: true },
-    { id: '7', sender: 'other', text: '현재 배송 중이며, 내일 도착 예정입니다.', timestamp: '오전 10:30', read: false },
-  ],
-  '2': [
-    { id: '1', sender: 'other', text: '안녕하세요! 글로시 네일입니다 😊', timestamp: '오후 2:15', read: true },
-    { id: '2', sender: 'me', text: '안녕하세요', timestamp: '오후 2:16', read: true },
-    { id: '3', sender: 'other', text: '주문하신 젤 네일 제품 3종이 배송 준비 중입니다.', timestamp: '오후 2:17', read: true },
-    { id: '4', sender: 'other', text: '내일 오전 중 출고 예정이에요!', timestamp: '오후 2:17', read: false },
-    { id: '5', sender: 'me', text: '감사합니다!', timestamp: '오후 2:18', read: true },
-  ],
-  '3': [
-    { id: '1', sender: 'me', text: '제품 사용법이 궁금해요', timestamp: '어제 오후 3:20', read: true },
-    { id: '2', sender: 'other', text: '네일 아트 스튜디오입니다! 어떤 제품인가요?', timestamp: '어제 오후 3:25', read: true },
-    { id: '3', sender: 'me', text: '젤 네일 스타터 키트요', timestamp: '어제 오후 3:26', read: true },
-    { id: '4', sender: 'other', text: '제품 박스 안에 설명서가 들어있어요. 유튜브에도 튜토리얼 영상이 있답니다!', timestamp: '어제 오후 3:30', read: true },
-    { id: '5', sender: 'me', text: '감사합니다! 찾아볼게요', timestamp: '어제 오후 3:32', read: true },
-    { id: '6', sender: 'other', text: '다음에 또 이용해주세요 😊', timestamp: '어제 오후 3:33', read: true },
-  ],
-};
-
-// 채팅방 정보
-const CHAT_ROOM_INFO: Record<string, { name: string }> = {
-  '1': { name: '핸디샵 고객센터' },
-  '2': { name: '글로시 네일' },
-  '3': { name: '네일 아트 스튜디오' },
-  '4': { name: '배송 알림' },
-  '5': { name: '엘레강스 네일' },
-  '6': { name: '프리미엄 네일샵' },
-  '7': { name: '젤네일 판매점' },
-};
-
 export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
-  const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState<Message[]>(DUMMY_MESSAGES[roomId] || []);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const roomInfo = CHAT_ROOM_INFO[roomId] || { name: '알 수 없음' };
-
-  // 스크롤을 맨 아래로
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // useChat 훅으로 모든 채팅 로직 처리
+  const {
+    messages,
+    inputText,
+    setInputText,
+    sendMessage,
+    isLoading,
+    isConnected,
+    error,
+    currentRoom,
+    clearError,
+  } = useChat(roomId);
 
   const handleSend = () => {
-    if (!inputText.trim()) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'me',
-      text: inputText,
-      timestamp: '방금',
-      read: false,
-    };
-
-    setMessages([...messages, newMessage]);
-    setInputText('');
+    sendMessage(inputText);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -89,6 +30,20 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
       handleSend();
     }
   };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">채팅방 로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const roomName = currentRoom?.name || '알 수 없음';
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -119,17 +74,50 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
           {/* Profile */}
           <div className="flex items-center gap-3 flex-1">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
-              {roomInfo.name.charAt(0)}
+              {roomName.charAt(0)}
             </div>
-            <h1 className="text-lg font-bold">{roomInfo.name}</h1>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold">{roomName}</h1>
+              {/* 연결 상태 표시 */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                <span className="text-gray-500">
+                  {isConnected ? '연결됨' : '오프라인 (더미 데이터)'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+          <button
+            onClick={clearError}
+            className="text-red-500 hover:text-red-700 text-sm font-medium"
+          >
+            닫기
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-          {messages.map((message) => (
+          {messages.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">아직 메시지가 없습니다.</p>
+              <p className="text-gray-400 text-sm mt-2">첫 메시지를 보내보세요!</p>
+            </div>
+          ) : (
+            messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
@@ -160,8 +148,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
                 </div>
               </div>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
+            ))
+          )}
         </div>
       </div>
 
