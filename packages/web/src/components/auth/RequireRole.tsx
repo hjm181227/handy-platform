@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useMiniRouter } from '../../utils/miniRouter';
+import { useMiniRouter } from '../../utils';
 import { LoadingScreen } from './LoadingScreen';
 import { RedirectingScreen } from './RedirectingScreen';
 
