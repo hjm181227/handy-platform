@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
-import navigateService from '@handy-platform/shared/src/services/navigate';
 import { ProductCard } from '../product/ProductCard';
 
 // 좋아요 페이지
@@ -142,7 +141,7 @@ export function LikesPage({
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="handy-page-content max-w-7xl">
       {/* 헤더 */}
       <h1 className="text-2xl font-semibold mb-6">찜한 목록</h1>
 
@@ -240,7 +239,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   // 로딩 상태일 때
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-5">
+      <div className="handy-page-content max-w-5xl">
         <div className="rounded-lg border bg-white p-4">
           <div className="animate-pulse">
             <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
@@ -355,7 +354,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   // 손톱 사이즈 목록 화면으로 이동
   const goToNailSizes = () => {
     console.log('🔵 [WEB] 사이즈 목록 버튼 클릭됨');
-    navigateService.goToNailSizes();
+    // TODO: Implement navigate service properly
+    // navigateService.goToNailSizes();
+    onGo('/nail-sizes');
   };
 
   // 로그아웃 처리
@@ -396,7 +397,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-5">
+    <div className="handy-page-content max-w-5xl">
       {/* 사이즈 목록 버튼 (WebView에서만 표시) */}
       {isWebViewEnvironment() && (
         <div className="mb-4">
@@ -595,7 +596,7 @@ export function SnapPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen:
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-4 py-6">
+      <div className="handy-page-content max-w-7xl">
         {/* 헤더 */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">SNAP</h1>

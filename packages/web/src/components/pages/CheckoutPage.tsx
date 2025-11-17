@@ -4,7 +4,7 @@ import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
 import { ShippingAddressForm } from '../common/ShippingAddressForm';
-import { API_BASE_URL } from '@handy-platform/shared/src/config/api';
+import { API_BASE_URL } from '@handy-platform/shared';
 import type {
   Cart,
   Order,

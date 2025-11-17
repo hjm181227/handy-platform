@@ -9,9 +9,11 @@ import { AlertProvider } from './components/common';
 // Layout Components
 import { TopDarkNav } from './components/layout/TopDarkNav';
 import { MainHeader } from './components/layout/MainHeader';
+import { MobilePageHeader } from './components/layout/MobilePageHeader';
 import { EventBanners } from './components/layout/Hero';
 import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { CategoryModal } from './components/common/CategoryModal';
 import { FloatingChatButton } from './components/common/FloatingChatButton';
 
@@ -520,6 +522,18 @@ export default function App() {
   } else if (pathname.match(/^\/order-complete\/(.+)$/)) {
     const orderId = pathname.split("/")[2];
     screen = <OrderCompletePage onGo={nav} orderId={orderId} />;
+  } else if (pathname === "/category") {
+    // 카테고리 페이지 (모바일에서 페이지로 작동)
+    screen = (
+      <CategoryModal
+        isOpen={true}
+        onClose={() => history.back()}
+        onNavigate={nav}
+        isPage={true}
+        cartCount={cartCount}
+        onCart={handleCartClick}
+      />
+    );
   } else if (pathname.startsWith("/help")) {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
@@ -892,7 +906,7 @@ export default function App() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
-                {brand.products?.slice(0, 6).map(p => {
+                {brand.products?.filter(Boolean).slice(0, 6).map(p => {
                   const productId = p.id;
                   return (
                     <div key={p.id} className="md:snap-start md:flex-shrink-0">
@@ -927,31 +941,131 @@ export default function App() {
   const isHomePage = pathname === '/';
   const shouldShowHeader = !isSellerPage && !isAdminPage && !isChatPage;
 
+  // 모바일 헤더 설정 결정
+  const getMobileHeaderProps = () => {
+    // 카테고리 페이지 - CategoryModal이 자체 헤더 관리
+    if (pathname === '/category') {
+      return null;
+    }
+    // 스냅 페이지
+    if (pathname.startsWith('/snap')) {
+      return {
+        title: 'SNAP',
+        showNotification: true,
+        showSearch: true,
+        showProfile: true,
+        cartCount,
+        onNotification: () => nav('/my/notifications'),
+        onSearch: () => {}, // 검색 모달 또는 검색 페이지로
+        onProfile: () => nav('/my'),
+        onGo: nav
+      };
+    }
+    // 좋아요 페이지
+    if (pathname.startsWith('/likes')) {
+      return {
+        title: '찜한 목록',
+        showSearch: true,
+        showCart: true,
+        cartCount,
+        onSearch: () => {},
+        onCart: handleCartClick,
+        onGo: nav
+      };
+    }
+    // 마이페이지
+    if (pathname.startsWith('/my')) {
+      return {
+        title: '마이페이지',
+        showSearch: true,
+        showSettings: true,
+        showCart: true,
+        cartCount,
+        onSearch: () => {},
+        onSettings: () => nav('/my/settings'),
+        onCart: handleCartClick,
+        onGo: nav
+      };
+    }
+    // 상품 상세 페이지
+    if (pathname.startsWith('/product/')) {
+      return {
+        showBack: true,
+        showHome: true,
+        showSearch: true,
+        showCart: true,
+        cartCount,
+        onBack: () => history.back(),
+        onHome: () => nav('/'),
+        onSearch: () => {},
+        onCart: handleCartClick,
+        onGo: nav
+      };
+    }
+    // 장바구니 페이지
+    if (pathname.startsWith('/cart')) {
+      return {
+        title: '장바구니',
+        showBack: true,
+        showHome: true,
+        cartCount,
+        onBack: () => history.back(),
+        onHome: () => nav('/'),
+        onGo: nav
+      };
+    }
+    // 기타 페이지는 null (헤더 없음 또는 기본 헤더)
+    return null;
+  };
+
+  const mobileHeaderProps = getMobileHeaderProps();
+
   return (
     <AlertProvider>
-      {/* 판매자 센터와 어드민 센터가 아닐 때만 헤더 표시 */}
-      {shouldShowHeader && (
-        <>
-          {/* 홈페이지에서는 헤더 표시, 다른 페이지에서는 앱에서만 숨김 */}
-          <div data-apphide={isHomePage ? "false" : "true"}>
-            <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
-          </div>
-          <div data-apphide={isHomePage ? "false" : "true"}>
-            <MainHeader
-              cartCount={cartCount}
-              onCart={handleCartClick}
-              onGo={nav}
-              currentPath={pathname}
-              onAuthStateChange={setCurrentUser}
-              authLoading={authLoading}
-              onCategoryOpen={() => setCatOpen(true)}
-            />
-          </div>
-        </>
-      )}
+      {/* 전체 컨테이너: flex 구조로 sticky 헤더 작동 */}
+      <div className="flex flex-col min-h-screen">
+        {/* 판매자 센터와 어드민 센터가 아닐 때만 헤더 표시 */}
+        {shouldShowHeader && (
+          <>
+            {/* PC 헤더 - TopDarkNav + MainHeader를 하나의 sticky로 */}
+            <div className="handy-sticky-header hidden md:block" data-apphide={isHomePage ? "false" : "true"}>
+              <TopDarkNav onOpenCategories={() => setCatOpen(true)} onGo={nav} />
+              <MainHeader
+                cartCount={cartCount}
+                onCart={handleCartClick}
+                onGo={nav}
+                currentPath={pathname}
+                onAuthStateChange={setCurrentUser}
+                authLoading={authLoading}
+                onCategoryOpen={() => setCatOpen(true)}
+              />
+            </div>
 
-      {/* 본문은 절대 숨김 래퍼 안에 넣지 않기 */}
-      {screen}
+            {/* 모바일 헤더 (페이지별) - sticky 작동 */}
+            {isHomePage && (
+              <div className="handy-sticky-header block md:hidden">
+                <MainHeader
+                  cartCount={cartCount}
+                  onCart={handleCartClick}
+                  onGo={nav}
+                  currentPath={pathname}
+                  onAuthStateChange={setCurrentUser}
+                  authLoading={authLoading}
+                  onCategoryOpen={() => setCatOpen(true)}
+                />
+              </div>
+            )}
+            {mobileHeaderProps && (
+              <MobilePageHeader className="block md:hidden" {...mobileHeaderProps} />
+            )}
+          </>
+        )}
+
+        {/* 본문 콘텐츠 - flex-1로 남은 공간 차지 */}
+        <div className="flex-1">
+          {screen}
+        </div>
+      </div>
 
       {/* 판매자 센터와 채팅 페이지가 아닐 때만 푸터와 드로어 표시 */}
       {!isSellerPage && !isChatPage && (
@@ -969,6 +1083,11 @@ export default function App() {
             isOpen={catOpen}
             onClose={() => setCatOpen(false)}
             onNavigate={nav}
+          />
+          <MobileBottomNav
+            currentPath={pathname}
+            onGo={nav}
+            onCategoryOpen={() => setCatOpen(true)}
           />
         </>
       )}

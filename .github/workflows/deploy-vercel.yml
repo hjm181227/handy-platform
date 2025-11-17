@@ -1,0 +1,55 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main      # Production
+      - develop   # Staging (Preview)
+    paths:
+      - 'packages/web/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-vercel.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (root)
+        run: npm install
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Build web package (Production)
+        if: github.ref == 'refs/heads/main'
+        working-directory: packages/web
+        run: npm run build:prod
+
+      - name: Build web package (Staging)
+        if: github.ref == 'refs/heads/develop'
+        working-directory: packages/web
+        run: npm run build:stage
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }} --cwd=packages/web
+
+      - name: Deploy to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --cwd=packages/web
+
+      - name: Deploy to Vercel (Preview)
+        if: github.ref == 'refs/heads/develop'
+        run: vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --cwd=packages/web

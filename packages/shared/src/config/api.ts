@@ -21,13 +21,13 @@ export const API_CONFIG: Record<string, ApiConfig> = {
     retryDelay: 1000,
   },
   stage: {
-    baseURL: 'https://api.stage-handy.com',
+    baseURL: '',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   production: {
-    baseURL: 'http://15.165.5.64:3000',
+    baseURL: '',
     timeout: 15000,
     retryAttempts: 5,
     retryDelay: 2000,
@@ -42,6 +42,19 @@ export const getCurrentEnvironment = (): string => {
   }
   if (typeof window !== 'undefined' && (window as any).__API_ENV__ === 'local') {
     return 'local';
+  }
+
+  // Vercel 배포 환경 감지 (hostname 기반, 최우선)
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const hostname = window.location.hostname;
+    if (hostname.includes('stage-handy.com')) {
+      console.log('🟢 [API_CONFIG] Detected staging environment from hostname:', hostname);
+      return 'stage';
+    }
+    if (hostname.includes('h-andy.com') && !hostname.includes('stage')) {
+      console.log('🟢 [API_CONFIG] Detected production environment from hostname:', hostname);
+      return 'production';
+    }
   }
 
   // React Native 환경 - BuildConfig 우선 확인 (최우선!)

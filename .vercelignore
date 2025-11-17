@@ -1,0 +1,44 @@
+# Vercel Ignore Configuration for Monorepo
+# This file controls what gets uploaded to Vercel
+
+# Ignore git and common artifacts
+.git
+.github
+.vscode
+*.log
+.DS_Store
+
+# Ignore local environment files
+.env*.local
+
+# Ignore all node_modules (will be installed during build)
+**/node_modules/
+
+# Ignore mobile package (not needed for web deployment)
+packages/mobile/
+
+# Ignore Ruby/iOS-related files (CocoaPods)
+Gemfile
+Gemfile.lock
+.bundle/
+vendor/bundle/
+
+# Ignore build outputs (will be regenerated)
+packages/web/dist/
+packages/shared/dist/
+
+# But ensure source files are included
+!packages/shared/src/
+!packages/shared/package.json
+!packages/shared/tsconfig.json
+!packages/web/src/
+!packages/web/package.json
+!packages/web/tsconfig.json
+!packages/web/vite.config.ts
+!packages/web/index.html
+
+# Ensure root build configuration is included
+!package.json
+!package-lock.json
+!vercel.json
+!packages/web/vercel-build.cjs

@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 import {
   createApiService,
   IntegratedApiService,
   User
 } from '@handy-platform/shared';
 import { API_CONFIG } from '@handy-platform/shared/src/config/api';
+import { alertService } from '@handy-platform/shared/src/services/utils/AlertService';
 
 // 모바일 앱은 스테이지 서버 사용 (localhost는 React Native에서 작동하지 않음)
 const MOBILE_API_BASE_URL = API_CONFIG.stage.baseURL;
@@ -65,6 +67,20 @@ const getMobileAuthHeaders = async (): Promise<Record<string, string>> => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+// 모바일 전용 토큰 만료 핸들러
+const handleMobileTokenExpiration = () => {
+  console.log('🔴 [MobileApiService] Token expired - showing toast and navigating to login');
+
+  // 토스트 메시지 표시
+  alertService.toast('로그인이 필요합니다', {
+    variant: 'warning',
+    duration: 3000,
+  });
+
+  // 로그인 페이지로 이동 (NativeScreenProvider가 처리)
+  DeviceEventEmitter.emit('navigateToHomeAndLogin');
+};
+
 // 모바일 전용 통합 API 서비스 생성
 class MobileApiService {
   private apiService: IntegratedApiService;
@@ -74,9 +90,10 @@ class MobileApiService {
     this.apiService = createApiService(
       MOBILE_API_BASE_URL,
       getMobileAuthHeaders,
-      'mobile'
+      'mobile',
+      handleMobileTokenExpiration
     );
-    
+
     // 모바일 전용 AuthService 메서드 확장
     this.setupMobileAuthMethods();
   }

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toQ } from '../../utils';
 import { webApiService } from '../../services/apiService';
-import type { User } from '@handy-platform/shared';
-import { SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared/src/components/icons';
+import { User, SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared';
 import { Logo } from '../common/Logo';
 import { IoPersonCircleOutline } from 'react-icons/io5';
 import { FiShoppingBag } from 'react-icons/fi';
@@ -238,7 +237,7 @@ export function MainHeader({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
+    <header className="bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
       {/* 데스크톱 레이아웃 */}
       <div className="hidden md:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center h-16 px-4">

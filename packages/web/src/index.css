@@ -166,3 +166,23 @@ body.webview-mode [data-apphide="true"] {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Handy 레이아웃 시스템 */
+@layer components {
+  /* 페이지 래퍼 */
+  .handy-page-wrapper {
+    @apply relative min-h-screen;
+  }
+
+  /* Sticky 헤더 (PC/모바일 공통) */
+  .handy-sticky-header {
+    @apply sticky top-0 z-40 bg-white;
+  }
+
+  /* 페이지 콘텐츠 (하단 탭바 공간 확보) */
+  .handy-page-content {
+    @apply mx-auto px-4 pt-6 pb-20 md:pb-6;
+    /* 모바일: pb-20 (하단 탭바 64px + 여유) */
+    /* PC: pb-6 (일반 패딩) */
+  }
+}

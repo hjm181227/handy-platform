@@ -243,7 +243,7 @@ export function BrandDetailPage({
   }, [brandInfo, products]);
 
   // 정렬된 상품 목록 (필터링은 API 레벨에서 처리됨)
-  const sortedProducts = products;
+  const sortedProducts = products.filter(Boolean);
 
   // 카테고리별 상품 분류
   const categoryGroups = useMemo(() => {

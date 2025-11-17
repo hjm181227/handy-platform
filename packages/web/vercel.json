@@ -1,23 +1,15 @@
 {
-  "buildCommand": "echo 'Using pre-built files from local'",
+  "framework": "vite",
+  "buildCommand": "echo 'Build skipped - already built in GitHub Actions'",
   "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "installCommand": "echo 'Skipping install - using pre-built files'",
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
+      "source": "/api/:path*",
+      "destination": "/api/proxy"
+    },
     {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
     }
   ]
 }
