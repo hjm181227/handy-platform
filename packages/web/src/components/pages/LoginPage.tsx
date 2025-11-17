@@ -402,21 +402,6 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           회원가입
         </button>
       </div>
-
-      {/* 비회원 주문 조회 */}
-      <div className="mt-10 text-center text-sm">
-        <span className="text-gray-600 mr-2">비회원으로 주문하셨나요?</span>
-        <a
-          href="/guest/orders"
-          onClick={(e) => {
-            e.preventDefault();
-            onGo("/guest/orders");
-          }}
-          className="underline"
-        >
-          비회원 주문 조회
-        </a>
-      </div>
     </div>
   );
 }

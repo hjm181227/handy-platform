@@ -9,6 +9,7 @@ export interface SellerApplicationData {
   businessNumber: string;
   businessType?: string;
   businessCategory?: string;
+  businessSector?: string;
   contactEmail: string;
   contactPhone: string;
   address?: {

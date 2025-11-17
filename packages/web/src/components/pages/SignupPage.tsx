@@ -108,22 +108,6 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
     }
   };
 
-  const fillTestData = () => {
-    setFormData({
-      email: "newuser@test.com",
-      password: "password123",
-      confirmPassword: "password123",
-      name: "테스트 사용자",
-      phone: "010-1234-5678"
-    });
-    setAgree({
-      terms: true,
-      privacy: true,
-      personalData: true,
-      marketing: false
-    });
-  };
-
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <div className="rounded-lg bg-gray-100 px-4 py-3 text-[15px] font-semibold">
@@ -152,15 +136,6 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
             )}
           </div>
         )}
-
-        {/* 테스트 데이터 버튼 */}
-        <button
-          type="button"
-          onClick={fillTestData}
-          className="w-full rounded-lg bg-blue-50 border border-blue-200 py-2 text-sm text-blue-600 hover:bg-blue-100"
-        >
-          📝 테스트 데이터 자동 입력
-        </button>
 
         <input
           type="email"
