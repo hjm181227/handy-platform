@@ -124,8 +124,8 @@ jobs:
             # Set alias to h-andy.com using REST API (more reliable than CLI)
             echo "🔗 Setting alias to h-andy.com via REST API..."
 
-            # Extract deployment ID from URL
-            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | cut -d'.' -f1)
+            # Extract deployment ID from URL (remove team suffix)
+            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | sed 's|-heobusys-projects\.vercel\.app||')
 
             # Assign domain via Vercel REST API
             ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_ID}/aliases" \
@@ -152,8 +152,8 @@ jobs:
             # Set alias to www.stage-handy.com using REST API (more reliable than CLI)
             echo "🔗 Setting alias to www.stage-handy.com via REST API..."
 
-            # Extract deployment ID from URL
-            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | cut -d'.' -f1)
+            # Extract deployment ID from URL (remove team suffix)
+            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | sed 's|-heobusys-projects\.vercel\.app||')
 
             # Assign domain via Vercel REST API
             ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_ID}/aliases" \
