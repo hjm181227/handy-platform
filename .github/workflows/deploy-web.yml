@@ -51,36 +51,50 @@ jobs:
           echo '{"version":3}' > .vercel/output/config.json
         working-directory: packages/web
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel with Git metadata
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            # Production deployment - Vercel automatically assigns h-andy.com domain
-            DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-            echo "✅ Production deployed to: $DEPLOYMENT_URL"
-            echo "   Domain: h-andy.com (automatically assigned)"
+            # Production deployment with Git metadata
+            echo "🚀 Deploying to production environment..."
+
+            DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod \
+              -m githubDeployment="1" \
+              -m githubCommitRef="${{ github.ref_name }}" \
+              -m githubCommitSha="${{ github.sha }}" \
+              -m githubCommitMessage="${{ github.event.head_commit.message }}" \
+              -m githubCommitAuthorName="${{ github.event.head_commit.author.name }}" \
+              -m githubOrg="${{ github.repository_owner }}" \
+              -m githubRepo="${{ github.event.repository.name }}" \
+              --token=${{ secrets.VERCEL_TOKEN }})
+
+            echo ""
+            echo "✅ Production deployment successful!"
+            echo "📦 Deployed to: $DEPLOYMENT_URL"
+            echo "🌐 Domain: h-andy.com (automatically assigned)"
           else
-            # Staging deployment with vercel promote
+            # Staging deployment with Git metadata for Branch Domain assignment
             echo "🔄 Deploying to staging environment..."
 
-            # Deploy with production quality but skip domain assignment
-            DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --skip-domain --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/tty | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
+            DEPLOY_OUTPUT=$(vercel deploy --prebuilt --prod \
+              -m githubDeployment="1" \
+              -m githubCommitRef="${{ github.ref_name }}" \
+              -m githubCommitSha="${{ github.sha }}" \
+              -m githubCommitMessage="${{ github.event.head_commit.message }}" \
+              -m githubCommitAuthorName="${{ github.event.head_commit.author.name }}" \
+              -m githubOrg="${{ github.repository_owner }}" \
+              -m githubRepo="${{ github.event.repository.name }}" \
+              --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
 
-            if [ -z "$DEPLOYMENT_URL" ]; then
-              echo "⚠️  --skip-domain flag not supported, trying alternative method..."
-              # Fallback: deploy as preview
-              DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-              echo "📦 Preview deployment created: $DEPLOYMENT_URL"
-              echo "⚠️  Manual domain assignment required in Vercel Dashboard"
-            else
-              echo "📦 Deployment created: $DEPLOYMENT_URL"
-              echo ""
-              echo "🔄 Promoting to www.stage-handy.com..."
+            echo "$DEPLOY_OUTPUT"
 
-              # Promote deployment to production domain
-              vercel promote $DEPLOYMENT_URL --token=${{ secrets.VERCEL_TOKEN }}
+            # Extract deployment URL
+            DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
 
-              echo "✅ Successfully promoted to: https://www.stage-handy.com"
-            fi
+            echo ""
+            echo "✅ Staging deployment successful!"
+            echo "📦 Deployed to: $DEPLOYMENT_URL"
+            echo "🌐 Domain: www.stage-handy.com (automatically assigned via Branch Domain)"
+            echo "ℹ️  Git metadata passed - Vercel will recognize this as develop branch deployment"
           fi
         working-directory: packages/web
         env:
