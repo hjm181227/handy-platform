@@ -121,11 +121,20 @@ jobs:
             echo "✅ Production deployment successful!"
             echo "📦 Deployed to: $DEPLOYMENT_URL"
 
-            # Set alias to h-andy.com
-            echo "🔗 Setting alias to h-andy.com..."
-            vercel alias set $DEPLOYMENT_URL h-andy.com --token=${{ secrets.VERCEL_TOKEN }}
+            # Set alias to h-andy.com using REST API (more reliable than CLI)
+            echo "🔗 Setting alias to h-andy.com via REST API..."
 
-            echo "🌐 Domain: h-andy.com (alias set)"
+            # Extract deployment ID from URL
+            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | cut -d'.' -f1)
+
+            # Assign domain via Vercel REST API
+            ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_ID}/aliases" \
+              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"alias": "h-andy.com"}')
+
+            echo "API Response: $ALIAS_RESPONSE"
+            echo "🌐 Domain: h-andy.com (alias set via API)"
           else
             # Staging deployment (develop branch)
             echo "🔄 Deploying to staging environment..."
@@ -140,11 +149,20 @@ jobs:
             echo "✅ Staging deployment successful!"
             echo "📦 Deployed to: $DEPLOYMENT_URL"
 
-            # Set alias to www.stage-handy.com
-            echo "🔗 Setting alias to www.stage-handy.com..."
-            vercel alias set $DEPLOYMENT_URL www.stage-handy.com --token=${{ secrets.VERCEL_TOKEN }}
+            # Set alias to www.stage-handy.com using REST API (more reliable than CLI)
+            echo "🔗 Setting alias to www.stage-handy.com via REST API..."
 
-            echo "🌐 Domain: www.stage-handy.com (alias set)"
+            # Extract deployment ID from URL
+            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | cut -d'.' -f1)
+
+            # Assign domain via Vercel REST API
+            ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_ID}/aliases" \
+              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"alias": "www.stage-handy.com"}')
+
+            echo "API Response: $ALIAS_RESPONSE"
+            echo "🌐 Domain: www.stage-handy.com (alias set via API)"
           fi
         working-directory: packages/web
         env:
