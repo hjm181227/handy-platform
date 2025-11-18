@@ -46,42 +46,24 @@ jobs:
           # Serverless function directory
           mkdir -p .vercel/output/functions/api/proxy.func
 
-          # Step 1: TypeScript compilation using esbuild to _compiled.js
-          # Using simple test function to isolate export issues
-          npx esbuild api/proxy-simple.ts \
-            --bundle \
-            --platform=node \
-            --target=node20 \
-            --format=cjs \
-            --outfile=.vercel/output/functions/api/proxy.func/_compiled.js \
-            --external:@vercel/node
+          # Step 1: Install @vercel/ncc for optimal serverless bundling
+          npm install --no-save @vercel/ncc
 
-          # Step 2: Post-process to fix CommonJS export format
-          # esbuild's __toCommonJS produces getter-based exports that don't work with Node.js require()
-          # We need to remove the export wrapper and add direct module.exports = handler
-          node << 'CONVERSION_SCRIPT'
-          const fs = require('fs');
+          # Step 2: Use @vercel/ncc to bundle (Vercel's recommended bundler)
+          # @vercel/ncc is specifically designed for Vercel serverless functions
+          npx ncc build api/proxy-simple.ts \
+            --out .vercel/output/functions/api/proxy.func \
+            --target es2020 \
+            --minify
 
-          console.log('🔄 Converting esbuild output to working CommonJS format...');
-
-          // Read compiled file
-          const code = fs.readFileSync('.vercel/output/functions/api/proxy.func/_compiled.js', 'utf8');
-
-          // Remove problematic export code (generic pattern to match any export variable name)
-          let fixed = code
-            .replace(/module\.exports = __toCommonJS\([^)]+\);/, '')
-            .replace(/var \w+_exports = \{\};/, '')
-            .replace(/__export\(\w+_exports, \{[\s\S]*?\}\);/, '');
-
-          // Add BOTH exports to support different require patterns
-          // Vercel may use require('./index').default or require('./index')
-          fixed = fixed + '\n// Export for Vercel compatibility\nexports.default = handler;\nmodule.exports = handler;\n';
-
-          // Write to index.js
-          fs.writeFileSync('.vercel/output/functions/api/proxy.func/index.js', fixed);
-
-          console.log('✅ Export conversion complete!');
-          CONVERSION_SCRIPT
+          # Step 3: Rename ncc output to index.js (ncc outputs to index.js by default, so this might not be needed)
+          # But let's make sure
+          if [ -f .vercel/output/functions/api/proxy.func/index.js ]; then
+            echo "✅ ncc generated index.js successfully"
+          else
+            echo "❌ ncc did not generate index.js"
+            exit 1
+          fi
 
           # Create package.json with @vercel/node dependency
           # IMPORTANT: Must create this BEFORE testing to override parent "type": "module"
@@ -123,24 +105,12 @@ jobs:
           }
           EOF
 
-          # Debug: Verify module.exports works correctly (after package.json is created)
-          echo "=== Last 15 lines of converted index.js ==="
-          tail -15 .vercel/output/functions/api/proxy.func/index.js
+          # Debug: Verify ncc output
+          echo "=== First 30 lines of ncc-generated index.js ==="
+          head -30 .vercel/output/functions/api/proxy.func/index.js
 
-          echo "=== Testing module.exports with package.json in place ==="
-          node << 'TEST_SCRIPT'
-          const handler = require('./.vercel/output/functions/api/proxy.func/index.js');
-          console.log('Type of handler:', typeof handler);
-          console.log('Is function:', typeof handler === 'function');
-          if (typeof handler === 'function') {
-            console.log('✅ Handler exports correctly as a function!');
-          } else {
-            console.error('❌ Handler is not a function!');
-            console.error('Type:', typeof handler);
-            console.error('Keys:', Object.keys(handler));
-            process.exit(1);
-          }
-          TEST_SCRIPT
+          echo "=== Last 20 lines of ncc-generated index.js ==="
+          tail -20 .vercel/output/functions/api/proxy.func/index.js
 
           # Debug: Check what was created
           echo "=== .vercel/output structure ==="
