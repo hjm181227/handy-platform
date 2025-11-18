@@ -2,6 +2,7 @@
   "framework": "vite",
   "buildCommand": "echo 'Build skipped - built in GitHub Actions'",
   "outputDirectory": "dist",
+  "// comment": "Root Directory removed from Vercel project settings",
   "headers": [
     {
       "source": "/index.html",
