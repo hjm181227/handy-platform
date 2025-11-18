@@ -351,7 +351,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     return !!(window as any).ReactNativeWebView;
   };
 
-  // 손톱 사이즈 목록 화면으로 이동
+  // 손톱 사이즈 목록 화면으로 이동 (WebView 브리지 사용)
   const goToNailSizes = () => {
     console.log('🔵 [WEB] 사이즈 목록 버튼 클릭됨');
 
