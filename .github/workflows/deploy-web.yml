@@ -67,11 +67,11 @@ jobs:
           // Read compiled file
           const code = fs.readFileSync('.vercel/output/functions/api/proxy.func/_compiled.js', 'utf8');
 
-          // Remove problematic export code
+          // Remove problematic export code (generic pattern to match any export variable name)
           let fixed = code
-            .replace(/module\.exports = __toCommonJS\(proxy_exports\);/, '')
-            .replace(/var proxy_exports = \{\};/, '')
-            .replace(/__export\(proxy_exports, \{[\s\S]*?\}\);/, '');
+            .replace(/module\.exports = __toCommonJS\([^)]+\);/, '')
+            .replace(/var \w+_exports = \{\};/, '')
+            .replace(/__export\(\w+_exports, \{[\s\S]*?\}\);/, '');
 
           // Add BOTH exports to support different require patterns
           // Vercel may use require('./index').default or require('./index')
