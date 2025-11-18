@@ -46,15 +46,40 @@ jobs:
           # Serverless function directory
           mkdir -p .vercel/output/functions/api/proxy.func
 
-          # TypeScript compilation using esbuild with footer to fix export format
+          # Step 1: TypeScript compilation using esbuild to _compiled.js
           npx esbuild api/proxy.ts \
             --bundle \
             --platform=node \
             --target=node20 \
             --format=cjs \
-            --outfile=.vercel/output/functions/api/proxy.func/index.js \
-            --external:@vercel/node \
-            --footer:js="if (module.exports && module.exports.default) { module.exports = module.exports.default; }"
+            --outfile=.vercel/output/functions/api/proxy.func/_compiled.js \
+            --external:@vercel/node
+
+          # Step 2: Post-process to fix CommonJS export format
+          # esbuild's __toCommonJS produces getter-based exports that don't work with Node.js require()
+          # We need to remove the export wrapper and add direct module.exports = handler
+          node << 'CONVERSION_SCRIPT'
+          const fs = require('fs');
+
+          console.log('🔄 Converting esbuild output to working CommonJS format...');
+
+          // Read compiled file
+          const code = fs.readFileSync('.vercel/output/functions/api/proxy.func/_compiled.js', 'utf8');
+
+          // Remove problematic export code
+          let fixed = code
+            .replace(/module\.exports = __toCommonJS\(proxy_exports\);/, '')
+            .replace(/var proxy_exports = \{\};/, '')
+            .replace(/__export\(proxy_exports, \{[\s\S]*?\}\);/, '');
+
+          // Add direct export at the end
+          fixed = fixed + '\nmodule.exports = handler;\n';
+
+          // Write to index.js
+          fs.writeFileSync('.vercel/output/functions/api/proxy.func/index.js', fixed);
+
+          console.log('✅ Export conversion complete!');
+          CONVERSION_SCRIPT
 
           # Create package.json with @vercel/node dependency
           cat > .vercel/output/functions/api/proxy.func/package.json << 'EOF'
