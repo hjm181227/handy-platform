@@ -111,6 +111,10 @@ jobs:
             # Production deployment
             echo "🚀 Deploying to production environment..."
 
+            # Ensure domain is registered at team level
+            echo "🔧 Registering domain at team level..."
+            vercel domains add h-andy.com --token=${{ secrets.VERCEL_TOKEN }} 2>/dev/null || echo "✓ Domain already at team level"
+
             DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
 
             echo ""
@@ -125,6 +129,10 @@ jobs:
           else
             # Staging deployment (develop branch)
             echo "🔄 Deploying to staging environment..."
+
+            # Ensure domain is registered at team level
+            echo "🔧 Registering domain at team level..."
+            vercel domains add www.stage-handy.com --token=${{ secrets.VERCEL_TOKEN }} 2>/dev/null || echo "✓ Domain already at team level"
 
             DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
 
