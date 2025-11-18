@@ -44,21 +44,39 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Prepare Vercel output structure with API functions
+      - name: Prepare Vercel output structure with compiled API functions
         run: |
           # Static files (frontend assets)
           mkdir -p .vercel/output/static
           cp -r dist/* .vercel/output/static/
 
-          # Serverless functions (API proxy)
+          # Serverless function directory
           mkdir -p .vercel/output/functions/api/proxy.func
-          cp api/proxy.ts .vercel/output/functions/api/proxy.func/index.ts
+
+          # TypeScript compilation using esbuild - fast and bundles dependencies
+          npx esbuild api/proxy.ts \
+            --bundle \
+            --platform=node \
+            --target=node20 \
+            --format=cjs \
+            --outfile=.vercel/output/functions/api/proxy.func/index.js \
+            --external:@vercel/node
+
+          # Create package.json with @vercel/node dependency
+          cat > .vercel/output/functions/api/proxy.func/package.json << 'EOF'
+          {
+            "type": "commonjs",
+            "dependencies": {
+              "@vercel/node": "^3.0.0"
+            }
+          }
+          EOF
 
           # Function runtime configuration
           cat > .vercel/output/functions/api/proxy.func/.vc-config.json << 'EOF'
           {
             "runtime": "nodejs20.x",
-            "handler": "index.ts",
+            "handler": "index.js",
             "launcherType": "Nodejs"
           }
           EOF
