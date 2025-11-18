@@ -36,13 +36,6 @@ jobs:
           VITE_API_BASE_URL: https://h-andy.com
           VITE_ENVIRONMENT: production
 
-      - name: Update vercel.json for production (port 8080 → 80)
-        run: |
-          cd packages/web
-          sed -i 's/:8080/:80/g' vercel.json
-          echo "✅ Updated API port to 80 for production"
-          grep "destination" vercel.json
-
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
