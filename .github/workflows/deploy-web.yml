@@ -73,9 +73,15 @@ jobs:
             echo "Deployment ID: $DEPLOYMENT_ID"
 
             # Use Vercel API to assign domain alias
-            if [ -n "$DEPLOYMENT_ID" ]; then
-              echo "Assigning domain www.stage-handy.com via API..."
-              API_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID/aliases" \
+            if [ -n "$DEPLOYMENT_URL" ]; then
+              # Extract hostname from deployment URL (web-xxxxx-team.vercel.app)
+              DEPLOYMENT_HOST=$(echo "$DEPLOYMENT_URL" | sed 's/https:\/\///')
+
+              echo "Waiting 5 seconds for deployment to fully propagate..."
+              sleep 5
+
+              echo "Assigning domain www.stage-handy.com to $DEPLOYMENT_HOST..."
+              API_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_HOST/aliases" \
                 -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
                 -H "Content-Type: application/json" \
                 -d '{"alias":"www.stage-handy.com"}' \
@@ -88,13 +94,15 @@ jobs:
               echo "HTTP Status: $HTTP_STATUS"
 
               if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
-                echo "✅ Successfully aliased to: www.stage-handy.com"
+                echo "✅ Successfully aliased to: https://www.stage-handy.com"
               else
-                echo "⚠️  Warning: Failed to alias domain (Status: $HTTP_STATUS)"
-                echo "Deployment is accessible at: $DEPLOYMENT_URL"
+                echo "⚠️  Domain aliasing failed (Status: $HTTP_STATUS)"
+                echo "📝 Please manually assign www.stage-handy.com to this deployment in Vercel Dashboard:"
+                echo "   Deployment URL: $DEPLOYMENT_URL"
+                echo "   Inspect URL: $INSPECT_URL"
               fi
             else
-              echo "⚠️  Could not extract deployment ID. Deployment is accessible at: $DEPLOYMENT_URL"
+              echo "⚠️  Could not extract deployment URL"
             fi
           fi
         working-directory: packages/web
