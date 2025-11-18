@@ -81,8 +81,25 @@ jobs:
           }
           EOF
 
-          # Build output configuration
-          echo '{"version":3}' > .vercel/output/config.json
+          # Build output configuration with routes
+          cat > .vercel/output/config.json << 'EOF'
+          {
+            "version": 3,
+            "routes": [
+              {
+                "src": "/api/(.*)",
+                "dest": "/api/proxy?path=$1"
+              },
+              {
+                "handle": "filesystem"
+              },
+              {
+                "src": "/(.*)",
+                "dest": "/index.html"
+              }
+            ]
+          }
+          EOF
         working-directory: packages/web
 
       - name: Deploy to Vercel with Git metadata
