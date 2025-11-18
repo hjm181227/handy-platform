@@ -44,10 +44,26 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Prepare Vercel output structure
+      - name: Prepare Vercel output structure with API functions
         run: |
-          mkdir -p .vercel/output
-          cp -r dist .vercel/output/static
+          # Static files (frontend assets)
+          mkdir -p .vercel/output/static
+          cp -r dist/* .vercel/output/static/
+
+          # Serverless functions (API proxy)
+          mkdir -p .vercel/output/functions/api/proxy.func
+          cp api/proxy.ts .vercel/output/functions/api/proxy.func/index.ts
+
+          # Function runtime configuration
+          cat > .vercel/output/functions/api/proxy.func/.vc-config.json << 'EOF'
+          {
+            "runtime": "nodejs20.x",
+            "handler": "index.ts",
+            "launcherType": "Nodejs"
+          }
+          EOF
+
+          # Build output configuration
           echo '{"version":3}' > .vercel/output/config.json
         working-directory: packages/web
 
