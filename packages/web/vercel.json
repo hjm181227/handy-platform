@@ -1,4 +1,5 @@
 {
+  "_comment": "Force rebuild to deploy latest code",
   "framework": "vite",
   "buildCommand": "echo 'Build skipped - built in GitHub Actions'",
   "outputDirectory": "dist",
