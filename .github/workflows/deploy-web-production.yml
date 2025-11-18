@@ -33,7 +33,7 @@ jobs:
         run: npm run build:prod
         working-directory: packages/web
         env:
-          VITE_API_BASE_URL: https://h-andy.com
+          VITE_API_BASE_URL: https://www.h-andy.com
           VITE_ENVIRONMENT: production
 
       - name: Install Vercel CLI
@@ -48,7 +48,7 @@ jobs:
           echo ""
           echo "✅ Production deployment successful!"
           echo "📦 Deployed to: $DEPLOYMENT_URL"
-          echo "🌐 Domain: h-andy.com"
+          echo "🌐 Domain: www.h-andy.com"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PRODUCTION }}
