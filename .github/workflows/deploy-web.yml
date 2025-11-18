@@ -30,6 +30,10 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
+      - name: Build web app with local build method
+        run: npm run build:stage
+        working-directory: packages/web
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -40,12 +44,12 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Build with Vercel
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Prepare Vercel output structure
+        run: |
+          mkdir -p .vercel/output
+          cp -r dist .vercel/output/static
+          echo '{"version":3}' > .vercel/output/config.json
         working-directory: packages/web
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Deploy to Vercel
         run: |

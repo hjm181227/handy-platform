@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build:stage",
+  "buildCommand": "echo 'Build skipped - built in GitHub Actions'",
   "outputDirectory": "dist",
   "headers": [
     {
