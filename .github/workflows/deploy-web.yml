@@ -46,20 +46,15 @@ jobs:
           # Serverless function directory
           mkdir -p .vercel/output/functions/api/proxy.func
 
-          # TypeScript compilation using esbuild - fast and bundles dependencies
+          # TypeScript compilation using esbuild with footer to fix export format
           npx esbuild api/proxy.ts \
             --bundle \
             --platform=node \
             --target=node20 \
             --format=cjs \
-            --outfile=.vercel/output/functions/api/proxy.func/_handler.js \
-            --external:@vercel/node
-
-          # Create wrapper that properly exports the handler
-          cat > .vercel/output/functions/api/proxy.func/index.js << 'EOF'
-          const handlerModule = require('./_handler.js');
-          module.exports = handlerModule.default || handlerModule;
-          EOF
+            --outfile=.vercel/output/functions/api/proxy.func/index.js \
+            --external:@vercel/node \
+            --footer:js="if (module.exports && module.exports.default) { module.exports = module.exports.default; }"
 
           # Create package.json with @vercel/node dependency
           cat > .vercel/output/functions/api/proxy.func/package.json << 'EOF'
