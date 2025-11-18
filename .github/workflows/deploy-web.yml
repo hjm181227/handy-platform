@@ -47,7 +47,8 @@ jobs:
           mkdir -p .vercel/output/functions/api/proxy.func
 
           # Step 1: TypeScript compilation using esbuild to _compiled.js
-          npx esbuild api/proxy.ts \
+          # Using simple test function to isolate export issues
+          npx esbuild api/proxy-simple.ts \
             --bundle \
             --platform=node \
             --target=node20 \
