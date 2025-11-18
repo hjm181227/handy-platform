@@ -354,9 +354,19 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   // 손톱 사이즈 목록 화면으로 이동
   const goToNailSizes = () => {
     console.log('🔵 [WEB] 사이즈 목록 버튼 클릭됨');
-    // TODO: Implement navigate service properly
-    // navigateService.goToNailSizes();
-    onGo('/nail-sizes');
+
+    if (isWebViewEnvironment()) {
+      // WebView 환경: 네이티브 화면 열기
+      console.log('🔵 [WEB] WebView 환경 - 네이티브 손톱 사이즈 화면 요청');
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'NAVIGATE_TO_SIZES',
+        data: { screen: 'NailSizes' }
+      }));
+    } else {
+      // 일반 브라우저: 앱 다운로드 안내
+      console.log('🔵 [WEB] 일반 브라우저 - 앱 다운로드 안내');
+      alert('손톱 사이즈 관리는 모바일 앱에서만 사용할 수 있습니다.\nHANDY 앱을 다운로드해주세요.');
+    }
   };
 
   // 로그아웃 처리
