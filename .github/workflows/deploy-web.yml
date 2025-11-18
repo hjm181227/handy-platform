@@ -56,30 +56,31 @@ jobs:
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Production deployment - Vercel automatically assigns h-andy.com domain
             DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-            echo "Production deployed to: $DEPLOYMENT_URL"
-            echo "Domain h-andy.com automatically assigned to production"
+            echo "✅ Production deployed to: $DEPLOYMENT_URL"
+            echo "   Domain: h-andy.com (automatically assigned)"
           else
-            # Preview deployment - capture full output to extract deployment ID
-            DEPLOY_OUTPUT=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
-            echo "$DEPLOY_OUTPUT"
+            # Staging deployment with vercel promote
+            echo "🔄 Deploying to staging environment..."
 
-            # Extract deployment URL and ID from output
-            DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
-            INSPECT_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://vercel\.com/[^/]+/[^/]+/[a-zA-Z0-9]+' | head -1)
-            DEPLOYMENT_ID=$(echo "$INSPECT_URL" | grep -oP '[a-zA-Z0-9]+$')
+            # Deploy with production quality but skip domain assignment
+            DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --skip-domain --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/tty | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
 
-            echo "Preview deployed to: $DEPLOYMENT_URL"
-            echo "Inspect URL: $INSPECT_URL"
-            echo "Deployment ID: $DEPLOYMENT_ID"
+            if [ -z "$DEPLOYMENT_URL" ]; then
+              echo "⚠️  --skip-domain flag not supported, trying alternative method..."
+              # Fallback: deploy as preview
+              DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+              echo "📦 Preview deployment created: $DEPLOYMENT_URL"
+              echo "⚠️  Manual domain assignment required in Vercel Dashboard"
+            else
+              echo "📦 Deployment created: $DEPLOYMENT_URL"
+              echo ""
+              echo "🔄 Promoting to www.stage-handy.com..."
 
-            echo ""
-            echo "✅ Deployment successful!"
-            echo "📝 Deployment details:"
-            echo "   🌐 Preview URL: $DEPLOYMENT_URL"
-            echo "   🔍 Inspect: $INSPECT_URL"
-            echo ""
-            echo "💡 If www.stage-handy.com is not updated automatically,"
-            echo "   assign the domain once in Vercel Dashboard → Deployments → Assign Domain"
+              # Promote deployment to production domain
+              vercel promote $DEPLOYMENT_URL --token=${{ secrets.VERCEL_TOKEN }}
+
+              echo "✅ Successfully promoted to: https://www.stage-handy.com"
+            fi
           fi
         working-directory: packages/web
         env:
