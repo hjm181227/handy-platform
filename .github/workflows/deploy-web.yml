@@ -69,7 +69,7 @@ jobs:
           cat > .vercel/output/functions/api/proxy.func/.vc-config.json << 'EOF'
           {
             "runtime": "nodejs20.x",
-            "handler": "index.js",
+            "handler": "index.default",
             "launcherType": "Nodejs"
           }
           EOF
