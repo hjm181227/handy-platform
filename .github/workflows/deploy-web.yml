@@ -72,34 +72,58 @@ jobs:
             echo "Inspect URL: $INSPECT_URL"
             echo "Deployment ID: $DEPLOYMENT_ID"
 
-            # Use Vercel API to assign domain alias
+            # Use Vercel API to update domain target
             if [ -n "$DEPLOYMENT_URL" ]; then
-              # Extract hostname from deployment URL (web-xxxxx-team.vercel.app)
-              DEPLOYMENT_HOST=$(echo "$DEPLOYMENT_URL" | sed 's/https:\/\///')
-
               echo "Waiting 5 seconds for deployment to fully propagate..."
               sleep 5
 
-              echo "Assigning domain www.stage-handy.com to $DEPLOYMENT_HOST..."
-              API_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_HOST/aliases" \
+              # Try method 1: Update domain redirect using project domains API
+              echo "🔄 Method 1: Updating domain redirect via project API..."
+              DOMAIN_UPDATE=$(curl -s -X PATCH "https://api.vercel.com/v9/projects/${{ secrets.VERCEL_PROJECT_ID }}/domains/www.stage-handy.com" \
                 -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
                 -H "Content-Type: application/json" \
-                -d '{"alias":"www.stage-handy.com"}' \
+                -d "{\"redirect\":\"$DEPLOYMENT_URL\"}" \
                 -w "\nHTTP_STATUS:%{http_code}")
 
-              HTTP_STATUS=$(echo "$API_RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
-              RESPONSE_BODY=$(echo "$API_RESPONSE" | sed '/HTTP_STATUS/d')
+              HTTP_STATUS_1=$(echo "$DOMAIN_UPDATE" | grep "HTTP_STATUS" | cut -d: -f2)
+              RESPONSE_1=$(echo "$DOMAIN_UPDATE" | sed '/HTTP_STATUS/d')
 
-              echo "API Response: $RESPONSE_BODY"
-              echo "HTTP Status: $HTTP_STATUS"
+              echo "Response: $RESPONSE_1"
+              echo "Status: $HTTP_STATUS_1"
 
-              if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
-                echo "✅ Successfully aliased to: https://www.stage-handy.com"
+              if [ "$HTTP_STATUS_1" = "200" ] || [ "$HTTP_STATUS_1" = "201" ]; then
+                echo "✅ Successfully updated domain redirect!"
               else
-                echo "⚠️  Domain aliasing failed (Status: $HTTP_STATUS)"
-                echo "📝 Please manually assign www.stage-handy.com to this deployment in Vercel Dashboard:"
-                echo "   Deployment URL: $DEPLOYMENT_URL"
-                echo "   Inspect URL: $INSPECT_URL"
+                # Try method 2: Use deployment alias API with deployment ID
+                echo ""
+                echo "🔄 Method 2: Trying deployment alias API..."
+
+                if [ -n "$DEPLOYMENT_ID" ]; then
+                  ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID/aliases" \
+                    -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+                    -H "Content-Type: application/json" \
+                    -d '{"alias":"www.stage-handy.com"}' \
+                    -w "\nHTTP_STATUS:%{http_code}")
+
+                  HTTP_STATUS_2=$(echo "$ALIAS_RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+                  RESPONSE_2=$(echo "$ALIAS_RESPONSE" | sed '/HTTP_STATUS/d')
+
+                  echo "Response: $RESPONSE_2"
+                  echo "Status: $HTTP_STATUS_2"
+
+                  if [ "$HTTP_STATUS_2" = "200" ] || [ "$HTTP_STATUS_2" = "201" ]; then
+                    echo "✅ Successfully created alias!"
+                  else
+                    echo ""
+                    echo "⚠️  Automatic domain aliasing not available with current token permissions"
+                    echo "📝 Latest deployment is ready at:"
+                    echo "   🌐 Preview URL: $DEPLOYMENT_URL"
+                    echo "   🔍 Inspect: $INSPECT_URL"
+                    echo ""
+                    echo "To view the latest code, use the Preview URL in your WebView temporarily,"
+                    echo "or manually assign www.stage-handy.com in Vercel Dashboard → Deployments → Select this deployment → Assign Domain"
+                  fi
+                fi
               fi
             else
               echo "⚠️  Could not extract deployment URL"
