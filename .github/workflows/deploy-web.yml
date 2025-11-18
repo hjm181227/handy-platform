@@ -46,24 +46,32 @@ jobs:
           # Serverless function directory
           mkdir -p .vercel/output/functions/api/proxy.func
 
-          # Step 1: Install @vercel/ncc for optimal serverless bundling
-          npm install --no-save @vercel/ncc
+          # Step 1: TypeScript compilation using esbuild
+          npx esbuild api/proxy-simple.ts \
+            --bundle \
+            --platform=node \
+            --target=node20 \
+            --format=cjs \
+            --outfile=.vercel/output/functions/api/proxy.func/index.js \
+            --external:@vercel/node
 
-          # Step 2: Use @vercel/ncc to bundle (Vercel's recommended bundler)
-          # @vercel/ncc is specifically designed for Vercel serverless functions
-          npx ncc build api/proxy-simple.ts \
-            --out .vercel/output/functions/api/proxy.func \
-            --target es2020 \
-            --minify
+          # Step 2: Post-process to remove problematic __toCommonJS code
+          node << 'FIX_EXPORTS'
+          const fs = require('fs');
+          let code = fs.readFileSync('.vercel/output/functions/api/proxy.func/index.js', 'utf8');
 
-          # Step 3: Rename ncc output to index.js (ncc outputs to index.js by default, so this might not be needed)
-          # But let's make sure
-          if [ -f .vercel/output/functions/api/proxy.func/index.js ]; then
-            echo "✅ ncc generated index.js successfully"
-          else
-            echo "❌ ncc did not generate index.js"
-            exit 1
-          fi
+          // Remove all problematic esbuild helper code
+          code = code
+            .replace(/module\.exports = __toCommonJS\([^)]+\);/g, '')
+            .replace(/var \w+_exports = \{\};/g, '')
+            .replace(/__export\(\w+_exports, \{[^}]+\}\);/g, '');
+
+          // Add clean export at the end
+          code += '\n\n// Vercel serverless function export\nmodule.exports = handler;\n';
+
+          fs.writeFileSync('.vercel/output/functions/api/proxy.func/index.js', code);
+          console.log('✅ Export fixed');
+          FIX_EXPORTS
 
           # Create package.json with @vercel/node dependency
           # IMPORTANT: Must create this BEFORE testing to override parent "type": "module"
