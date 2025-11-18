@@ -132,11 +132,11 @@ jobs:
             echo "✅ Staging deployment successful!"
             echo "📦 Deployed to: $DEPLOYMENT_URL"
 
-            # Set alias to www.stage-handy.com
-            echo "🔗 Setting alias to www.stage-handy.com..."
-            vercel alias set $DEPLOYMENT_URL www.stage-handy.com --token=${{ secrets.VERCEL_TOKEN }}
+            # Set alias to stage-handy.com
+            echo "🔗 Setting alias to stage-handy.com..."
+            vercel alias set $DEPLOYMENT_URL stage-handy.com --token=${{ secrets.VERCEL_TOKEN }}
 
-            echo "🌐 Domain: www.stage-handy.com (alias set)"
+            echo "🌐 Domain: stage-handy.com (alias set)"
           fi
         working-directory: packages/web
         env:
