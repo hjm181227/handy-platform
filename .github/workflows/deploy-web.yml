@@ -54,15 +54,39 @@ jobs:
       - name: Deploy to Vercel
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            # Production deployment - Vercel automatically assigns h-andy.com domain
             DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
             echo "Production deployed to: $DEPLOYMENT_URL"
-            vercel alias $DEPLOYMENT_URL h-andy.com --token=${{ secrets.VERCEL_TOKEN }}
-            echo "Aliased to: h-andy.com"
+            echo "Domain h-andy.com automatically assigned to production"
           else
+            # Preview deployment
             DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
             echo "Preview deployed to: $DEPLOYMENT_URL"
-            vercel alias $DEPLOYMENT_URL www.stage-handy.com --token=${{ secrets.VERCEL_TOKEN }}
-            echo "Aliased to: www.stage-handy.com"
+
+            # Extract deployment ID from URL (format: https://web-xxxxx-team.vercel.app)
+            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's/https:\/\/\(.*\)\.vercel\.app/\1/')
+            echo "Deployment ID: $DEPLOYMENT_ID"
+
+            # Use Vercel API to assign domain alias
+            echo "Assigning domain www.stage-handy.com via API..."
+            API_RESPONSE=$(curl -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID/aliases" \
+              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"alias":"www.stage-handy.com"}' \
+              -w "\nHTTP_STATUS:%{http_code}")
+
+            HTTP_STATUS=$(echo "$API_RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            RESPONSE_BODY=$(echo "$API_RESPONSE" | sed '/HTTP_STATUS/d')
+
+            echo "API Response: $RESPONSE_BODY"
+            echo "HTTP Status: $HTTP_STATUS"
+
+            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
+              echo "Successfully aliased to: www.stage-handy.com"
+            else
+              echo "Warning: Failed to alias domain (Status: $HTTP_STATUS)"
+              echo "Deployment is accessible at: $DEPLOYMENT_URL"
+            fi
           fi
         working-directory: packages/web
         env:
