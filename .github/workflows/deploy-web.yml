@@ -52,8 +52,14 @@ jobs:
             --platform=node \
             --target=node20 \
             --format=cjs \
-            --outfile=.vercel/output/functions/api/proxy.func/index.js \
+            --outfile=.vercel/output/functions/api/proxy.func/_handler.js \
             --external:@vercel/node
+
+          # Create wrapper that properly exports the handler
+          cat > .vercel/output/functions/api/proxy.func/index.js << 'EOF'
+          const handlerModule = require('./_handler.js');
+          module.exports = handlerModule.default || handlerModule;
+          EOF
 
           # Create package.json with @vercel/node dependency
           cat > .vercel/output/functions/api/proxy.func/package.json << 'EOF'
@@ -69,7 +75,7 @@ jobs:
           cat > .vercel/output/functions/api/proxy.func/.vc-config.json << 'EOF'
           {
             "runtime": "nodejs20.x",
-            "handler": "index.default",
+            "handler": "index",
             "launcherType": "Nodejs"
           }
           EOF
