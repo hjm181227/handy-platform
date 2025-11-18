@@ -100,6 +100,16 @@ jobs:
             ]
           }
           EOF
+
+          # Debug: Check what was created
+          echo "=== .vercel/output structure ==="
+          ls -lah .vercel/output/
+          echo "=== Static files ==="
+          ls -lah .vercel/output/static/ | head -10
+          echo "=== Function files ==="
+          ls -lah .vercel/output/functions/api/proxy.func/
+          echo "=== config.json ==="
+          cat .vercel/output/config.json
         working-directory: packages/web
 
       - name: Deploy to Vercel with Git metadata
