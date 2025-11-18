@@ -59,33 +59,42 @@ jobs:
             echo "Production deployed to: $DEPLOYMENT_URL"
             echo "Domain h-andy.com automatically assigned to production"
           else
-            # Preview deployment
-            DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-            echo "Preview deployed to: $DEPLOYMENT_URL"
+            # Preview deployment - capture full output to extract deployment ID
+            DEPLOY_OUTPUT=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
+            echo "$DEPLOY_OUTPUT"
 
-            # Extract deployment ID from URL (format: https://web-xxxxx-team.vercel.app)
-            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's/https:\/\/\(.*\)\.vercel\.app/\1/')
+            # Extract deployment URL and ID from output
+            DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
+            INSPECT_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://vercel\.com/[^/]+/[^/]+/[a-zA-Z0-9]+' | head -1)
+            DEPLOYMENT_ID=$(echo "$INSPECT_URL" | grep -oP '[a-zA-Z0-9]+$')
+
+            echo "Preview deployed to: $DEPLOYMENT_URL"
+            echo "Inspect URL: $INSPECT_URL"
             echo "Deployment ID: $DEPLOYMENT_ID"
 
             # Use Vercel API to assign domain alias
-            echo "Assigning domain www.stage-handy.com via API..."
-            API_RESPONSE=$(curl -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID/aliases" \
-              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              -d '{"alias":"www.stage-handy.com"}' \
-              -w "\nHTTP_STATUS:%{http_code}")
+            if [ -n "$DEPLOYMENT_ID" ]; then
+              echo "Assigning domain www.stage-handy.com via API..."
+              API_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID/aliases" \
+                -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+                -H "Content-Type: application/json" \
+                -d '{"alias":"www.stage-handy.com"}' \
+                -w "\nHTTP_STATUS:%{http_code}")
 
-            HTTP_STATUS=$(echo "$API_RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
-            RESPONSE_BODY=$(echo "$API_RESPONSE" | sed '/HTTP_STATUS/d')
+              HTTP_STATUS=$(echo "$API_RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+              RESPONSE_BODY=$(echo "$API_RESPONSE" | sed '/HTTP_STATUS/d')
 
-            echo "API Response: $RESPONSE_BODY"
-            echo "HTTP Status: $HTTP_STATUS"
+              echo "API Response: $RESPONSE_BODY"
+              echo "HTTP Status: $HTTP_STATUS"
 
-            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
-              echo "Successfully aliased to: www.stage-handy.com"
+              if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
+                echo "✅ Successfully aliased to: www.stage-handy.com"
+              else
+                echo "⚠️  Warning: Failed to alias domain (Status: $HTTP_STATUS)"
+                echo "Deployment is accessible at: $DEPLOYMENT_URL"
+              fi
             else
-              echo "Warning: Failed to alias domain (Status: $HTTP_STATUS)"
-              echo "Deployment is accessible at: $DEPLOYMENT_URL"
+              echo "⚠️  Could not extract deployment ID. Deployment is accessible at: $DEPLOYMENT_URL"
             fi
           fi
         working-directory: packages/web
