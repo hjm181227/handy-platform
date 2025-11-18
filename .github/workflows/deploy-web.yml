@@ -72,8 +72,9 @@ jobs:
             .replace(/var proxy_exports = \{\};/, '')
             .replace(/__export\(proxy_exports, \{[\s\S]*?\}\);/, '');
 
-          // Add direct export at the end
-          fixed = fixed + '\nmodule.exports = handler;\n';
+          // Add BOTH exports to support different require patterns
+          // Vercel may use require('./index').default or require('./index')
+          fixed = fixed + '\n// Export for Vercel compatibility\nexports.default = handler;\nmodule.exports = handler;\n';
 
           // Write to index.js
           fs.writeFileSync('.vercel/output/functions/api/proxy.func/index.js', fixed);
