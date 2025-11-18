@@ -82,6 +82,7 @@ jobs:
           CONVERSION_SCRIPT
 
           # Create package.json with @vercel/node dependency
+          # IMPORTANT: Must create this BEFORE testing to override parent "type": "module"
           cat > .vercel/output/functions/api/proxy.func/package.json << 'EOF'
           {
             "type": "commonjs",
@@ -119,6 +120,25 @@ jobs:
             ]
           }
           EOF
+
+          # Debug: Verify module.exports works correctly (after package.json is created)
+          echo "=== Last 15 lines of converted index.js ==="
+          tail -15 .vercel/output/functions/api/proxy.func/index.js
+
+          echo "=== Testing module.exports with package.json in place ==="
+          node << 'TEST_SCRIPT'
+          const handler = require('./.vercel/output/functions/api/proxy.func/index.js');
+          console.log('Type of handler:', typeof handler);
+          console.log('Is function:', typeof handler === 'function');
+          if (typeof handler === 'function') {
+            console.log('✅ Handler exports correctly as a function!');
+          } else {
+            console.error('❌ Handler is not a function!');
+            console.error('Type:', typeof handler);
+            console.error('Keys:', Object.keys(handler));
+            process.exit(1);
+          }
+          TEST_SCRIPT
 
           # Debug: Check what was created
           echo "=== .vercel/output structure ==="
