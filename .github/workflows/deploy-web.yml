@@ -124,17 +124,26 @@ jobs:
             # Set alias to h-andy.com using REST API (more reliable than CLI)
             echo "🔗 Setting alias to h-andy.com via REST API..."
 
-            # Extract deployment ID from URL (remove team suffix)
-            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | sed 's|-heobusys-projects\.vercel\.app||')
+            # Extract deployment URL without protocol (Vercel API accepts this format)
+            DEPLOYMENT_URL_NO_PROTOCOL=$(echo $DEPLOYMENT_URL | sed 's|https://||')
+            echo "📝 Deployment URL (no protocol): $DEPLOYMENT_URL_NO_PROTOCOL"
 
             # Assign domain via Vercel REST API
-            ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_ID}/aliases" \
+            ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_URL_NO_PROTOCOL}/aliases" \
               -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
               -H "Content-Type: application/json" \
               -d '{"alias": "h-andy.com"}')
 
-            echo "API Response: $ALIAS_RESPONSE"
-            echo "🌐 Domain: h-andy.com (alias set via API)"
+            echo "📡 API Response: $ALIAS_RESPONSE"
+
+            # Check if alias was successful
+            if echo "$ALIAS_RESPONSE" | grep -q '"uid"'; then
+              echo "✅ Domain alias set successfully!"
+              echo "🌐 Domain: h-andy.com"
+            else
+              echo "❌ Domain alias failed!"
+              echo "🌐 Domain: h-andy.com (manual verification needed)"
+            fi
           else
             # Staging deployment (develop branch)
             echo "🔄 Deploying to staging environment..."
@@ -152,17 +161,26 @@ jobs:
             # Set alias to www.stage-handy.com using REST API (more reliable than CLI)
             echo "🔗 Setting alias to www.stage-handy.com via REST API..."
 
-            # Extract deployment ID from URL (remove team suffix)
-            DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | sed 's|-heobusys-projects\.vercel\.app||')
+            # Extract deployment URL without protocol (Vercel API accepts this format)
+            DEPLOYMENT_URL_NO_PROTOCOL=$(echo $DEPLOYMENT_URL | sed 's|https://||')
+            echo "📝 Deployment URL (no protocol): $DEPLOYMENT_URL_NO_PROTOCOL"
 
             # Assign domain via Vercel REST API
-            ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_ID}/aliases" \
+            ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOYMENT_URL_NO_PROTOCOL}/aliases" \
               -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
               -H "Content-Type: application/json" \
               -d '{"alias": "www.stage-handy.com"}')
 
-            echo "API Response: $ALIAS_RESPONSE"
-            echo "🌐 Domain: www.stage-handy.com (alias set via API)"
+            echo "📡 API Response: $ALIAS_RESPONSE"
+
+            # Check if alias was successful
+            if echo "$ALIAS_RESPONSE" | grep -q '"uid"'; then
+              echo "✅ Domain alias set successfully!"
+              echo "🌐 Domain: www.stage-handy.com"
+            else
+              echo "❌ Domain alias failed!"
+              echo "🌐 Domain: www.stage-handy.com (manual verification needed)"
+            fi
           fi
         working-directory: packages/web
         env:
