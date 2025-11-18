@@ -1,0 +1,69 @@
+name: Deploy Web App to Vercel (Staging)
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'packages/web/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-web-staging.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Build web app for staging
+        run: npm run build:stage
+        working-directory: packages/web
+        env:
+          VITE_API_BASE_URL: https://www.stage-handy.com
+          VITE_ENVIRONMENT: staging
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: packages/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
+
+      - name: Build Project Artifacts for Vercel
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: packages/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
+
+      - name: Deploy to Vercel Staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+
+          echo ""
+          echo "✅ Staging deployment successful!"
+          echo "📦 Deployed to: $DEPLOYMENT_URL"
+          echo "🌐 Domain: www.stage-handy.com"
+        working-directory: packages/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}

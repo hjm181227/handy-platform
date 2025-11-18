@@ -34,7 +34,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/proxy"
+      "destination": "http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:8080/api/:path*"
     },
     {
       "source": "/((?!api).*)",
