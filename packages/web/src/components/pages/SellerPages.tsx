@@ -1023,12 +1023,15 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       // 2. S3에 이미지 업로드
       console.log('Uploading to S3...');
+      const uploadHeaders: Record<string, string> = {
+        'Content-Type': file.type,
+        // Add any additional headers required by the presigned URL (e.g., x-amz-acl)
+        ...(presignedResponse.uploadHeaders || {})
+      };
       const uploadResponse = await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
         body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
+        headers: uploadHeaders,
       });
       
       if (!uploadResponse.ok) {
@@ -1080,12 +1083,15 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       // 2. S3에 이미지 업로드
       console.log('Uploading detail image to S3...');
+      const uploadHeaders: Record<string, string> = {
+        'Content-Type': file.type,
+        // Add any additional headers required by the presigned URL (e.g., x-amz-acl)
+        ...(presignedResponse.uploadHeaders || {})
+      };
       const uploadResponse = await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
         body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
+        headers: uploadHeaders,
       });
       
       if (!uploadResponse.ok) {
@@ -1165,12 +1171,15 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
       });
 
       // S3에 재업로드
+      const uploadHeaders: Record<string, string> = {
+        'Content-Type': detailImage.file.type,
+        // Add any additional headers required by the presigned URL (e.g., x-amz-acl)
+        ...(presignedResponse.uploadHeaders || {})
+      };
       const uploadResponse = await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
         body: detailImage.file,
-        headers: {
-          'Content-Type': detailImage.file.type,
-        },
+        headers: uploadHeaders,
       });
       
       if (!uploadResponse.ok) {
