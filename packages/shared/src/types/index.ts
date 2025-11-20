@@ -366,6 +366,7 @@ export interface SellerApplication {
   businessNumber: string;
   businessType?: string;
   businessCategory?: string;
+  businessSector?: string;
   contactEmail: string;
   contactPhone: string;
   status: 'pending' | 'approved' | 'rejected';
