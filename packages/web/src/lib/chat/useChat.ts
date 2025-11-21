@@ -53,6 +53,11 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
       try {
         setIsLoading(true);
 
+        // 토큰 필수 체크
+        if (!token) {
+          throw new Error('로그인이 필요합니다');
+        }
+
         // 소켓 연결 시도
         try {
           await chatSocket.current.connect({ token });

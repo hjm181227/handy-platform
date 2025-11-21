@@ -15,7 +15,6 @@ import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { CategoryModal } from './components/common/CategoryModal';
-import { FloatingChatButton } from './components/common/FloatingChatButton';
 
 // Product Components
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
@@ -37,6 +36,7 @@ import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 import { ChatPage } from './pages/ChatPage';
 import { ChatRoomPage } from './pages/ChatRoomPage';
 import { CartContent } from './components/cart/CartContent';
+import { FloatingChatButton } from './components/common/FloatingChatButton';
 
 // MyPage Components
 import {
@@ -161,6 +161,11 @@ export default function App() {
     }, 3000);
   };
 
+  // 채팅 버튼 클릭 핸들러
+  const handleChatButtonClick = () => {
+    window.location.href = 'http://192.168.45.57:3002/chat';
+  };
+
   // 장바구니 개수 로딩 (로그인된 사용자만)
   const loadCartCount = async () => {
     try {
@@ -236,6 +241,16 @@ export default function App() {
       setLoadingBrands(false);
     }
   };
+
+  // nav 함수를 window 객체에 노출 (WebView에서 접근 가능하도록)
+  useEffect(() => {
+    (window as any).__appNavigate = nav;
+    console.log('[App] Navigation function exposed to window.__appNavigate');
+
+    return () => {
+      delete (window as any).__appNavigate;
+    };
+  }, [nav]);
 
   // 초기 데이터 로딩 (신상 제품과 브랜드, 장바구니는 로그인 후)
   useEffect(() => {
@@ -1141,9 +1156,7 @@ export default function App() {
       )}
 
       {/* Floating Chat Button */}
-      {!isSellerPage && !isAdminPage && !isChatPage && (
-        <FloatingChatButton onClick={() => nav('/chat')} />
-      )}
+      <FloatingChatButton onClick={handleChatButtonClick} />
     </AlertProvider>
   );
 }

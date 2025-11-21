@@ -9,12 +9,22 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3001,
     host: true,
-    // 프록시 제거 - 직접 서버 URL로 연결
+    // 일반 API는 stage 백엔드로 프록시, 채팅은 직접 연결
+    proxy: {
+      '/api': {
+        target: 'http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   resolve: {
     // 웹 빌드 시 .web 확장자 우선 사용
     extensions: ['.web.ts', '.web.tsx', '.web.js', '.ts', '.tsx', '.js', '.json'],
-    // alias 제거 - Node.js 표준 모듈 resolution 사용
+    // React Native를 빈 모듈로 alias 처리 (웹 환경에서 사용하지 않음)
+    alias: {
+      'react-native': './src/utils/react-native-stub.ts',
+    },
   },
   optimizeDeps: {
     // React Native 모듈 제외

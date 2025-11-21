@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useChat } from '../lib/chat';
 
 interface ChatRoomPageProps {
@@ -7,6 +7,29 @@ interface ChatRoomPageProps {
 }
 
 export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
+  // localStorage에서 JWT 토큰 가져오기
+  const token = localStorage.getItem('accessToken') || undefined;
+
+  // 로그인 체크 - 토큰 없으면 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!token) {
+      alert('로그인이 필요한 서비스입니다.');
+      nav('/login');
+    }
+  }, [token, nav]);
+
+  // 토큰 없으면 로딩 화면 표시 (리다이렉트 중)
+  if (!token) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">로그인 페이지로 이동 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   // useChat 훅으로 모든 채팅 로직 처리
   const {
     messages,
@@ -18,7 +41,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
     error,
     currentRoom,
     clearError,
-  } = useChat(roomId);
+  } = useChat(roomId, token);
 
   const handleSend = () => {
     sendMessage(inputText);

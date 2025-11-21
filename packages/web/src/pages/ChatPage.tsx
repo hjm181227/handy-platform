@@ -71,13 +71,26 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav }) => {
     nav(`/chat/${chatId}`);
   };
 
+  const handleBack = () => {
+    // React Native 환경에서는 Native에 메시지 전송하여 원래 서버로 복귀
+    if ((window as any).ReactNativeWebView) {
+      console.log('[ChatPage] Sending closeChat message to Native');
+      (window as any).ReactNativeWebView.postMessage(
+        JSON.stringify({ type: 'closeChat' })
+      );
+    } else {
+      // 웹 환경에서는 일반 네비게이션
+      nav('/');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
-            onClick={() => nav('/')}
+            onClick={handleBack}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="뒤로가기"
           >
