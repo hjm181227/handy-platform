@@ -16,6 +16,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
     businessNumber: '',
     businessType: '개인사업자',
     businessCategory: '네일아트',
+    businessSector: '',
     contactEmail: '',
     contactPhone: '',
     businessAddress: {
@@ -345,7 +346,12 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
             {/* 사업자 정보 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">사업자 정보</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                사업자 정보
+                <span className="text-xs font-normal text-gray-500 ml-2">
+                  사업자 등록증에 기재된 내용과 동일하게 작성해주세요
+                </span>
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="businessNumber" className="block text-sm font-medium text-gray-700 mb-2">
@@ -392,7 +398,21 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   value={formData.businessCategory}
                   onChange={(e) => handleInputChange('businessCategory', '', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="네일아트"
+                  placeholder="전자상거래 소매업"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="businessSector" className="block text-sm font-medium text-gray-700 mb-2">
+                  업태
+                </label>
+                <input
+                  type="text"
+                  id="businessSector"
+                  value={formData.businessSector}
+                  onChange={(e) => handleInputChange('businessSector', '', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 도소매업"
                 />
               </div>
             </div>
@@ -603,7 +623,10 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
             {/* 안내 사항 */}
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">📋 안내 사항</h4>
+              <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                안내 사항
+              </h4>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• 신청서 제출 후 1-3 영업일 내에 검토 결과를 연락드립니다.</li>
                 <li>• 추가 서류가 필요한 경우 별도로 안내해드립니다.</li>

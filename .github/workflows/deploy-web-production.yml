@@ -1,0 +1,54 @@
+name: Deploy Web App to Vercel (Production)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/web/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-web-production.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Build web app for production
+        run: npm run build:prod
+        working-directory: packages/web
+        env:
+          VITE_API_BASE_URL: https://www.h-andy.com
+          VITE_ENVIRONMENT: production
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy to Vercel Production
+        run: |
+          echo "🚀 Deploying to production environment..."
+
+          DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --cwd packages/web)
+
+          echo ""
+          echo "✅ Production deployment successful!"
+          echo "📦 Deployed to: $DEPLOYMENT_URL"
+          echo "🌐 Domain: www.h-andy.com"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PRODUCTION }}

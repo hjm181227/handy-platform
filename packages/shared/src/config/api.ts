@@ -21,13 +21,13 @@ export const API_CONFIG: Record<string, ApiConfig> = {
     retryDelay: 1000,
   },
   stage: {
-    baseURL: '',
+    baseURL: 'https://www.stage-handy.com',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   production: {
-    baseURL: '',
+    baseURL: 'https://h-andy.com',
     timeout: 15000,
     retryAttempts: 5,
     retryDelay: 2000,
@@ -84,15 +84,25 @@ export const getCurrentEnvironment = (): string => {
     return 'stage';
   }
 
-  // Vite 환경 (웹) - 전역 변수 사용
+  // Vite 환경 (웹) - 전역 변수 사용 (최우선!)
   if (typeof window !== 'undefined') {
     // Vite에서 설정한 환경 변수 확인
     const viteMode = (window as any).__VITE_MODE__ || (globalThis as any).__VITE_MODE__;
     if (viteMode) {
+      console.log('🟢 [API_CONFIG] Detected Vite mode from __VITE_MODE__:', viteMode);
       if (viteMode === 'local') return 'local';
       if (viteMode === 'development') return 'development';
       if (viteMode === 'stage') return 'stage';
       if (viteMode === 'production') return 'production';
+    }
+
+    // Vite import.meta.env 확인 (런타임)
+    if (typeof (import.meta as any)?.env !== 'undefined') {
+      const importMetaMode = (import.meta as any).env?.MODE;
+      if (importMetaMode) {
+        console.log('🟢 [API_CONFIG] Detected Vite mode from import.meta.env.MODE:', importMetaMode);
+        return importMetaMode;
+      }
     }
   }
 
@@ -135,6 +145,9 @@ export const shouldUseProxy = (): boolean => {
 export const getApiConfig = (): ApiConfig => {
   const env = getCurrentEnvironment();
   const config = API_CONFIG[env] || API_CONFIG.development;
+
+  console.log('🔧 [API_CONFIG] Current environment:', env);
+  console.log('🔧 [API_CONFIG] API Base URL:', config.baseURL);
 
   // 항상 실제 서버 URL 사용
   return config;

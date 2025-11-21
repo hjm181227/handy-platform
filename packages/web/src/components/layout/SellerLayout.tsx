@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MdDashboard, MdInventory, MdFactory, MdInsertChart } from 'react-icons/md';
 import { FaClipboardList, FaMoneyBillWave, FaHome, FaSignOutAlt } from 'react-icons/fa';
 import { IoMdStar } from 'react-icons/io';
+import { useAuth } from '../../hooks/useAuth';
 
 interface SellerLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface SellerLayoutProps {
 
 export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
 
   const menuItems = [
     {
@@ -144,7 +146,15 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
             </button>
 
             <button
-              onClick={() => alert('로그아웃 기능은 추후 구현됩니다.')}
+              onClick={async () => {
+                try {
+                  await logout();
+                  onGo('/');
+                } catch (error) {
+                  console.error('[SellerLayout] 로그아웃 실패:', error);
+                  onGo('/');
+                }
+              }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors text-sm"
             >
               <FaSignOutAlt className="text-lg" />
@@ -204,8 +214,10 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
               </span>
             </button>
 
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">S</span>
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center" title={currentUser?.name || '판매자'}>
+              <span className="text-white font-medium text-sm">
+                {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'S'}
+              </span>
             </div>
           </div>
         </header>

@@ -299,12 +299,12 @@ export function Detail({
               ].map((qa, index) => (
                 <div key={index} className="border-b pb-4 last:border-b-0">
                   <div className="mb-2">
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">Q</span>
+                    <span className="inline-block bg-black text-white text-xs font-bold px-2 py-1 rounded mr-2">Q</span>
                     <span className="text-sm font-medium">{qa.q}</span>
                     <span className="text-xs text-gray-500 ml-2">{qa.date}</span>
                   </div>
                   <div className="ml-6">
-                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2">A</span>
+                    <span className="inline-block bg-white text-black border text-xs font-bold px-2 py-1 rounded mr-2">A</span>
                     <span className="text-sm text-gray-700">{qa.a}</span>
                   </div>
                 </div>

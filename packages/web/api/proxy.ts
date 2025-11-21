@@ -6,9 +6,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * 클라이언트 요청을 백엔드 ALB로 프록시합니다.
  * ALB URL은 서버사이드에만 존재하여 보안을 유지합니다.
  *
- * 환경별 자동 라우팅:
- * - Production (main branch): Port 80
- * - Preview/Staging (develop branch): Port 8080
+ * Vercel 프로젝트별 포트 구분 (환경변수 기반):
+ * - handy-web-staging: BACKEND_PORT=8080 (develop 브랜치)
+ * - handy-web-production: BACKEND_PORT=80 (main 브랜치)
  *
  * CORS 지원:
  * - OPTIONS preflight 처리
@@ -44,16 +44,13 @@ function setCorsHeaders(res: VercelResponse, origin?: string) {
   res.setHeader('Access-Control-Max-Age', '86400'); // 24시간 캐싱
 }
 
-// 환경별 포트 설정
+// Vercel 프로젝트별 포트 설정 (환경변수 기반)
 function getBackendUrl(): string {
-  const env = process.env.VERCEL_ENV || 'development';
-
-  if (env === 'production') {
-    return `${ALB_BASE_URL}:80`;
-  } else {
-    // preview, development 모두 staging 포트 사용
-    return `${ALB_BASE_URL}:8080`;
-  }
+  // BACKEND_PORT 환경변수로 프로젝트별 포트 구분
+  // handy-web-staging: BACKEND_PORT=8080
+  // handy-web-production: BACKEND_PORT=80
+  const port = process.env.BACKEND_PORT || '8080'; // fallback to staging
+  return `${ALB_BASE_URL}:${port}`;
 }
 
 export default async function handler(

@@ -181,8 +181,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
           <div className="flex border-b bg-white">
             {[
               { key: 'category' as const, label: '카테고리' },
-              { key: 'brand' as const, label: '브랜드' },
-              { key: 'service' as const, label: '서비스' }
+              { key: 'brand' as const, label: '브랜드' }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -325,13 +324,9 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 카테고리 데이터가 없습니다.
               </div>
             )
-          ) : activeTab === 'brand' ? (
-            <div className="text-center py-12 text-gray-500 w-full">
-              브랜드 목록은 준비 중입니다.
-            </div>
           ) : (
             <div className="text-center py-12 text-gray-500 w-full">
-              서비스 목록은 준비 중입니다.
+              브랜드 목록은 준비 중입니다.
             </div>
           )}
         </div>
@@ -374,8 +369,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
         <div className="flex border-b bg-white sticky top-[57px] z-10">
           {[
             { key: 'category' as const, label: '카테고리' },
-            { key: 'brand' as const, label: '브랜드' },
-            { key: 'service' as const, label: '서비스' }
+            { key: 'brand' as const, label: '브랜드' }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -517,13 +511,9 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 카테고리 데이터가 없습니다.
               </div>
             )
-          ) : activeTab === 'brand' ? (
-            <div className="text-center py-12 text-gray-500 w-full">
-              브랜드 목록은 준비 중입니다.
-            </div>
           ) : (
             <div className="text-center py-12 text-gray-500 w-full">
-              서비스 목록은 준비 중입니다.
+              브랜드 목록은 준비 중입니다.
             </div>
           )}
         </div>

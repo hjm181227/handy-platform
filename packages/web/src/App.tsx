@@ -5,6 +5,9 @@ import { webApiService, cartService, likesService, brandService } from './servic
 import { useResponsiveCart } from './hooks/useResponsiveCart';
 import type { User, Product, Brand } from '@handy-platform/shared';
 import { AlertProvider } from './components/common';
+import { AuthProvider } from './contexts/AuthContext';
+import { RequireAuth, RequireRole } from './components/auth';
+import { useAuth } from './hooks/useAuth';
 
 // Layout Components
 import { TopDarkNav } from './components/layout/TopDarkNav';
@@ -122,13 +125,13 @@ import CategoryManagement from './components/admin/CategoryManagement';
 import BannerManagement from './components/admin/BannerManagement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
-export default function App() {
+// 내부 컴포넌트: useAuth를 사용하기 위해 AuthProvider 내부에 위치
+function AppContent() {
   const { path, nav } = useMiniRouter();
   const { isMobile } = useResponsiveCart();
 
-  // Auth state
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  // AuthContext에서 인증 상태 가져오기
+  const { currentUser, authLoading, setUser } = useAuth();
 
   // Cart state
   const [cartCount, setCartCount] = useState(0);
@@ -287,33 +290,7 @@ export default function App() {
     }
   };
 
-  // 인증 상태 초기화 (앱 시작 시 토큰 복원)
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        setAuthLoading(true);
-
-        // WebView 환경에서는 Native 토큰 동기화 먼저 수행
-        if ((window as any).ReactNativeWebView) {
-          await webApiService.initializeFromNative();
-          console.log('✅ Native 토큰 동기화 완료');
-        }
-
-        // 현재 사용자 정보 복원 시도
-        const user = await webApiService.getCurrentUser();
-        console.log('🔍 토큰에서 복원된 사용자:', user);
-        setCurrentUser(user);
-
-      } catch (error) {
-        console.warn('⚠️ 인증 상태 초기화 실패:', error);
-        setCurrentUser(null);
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
+  // 인증 상태는 AuthContext에서 관리하므로 여기서는 제거됨
 
   // 장바구니에 상품 추가 (로그인된 사용자만)
   const addToCart = async (productId: string, options?: Record<string, string>) => {
@@ -525,7 +502,11 @@ export default function App() {
       showToast={showToast}
     />;
   } else if (pathname === "/checkout") {
-    screen = <CheckoutPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <CheckoutPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/payment/success") {
     screen = <PaymentSuccess onGo={nav} />;
   } else if (pathname === "/payment/cancel") {
@@ -536,7 +517,11 @@ export default function App() {
     screen = <PaymentTest onGo={nav} />;
   } else if (pathname.match(/^\/order-complete\/(.+)$/)) {
     const orderId = pathname.split("/")[2];
-    screen = <OrderCompletePage onGo={nav} orderId={orderId} />;
+    screen = (
+      <RequireAuth>
+        <OrderCompletePage onGo={nav} orderId={orderId} />
+      </RequireAuth>
+    );
   } else if (pathname === "/category") {
     // 카테고리 페이지 (모바일에서 페이지로 작동)
     screen = (
@@ -552,33 +537,88 @@ export default function App() {
   } else if (pathname.startsWith("/help")) {
     screen = <HelpPage onGo={nav} />;
   } else if (pathname.startsWith("/likes")) {
-    screen = <LikesPage onGo={nav} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} />;
+    screen = (
+      <RequireAuth>
+        <LikesPage onGo={nav} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/orders") {
-    screen = <OrdersPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <OrdersPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/shipping-address") {
-    screen = <ShippingAddressPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <ShippingAddressPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/shipping") {
-    screen = <ShippingPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <ShippingPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/claims") {
-    screen = <ClaimsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <ClaimsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/cancel") {
-    screen = <CancelPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <CancelPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/reviews") {
-    screen = <ReviewsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <ReviewsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/coupons") {
-    screen = <CouponsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <CouponsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/points") {
-    screen = <PointsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <PointsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/payments") {
-    screen = <PaymentsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <PaymentsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/notifications") {
-    screen = <NotificationsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <NotificationsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/my/settings") {
-    screen = <SettingsPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <SettingsPage onGo={nav} />
+      </RequireAuth>
+    );
   } else if (pathname === "/chat") {
     screen = <ChatPage nav={nav} />;
+  } else if (pathname.startsWith("/chat/")) {
+    const roomId = pathname.split("/")[2];
+    screen = <ChatRoomPage nav={nav} roomId={roomId} />;
   } else if (pathname === "/seller/register") {
-    screen = <SellerRegistrationPage onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerRegistrationPage onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/support/contact") {
     screen = <ContactPage onGo={nav} />;
   } else if (pathname === "/support/faq") {
@@ -621,30 +661,78 @@ export default function App() {
 
   // 판매자 센터 라우팅
   } else if (pathname === "/seller") {
-    screen = <SellerDashboard onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerDashboard onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/products") {
-    screen = <SellerProducts onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerProducts onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/products/new") {
-    screen = <SellerProductForm onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerProductForm onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname.match(/^\/seller\/products\/(.+)\/edit$/)) {
     const productId = pathname.split("/")[3];
-    screen = <SellerProductForm onGo={nav} productId={productId} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerProductForm onGo={nav} productId={productId} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/orders") {
-    screen = <SellerOrders onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerOrders onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/reviews") {
-    screen = <SellerReviews onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerReviews onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/analytics") {
-    screen = <SellerAnalytics onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerAnalytics onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/settlement") {
-    screen = <SellerSettlement onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerSettlement onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/production") {
-    screen = <ProductionDashboard onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <ProductionDashboard onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/production/settings") {
-    screen = <ProductionSettings onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <ProductionSettings onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/production/manage") {
-    screen = <ProductionManage onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <ProductionManage onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/production/status") {
-    screen = <ProductionStatus onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <ProductionStatus onGo={nav} />
+      </RequireRole>
+    );
 
   // Admin routes
   } else if (pathname.startsWith("/admin")) {
@@ -874,9 +962,17 @@ export default function App() {
       );
     }
   } else if (pathname.startsWith("/my")) {
-    screen = <MyPage onGo={nav} onOpen={openProduct} />;
+    screen = (
+      <RequireAuth>
+        <MyPage onGo={nav} onOpen={openProduct} />
+      </RequireAuth>
+    );
   } else if (pathname === "/seller/apply") {
-    screen = <SellerApplicationForm onGo={nav} />;
+    screen = (
+      <RequireRole requiredRole="seller">
+        <SellerApplicationForm onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname.startsWith("/login")) {
     screen = <LoginPage onGo={nav} />;
   } else if (pathname.startsWith("/auth/social/signup")) {
@@ -1050,7 +1146,7 @@ export default function App() {
                 onCart={handleCartClick}
                 onGo={nav}
                 currentPath={pathname}
-                onAuthStateChange={setCurrentUser}
+                onAuthStateChange={setUser}
                 authLoading={authLoading}
                 onCategoryOpen={() => setCatOpen(true)}
               />
@@ -1064,7 +1160,7 @@ export default function App() {
                   onCart={handleCartClick}
                   onGo={nav}
                   currentPath={pathname}
-                  onAuthStateChange={setCurrentUser}
+                  onAuthStateChange={setUser}
                   authLoading={authLoading}
                   onCategoryOpen={() => setCatOpen(true)}
                 />
@@ -1158,5 +1254,14 @@ export default function App() {
       {/* Floating Chat Button */}
       <FloatingChatButton onClick={handleChatButtonClick} />
     </AlertProvider>
+  );
+}
+
+// 외부 래퍼: AuthProvider로 AppContent를 감싸기
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
