@@ -13,7 +13,7 @@ import { useAuth } from './hooks/useAuth';
 import { TopDarkNav } from './components/layout/TopDarkNav';
 import { MainHeader } from './components/layout/MainHeader';
 import { MobilePageHeader } from './components/layout/MobilePageHeader';
-import { EventBanners } from './components/layout/Hero';
+import { EventBanners } from './components/layout/EventBanner';
 import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
