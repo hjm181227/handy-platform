@@ -36,102 +36,72 @@ export const API_CONFIG: Record<string, ApiConfig> = {
 
 // 현재 환경 감지
 export const getCurrentEnvironment = (): string => {
-  // 명시적 로컬 환경 설정
-  if (typeof process !== 'undefined' && process.env?.API_ENV === 'local') {
-    return 'local';
-  }
-  if (typeof window !== 'undefined' && (window as any).__API_ENV__ === 'local') {
-    return 'local';
-  }
-
-  // Vercel 배포 환경 감지 (hostname 기반, 최우선)
-  if (typeof window !== 'undefined' && window.location?.hostname) {
-    const hostname = window.location.hostname;
-    if (hostname.includes('stage-handy.com')) {
-      console.log('🟢 [API_CONFIG] Detected staging environment from hostname:', hostname);
-      return 'stage';
-    }
-    if (hostname.includes('h-andy.com') && !hostname.includes('stage')) {
-      console.log('🟢 [API_CONFIG] Detected production environment from hostname:', hostname);
-      return 'production';
-    }
-  }
-
-  // React Native 환경 - BuildConfig 우선 확인 (최우선!)
-  // React Native인지 감지: navigator.product === 'ReactNative'
+  // 1. React Native 환경 체크 (최우선 - 플랫폼 분리)
   if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
     try {
       // @ts-ignore - React Native 전용 코드
       const { NativeModules } = require('react-native');
-      if (NativeModules && NativeModules.BuildConfig) {
-        const buildEnv = NativeModules.BuildConfig.APP_ENV;
-        if (buildEnv) {
-          console.log('🟢 [API_CONFIG] React Native BuildConfig.APP_ENV:', buildEnv);
-          return buildEnv; // 'stage' 또는 'production'
-        }
+      const buildEnv = NativeModules?.BuildConfig?.APP_ENV;
+      if (buildEnv) {
+        console.log('🟢 [API_CONFIG] React Native BuildConfig.APP_ENV:', buildEnv);
+        return buildEnv; // 'stage' 또는 'production'
       }
     } catch (error) {
       console.warn('🔴 [API_CONFIG] Failed to read BuildConfig:', error);
     }
 
-    // BuildConfig를 읽지 못한 경우, process.env 확인
+    // BuildConfig 실패 시 process.env 확인
     if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
       return process.env.REACT_NATIVE_ENV;
     }
 
-    // React Native이지만 환경 변수가 없는 경우 - stage 기본값 사용
-    console.log('🟡 [API_CONFIG] React Native detected but no BuildConfig, using stage as fallback');
+    // React Native 기본값
+    console.log('🟡 [API_CONFIG] React Native detected, using stage as fallback');
     return 'stage';
   }
 
-  // Vite 환경 (웹) - 전역 변수 사용 (최우선!)
+  // 2. 웹 환경 체크 (window가 있으면 웹)
   if (typeof window !== 'undefined') {
-    // Vite에서 설정한 환경 변수 확인
-    const viteMode = (window as any).__VITE_MODE__ || (globalThis as any).__VITE_MODE__;
-    if (viteMode) {
-      console.log('🟢 [API_CONFIG] Detected Vite mode from __VITE_MODE__:', viteMode);
-      if (viteMode === 'local') return 'local';
-      if (viteMode === 'development') return 'development';
-      if (viteMode === 'stage') return 'stage';
-      if (viteMode === 'production') return 'production';
+    // 2a. 명시적 로컬 환경 설정
+    if ((window as any).__API_ENV__ === 'local') {
+      return 'local';
     }
 
-    // Vite import.meta.env 확인 (런타임)
-    if (typeof (import.meta as any)?.env !== 'undefined') {
-      const importMetaMode = (import.meta as any).env?.MODE;
-      if (importMetaMode) {
-        console.log('🟢 [API_CONFIG] Detected Vite mode from import.meta.env.MODE:', importMetaMode);
-        return importMetaMode;
+    // 2b. Vercel 배포 환경 - hostname 기반 감지
+    const hostname = window.location?.hostname;
+    if (hostname) {
+      if (hostname.includes('stage-handy.com')) {
+        console.log('🟢 [API_CONFIG] Detected staging from hostname:', hostname);
+        return 'stage';
       }
-    }
-  }
-
-  // 웹에서 전역 변수 확인
-  if (typeof window !== 'undefined') {
-    const windowEnv = (window as any).__VITE_ENV__ || (window as any).__APP_ENV__;
-    if (windowEnv) return windowEnv;
-  }
-
-  // Node.js 환경
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV) {
-    // 로컬 개발 환경 자동 감지 (localhost 포트 체크)
-    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-      if (window.location?.hostname === 'localhost' || window.location?.hostname === '127.0.0.1') {
+      if (hostname.includes('h-andy.com') && !hostname.includes('stage')) {
+        console.log('🟢 [API_CONFIG] Detected production from hostname:', hostname);
+        return 'production';
+      }
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
         return 'local';
       }
     }
-    return process.env.NODE_ENV;
-  }
 
-  // 웹 환경에서 hostname 기반 자동 감지
-  if (typeof window !== 'undefined') {
-    const hostname = window.location?.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'local';
+    // 2c. Vite 빌드 타임 모드
+    const viteMode = (window as any).__VITE_MODE__;
+    if (viteMode) {
+      console.log('🟢 [API_CONFIG] Detected Vite mode:', viteMode);
+      return viteMode; // 'local', 'development', 'stage', 'production'
     }
   }
 
-  // 기본값
+  // 3. Node.js 환경 (서버사이드 렌더링 등)
+  if (typeof process !== 'undefined') {
+    if (process.env?.API_ENV === 'local') {
+      return 'local';
+    }
+    if (process.env?.NODE_ENV) {
+      return process.env.NODE_ENV;
+    }
+  }
+
+  // 4. 기본값
   return 'development';
 };
 
