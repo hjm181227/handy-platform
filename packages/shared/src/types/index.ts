@@ -21,7 +21,9 @@ export interface User {
   id: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) after migration
   email: string;
   name: string;
-  phone?: string;
+  phone: string;  // 필수로 변경 (SMS 본인인증)
+  phoneVerified?: boolean;  // SMS 본인인증 완료 여부
+  phoneVerifiedAt?: string;  // SMS 본인인증 완료 시각 (ISO 8601)
   avatar?: string;
   role: 'user' | 'seller' | 'admin';
   isActive: boolean;
@@ -762,7 +764,8 @@ export interface RegisterForm {
   email: string;
   password: string;
   name: string;
-  phone?: string;
+  phone: string;  // 필수로 변경 (SMS 본인인증)
+  verificationToken?: string;  // SMS 인증 완료 토큰 (백엔드 검증용)
 }
 
 export interface ReviewForm {

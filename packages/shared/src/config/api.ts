@@ -154,6 +154,14 @@ export const API_ENDPOINTS = {
     LINKED: '/api/auth/oauth/linked',
   },
 
+  // SMS 본인인증
+  VERIFICATION: {
+    SEND_CODE: '/api/verification/send-code',             // POST - SMS 인증 코드 발송
+    VERIFY_CODE: '/api/verification/verify-code',         // POST - SMS 인증 코드 검증
+    RESEND_CODE: '/api/verification/resend-code',         // POST - SMS 인증 코드 재발송
+    CHECK_STATUS: (phone: string) => `/api/verification/status/${phone}`,  // GET - 인증 상태 확인
+  },
+
   // 상품 (서버 API 스펙에 완전 일치)
   PRODUCTS: {
     LIST: '/api/products',                                    // GET / - 상품 목록 조회
