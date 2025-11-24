@@ -1054,8 +1054,8 @@ function AppContent() {
         onGo: nav
       };
     }
-    // 마이페이지
-    if (pathname.startsWith('/my')) {
+    // 마이페이지 (메인 페이지만 - 서브페이지는 자체 PageHeader 사용)
+    if (pathname === '/my') {
       return {
         title: '마이페이지',
         showSearch: true,

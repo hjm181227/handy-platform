@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
 import { User } from '@handy-platform/shared';
+import { PageHeader } from '../layout/PageHeader';
 
 // 정보 입력 항목 컴포넌트
 const InfoItem = ({
@@ -51,19 +52,7 @@ const InfoItem = ({
   </div>
 );
 
-// 공통 컴포넌트
-const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) => (
-  <div className="border-b bg-white px-4 py-3">
-    <div className="flex items-center gap-3">
-      <button onClick={onBack} className="text-gray-600">
-        <svg viewBox="0 0 24 24" className="h-6 w-6">
-          <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      <h1 className="text-lg font-semibold">{title}</h1>
-    </div>
-  </div>
-);
+// 공통 컴포넌트 - BackButton 제거 (PageHeader 사용)
 
 // 1:1 문의 페이지
 export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
@@ -158,7 +147,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="1:1 문의" />
+      <PageHeader title="1:1 문의" onBack={() => onGo("/my")} />
       
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
