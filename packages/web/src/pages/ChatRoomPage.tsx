@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useChat } from '../lib/chat';
 
 interface ChatRoomPageProps {
@@ -43,6 +43,14 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
     clearError,
   } = useChat(roomId, token);
 
+  // 자동 스크롤을 위한 ref
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 메시지 변경 시 자동 스크롤
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSend = () => {
     sendMessage(inputText);
   };
@@ -67,6 +75,46 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
   }
 
   const roomName = currentRoom?.name || '알 수 없음';
+
+  // 날짜 포맷팅 헬퍼 함수
+  const formatDateSeparator = (dateString?: string): string => {
+    if (!dateString) return '';
+
+    const messageDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // 날짜만 비교 (시간 무시)
+    const isSameDay = (d1: Date, d2: Date) =>
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
+
+    if (isSameDay(messageDate, today)) {
+      return '오늘';
+    } else if (isSameDay(messageDate, yesterday)) {
+      return '어제';
+    } else {
+      return messageDate.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    }
+  };
+
+  // 두 메시지가 다른 날짜인지 확인
+  const isDifferentDay = (date1?: string, date2?: string): boolean => {
+    if (!date1 || !date2) return false;
+
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+
+    return d1.getFullYear() !== d2.getFullYear() ||
+           d1.getMonth() !== d2.getMonth() ||
+           d1.getDate() !== d2.getDate();
+  };
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -133,46 +181,122 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           {messages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">아직 메시지가 없습니다.</p>
               <p className="text-gray-400 text-sm mt-2">첫 메시지를 보내보세요!</p>
             </div>
           ) : (
-            messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-[70%] ${message.sender === 'me' ? 'order-2' : 'order-1'}`}>
-                <div
-                  className={`
-                    px-4 py-3 rounded-2xl
-                    ${message.sender === 'me'
-                      ? 'bg-blue-500 text-white rounded-br-md'
-                      : 'bg-white text-gray-900 rounded-bl-md'
-                    }
-                  `}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-words">
-                    {message.text}
-                  </p>
-                </div>
-                <div className={`flex items-center gap-2 mt-1 px-2 ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                  <span className="text-xs text-gray-500">
-                    {message.timestamp}
-                  </span>
-                  {message.sender === 'me' && (
-                    <span className="text-xs text-gray-500">
-                      {message.read ? '읽음' : '안읽음'}
-                    </span>
+            messages.map((message, index) => {
+              const prevMessage = index > 0 ? messages[index - 1] : null;
+              const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+
+              // 날짜 구분선 표시 여부
+              const showDateSeparator = index === 0 || isDifferentDay(prevMessage?.createdAt, message.createdAt);
+
+              // 그룹 판별: 이전 메시지와 같은 발신자인지
+              const isGroupStart = !prevMessage || prevMessage.sender !== message.sender;
+              const isGroupEnd = !nextMessage || nextMessage.sender !== message.sender;
+              const isMe = message.sender === 'me';
+
+              return (
+                <React.Fragment key={message.id}>
+                  {/* 날짜 구분선 */}
+                  {showDateSeparator && (
+                    <div className="flex justify-center my-4">
+                      <div className="bg-gray-300 text-gray-600 text-xs px-3 py-1 rounded-full">
+                        {formatDateSeparator(message.createdAt)}
+                      </div>
+                    </div>
                   )}
-                </div>
+
+                  {/* 메시지 */}
+                  <div
+                    className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'} ${
+                      isGroupStart ? 'mt-6' : 'mt-1'
+                    }`}
+                  >
+                  {/* 상대방 아바타 (그룹 시작시에만) */}
+                  {!isMe && (
+                    <div className="flex-shrink-0">
+                      {isGroupStart ? (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+                          {roomName.charAt(0)}
+                        </div>
+                      ) : (
+                        <div className="w-10" />
+                      )}
+                    </div>
+                  )}
+
+                  {/* 메시지 버블 */}
+                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                    {/* 발신자 이름 (상대방 메시지, 그룹 시작시에만) */}
+                    {!isMe && isGroupStart && (
+                      <span className="text-xs text-gray-600 mb-1 px-2">{roomName}</span>
+                    )}
+
+                    {/* 메시지 버블 + 타임스탬프 */}
+                    <div className="flex items-end gap-2">
+                      {/* 내 메시지: 읽음 표시 + 타임스탬프 (왼쪽) */}
+                      {isMe && isGroupEnd && (
+                        <div className="flex flex-col items-end gap-0.5 text-xs text-gray-500">
+                          {message.read ? (
+                            <span className="text-blue-500">✓✓</span>
+                          ) : (
+                            <span className="text-gray-400">✓</span>
+                          )}
+                          <span>{message.timestamp}</span>
+                        </div>
+                      )}
+
+                      {/* 메시지 버블 */}
+                      <div
+                        className={`
+                          px-4 py-2.5 rounded-2xl transition-all
+                          ${isMe
+                            ? 'bg-blue-600 text-white rounded-br-sm shadow-md hover:shadow-lg'
+                            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                          }
+                        `}
+                      >
+                        <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                          {message.text}
+                        </p>
+                      </div>
+
+                      {/* 상대방 메시지: 타임스탬프 (오른쪽) */}
+                      {!isMe && isGroupEnd && (
+                        <span className="text-xs text-gray-500 self-end mb-0.5">
+                          {message.timestamp}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  </div>
+                </React.Fragment>
+              );
+            })
+          )}
+
+          {/* 타이핑 인디케이터 (향후 구현 예정) */}
+          {false && ( // 일단 비활성화
+            <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                {roomName.charAt(0)}
+              </div>
+              <span className="italic">{roomName}님이 입력 중</span>
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></span>
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
               </div>
             </div>
-            ))
           )}
+
+          {/* 자동 스크롤용 마커 */}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 

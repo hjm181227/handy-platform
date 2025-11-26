@@ -166,7 +166,7 @@ function AppContent() {
 
   // 채팅 버튼 클릭 핸들러
   const handleChatButtonClick = () => {
-    window.location.href = 'http://192.168.45.57:3002/chat';
+    nav('/chat');
   };
 
   // 장바구니 개수 로딩 (로그인된 사용자만)

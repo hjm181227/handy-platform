@@ -13,56 +13,21 @@ interface ChatRoom {
   unreadCount: number;
 }
 
-// 더미 채팅 데이터
+// 테스트 계정 채팅 데이터
 const DUMMY_CHATS: ChatRoom[] = [
   {
-    id: '1',
-    name: '핸디샵 고객센터',
-    lastMessage: '안녕하세요! 무엇을 도와드릴까요?',
-    timestamp: '방금',
-    unreadCount: 2,
-  },
-  {
-    id: '2',
-    name: '글로시 네일',
-    lastMessage: '주문하신 상품이 배송 준비 중입니다.',
-    timestamp: '5분 전',
-    unreadCount: 1,
-  },
-  {
-    id: '3',
-    name: '네일 아트 스튜디오',
-    lastMessage: '감사합니다! 다음에 또 이용해주세요 😊',
-    timestamp: '1시간 전',
+    id: 'hermosear98',
+    name: 'hermosear98@gmail.com',
+    lastMessage: '',
+    timestamp: '',
     unreadCount: 0,
   },
   {
-    id: '4',
-    name: '배송 알림',
-    lastMessage: '상품이 배송 중입니다. 운송장번호: 123456789',
-    timestamp: '어제',
+    id: 'usertest',
+    name: 'usertest@handy.com',
+    lastMessage: '',
+    timestamp: '',
     unreadCount: 0,
-  },
-  {
-    id: '5',
-    name: '엘레강스 네일',
-    lastMessage: '문의하신 제품은 현재 품절입니다.',
-    timestamp: '2일 전',
-    unreadCount: 0,
-  },
-  {
-    id: '6',
-    name: '프리미엄 네일샵',
-    lastMessage: '주문 취소가 완료되었습니다.',
-    timestamp: '2024-01-15',
-    unreadCount: 0,
-  },
-  {
-    id: '7',
-    name: '젤네일 판매점',
-    lastMessage: '할인 이벤트가 진행 중입니다!',
-    timestamp: '2024-01-10',
-    unreadCount: 3,
   },
 ];
 

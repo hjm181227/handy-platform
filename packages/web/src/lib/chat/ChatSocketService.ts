@@ -43,11 +43,15 @@ export class ChatSocketService {
       try {
         // 이미 연결되어 있으면 재사용
         if (this.socket?.connected) {
+          console.log('[ChatSocket] Already connected, reusing connection');
           resolve();
           return;
         }
 
-        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || 'http://16.176.147.141';
+
+        console.log('[ChatSocket] 🔍 VITE_SOCKET_URL:', import.meta.env.VITE_SOCKET_URL);
+        console.log('[ChatSocket] 🎯 Final serverUrl:', serverUrl);
 
         const socketOptions: any = {
           reconnection: config?.reconnection !== false,
@@ -59,15 +63,31 @@ export class ChatSocketService {
         // 토큰이 있으면 auth에 추가
         if (config?.token) {
           socketOptions.auth = { token: config.token };
+          console.log('[ChatSocket] 🔐 Auth token added (length:', config.token.length, ')');
         }
 
+        console.log('[ChatSocket] 🚀 Connecting to', serverUrl, 'with options:', socketOptions);
         this.socket = io(serverUrl, socketOptions);
+
+        // 타임아웃 설정 (10초)
+        const connectionTimeout = setTimeout(() => {
+          console.error('[ChatSocket] Connection timeout');
+          reject(new Error('Socket connection timeout (10s)'));
+        }, 10000);
+
+        // 연결 성공 시 타임아웃 제거
+        const clearTimeoutAndResolve = () => {
+          clearTimeout(connectionTimeout);
+          resolve();
+        };
 
         // 연결 이벤트 리스너
         this.socket.on('connect', () => {
-          console.log('[ChatSocket] Connected to server');
+          console.log('[ChatSocket] ✅ Connected to server successfully!');
+          console.log('[ChatSocket] ✅ Socket ID:', this.socket?.id);
+          console.log('[ChatSocket] ✅ Transport:', this.socket?.io.engine.transport.name);
           this.connectCallbacks.forEach(cb => cb());
-          resolve();
+          clearTimeoutAndResolve();
         });
 
         this.socket.on('disconnect', () => {
@@ -75,9 +95,14 @@ export class ChatSocketService {
           this.disconnectCallbacks.forEach(cb => cb());
         });
 
-        this.socket.on('connect_error', (error) => {
-          console.error('[ChatSocket] Connection error:', error);
+        this.socket.on('connect_error', (error: any) => {
+          console.error('[ChatSocket] ❌ Connection error:', error);
+          console.error('[ChatSocket] ❌ Error message:', error.message);
+          console.error('[ChatSocket] ❌ Error data:', error.data);
+          console.error('[ChatSocket] ❌ Error type:', error.type);
+          console.error('[ChatSocket] ❌ Error description:', error.description);
           this.errorCallbacks.forEach(cb => cb(error));
+          clearTimeout(connectionTimeout);
           reject(error);
         });
 
@@ -104,6 +129,12 @@ export class ChatSocketService {
           if (this.currentRoomId === data.roomId) {
             this.currentRoomId = null;
           }
+        });
+
+        // Presence 이벤트 (다른 사용자의 입장/퇴장)
+        this.socket.on('presence', (data: { userId: string; state: 'join' | 'leave' }) => {
+          console.log('[ChatSocket] 👤 Presence update:', data);
+          // 필요 시 콜백으로 UI 업데이트 가능
         });
 
       } catch (error) {
@@ -138,41 +169,50 @@ export class ChatSocketService {
   }
 
   /**
-   * 방 입장
+   * 방 입장 (연결 대기 로직 포함)
+   * 참고: 백엔드 서버는 join 이벤트에 ACK를 보내지 않음
    */
   public async joinRoom(roomId: string): Promise<void> {
-    if (!this.socket?.connected) {
-      throw new Error('Socket not connected');
+    // 연결이 완료될 때까지 최대 5초 대기
+    const maxWaitTime = 5000;
+    const checkInterval = 100;
+    let waitedTime = 0;
+
+    while (!this.socket?.connected && waitedTime < maxWaitTime) {
+      console.log('[ChatSocket] Waiting for connection before joining room...');
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      waitedTime += checkInterval;
     }
 
-    return new Promise((resolve, reject) => {
-      this.socket!.emit('join', { roomId }, (response: any) => {
-        if (response?.error) {
-          reject(new Error(response.error));
-        } else {
-          this.currentRoomId = roomId;
-          resolve();
-        }
-      });
-    });
+    if (!this.socket?.connected) {
+      throw new Error('Socket not connected after waiting');
+    }
+
+    console.log('[ChatSocket] Joining room:', roomId);
+
+    // ACK 없이 바로 emit하고 완료 처리
+    this.socket!.emit('join', { roomId });
+    this.currentRoomId = roomId;
+    console.log('[ChatSocket] ✅ Successfully joined room:', roomId);
   }
 
   /**
    * 방 퇴장
+   * 참고: 백엔드 서버는 leave 이벤트에 ACK를 보내지 않음
    */
   public async leaveRoom(roomId: string): Promise<void> {
     if (!this.socket?.connected) {
       return;
     }
 
-    return new Promise((resolve) => {
-      this.socket!.emit('leave', { roomId }, () => {
-        if (this.currentRoomId === roomId) {
-          this.currentRoomId = null;
-        }
-        resolve();
-      });
-    });
+    console.log('[ChatSocket] Leaving room:', roomId);
+    this.socket!.emit('leave', { roomId });
+
+    if (this.currentRoomId === roomId) {
+      this.currentRoomId = null;
+    }
+
+    console.log('[ChatSocket] ✅ Successfully left room:', roomId);
   }
 
   /**

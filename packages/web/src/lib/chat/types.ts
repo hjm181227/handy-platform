@@ -9,7 +9,8 @@ export interface Message {
   sender: 'me' | 'other';
   senderId: string;
   text: string;
-  timestamp: string;
+  timestamp: string;  // 표시용 시간 (HH:MM)
+  createdAt?: string; // ISO 형식 전체 날짜 (날짜 구분용)
   read: boolean;
   clientMessageId?: string;
 }
