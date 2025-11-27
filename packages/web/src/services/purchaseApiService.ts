@@ -245,47 +245,57 @@ export class PurchaseApiService {
     return webApiService.order.createOrder(orderRequest);
   }
 
-  // 주문 목록 조회 (새로운 POST /list 엔드포인트 사용)
-  async getOrders(filters: { 
-    page?: number; 
-    limit?: number; 
-    status?: string[]; 
+  // 주문 목록 조회 - webApiService를 통해 BaseApiService 활용
+  async getOrders(filters: {
+    page?: number;
+    limit?: number;
+    status?: string[];
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   } = {}) {
     if (USE_MOCK_API) {
       return mockApiService.order.getOrders();
     }
-    
-    // 새로운 POST /api/orders/list 엔드포인트 호출
-    const requestBody = {
-      page: filters.page || 1,
-      limit: filters.limit || 10,
-      sortBy: filters.sortBy || 'createdAt',
-      sortOrder: filters.sortOrder || 'desc',
-      ...(filters.status && { status: filters.status })
-    };
 
     try {
-      // webApiService의 베이스 API service를 통해 직접 호출
-      const token = await webApiService.auth.getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/api/orders/list`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-        body: JSON.stringify(requestBody)
+      // ✅ webApiService 사용 (다른 API들과 동일한 패턴)
+      // BaseApiService가 자동으로 올바른 서버 URL, 재시도, 타임아웃 등을 처리
+      const response = await webApiService.order.getOrders({
+        page: filters.page || 1,
+        limit: filters.limit || 10,
+        status: filters.status?.join(','), // 배열을 문자열로 변환
+        sortBy: filters.sortBy || 'createdAt',
+        sortOrder: filters.sortOrder || 'desc'
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      // 응답 형식 표준화
+      return {
+        success: true,
+        orders: response.orders || [],
+        pagination: response.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          hasNext: false,
+          hasPrev: false
+        },
+        message: 'Success'
+      };
     } catch (error: any) {
       console.error('Orders list API error:', error);
-      throw error;
+      // 에러 응답 표준화
+      return {
+        success: false,
+        orders: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          hasNext: false,
+          hasPrev: false
+        },
+        message: error.message || '주문 목록을 불러올 수 없습니다.'
+      };
     }
   }
 

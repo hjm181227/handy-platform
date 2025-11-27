@@ -89,7 +89,7 @@ const UserManagement: React.FC = () => {
 
   const handleStatusToggle = async (user: AdminUser) => {
     try {
-      await adminService.updateUserStatus(user.id, !user.isActive);
+      await adminService.updateUserStatus(user.userUuid, !user.isActive);
       await loadUsers();
       alert(`${user.name}님의 계정이 ${!user.isActive ? '활성화' : '비활성화'}되었습니다.`);
     } catch (error) {
@@ -245,7 +245,7 @@ const UserManagement: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.userUuid} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">

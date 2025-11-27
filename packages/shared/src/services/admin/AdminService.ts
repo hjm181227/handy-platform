@@ -4,8 +4,6 @@ import { API_ENDPOINTS } from '../../config/api';
 
 // 어드민 전용 사용자 타입
 export interface AdminUser {
-  id: string;
-  userId: string;
   userUuid: string;
   email: string;
   name: string;

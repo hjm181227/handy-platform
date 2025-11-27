@@ -2,20 +2,9 @@ import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import type { CustomerOrder } from '@handy-platform/shared';
+import { PageHeader } from '../layout/PageHeader';
 
 // 공통 컴포넌트들
-const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) => (
-  <div className="border-b bg-white px-4 py-3">
-    <div className="flex items-center gap-3">
-      <button onClick={onBack} className="text-gray-600">
-        <svg viewBox="0 0 24 24" className="h-6 w-6">
-          <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      <h1 className="text-lg font-semibold">{title}</h1>
-    </div>
-  </div>
-);
 
 const EmptyState = ({ title, description, actionText, onAction }: {
   title: string;
@@ -69,16 +58,21 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
 
       console.log('Orders API Response:', response);
 
+      // purchaseApiService는 항상 success 필드를 반환하도록 수정됨
       if (response.success && response.orders) {
         setOrders(response.orders);
         setPagination(response.pagination);
         setCurrentPage(page);
       } else {
+        // API가 실패 응답을 반환한 경우
         throw new Error(response.message || '주문 내역을 불러올 수 없습니다.');
       }
     } catch (err: any) {
       console.error('Orders loading failed:', err);
-      setError(err.message || '주문 내역을 불러오는 중 오류가 발생했습니다.');
+      const errorMessage = err.message || '주문 내역을 불러오는 중 오류가 발생했습니다.';
+      setError(errorMessage);
+      // 에러 발생 시 빈 배열로 초기화
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -119,11 +113,31 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
     }
   };
 
+  // 페이지 헤더 (모든 상태에서 동일하게 사용)
+  const orderHeader = (
+    <PageHeader
+      title="주문 내역"
+      onBack={() => onGo("/my")}
+      rightActions={[
+        {
+          icon: (
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 22V12h6v10" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ),
+          onClick: () => onGo("/"),
+          ariaLabel: "홈으로"
+        }
+      ]}
+    />
+  );
+
   // 로딩 상태
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BackButton onBack={() => onGo("/my")} title="주문 내역" />
+        {orderHeader}
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
@@ -138,13 +152,14 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BackButton onBack={() => onGo("/my")} title="주문 내역" />
+        {orderHeader}
         <div className="p-4 flex justify-center items-center min-h-64">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="text-center space-y-4">
+            <div className="text-4xl">⚠️</div>
+            <p className="text-red-600">{error}</p>
             <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              onClick={() => loadOrders(currentPage, filters)}
+              className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
             >
               다시 시도
             </button>
@@ -156,7 +171,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="주문 내역" />
+      {orderHeader}
 
       {/* 필터 영역 */}
       <div className="bg-white border-b px-4 py-3">
@@ -454,7 +469,7 @@ export function ShippingPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="배송중 주문" />
+      <PageHeader title="배송중 주문" onBack={() => onGo("/my")} />
       <div className="p-4 space-y-4">
         {shippingOrders.length === 0 ? (
           <EmptyState
@@ -498,7 +513,7 @@ export function ClaimsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="반품/교환 내역" />
+      <PageHeader title="반품/교환 내역" onBack={() => onGo("/my")} />
       <div className="p-4">
         {claims.length === 0 ? (
           <EmptyState
@@ -523,7 +538,7 @@ export function CancelPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="취소 내역" />
+      <PageHeader title="취소 내역" onBack={() => onGo("/my")} />
       <div className="p-4">
         {cancelledOrders.length === 0 ? (
           <EmptyState
@@ -551,7 +566,7 @@ export function ReviewsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="내 리뷰 관리" />
+      <PageHeader title="내 리뷰 관리" onBack={() => onGo("/my")} />
       <div className="p-4 space-y-4">
         {reviews.map(review => (
           <div key={review.id} className="bg-white rounded-lg border p-4">
@@ -588,7 +603,7 @@ export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="쿠폰함" />
+      <PageHeader title="쿠폰함" onBack={() => onGo("/my")} />
       <div className="p-4 space-y-3">
         {coupons.map(coupon => (
           <div key={coupon.id} className={`bg-white rounded-lg border-2 ${coupon.used ? 'border-gray-200 opacity-50' : 'border-blue-200'} p-4`}>
@@ -627,7 +642,7 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="포인트" />
+      <PageHeader title="포인트" onBack={() => onGo("/my")} />
 
       {/* 포인트 요약 */}
       <div className="bg-white border-b p-6">
@@ -673,7 +688,7 @@ export function PaymentsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="결제수단 관리" />
+      <PageHeader title="결제수단 관리" onBack={() => onGo("/my")} />
       <div className="p-4">
         <div className="mb-4 flex justify-between items-center">
           <h3 className="font-medium">등록된 카드</h3>
