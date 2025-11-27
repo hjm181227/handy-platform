@@ -14,6 +14,7 @@ import { getWebURL, logWebUrlInfo } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
 import { WebView } from 'react-native-webview';
 import { useNativeScreen } from '../contexts/NativeScreenProvider';
+import { FloatingChatButton } from '../components/FloatingChatButton';
 
 const HomeScreen: React.FC = () => {
   const [canGoBack, setCanGoBack] = useState(false);
@@ -58,6 +59,27 @@ const HomeScreen: React.FC = () => {
     };
   }, []);
 
+  // DeviceEventEmitter로 채팅 닫기 이벤트 수신
+  useEffect(() => {
+    const closeChatListener = DeviceEventEmitter.addListener(
+      'closeChat',
+      () => {
+        console.log('📍 [HOMESCREEN] closeChat event received, returning to original server');
+        if (webViewBridgeRef.current) {
+          webViewBridgeRef.current.injectJavaScript(`
+            console.log('Navigating back to original server: ${webURL}');
+            window.location.href = '${webURL}';
+            true;
+          `);
+        }
+      }
+    );
+
+    return () => {
+      closeChatListener.remove();
+    };
+  }, [webURL]);
+
   // 하드웨어 뒤로가기 처리
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -95,6 +117,24 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const handleChatButtonPress = () => {
+    console.log('💬 [HOMESCREEN] Navigating to chat');
+    if (webViewBridgeRef.current) {
+      // 개발 테스트용: 로컬 웹 서버 사용
+      // TODO: 배포 시 제거하고 ${webURL}/chat 사용
+      const chatUrl = 'http://192.168.45.57:3002/chat';
+      console.log('💬 [HOMESCREEN] Chat URL (DEV):', chatUrl);
+
+      webViewBridgeRef.current.injectJavaScript(`
+        (function() {
+          console.log('[WebView] Navigating to chat:', '${chatUrl}');
+          window.location.href = '${chatUrl}';
+        })();
+        true;
+      `);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar
@@ -109,6 +149,7 @@ const HomeScreen: React.FC = () => {
           onShowNativeFeatures={openNailSizes}
         />
       </View>
+      <FloatingChatButton onPress={handleChatButtonPress} />
     </SafeAreaView>
   );
 };

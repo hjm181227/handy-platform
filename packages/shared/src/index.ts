@@ -51,6 +51,9 @@ export * from './services/category/CategoryService';
 // Banner Services
 export * from './services/banner/BannerService';
 
+// Chat Services
+export * from './services/chat';
+
 // Config
 export * from './config/api';
 

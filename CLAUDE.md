@@ -251,6 +251,13 @@ window.ReactNativeWebView.payment('kakaopay', { amount, orderInfo });
 
 // 권한 요청
 window.ReactNativeWebView.requestPermission('camera');
+
+// 채팅 기능 (모바일 앱 전용)
+window.ReactNativeWebView.chat('connect', { token });
+window.ReactNativeWebView.chat('joinRoom', { roomId });
+window.ReactNativeWebView.chat('sendMessage', { roomId, text: 'Hello!' });
+window.ReactNativeWebView.chat('leaveRoom', { roomId });
+window.ReactNativeWebView.chat('disconnect');
 ```
 
 ### 주요 기능
@@ -259,6 +266,7 @@ window.ReactNativeWebView.requestPermission('camera');
 3. **결제 시스템**: 신용카드, 카카오페이, 네이버페이, 계좌이체 지원
 4. **API 통합**: JWT 인증, 자동 토큰 갱신, 에러 핸들링
 5. **반응형 UI**: 모바일 최적화된 쇼핑몰 인터페이스
+6. **실시간 채팅**: Socket.IO 기반 1:1 채팅, 고객 지원, 주문 관련 채팅 (모바일 앱 전용)
 
 ## 📱 네이티브 화면 추가 가이드
 
@@ -840,6 +848,264 @@ import { Product, Cart, User } from '@handy-platform/shared';
 - `packages/web/.env.stage` - 웹 스테이지환경 설정
 - `packages/web/.env.production` - 웹 프로덕션환경 설정
 - `packages/shared/src/config/api.ts` - 공통 API 설정
+
+## 💬 Socket.IO 실시간 채팅 기능
+
+### 개요
+handy-platform은 Socket.IO 기반의 실시간 채팅 기능을 지원합니다. **모바일 앱에서만 활성화**되며, 웹 브라우저에서는 비활성화됩니다.
+
+### 주요 특징
+- **실시간 양방향 통신**: Socket.IO를 사용한 WebSocket 연결
+- **JWT 인증**: 기존 인증 시스템과 통합 (Socket.IO auth 옵션 사용)
+- **플랫폼별 최적화**: React Native와 웹 환경에 맞춘 구현
+- **백그라운드 재연결**: 앱이 백그라운드로 갔다가 다시 돌아올 때 자동 재연결
+- **모바일 전용**: 웹 환경에서는 자동으로 비활성화
+
+### 채팅 서버 정보
+- **서버 URL**: `http://16.176.147.141`
+- **인증 방식**: Socket.IO auth 옵션 (`{ auth: { token: 'JWT_TOKEN' } }`)
+- **프로토콜**: WebSocket with fallback to polling
+
+### 아키텍처
+
+```
+packages/shared/src/services/chat/
+├── BaseChatService.ts        # 추상 베이스 클래스
+├── ChatService.native.ts     # React Native 구현 (모바일 앱)
+├── ChatService.web.ts        # Web 구현 (WebView 감지)
+├── types.ts                  # 공통 타입 정의
+└── index.ts                  # 플랫폼별 export
+```
+
+### 사용법
+
+#### 1. 모바일 앱에서 직접 사용
+
+```typescript
+import { mobileApiService } from '@/services/apiService';
+
+const chatService = mobileApiService.chat;
+
+// 1. 연결
+await chatService.connect({
+  serverUrl: 'http://16.176.147.141',
+  token: 'YOUR_JWT_TOKEN',
+});
+
+// 2. 채팅방 입장
+await chatService.joinRoom('room-123');
+
+// 3. 메시지 전송
+const message = await chatService.sendMessage('room-123', 'Hello!');
+
+// 4. 메시지 수신 리스너
+const unsubscribe = chatService.onMessage((message) => {
+  console.log('New message:', message);
+});
+
+// 5. 타이핑 상태 전송
+chatService.sendTyping('room-123', true);
+
+// 6. 채팅방 퇴장
+await chatService.leaveRoom('room-123');
+
+// 7. 연결 종료
+chatService.disconnect();
+
+// 8. 리스너 정리
+unsubscribe();
+```
+
+#### 2. WebView 브릿지를 통한 사용
+
+웹 페이지에서 React Native 브릿지를 통해 채팅 기능 호출:
+
+```javascript
+// 연결
+window.ReactNativeWebView.postMessage(JSON.stringify({
+  type: 'CHAT',
+  data: {
+    action: 'connect',
+    token: 'YOUR_JWT_TOKEN',
+    requestId: 'unique-id-1',
+  }
+}));
+
+// 채팅방 입장
+window.ReactNativeWebView.postMessage(JSON.stringify({
+  type: 'CHAT',
+  data: {
+    action: 'joinRoom',
+    roomId: 'room-123',
+    requestId: 'unique-id-2',
+  }
+}));
+
+// 메시지 전송
+window.ReactNativeWebView.postMessage(JSON.stringify({
+  type: 'CHAT',
+  data: {
+    action: 'sendMessage',
+    roomId: 'room-123',
+    text: 'Hello from web!',
+    requestId: 'unique-id-3',
+  }
+}));
+
+// 응답 수신
+window.addEventListener('message', (event) => {
+  const response = JSON.parse(event.data);
+  if (response.type === 'CHAT_RESPONSE') {
+    console.log('Chat response:', response.data);
+  }
+});
+```
+
+### 지원하는 채팅 액션
+
+| 액션 | 설명 | 파라미터 |
+|------|------|----------|
+| `connect` | Socket.IO 서버 연결 | `token` (선택) |
+| `disconnect` | 연결 종료 | - |
+| `joinRoom` | 채팅방 입장 | `roomId` |
+| `leaveRoom` | 채팅방 퇴장 | `roomId` |
+| `sendMessage` | 메시지 전송 | `roomId`, `text` |
+| `sendTyping` | 타이핑 상태 전송 | `roomId`, `isTyping` |
+| `isConnected` | 연결 상태 확인 | - |
+| `getCurrentRoom` | 현재 방 ID 조회 | - |
+
+### 이벤트 리스너
+
+```typescript
+// 메시지 수신
+chatService.onMessage((message) => {
+  console.log('Message:', message);
+});
+
+// 타이핑 표시
+chatService.onTyping((data) => {
+  console.log('Typing:', data);
+});
+
+// 연결 상태 변경
+chatService.onConnect(() => {
+  console.log('Connected');
+});
+
+chatService.onDisconnect(() => {
+  console.log('Disconnected');
+});
+
+// 에러
+chatService.onError((error) => {
+  console.error('Chat error:', error);
+});
+```
+
+### 타입 정의
+
+```typescript
+interface Message {
+  id: string;
+  roomId: string;
+  sender: 'me' | 'other';
+  senderId: string;
+  text: string;
+  timestamp: string;
+  read: boolean;
+  clientMessageId?: string;
+}
+
+interface ChatRoom {
+  id: string;
+  name: string;
+  avatar?: string;
+  lastMessage?: string;
+  timestamp?: string;
+  unreadCount?: number;
+  userIds?: string[];
+}
+
+interface TypingIndicator {
+  roomId: string;
+  userId: string;
+  isTyping: boolean;
+}
+```
+
+### 플랫폼별 동작
+
+#### React Native (모바일 앱)
+- ✅ 모든 채팅 기능 활성화
+- ✅ 백그라운드 재연결 지원
+- ✅ Android 에뮬레이터: `localhost` → `10.0.2.2` 자동 변환
+- ✅ AppState 감지 및 자동 재연결
+
+#### Web (브라우저)
+- ❌ 기본적으로 비활성화
+- ✅ WebView 환경 감지 시 활성화
+- ✅ `isChatEnabled()` 메서드로 상태 확인
+
+```typescript
+// 웹에서 채팅 활성화 여부 확인
+const isEnabled = webApiService.chat.isChatEnabled();
+// WebView 환경이면 true, 일반 브라우저면 false
+```
+
+### Android 설정
+
+채팅 서버 IP가 이미 네트워크 보안 설정에 추가되어 있습니다:
+
+```xml
+<!-- packages/mobile/android/app/src/main/res/xml/network_security_config.xml -->
+<domain includeSubdomains="true">16.176.147.141</domain>
+```
+
+### 문제 해결
+
+#### 연결 실패 시
+1. 서버 URL 확인: `http://16.176.147.141`
+2. 네트워크 권한 확인 (Android)
+3. JWT 토큰 유효성 확인
+4. Android 에뮬레이터에서는 `localhost` 대신 `10.0.2.2` 사용
+
+#### 메시지가 수신되지 않을 때
+1. 연결 상태 확인: `chatService.isConnected()`
+2. 채팅방 입장 확인: `chatService.getCurrentRoomId()`
+3. 이벤트 리스너 등록 확인
+4. 백엔드 서버 로그 확인
+
+#### 웹에서 채팅이 안 될 때
+- 웹 브라우저에서는 의도적으로 비활성화됨
+- WebView 환경에서만 작동 (React Native WebView)
+- `isChatEnabled()` 메서드로 확인
+
+### 백엔드 서버 연동
+
+채팅 서버(chat-stack-scaffold)에서 구현해야 할 이벤트:
+
+**서버 → 클라이언트:**
+- `connect`: 연결 성공
+- `disconnect`: 연결 해제
+- `message`: 새 메시지 수신
+- `user:typing`: 타이핑 표시
+- `room:joined`: 방 입장 확인
+- `room:left`: 방 퇴장 확인
+
+**클라이언트 → 서버:**
+- `join`: 채팅방 입장 요청
+- `leave`: 채팅방 퇴장 요청
+- `message`: 메시지 전송
+- `typing`: 타이핑 상태 전송
+
+### 향후 개선 사항
+
+- [ ] 오프라인 메시지 큐
+- [ ] 읽음 표시 동기화
+- [ ] 파일/이미지 전송
+- [ ] 푸시 알림 통합
+- [ ] 채팅 히스토리 캐싱
+- [ ] 네이티브 채팅 UI 화면
 
 ## Vercel Edge Config - 동적 API 라우팅
 

@@ -4,17 +4,17 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "android:dev": "REACT_NATIVE_ENV=development react-native run-android",
-    "android:stage": "REACT_NATIVE_ENV=stage react-native run-android",
-    "android:prod": "REACT_NATIVE_ENV=production react-native run-android",
+    "android:dev": "cross-env REACT_NATIVE_ENV=development react-native run-android",
+    "android:stage": "cross-env REACT_NATIVE_ENV=stage react-native run-android",
+    "android:prod": "cross-env REACT_NATIVE_ENV=production react-native run-android",
     "ios": "react-native run-ios",
-    "ios:dev": "REACT_NATIVE_ENV=development react-native run-ios",
-    "ios:stage": "REACT_NATIVE_ENV=stage react-native run-ios",
-    "ios:prod": "REACT_NATIVE_ENV=production react-native run-ios",
+    "ios:dev": "cross-env REACT_NATIVE_ENV=development react-native run-ios",
+    "ios:stage": "cross-env REACT_NATIVE_ENV=stage react-native run-ios",
+    "ios:prod": "cross-env REACT_NATIVE_ENV=production react-native run-ios",
     "start": "react-native start",
-    "start:dev": "REACT_NATIVE_ENV=development react-native start",
-    "start:stage": "REACT_NATIVE_ENV=stage react-native start",
-    "start:prod": "REACT_NATIVE_ENV=production react-native start",
+    "start:dev": "cross-env REACT_NATIVE_ENV=development react-native start",
+    "start:stage": "cross-env REACT_NATIVE_ENV=stage react-native start",
+    "start:prod": "cross-env REACT_NATIVE_ENV=production react-native start",
     "clean": "react-native clean",
     "build:android": "cd android && ./gradlew assembleRelease",
     "build:android:bundle": "cd android && ./gradlew bundleRelease"
@@ -29,8 +29,10 @@
     "react-native-image-picker": "^7.1.2",
     "react-native-permissions": "^4.1.5",
     "react-native-safe-area-context": "^4.8.2",
-    "react-native-screens": "^3.29.0",
-    "react-native-webview": "^13.8.6"
+    "react-native-screens": "3.29.0",
+    "react-native-vector-icons": "^10.3.0",
+    "react-native-webview": "^13.8.6",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -39,6 +41,8 @@
     "@react-native-community/cli-platform-android": "^12.3.6",
     "@react-native/metro-config": "^0.73.5",
     "@types/react": "^18.2.6",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "cross-env": "^10.1.0",
     "metro-react-native-babel-preset": "^0.77.0",
     "react-test-renderer": "18.2.0",
     "typescript": "4.8.4"

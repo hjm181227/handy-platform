@@ -139,6 +139,7 @@ class MobileApiService {
   get qr() { return this.apiService.qr; }
   get address() { return this.apiService.address; }
   get user() { return this.apiService.user; }
+  get chat() { return this.apiService.chat; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -227,6 +228,7 @@ export const {
   qr: qrService,
   address: addressService,
   user: userService,
+  chat: chatService,
 } = mobileApiService;
 
 // 레거시 호환성을 위한 기본 함수들

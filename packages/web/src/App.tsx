@@ -36,7 +36,10 @@ import { SignupPage } from './components/pages/SignupPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
+import { ChatPage } from './pages/ChatPage';
+import { ChatRoomPage } from './pages/ChatRoomPage';
 import { CartContent } from './components/cart/CartContent';
+import { FloatingChatButton } from './components/common/FloatingChatButton';
 
 // MyPage Components
 import {
@@ -161,6 +164,11 @@ function AppContent() {
     }, 3000);
   };
 
+  // 채팅 버튼 클릭 핸들러
+  const handleChatButtonClick = () => {
+    nav('/chat');
+  };
+
   // 장바구니 개수 로딩 (로그인된 사용자만)
   const loadCartCount = async () => {
     try {
@@ -236,6 +244,16 @@ function AppContent() {
       setLoadingBrands(false);
     }
   };
+
+  // nav 함수를 window 객체에 노출 (WebView에서 접근 가능하도록)
+  useEffect(() => {
+    (window as any).__appNavigate = nav;
+    console.log('[App] Navigation function exposed to window.__appNavigate');
+
+    return () => {
+      delete (window as any).__appNavigate;
+    };
+  }, [nav]);
 
   // 초기 데이터 로딩 (신상 제품과 브랜드, 장바구니는 로그인 후)
   useEffect(() => {
@@ -386,10 +404,14 @@ function AppContent() {
 
   let screen: React.ReactNode;
 
-
+  // Chat room detail
+  const mChatRoom = pathname.match(/^\/chat\/(.+)$/);
+  if (mChatRoom) {
+    screen = <ChatRoomPage nav={nav} roomId={decodeURIComponent(mChatRoom[1])} />;
+  }
   // Product detail
-  const mDetail = pathname.match(/^\/product\/(.+)$/);
-  if (mDetail) {
+  else if (pathname.match(/^\/product\/(.+)$/)) {
+    const mDetail = pathname.match(/^\/product\/(.+)$/)!;
     screen = <Detail
       id={decodeURIComponent(mDetail[1])}
       onBack={()=>history.back()}
@@ -586,6 +608,11 @@ function AppContent() {
         <SettingsPage onGo={nav} />
       </RequireAuth>
     );
+  } else if (pathname === "/chat") {
+    screen = <ChatPage nav={nav} />;
+  } else if (pathname.startsWith("/chat/")) {
+    const roomId = pathname.split("/")[2];
+    screen = <ChatRoomPage nav={nav} roomId={roomId} />;
   } else if (pathname === "/seller/register") {
     screen = (
       <RequireRole requiredRole="seller">
@@ -1018,9 +1045,12 @@ function AppContent() {
   // 어드민 센터 페이지인지 확인
   const isAdminPage = pathname.startsWith("/admin");
 
+  // 채팅 페이지인지 확인
+  const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
+
   // 홈화면에서는 헤더를 표시, 다른 페이지에서는 숨김
   const isHomePage = pathname === '/';
-  const shouldShowHeader = !isSellerPage && !isAdminPage;
+  const shouldShowHeader = !isSellerPage && !isAdminPage && !isChatPage;
 
   // 모바일 헤더 설정 결정
   const getMobileHeaderProps = () => {
@@ -1148,8 +1178,8 @@ function AppContent() {
         </div>
       </div>
 
-      {/* 판매자 센터가 아닐 때만 푸터와 드로어 표시 */}
-      {!isSellerPage && (
+      {/* 판매자 센터와 채팅 페이지가 아닐 때만 푸터와 드로어 표시 */}
+      {!isSellerPage && !isChatPage && (
         <>
           <FooterMega onGo={nav} />
           <CartDrawer
@@ -1220,6 +1250,9 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {/* Floating Chat Button */}
+      <FloatingChatButton onClick={handleChatButtonClick} />
     </AlertProvider>
   );
 }

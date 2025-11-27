@@ -19,6 +19,7 @@ import { BaseUserService, UserServiceFactory } from './user/UserService';
 import { BaseLikesService, LikesServiceFactory } from './likes/LikesService';
 import { BaseCategoryService, CategoryServiceFactory } from './category/CategoryService';
 import { BaseBannerService, BannerServiceFactory } from './banner/BannerService';
+import { BaseChatService, getChatService } from './chat';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -43,6 +44,7 @@ export interface IntegratedApiService {
   likes: BaseLikesService;
   category: BaseCategoryService;
   banner: BaseBannerService;
+  chat: BaseChatService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -74,6 +76,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public likes: BaseLikesService;
   public category: BaseCategoryService;
   public banner: BaseBannerService;
+  public chat: BaseChatService;
 
   protected baseURL: string;
   protected platform: string;
@@ -111,6 +114,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.likes = LikesServiceFactory.create(baseURL, getAuthHeaders);
     this.category = CategoryServiceFactory.create(baseURL, getAuthHeaders);
     this.banner = BannerServiceFactory.create(baseURL, getAuthHeaders);
+    this.chat = getChatService();
   }
 
   getEnvironmentInfo() {
@@ -137,7 +141,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'user',
         'likes',
         'category',
-        'banner'
+        'banner',
+        'chat'
       ],
     };
   }

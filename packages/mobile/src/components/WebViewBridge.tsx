@@ -74,6 +74,13 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'NAVIGATE_BACK':
           handleNavigateBack();
           break;
+        case 'CHAT':
+          await handleChat(message.data);
+          break;
+        case 'closeChat':
+          console.log('🔵 [BRIDGE] closeChat 메시지 수신');
+          DeviceEventEmitter.emit('closeChat');
+          break;
         default:
           console.log('🔴 [BRIDGE] 알 수 없는 메시지 타입:', message.type);
       }
@@ -425,10 +432,86 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     }
   };
 
+  const handleChat = async (data: any) => {
+    try {
+      const chatService = mobileApiService.chat;
+      let result: any = {};
+
+      switch (data.action) {
+        case 'connect':
+          // 토큰 가져오기
+          const token = await AsyncStorage.getItem('@handy_platform:accessToken');
+          await chatService.connect({
+            serverUrl: 'http://16.176.147.141',
+            token: token || undefined,
+          });
+          result = { connected: true };
+          break;
+
+        case 'disconnect':
+          chatService.disconnect();
+          result = { disconnected: true };
+          break;
+
+        case 'joinRoom':
+          await chatService.joinRoom(data.roomId);
+          result = { roomId: data.roomId, joined: true };
+          break;
+
+        case 'leaveRoom':
+          await chatService.leaveRoom(data.roomId);
+          result = { roomId: data.roomId, left: true };
+          break;
+
+        case 'sendMessage':
+          const message = await chatService.sendMessage(data.roomId, data.text);
+          result = { message };
+          break;
+
+        case 'sendTyping':
+          chatService.sendTyping(data.roomId, data.isTyping);
+          result = { roomId: data.roomId, isTyping: data.isTyping };
+          break;
+
+        case 'isConnected':
+          result = { connected: chatService.isConnected() };
+          break;
+
+        case 'getCurrentRoom':
+          result = { roomId: chatService.getCurrentRoomId() };
+          break;
+
+        default:
+          throw new Error(`Unknown chat action: ${data.action}`);
+      }
+
+      sendMessageToWebView({
+        type: 'CHAT_RESPONSE',
+        data: {
+          success: true,
+          result,
+          action: data.action,
+          requestId: data.requestId,
+        },
+      });
+    } catch (error) {
+      console.error('🔴 [BRIDGE] Chat error:', error);
+      sendMessageToWebView({
+        type: 'CHAT_RESPONSE',
+        data: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Chat error',
+          action: data.action,
+          requestId: data.requestId,
+        },
+      });
+    }
+  };
+
   const handlePermissions = async (data: any) => {
     try {
       let granted = false;
-      
+
       switch (data.type) {
         case 'camera':
           granted = await cameraService.requestCameraPermission();
@@ -445,20 +528,20 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
 
       sendMessageToWebView({
         type: 'PERMISSIONS_RESPONSE',
-        data: { 
-          success: true, 
+        data: {
+          success: true,
           granted,
           type: data.type,
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     } catch (error) {
       sendMessageToWebView({
         type: 'PERMISSIONS_RESPONSE',
-        data: { 
-          success: false, 
+        data: {
+          success: false,
           error: error instanceof Error ? error.message : 'Permission error',
-          requestId: data.requestId 
+          requestId: data.requestId
         },
       });
     }
@@ -848,6 +931,32 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         if (onNavigationStateChange) {
           onNavigationStateChange(navState);
         }
+      }}
+      onError={(syntheticEvent) => {
+        const { nativeEvent } = syntheticEvent;
+        console.error('❌ [WEBVIEW] Error:', nativeEvent);
+        Alert.alert(
+          'WebView 로딩 에러',
+          `URL: ${nativeEvent.url}\n\nDescription: ${nativeEvent.description}\n\nCode: ${nativeEvent.code}`,
+          [{ text: '확인', style: 'default' }]
+        );
+      }}
+      onHttpError={(syntheticEvent) => {
+        const { nativeEvent } = syntheticEvent;
+        console.error('❌ [WEBVIEW] HTTP Error:', nativeEvent);
+        Alert.alert(
+          'HTTP 에러',
+          `URL: ${nativeEvent.url}\n\nStatus Code: ${nativeEvent.statusCode}`,
+          [{ text: '확인', style: 'default' }]
+        );
+      }}
+      onLoadEnd={(syntheticEvent) => {
+        const { nativeEvent } = syntheticEvent;
+        console.log('✅ [WEBVIEW] Load End:', {
+          url: nativeEvent.url,
+          loading: nativeEvent.loading,
+          title: nativeEvent.title
+        });
       }}
       javaScriptEnabled={true}
       domStorageEnabled={true}

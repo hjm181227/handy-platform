@@ -13,7 +13,14 @@ export default defineConfig(({ mode }) => {
   server: {
     port: 3001,
     host: true,
-    // 프록시 제거 - 직접 서버 URL로 연결
+    // 일반 API는 stage 백엔드로 프록시, 채팅은 직접 연결
+    proxy: {
+      '/api': {
+        target: 'http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   resolve: {
     // 웹 빌드 시 .web 확장자 우선 사용
