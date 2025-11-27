@@ -22,7 +22,7 @@ export const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onPress 
 const styles = StyleSheet.create({
   button: {
     position: 'absolute',
-    top: '50%',
+    bottom: 96, // 탭바 높이(64px) + 여백(32px)
     right: 24,
     width: 56,
     height: 56,
@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 8,
     zIndex: 1000,
-    marginTop: -28, // Half of height to center vertically
   },
   icon: {
     fontSize: 28,
