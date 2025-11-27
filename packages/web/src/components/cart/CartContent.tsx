@@ -3,6 +3,58 @@ import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem, User }
 import { cartService } from '../../services/apiService';
 import { money } from '../../utils';
 
+/**
+ * API 응답 데이터를 프론트엔드 Cart 타입에 맞게 변환
+ * API는 productTotal/shippingTotal/paymentTotal을 보내지만
+ * 프론트엔드는 subtotal/shippingCost/total을 기대함
+ */
+const mapApiResponseToCart = (apiData: any): Cart => {
+  // 전체 아이템 개수 계산
+  let totalItemCount = 0;
+  if (apiData.itemsBySeller) {
+    apiData.itemsBySeller.forEach((seller: any) => {
+      if (seller.items) {
+        totalItemCount += seller.items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+      }
+    });
+  }
+
+  // itemsBySeller의 shipping 구조 변환 (cost → shippingCost) 및 itemCount 계산
+  const itemsBySeller = (apiData.itemsBySeller || []).map((seller: any) => {
+    // 판매자별 아이템 개수 계산
+    const itemCount = seller.itemCount || (seller.items || []).reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+
+    return {
+      ...seller,
+      itemCount, // 아이템 개수 추가
+      shipping: {
+        ...seller.shipping,
+        // API는 cost를 보내지만, 프론트엔드는 shippingCost를 기대
+        shippingCost: seller.shipping?.cost || seller.shipping?.shippingCost || 0,
+        // freeShippingRemaining 계산
+        freeShippingRemaining: seller.shipping?.freeShippingRemaining ||
+          (seller.shipping?.freeShippingThreshold && seller.subtotal < seller.shipping.freeShippingThreshold
+            ? seller.shipping.freeShippingThreshold - seller.subtotal
+            : 0)
+      }
+    };
+  });
+
+  return {
+    ...apiData,
+    items: apiData.items || [],
+    itemsBySeller,
+    totals: {
+      subtotal: apiData.totals?.productTotal || 0,
+      shippingCost: apiData.totals?.shippingTotal || 0,
+      total: apiData.totals?.paymentTotal || 0,
+      tax: apiData.totals?.tax || 0,
+      itemCount: totalItemCount,
+      freeShippingRemaining: apiData.totals?.freeShippingRemaining || 0,
+    }
+  };
+};
+
 interface CartContentProps {
   /** 렌더링 모드 - drawer는 좁은 사이드바, page는 전체 화면 */
   mode: 'drawer' | 'page';
@@ -57,12 +109,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       const response = await cartService.getCart();
 
       if (response.success && response.data) {
-        // Cart 응답 구조: data에 직접 장바구니 정보
-        const cartData = {
-          ...response.data,
-          items: response.data.items || [],
-          totals: response.data.totals || {}
-        };
+        // API 응답을 프론트엔드 타입에 맞게 변환
+        const cartData = mapApiResponseToCart(response.data);
 
         setCart(cartData);
 
@@ -106,12 +154,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       console.log('Update cart response:', response);
 
       if (response.success && response.data) {
-        // Cart 응답 구조 처리: data에 직접 장바구니 정보
-        const cartData = {
-          ...response.data,
-          items: response.data.items || [],
-          totals: response.data.totals || {}
-        };
+        // API 응답을 프론트엔드 타입에 맞게 변환
+        const cartData = mapApiResponseToCart(response.data);
 
         setCart(cartData);
 
@@ -178,6 +222,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       showToast(`${name}이(가) 장바구니에서 제거되었어요`, 'info');
     }
 
+    // ✅ 즉시 장바구니 업데이트 (헤더 카운트 및 드로어 갱신)
+    onCartUpdate?.();
+
     // 3초 후 API 호출
     if (undoTimerRef.current) {
       clearTimeout(undoTimerRef.current);
@@ -191,11 +238,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
         console.log('Remove cart response:', response);
 
         if (response.success && response.data) {
-          const cartData = {
-            ...response.data,
-            items: response.data.items || [],
-            totals: response.data.totals || {}
-          };
+          // API 응답을 프론트엔드 타입에 맞게 변환
+          const cartData = mapApiResponseToCart(response.data);
 
           setCart(cartData);
           setRemovedItems(response.removedItems || []);
@@ -235,6 +279,10 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
     // 이전 상태로 복원
     setCart(pendingUndo.previousCart);
+
+    // ✅ Undo 시에도 장바구니 업데이트 (헤더 카운트 및 드로어 갱신)
+    onCartUpdate?.();
+
     setRemovingItems(prev => {
       const newSet = new Set(prev);
       newSet.delete(pendingUndo.productId);
@@ -315,9 +363,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
   // 로딩 상태
   const renderLoading = () => (
-    <div className="animate-pulse space-y-3 sm:space-y-4">
+    <div className="animate-pulse space-y-3">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+        <div key={i} className="flex gap-3 p-3 border rounded-lg">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded flex-shrink-0"></div>
           <div className="flex-1 space-y-2">
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -350,11 +398,11 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     }
 
     return (
-      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+      <div className="space-y-2 mb-4">
         {/* 다중 판매자 안내 */}
         {cartSummary?.hasMultipleSellers && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-start gap-2">
               <div className="text-blue-500 text-lg sm:text-xl flex-shrink-0">🚚</div>
               <div className="min-w-0">
                 <div className="text-blue-800 font-medium text-sm sm:text-base">다중 판매자 주문</div>
@@ -368,8 +416,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
         {/* 제작 용량 관련 메시지 */}
         {message && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <div className="flex items-start gap-2">
               <div className="text-orange-500 text-lg sm:text-xl flex-shrink-0">⚠️</div>
               <div className="text-orange-800 text-xs sm:text-sm">{message}</div>
             </div>
@@ -378,7 +426,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
         {/* 제거된 아이템들 */}
         {removedItems.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <div className="text-red-800 font-medium mb-2 text-sm sm:text-base">제작 용량 부족으로 제거된 상품</div>
             {removedItems.map((item, index) => (
               <div key={index} className="text-red-700 text-xs sm:text-sm mb-1">
@@ -392,7 +440,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
         {/* 제작 용량 경고 */}
         {capacityWarnings.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <div className="text-yellow-800 font-medium mb-2 text-sm sm:text-base">제작 용량 주의</div>
             {capacityWarnings.map((warning, index) => (
               <div key={index} className="text-yellow-700 text-xs sm:text-sm mb-1">
@@ -422,18 +470,18 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
   // 판매자별 그룹화된 장바구니 아이템 렌더링
   const renderSellerGroup = (seller: CartItemsBySeller) => (
-    <div key={seller.sellerUuid} className="border rounded-lg mb-3 sm:mb-4 md:mb-6 overflow-hidden">
+    <div key={seller.sellerUuid} className="border rounded-lg mb-3 overflow-hidden">
       {/* 판매자 헤더 */}
-      <div className="bg-gray-50 border-b p-2 sm:p-3 md:p-4">
+      <div className="bg-gray-50 border-b p-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+          <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm sm:text-base md:text-lg leading-tight">{seller.sellerName}</h3>
           </div>
         </div>
       </div>
 
       {/* 판매자의 상품 목록 */}
-      <div className="p-2 sm:p-3 md:p-4 lg:p-6 space-y-2 sm:space-y-3 md:space-y-4">
+      <div className="p-3 space-y-2">
         {seller.items.map((item: CartItem) => {
           // 새 API 구조: 플랫하게 productUuid 사용, 기존 구조 호환성 유지
           const productId = item.productUuid || item.product?.id;
@@ -447,10 +495,20 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
           return (
             <div
               key={itemKey}
-              className={`flex gap-2 sm:gap-3 md:gap-4 lg:gap-6 transition-all duration-300 ${isUpdating ? 'opacity-50' : ''} ${isRemoving ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
+              className={`flex items-center gap-2 py-1.5 transition-all duration-300 ${isUpdating ? 'opacity-50' : ''} ${isRemoving ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
             >
-              {/* 상품 이미지 */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+              {/* 삭제 버튼 - 맨 왼쪽 */}
+              <button
+                onClick={() => removeItem(productId, item.options, productName)}
+                disabled={isUpdating}
+                className="text-gray-400 hover:text-red-500 p-1 touch-manipulation flex-shrink-0"
+                title="상품 제거"
+              >
+                <span className="text-sm">✕</span>
+              </button>
+
+              {/* 상품 이미지 - 작게 */}
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                 {productMainImageUrl ? (
                   <img
                     src={productMainImageUrl}
@@ -477,86 +535,71 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                 )}
               </div>
 
-              {/* 상품 정보 */}
+              {/* 상품 정보 - 왼쪽 */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-1 sm:gap-2">
-                  <div className="flex-1 pr-1 min-w-0">
-                    <h4 className="font-semibold text-xs sm:text-sm md:text-base truncate leading-tight">{productName}</h4>
-                    <div className="text-gray-500 text-[10px] sm:text-xs mt-0.5">
-                      {productBrand && <span className="block sm:inline">{productBrand}</span>}
-                      {item.options && (
-                        <div className="mt-0.5 sm:mt-1 flex flex-wrap gap-0.5 sm:gap-1">
-                          {Object.entries(item.options).map(([key, value]) => {
-                            const optionNames: Record<string, string> = {
-                              'nailShape': '쉐입',
-                              'nailLength': '길이',
-                              'nailSize': '사이즈'
-                            };
+                <h4 className="font-semibold text-xs sm:text-sm leading-tight line-clamp-2">{productName}</h4>
+                {item.options && (
+                  <div className="mt-0.5 flex flex-wrap gap-0.5">
+                    {Object.entries(item.options).map(([key, value]) => {
+                      const optionNames: Record<string, string> = {
+                        'nailShape': '쉐입',
+                        'nailLength': '길이',
+                        'nailSize': '사이즈'
+                      };
 
-                            const optionValues: Record<string, string> = {
-                              'ROUND': '라운드',
-                              'ALMOND': '아몬드',
-                              'SQUARE': '스퀘어',
-                              'OVAL': '오벌',
-                              'COFFIN': '코핀',
-                              'SHORT': '숏',
-                              'MEDIUM': '미디움',
-                              'LONG': '롱'
-                            };
+                      const optionValues: Record<string, string> = {
+                        'ROUND': '라운드',
+                        'ALMOND': '아몬드',
+                        'SQUARE': '스퀘어',
+                        'OVAL': '오벌',
+                        'COFFIN': '코핀',
+                        'SHORT': '숏',
+                        'MEDIUM': '미디움',
+                        'LONG': '롱'
+                      };
 
-                            const displayKey = optionNames[key] || key;
-                            const displayValue = optionValues[value as string] || value;
+                      const displayKey = optionNames[key] || key;
+                      const displayValue = optionValues[value as string] || value;
 
-                            return (
-                              <span key={key} className="inline-block bg-gray-100 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs whitespace-nowrap">
-                                {displayKey}: {displayValue}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
+                      return (
+                        <span key={key} className="inline-block bg-gray-100 px-1 py-0.5 rounded text-[10px] whitespace-nowrap">
+                          {displayKey}: {displayValue}
+                        </span>
+                      );
+                    })}
                   </div>
-                  <button
-                    onClick={() => removeItem(productId, item.options, productName)}
-                    disabled={isUpdating}
-                    className="text-gray-400 hover:text-red-500 p-1.5 sm:p-2 ml-auto flex-shrink-0 -mt-0.5 touch-manipulation"
-                    title="상품 제거"
-                  >
-                    <span className="text-sm sm:text-base">✕</span>
-                  </button>
+                )}
+              </div>
+
+              {/* 가격 및 수량 - 오른쪽 2줄 */}
+              <div className="flex flex-col gap-1 ml-auto flex-shrink-0">
+                {/* 가격 */}
+                <div className="text-right">
+                  <div className="font-bold text-sm whitespace-nowrap">
+                    {money(item.subtotal)}원
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3">
-                  {/* 수량 조절 */}
-                  <div className="flex items-center border rounded touch-manipulation scale-90 sm:scale-100 origin-left">
+                {/* 수량 조절 */}
+                <div className="flex items-center justify-end">
+                  <div className="flex items-center border rounded">
                     <button
                       onClick={() => updateQuantity(productId, item.quantity - 1, item.options)}
                       disabled={isUpdating || item.quantity <= 1}
-                      className="px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center text-sm sm:text-base"
+                      className="px-1.5 py-0.5 hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center text-sm"
                     >
                       -
                     </button>
-                    <div className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 min-w-[36px] sm:min-w-[50px] text-center border-x font-medium text-xs sm:text-sm">
+                    <div className="px-1.5 py-0.5 min-w-[28px] text-center border-x font-medium text-xs">
                       {isUpdating ? '...' : item.quantity}
                     </div>
                     <button
                       onClick={() => updateQuantity(productId, item.quantity + 1, item.options)}
                       disabled={isUpdating}
-                      className="px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center text-sm sm:text-base"
+                      className="px-1.5 py-0.5 hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center text-sm"
                     >
                       +
                     </button>
-                  </div>
-
-                  {/* 가격 정보 */}
-                  <div className="text-right ml-auto">
-                    <div className="font-bold text-sm sm:text-base md:text-lg leading-tight">
-                      {money(item.subtotal)}원
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">
-                      개당 {money(item.price)}원
-                    </div>
                   </div>
                 </div>
               </div>
@@ -566,7 +609,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
       </div>
 
       {/* 판매자별 소계 및 배송 정보 */}
-      <div className="bg-gray-50 border-t p-2 sm:p-3 md:p-4">
+      <div className="bg-gray-50 border-t p-2">
         <div className="flex items-center justify-between flex-wrap gap-1.5 sm:gap-2">
           <div>
             <div className="font-semibold text-xs sm:text-sm md:text-base">
@@ -603,13 +646,12 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     );
   };
 
-  // 주문 요약 렌더링 (다중 판매자 정보 우선 사용)
+  // 주문 요약 렌더링
   const renderOrderSummary = () => {
     if (!cart || itemsBySeller.length === 0) return null;
 
-    // 다중 판매자 정보가 있으면 우선 사용, 없으면 기존 정보 사용
-    const totals = multiSellerTotals || cart.totals;
-    const hasMultiSellerInfo = !!multiSellerTotals;
+    // cart.totals 직접 사용 (mapApiResponseToCart에서 이미 변환됨)
+    const totals = cart.totals;
 
     const summary = (
       <>
@@ -619,58 +661,20 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
             <span className="font-medium">{money(totals.subtotal)}원</span>
           </div>
           
-          {hasMultiSellerInfo ? (
-            /* 다중 판매자 배송비 상세 표시 */
-            <div className="space-y-1">
-              {multiSellerTotals!.totalShippingCost > 0 && (
-                <div className="flex items-center justify-between">
-                  <span>총 배송비</span>
-                  <span className="font-medium">{money(multiSellerTotals!.totalShippingCost)}원</span>
-                </div>
-              )}
-              
-              {/* 판매자별 배송비 안내 */}
-              {multiSellerTotals!.shippingBreakdown.totalSellers > 1 && (
-                <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                  {multiSellerTotals!.shippingBreakdown.freeShippingSellers}/{multiSellerTotals!.shippingBreakdown.totalSellers} 판매자 무료배송
-                  {multiSellerTotals!.shippingBreakdown.averageDeliveryDays && (
-                    <span className="block mt-1">
-                      평균 배송: {multiSellerTotals!.shippingBreakdown.averageDeliveryDays}일
-                    </span>
-                  )}
-                </div>
-              )}
+          {/* 배송비 표시 */}
+          {totals.shippingCost > 0 && (
+            <div className="flex items-center justify-between">
+              <span>배송비</span>
+              <span className="font-medium">{money(totals.shippingCost)}원</span>
             </div>
-          ) : (
-            /* 기존 단일 판매자 방식 */
-            <>
-              {cart.totals.shippingCost > 0 && (
-                <div className="flex items-center justify-between">
-                  <span>배송비</span>
-                  <span className="font-medium">{money(cart.totals.shippingCost)}원</span>
-                </div>
-              )}
-              {cart.totals.freeShippingRemaining > 0 && (
-                <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  {money(cart.totals.freeShippingRemaining)}원 더 구매하면 무료배송!
-                </div>
-              )}
-            </>
           )}
-          
-          
-          {/* 제작 일정 정보 */}
-          {hasMultiSellerInfo && multiSellerTotals!.estimatedProductionTime > 0 && (
-            <div className="text-xs text-gray-600 bg-yellow-50 p-2 rounded">
-              예상 제작 기간: {multiSellerTotals!.estimatedProductionTime}일
-              {multiSellerTotals!.earliestDeliveryDate && (
-                <span className="block mt-1">
-                  최빠른 배송일: {new Date(multiSellerTotals!.earliestDeliveryDate).toLocaleDateString()}
-                </span>
-              )}
+          {totals.freeShippingRemaining > 0 && (
+            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+              {money(totals.freeShippingRemaining)}원 더 구매하면 무료배송!
             </div>
           )}
           
+
           <hr />
         </div>
         <div className="mb-4 flex items-center justify-between border-t pt-3">
@@ -700,8 +704,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     }
 
     return (
-      <div className="border rounded-lg p-4 sm:p-5 lg:sticky lg:top-4">
-        <h3 className="font-semibold mb-3 sm:mb-4 text-base sm:text-lg">주문 요약</h3>
+      <div className="border rounded-lg p-3 lg:sticky lg:top-4">
+        <h3 className="font-semibold mb-3 text-base sm:text-lg">주문 요약</h3>
         {summary}
         <div className="mt-4 text-xs sm:text-sm text-gray-500 text-center">
           • 최종 결제금액은 쿠폰 적용에 따라 달라질 수 있습니다
@@ -805,10 +809,10 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
     return (
       <>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6">
+        <div className="mx-auto max-w-6xl px-4 py-4">
           {renderHeader()}
           {renderNotifications()}
-          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
               {renderCartItems()}
             </div>

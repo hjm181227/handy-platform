@@ -91,8 +91,12 @@ export function Detail({
       setCartMessage('장바구니에 추가되었습니다!');
       // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거
 
+      console.log('🛒 [Detail] Calling onCartUpdate after adding to cart');
       if (onCartUpdate) {
         onCartUpdate();
+        console.log('🛒 [Detail] onCartUpdate called successfully');
+      } else {
+        console.warn('⚠️ [Detail] onCartUpdate is not provided!');
       }
 
       setTimeout(() => setCartMessage(null), 3000);

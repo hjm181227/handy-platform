@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
@@ -20,6 +21,7 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const { alert } = useAlert();
+  const location = useLocation();
   const [cart, setCart] = useState<Cart | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,11 +45,65 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   // 결제 방법
   const [paymentMethod, setPaymentMethod] = useState<string>('card');
 
+  // 배송지 및 결제수단 등 추가 체크아웃 데이터 로드
+  const loadAdditionalCheckoutData = async () => {
+    // 저장된 배송지 목록 로드
+    try {
+      const addressesResponse = await purchaseApiService.getShippingAddresses();
+
+      if (addressesResponse.success && addressesResponse.data) {
+        setSavedAddresses(addressesResponse.data);
+
+        // 기본 배송지가 있으면 선택
+        const defaultAddress = addressesResponse.data.find(addr => addr.isDefault);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+          setShippingAddress(defaultAddress);
+          setShowAddressForm(false);
+        } else if (addressesResponse.data.length > 0) {
+          // 기본 배송지가 없으면 첫 번째 배송지 선택
+          const firstAddress = addressesResponse.data[0];
+          setSelectedAddressId(firstAddress.id);
+          setShippingAddress(firstAddress);
+          setShowAddressForm(false);
+        } else {
+          // 배송지가 없으면 빈 상태 표시 (폼은 버튼을 눌러야 열림)
+          setShowAddressForm(false);
+        }
+      } else {
+        console.warn('배송지 목록 로드 실패:', addressesResponse.message);
+        setShowAddressForm(false);
+      }
+    } catch (addressError) {
+      console.error('배송지 목록 로드 오류:', addressError);
+      setShowAddressForm(false);
+    }
+  };
+
   // 장바구니와 pending 주문 로드
-  const loadCheckoutData = async () => {
+  const loadCheckoutData = async (retryCount = 0) => {
     try {
       setLoading(true);
       setError(null);
+
+      // ✅ 1. 먼저 navigation state에서 검증된 장바구니 데이터 확인
+      const validatedCart = (location.state as any)?.validatedCart;
+
+      if (validatedCart && validatedCart.items && validatedCart.items.length > 0) {
+        console.log('✅ Using validated cart from navigation state (이중 API 호출 방지)');
+        console.log('🛒 Validated cart items:', validatedCart.items);
+
+        // 검증된 장바구니 데이터로 바로 설정
+        setCart(validatedCart);
+
+        // 나머지 체크아웃 데이터 로드 (배송지, 결제수단 등)
+        await loadAdditionalCheckoutData();
+        setLoading(false);
+        return;
+      }
+
+      // ✅ 2. Fallback: navigation state가 없으면 API 호출 (뒤로가기, 새로고침 등)
+      console.log('⚠️ No validated cart in navigation state, fetching from API (fallback)');
 
       // 장바구니 정보 가져오기
       const cartResponse = await purchaseApiService.getCart();
@@ -60,81 +116,25 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         const cartData = cartResponse.data;
         console.log('🛒 Checkout cart data:', cartData);
         console.log('🛒 Cart items:', cartData.items);
-        setCart(cartData);
 
-        // 장바구니가 비어있으면 장바구니 페이지로 리다이렉트
+        // 장바구니가 비어있고 재시도 횟수가 남았으면 재시도
+        if ((!cartData || !cartData.items || cartData.items.length === 0) && retryCount < 2) {
+          console.log(`🔄 Empty cart detected, retrying (${retryCount + 1}/2)...`);
+          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms 대기
+          return loadCheckoutData(retryCount + 1);
+        }
+
+        // 재시도 후에도 비어있으면 에러 표시
         if (!cartData || !cartData.items || cartData.items.length === 0) {
           setError('장바구니가 비어있습니다.');
           setTimeout(() => onGo('/cart'), 2000);
           return;
         }
 
-        // 장바구니 기반으로 임시 주문 정보 생성 (결제 시점에 실제 주문 생성)
-        const tempOrder: Order = {
-          id: `temp_${Date.now()}`,
-          orderNumber: `ORDER_${Date.now()}`,
-          status: 'pending',
-          paymentStatus: 'pending',
-          totalAmount: cartData.totals?.total || 0,
-          items: cartData.items,
-          shipping: {
-            id: `shipping_${Date.now()}`,
-            status: 'preparing',
-            trackingNumber: undefined,
-            estimatedDelivery: undefined,
-            carrier: {
-              name: 'Standard Delivery',
-              code: 'STD'
-            }
-          } as ShippingDetails,
-          createdAt: new Date().toISOString(),
-          // Checkout 페이지 전용 필드들
-          totalPrice: cartData.totals?.subtotal || 0,
-          shippingCost: cartData.totals?.shippingCost || 0,
-          totalDiscount: 0,
-          finalPrice: cartData.totals?.total || 0
-        };
-        setOrder(tempOrder);
+        setCart(cartData);
 
-        // 저장된 배송지 목록 로드
-        try {
-          const addressesResponse = await purchaseApiService.getShippingAddresses();
-
-          if (addressesResponse.success && addressesResponse.data) {
-            setSavedAddresses(addressesResponse.data);
-
-            // 기본 배송지가 있으면 선택
-            const defaultAddress = addressesResponse.data.find(addr => addr.isDefault);
-            if (defaultAddress) {
-              setSelectedAddressId(defaultAddress.id);
-              setShippingAddress(defaultAddress);
-              setShowAddressForm(false);
-            } else if (addressesResponse.data.length > 0) {
-              // 기본 배송지가 없으면 첫 번째 배송지 선택
-              const firstAddress = addressesResponse.data[0];
-              setSelectedAddressId(firstAddress.id);
-              setShippingAddress(firstAddress);
-              setShowAddressForm(false);
-            } else {
-              // 배송지가 없으면 빈 상태 표시 (폼은 버튼을 눌러야 열림)
-              setShowAddressForm(false);
-            }
-          } else {
-            console.warn('배송지 목록 로드 실패:', addressesResponse.message);
-            // 배송지 로드 실패 시 빈 상태 표시
-            setShowAddressForm(false);
-          }
-        } catch (addressError) {
-          console.error('배송지 목록 로드 오류:', addressError);
-          // 오류 발생 시 빈 상태 표시
-          setShowAddressForm(false);
-        }
-
-        // 저장된 결제수단 목록 로드 (임시 비활성화)
-        // const paymentMethodsResponse = await purchaseApiService.getPaymentMethods();
-        // if (paymentMethodsResponse.success && paymentMethodsResponse.data) {
-        //   setSavedPaymentMethods(paymentMethodsResponse.data);
-        // }
+        // 나머지 체크아웃 데이터 로드 (배송지 등)
+        await loadAdditionalCheckoutData();
       } else {
         throw new Error('장바구니 정보를 불러올 수 없습니다.');
       }
@@ -298,7 +298,8 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">주문 정보를 준비하고 있습니다...</p>
+          <p className="text-gray-600 font-medium">주문 정보를 준비하고 있습니다...</p>
+          <p className="text-sm text-gray-500 mt-2">장바구니를 불러오는 중</p>
         </div>
       </div>
     );

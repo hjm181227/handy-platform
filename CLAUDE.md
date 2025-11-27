@@ -244,7 +244,6 @@ window.ReactNativeWebView.cart('add', { productId, quantity });
 // 카메라 기능
 window.ReactNativeWebView.camera('takePhoto', { productId });
 window.ReactNativeWebView.camera('choosePhoto', { productId });
-window.ReactNativeWebView.camera('scanQR');
 
 // 결제 기능
 window.ReactNativeWebView.payment('kakaopay', { amount, orderInfo });

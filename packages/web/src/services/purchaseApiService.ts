@@ -307,6 +307,40 @@ export class PurchaseApiService {
     return webApiService.order.getOrder(orderId);
   }
 
+  // 주문 취소
+  async cancelOrder(orderId: string, reason?: string) {
+    if (USE_MOCK_API) {
+      return {
+        success: true,
+        message: '주문이 취소되었습니다.',
+        data: { orderId, status: 'cancelled' }
+      };
+    }
+
+    try {
+      const response = await webApiService.order.cancelOrder(orderId, reason);
+
+      if (response.success) {
+        return {
+          success: true,
+          message: '주문이 성공적으로 취소되었습니다.',
+          data: response.data
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || '주문 취소에 실패했습니다.'
+      };
+    } catch (error: any) {
+      console.error('Order cancellation failed:', error);
+      return {
+        success: false,
+        message: error.message || '주문 취소 중 오류가 발생했습니다.'
+      };
+    }
+  }
+
   async processPayment(paymentData: {
     orderId: string;
     paymentMethod: string;
