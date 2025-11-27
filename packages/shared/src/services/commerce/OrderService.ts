@@ -11,7 +11,7 @@ import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
 
 export abstract class BaseOrderService extends BaseApiService {
-  // 주문 조회
+  // 주문 조회 - POST /api/orders/list 사용 (백엔드 스펙 준수)
   async getOrders(filters: {
     page?: number;
     limit?: number;
@@ -22,14 +22,41 @@ export abstract class BaseOrderService extends BaseApiService {
     sortBy?: string;
     sortOrder?: string;
   } = {}): Promise<OrdersResponse> {
-    const queryString = this.buildQueryString(filters);
-    const endpoint = queryString ? `${API_ENDPOINTS.ORDERS.LIST}?${queryString}` : API_ENDPOINTS.ORDERS.LIST;
-    
-    const response = await this.request<OrdersResponse>(endpoint);
+    // POST 방식으로 변경 - 필터 데이터를 request body로 전송
+    const requestBody = {
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+      ...(filters.status && { status: filters.status.split(',') }), // 문자열을 배열로 변환
+      ...(filters.paymentStatus && { paymentStatus: filters.paymentStatus }),
+      ...(filters.startDate && { startDate: filters.startDate }),
+      ...(filters.endDate && { endDate: filters.endDate }),
+      ...(filters.sortBy && { sortBy: filters.sortBy }),
+    };
+
+    const response = await this.request<any>(
+      '/api/orders/list',
+      {
+        method: 'POST',
+        body: JSON.stringify(requestBody)
+      }
+    );
+
+    // 백엔드 응답 형식: { success, items, pagination }
+    // 프론트엔드 형식으로 변환: { orders, pagination }
+    const normalizedResponse: OrdersResponse = {
+      orders: response.items || [],
+      pagination: response.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        hasNext: false,
+        hasPrev: false
+      }
+    };
 
     // Validate UUID format in orders response during migration period
-    if (response.orders) {
-      response.orders.forEach((order, index) => {
+    if (normalizedResponse.orders) {
+      normalizedResponse.orders.forEach((order, index) => {
         try {
           validateResponseId(order, `Order[${index}]`);
         } catch (error) {
@@ -38,7 +65,7 @@ export abstract class BaseOrderService extends BaseApiService {
       });
     }
 
-    return response;
+    return normalizedResponse;
   }
 
   async getOrder(id: string): Promise<ApiResponse<{ order: Order }>> {

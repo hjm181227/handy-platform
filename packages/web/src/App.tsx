@@ -13,7 +13,7 @@ import { useAuth } from './hooks/useAuth';
 import { TopDarkNav } from './components/layout/TopDarkNav';
 import { MainHeader } from './components/layout/MainHeader';
 import { MobilePageHeader } from './components/layout/MobilePageHeader';
-import { EventBanners } from './components/layout/Hero';
+import { EventBanners } from './components/layout/EventBanner';
 import { FooterMega } from './components/layout/Footer';
 import { CartDrawer, CategoryDrawer } from './components/layout/Drawers';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
@@ -1054,8 +1054,8 @@ function AppContent() {
         onGo: nav
       };
     }
-    // 마이페이지
-    if (pathname.startsWith('/my')) {
+    // 마이페이지 (메인 페이지만 - 서브페이지는 자체 PageHeader 사용)
+    if (pathname === '/my') {
       return {
         title: '마이페이지',
         showSearch: true,

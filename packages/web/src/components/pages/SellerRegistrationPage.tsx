@@ -1,22 +1,6 @@
 import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
-
-// 뒤로가기 버튼 컴포넌트
-const BackButton = ({ onBack, title }: { onBack: () => void; title: string }) => (
-  <div className="bg-white border-b px-4 py-3">
-    <div className="flex items-center gap-3">
-      <button
-        onClick={onBack}
-        className="p-1 hover:bg-gray-100 rounded"
-      >
-        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor">
-          <path d="M19 12H5m7-7l-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      <h1 className="text-lg font-semibold">{title}</h1>
-    </div>
-  </div>
-);
+import { PageHeader } from '../layout/PageHeader';
 
 // 입력 필드 컴포넌트
 const FormField = ({
@@ -231,7 +215,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BackButton onBack={() => onGo('/my/settings')} title="판매자 전환 신청" />
+        <PageHeader title="판매자 전환 신청" onBack={() => onGo('/my/settings')} />
         <div className="flex items-center justify-center py-20">
           <div className="animate-pulse text-gray-600">로딩 중...</div>
         </div>
@@ -241,7 +225,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo('/my/settings')} title="판매자 전환 신청" />
+      <PageHeader title="판매자 전환 신청" onBack={() => onGo('/my/settings')} />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* 안내 섹션 */}
