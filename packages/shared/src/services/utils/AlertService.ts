@@ -58,8 +58,20 @@ export function processError(error: Error | string): ProcessedError {
     };
   }
 
+  // 502 Bad Gateway (서비스 점검)
+  if (errorMessage.includes('502') ||
+      errorMessage.includes('Bad Gateway')) {
+    return {
+      userMessage: '현재 서비스 점검 중입니다. 잠시 후 이용해주세요.',
+      technicalMessage: errorMessage,
+      category: 'server',
+      recoverable: true,
+      showRetry: true
+    };
+  }
+
   // 서버 에러
-  if (errorMessage.includes('500') || 
+  if (errorMessage.includes('500') ||
       errorMessage.includes('Internal Server Error') ||
       errorMessage.includes('서버')) {
     return {

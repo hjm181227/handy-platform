@@ -98,16 +98,39 @@ export abstract class BaseApiService {
     if (!response.ok) {
       const errorData = await safeJsonParse(response);
       const apiError = parseApiError(response, errorData);
-      
+
       if (isTokenExpired(apiError)) {
         await this.handleTokenExpiration();
         throw apiError;
       }
-      
+
+      // 502 Bad Gateway: 서비스 점검 알림
+      if (apiError.status === 502) {
+        this.handleServiceUnavailable();
+        throw apiError;
+      }
+
       throw apiError;
     }
 
     return response.json();
+  }
+
+  protected handleServiceUnavailable(): void {
+    console.log('Service unavailable (502), showing maintenance message');
+
+    try {
+      // AlertService 동적 import (순환 의존성 방지)
+      const { alertService } = require('../utils/AlertService');
+
+      alertService.toast('현재 서비스 점검 중입니다. 잠시 후 이용해주세요.', {
+        variant: 'warning',
+        duration: 5000,
+        position: 'top'
+      });
+    } catch (error) {
+      console.warn('Failed to show service unavailable toast:', error);
+    }
   }
 
   protected async handleTokenExpiration(): Promise<void> {

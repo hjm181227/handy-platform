@@ -46,7 +46,7 @@ export function PageHeader({
   return (
     <header
       className={`
-        ${sticky ? 'sticky top-0 z-40' : ''}
+        ${sticky ? 'sticky top-0 z-30' : ''}
         ${borderBottom ? 'border-b' : ''}
         bg-white px-4 py-3
         ${className}
