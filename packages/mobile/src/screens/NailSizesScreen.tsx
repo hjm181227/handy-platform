@@ -137,8 +137,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
           onPress={() => {
             if (onClose) {
               onClose();
-            } else {
-              navigation.goBack();
             }
           }}
         >
@@ -157,8 +155,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
           onPress={() => {
             if (onNavigateToCamera) {
               onNavigateToCamera();
-            } else {
-              navigation.navigate('NailMeasurement');
             }
           }}
         >
@@ -189,8 +185,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
               onPress={() => {
                 if (onNavigateToCamera) {
                   onNavigateToCamera();
-                } else {
-                  navigation.navigate('NailMeasurement');
                 }
               }}
             >
@@ -237,8 +231,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
           onPress={() => {
             if (onNavigateToCamera) {
               onNavigateToCamera();
-            } else {
-              navigation.navigate('NailMeasurement');
             }
           }}
         >

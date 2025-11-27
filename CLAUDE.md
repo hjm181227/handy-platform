@@ -268,6 +268,417 @@ window.ReactNativeWebView.chat('disconnect');
 5. **반응형 UI**: 모바일 최적화된 쇼핑몰 인터페이스
 6. **실시간 채팅**: Socket.IO 기반 1:1 채팅, 고객 지원, 주문 관련 채팅 (모바일 앱 전용)
 
+## 📱 네이티브 화면 추가 가이드
+
+### 아키텍처 개요
+
+현재 프로젝트는 **확장 가능한 네이티브 화면 아키텍처**를 사용하고 있습니다. 웹 버튼 클릭 시 네이티브 Modal을 표시하는 방식으로 구현되어 있으며, 새로운 네이티브 화면 추가가 일관된 패턴을 따릅니다.
+
+**통신 흐름:**
+```
+Web Button Click
+  → navigateService.goToXXX()
+  → window.ReactNativeWebView.postMessage()
+  → WebViewBridge (handleMessage)
+  → DeviceEventEmitter.emit()
+  → NativeScreenProvider (listener)
+  → Modal state change
+  → Native Screen displayed
+```
+
+### 핵심 컴포넌트
+
+1. **NativeScreenProvider** (`packages/mobile/src/contexts/NativeScreenProvider.tsx`)
+   - 모든 네이티브 화면의 상태 관리
+   - Modal 컴포넌트 렌더링
+   - DeviceEventEmitter 이벤트 리스닝
+
+2. **WebViewBridge** (`packages/mobile/src/components/WebViewBridge.tsx`)
+   - 웹 ↔ 네이티브 메시지 라우팅
+   - Switch-case 패턴으로 메시지 타입별 처리
+
+3. **NavigateService** (`packages/shared/src/services/navigate/`)
+   - 플랫폼 독립적 네비게이션 API
+   - Web: postMessage 전송
+   - Native: DeviceEventEmitter 사용
+
+### 새 화면 추가 절차
+
+새로운 네이티브 화면(예: CameraScreen)을 추가하려면 **7개 파일을 수정**해야 합니다:
+
+#### 1. Screen 컴포넌트 생성
+
+**파일**: `packages/mobile/src/screens/CameraScreen.tsx`
+
+```typescript
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+} from 'react-native';
+
+interface CameraScreenProps {
+  onClose?: () => void;
+  onPhotoTaken?: (uri: string) => void;
+}
+
+const CameraScreen: React.FC<CameraScreenProps> = ({
+  onClose,
+  onPhotoTaken
+}) => {
+  const handleTakePhoto = () => {
+    // 카메라 촬영 로직
+    const photoUri = 'photo://example.jpg';
+    if (onPhotoTaken) {
+      onPhotoTaken(photoUri);
+    }
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onClose}>
+          <Text style={styles.closeButton}>닫기</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>카메라</Text>
+      </View>
+
+      <View style={styles.content}>
+        {/* 카메라 UI */}
+        <TouchableOpacity
+          style={styles.captureButton}
+          onPress={handleTakePhoto}
+        >
+          <Text style={styles.captureButtonText}>📸 촬영</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#FFF',
+  },
+  closeButton: {
+    color: '#007AFF',
+    fontSize: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  captureButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+  },
+  captureButtonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
+
+export default CameraScreen;
+```
+
+#### 2. 메시지 타입 추가
+
+**파일**: `packages/shared/src/types/index.ts`
+
+```typescript
+export type WebViewMessageType =
+  | 'NAVIGATION'
+  | 'API_CALL'
+  // ... 기존 타입들
+  | 'NAVIGATE_TO_CAMERA'  // 추가
+  | 'NAVIGATE_TO_SIZES'
+  | 'NAVIGATE_TO_MEASUREMENT'
+  | 'NAVIGATE_BACK';
+```
+
+#### 3. NativeScreenProvider 업데이트
+
+**파일**: `packages/mobile/src/contexts/NativeScreenProvider.tsx`
+
+```typescript
+// 1. Screen import 추가
+import CameraScreen from '../screens/CameraScreen';
+
+// 2. State 추가 (Context 내부)
+const [showCamera, setShowCamera] = useState(false);
+const [cameraParams, setCameraParams] = useState<any>(null);
+
+// 3. 제어 함수 추가
+const openCamera = (params?: any) => {
+  console.log('📱 [NativeScreenProvider] Opening Camera screen', params);
+  setCameraParams(params || null);
+  setShowCamera(true);
+};
+
+const closeCamera = () => {
+  console.log('📱 [NativeScreenProvider] Closing Camera screen');
+  setShowCamera(false);
+  setCameraParams(null);
+};
+
+// 4. Context 인터페이스 업데이트
+interface NativeScreenContextType {
+  // ... 기존 메서드들
+  openCamera: (params?: any) => void;
+  closeCamera: () => void;
+}
+
+// 5. DeviceEventEmitter 리스너 추가
+useEffect(() => {
+  // ... 기존 리스너들
+
+  const openCameraListener = DeviceEventEmitter.addListener(
+    'openCamera',
+    (data: any) => {
+      console.log('🔵 [NativeScreenProvider] openCamera event received', data);
+      openCamera(data);
+    }
+  );
+
+  return () => {
+    // ... 기존 cleanup
+    openCameraListener.remove();
+  };
+}, []);
+
+// 6. Context value 업데이트
+const value: NativeScreenContextType = {
+  // ... 기존 메서드들
+  openCamera,
+  closeCamera,
+};
+
+// 7. Modal JSX 추가 (return 내부)
+return (
+  <NativeScreenContext.Provider value={value}>
+    {children}
+
+    {/* 기존 Modals... */}
+
+    {/* Camera Modal */}
+    <Modal
+      visible={showCamera}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={closeCamera}
+    >
+      <CameraScreen
+        onClose={closeCamera}
+        onPhotoTaken={(uri) => {
+          console.log('📸 Photo taken:', uri);
+          // 사진 처리 로직
+          closeCamera();
+        }}
+      />
+    </Modal>
+  </NativeScreenContext.Provider>
+);
+```
+
+#### 4. WebViewBridge 핸들러 추가
+
+**파일**: `packages/mobile/src/components/WebViewBridge.tsx`
+
+```typescript
+// 메시지 핸들러에 case 추가
+const handleMessage = async (event: any) => {
+  const message: WebViewMessage = JSON.parse(event.nativeEvent.data);
+
+  switch (message.type) {
+    // ... 기존 cases
+
+    case 'NAVIGATE_TO_CAMERA':
+      handleNavigateToCamera(message.data);
+      break;
+
+    // ... 다른 cases
+  }
+};
+
+// 핸들러 함수 추가
+const handleNavigateToCamera = (data: any) => {
+  console.log('🔵 [BRIDGE] Navigate to Camera screen:', data);
+  DeviceEventEmitter.emit('openCamera', data);
+};
+```
+
+#### 5. NavigateService 타입 정의
+
+**파일**: `packages/shared/src/services/navigate/types.ts`
+
+```typescript
+export interface INavigateService {
+  goToMeasureSize(): void;
+  goToNailSizes(): void;
+  goToCamera(): void;  // 추가
+  goToWebPage?(path: string): void;
+}
+
+export type NavigationMessageType =
+  | 'NAVIGATE_TO_MEASUREMENT'
+  | 'NAVIGATE_TO_SIZES'
+  | 'NAVIGATE_TO_CAMERA'  // 추가
+  | 'NAVIGATE_BACK';
+```
+
+#### 6. NavigateService Web 구현
+
+**파일**: `packages/shared/src/services/navigate/NavigateService.web.ts`
+
+```typescript
+goToCamera(): void {
+  console.log('[NavigateService.web] goToCamera called');
+
+  if (this.isWebViewEnvironment()) {
+    this.sendMessageToWebView({
+      type: 'NAVIGATE_TO_CAMERA',
+      data: { screen: 'Camera' }
+    });
+  } else {
+    // 웹 환경에서 앱 다운로드 유도
+    const shouldDownload = window.confirm(
+      '카메라 기능은 모바일 앱에서만 사용할 수 있습니다.\n' +
+      'HANDY 앱을 다운로드하시겠습니까?'
+    );
+    if (shouldDownload) {
+      window.location.href = 'https://handy-app.com/download';
+    }
+  }
+}
+```
+
+#### 7. NavigateService Native 구현
+
+**파일**: `packages/shared/src/services/navigate/NavigateService.native.ts`
+
+```typescript
+goToCamera(): void {
+  console.log('[NavigateService.native] goToCamera called');
+
+  if (this.isWebViewEnvironment()) {
+    this.sendMessageToWebView({
+      type: 'NAVIGATE_TO_CAMERA',
+      data: { screen: 'Camera' }
+    });
+  } else {
+    // Native 환경에서 직접 이벤트 발생
+    this.emitNativeEvent('openCamera', {
+      screen: 'Camera'
+    });
+  }
+}
+```
+
+### 사용 방법
+
+웹 컴포넌트에서 네이티브 화면 호출:
+
+```typescript
+import navigateService from '@handy-platform/shared/src/services/navigate';
+
+const MyComponent = () => {
+  const handleOpenCamera = () => {
+    navigateService.goToCamera();
+  };
+
+  return (
+    <button onClick={handleOpenCamera}>
+      카메라 열기
+    </button>
+  );
+};
+```
+
+### 체크리스트
+
+새 네이티브 화면 추가 시 확인 사항:
+
+- [ ] Screen 컴포넌트 생성 (`packages/mobile/src/screens/`)
+- [ ] 메시지 타입 추가 (`packages/shared/src/types/index.ts`)
+- [ ] NativeScreenProvider:
+  - [ ] Screen import
+  - [ ] State 추가 (`useState`)
+  - [ ] 제어 함수 (`open`, `close`)
+  - [ ] Context 인터페이스 업데이트
+  - [ ] DeviceEventEmitter 리스너
+  - [ ] Context value 업데이트
+  - [ ] Modal JSX 추가
+- [ ] WebViewBridge:
+  - [ ] Case 추가
+  - [ ] 핸들러 함수 추가
+- [ ] NavigateService 타입 (`types.ts`)
+- [ ] NavigateService Web 구현
+- [ ] NavigateService Native 구현
+- [ ] shared 패키지 재빌드 (`npm run build:shared`)
+- [ ] 테스트 (앱 재시작 후 동작 확인)
+
+### 장점
+
+현재 아키텍처의 장점:
+
+- **일관성**: 모든 화면이 동일한 패턴 사용
+- **확장성**: 새 화면 추가가 명확하고 예측 가능
+- **타입 안정성**: TypeScript로 컴파일 타임 오류 검출
+- **플랫폼 독립성**: Web/Native 모두 동일한 API 사용
+- **중앙 관리**: NativeScreenProvider에서 모든 화면 관리
+
+### 개선 가능 영역 (선택사항)
+
+화면이 10개 이상으로 늘어나면 다음을 고려:
+
+1. **Screen Registry 패턴**
+   ```typescript
+   const SCREEN_REGISTRY = {
+     Camera: CameraScreen,
+     NailSizes: NailSizesScreen,
+     // ...
+   };
+   ```
+
+2. **Generic Screen Control**
+   ```typescript
+   openScreen(screenName: string, params?: any): void
+   closeScreen(screenName: string): void
+   ```
+
+3. **Message Handler Registry**
+   ```typescript
+   const MESSAGE_HANDLERS = {
+     'NAVIGATE_TO_CAMERA': () => DeviceEventEmitter.emit('openCamera'),
+     // ...
+   };
+   ```
+
+---
+
 ## 개발 환경 상태
 
 ### 현재 상태: 🔴 종료됨

@@ -20,7 +20,7 @@ const HomeScreen: React.FC = () => {
   const [canGoBack, setCanGoBack] = useState(false);
   const webViewBridgeRef = useRef<WebView>(null);
   const lastBackPressed = useRef<number>(0);
-  const { registerWebView } = useNativeScreen();
+  const { registerWebView, openNailSizes } = useNativeScreen();
 
   // 중앙화된 웹 URL 사용
   const webURL = getWebURL();
@@ -146,6 +146,7 @@ const HomeScreen: React.FC = () => {
           ref={webViewBridgeRef}
           url={webURL}
           onNavigationStateChange={handleNavigationStateChange}
+          onShowNativeFeatures={openNailSizes}
         />
       </View>
       <FloatingChatButton onPress={handleChatButtonPress} />
