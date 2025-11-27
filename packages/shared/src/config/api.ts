@@ -38,20 +38,12 @@ export const API_CONFIG: Record<string, ApiConfig> = {
 export const getCurrentEnvironment = (): string => {
   // 1. React Native 환경 체크 (최우선 - 플랫폼 분리)
   if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-    try {
-      // @ts-ignore - React Native 전용 코드
-      const { NativeModules } = require('react-native');
-      const buildEnv = NativeModules?.BuildConfig?.APP_ENV;
-      if (buildEnv) {
-        console.log('🟢 [API_CONFIG] React Native BuildConfig.APP_ENV:', buildEnv);
-        return buildEnv; // 'stage' 또는 'production'
-      }
-    } catch (error) {
-      console.warn('🔴 [API_CONFIG] Failed to read BuildConfig:', error);
-    }
+    // BuildConfig는 React Native 네이티브 빌드에서만 사용 가능
+    // 웹 환경에서는 이 분기에 절대 진입하지 않음
 
     // BuildConfig 실패 시 process.env 확인
     if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
+      console.log('🟢 [API_CONFIG] React Native process.env:', process.env.REACT_NATIVE_ENV);
       return process.env.REACT_NATIVE_ENV;
     }
 
