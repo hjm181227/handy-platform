@@ -27,19 +27,20 @@ export { ChatServiceWeb, getChatServiceWeb } from './ChatService.web';
 export { ChatServiceNative, getChatServiceNative } from './ChatService.native';
 
 // 플랫폼 감지하여 적절한 서비스 반환
-export const getChatService = (): any => {
-  try {
-    // React Native 환경 감지
-    const RN = require('react-native');
-    if (RN.Platform) {
-      const { getChatServiceNative } = require('./ChatService.native');
-      return getChatServiceNative();
-    }
-  } catch (e) {
-    // React Native가 없으면 웹 환경
-  }
+import { getChatServiceWeb as getWebService } from './ChatService.web';
+import { getChatServiceNative as getNativeService } from './ChatService.native';
 
-  // 웹 환경
-  const { getChatServiceWeb } = require('./ChatService.web');
-  return getChatServiceWeb();
+export const getChatService = (): any => {
+  // 환경 감지: React Native vs Web
+  const isReactNative =
+    typeof navigator !== 'undefined' &&
+    navigator.product === 'ReactNative';
+
+  if (isReactNative) {
+    // React Native 환경
+    return getNativeService();
+  } else {
+    // Web 환경
+    return getWebService();
+  }
 };
