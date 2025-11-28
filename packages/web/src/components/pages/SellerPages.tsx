@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
-import { imageService, productService, sellerService } from '../../services/apiService';
+import { imageService, productService, sellerService, brandService } from '../../services/apiService';
 import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
 import { FaDollarSign, FaChartLine, FaClipboardList, FaBox, FaPlus, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
-import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions } from '../../types';
+import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType } from '../../types';
 
 // 생산 관리 컴포넌트 임포트
 import { ProductionDashboard } from './seller/ProductionDashboard';
@@ -780,6 +780,9 @@ interface DetailImage {
 export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => void; productId?: string }) {
   const isEdit = !!productId;
   const [ formData, setFormData ] = useState({
+    // 상품 유형
+    productType: 'ORIGINAL' as ProductType,
+
     // 기본 정보
     name: '',
     description: '',
@@ -855,6 +858,9 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
           // 폼 데이터 업데이트 (API 응답 구조에 맞게, 안전한 접근)
           setFormData({
+            // 상품 유형
+            productType: (product.productType as ProductType) || 'ORIGINAL',
+
             // 기본 정보
             name: String(product.name || ''),
             description: String(product.description || ''),
@@ -944,6 +950,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       // 2. 상품 데이터 구성 (서버 API 스펙에 완전 일치)
       const productData: CreateProductRequest = {
+        productType: formData.productType,
         name: formData.name,
         description: formData.description,
         shortDescription: formData.shortDescription || formData.description.substring(0, 100),
@@ -1358,6 +1365,59 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         {/* 기본 정보 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
+
+          {/* 상품 유형 선택 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              상품 유형 *
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, productType: 'ORIGINAL' })}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                  formData.productType === 'ORIGINAL'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                오리지널
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, productType: 'CUSTOM' })}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                  formData.productType === 'CUSTOM'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                커스텀
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              오리지널: 기성품 / 커스텀: 주문제작 상품
+            </p>
+          </div>
+
+          {/* 커스텀 선택 시 주문서 불러오기 버튼 */}
+          {formData.productType === 'CUSTOM' && (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  // TODO: 주문서 불러오기 기능 구현
+                  alert('주문서 불러오기 기능은 추후 구현됩니다.');
+                }}
+                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                주문서 불러오기
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
@@ -2822,6 +2882,355 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+    </SellerLayout>
+  );
+}
+
+// 브랜드 관리 컴포넌트
+export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
+  const [brandInfo, setBrandInfo] = useState<{
+    sellerUuid: string;
+    brandName: string;
+    brandProfile: string | null;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 편집 상태
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+
+  // 로고 업로드 상태
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 성공/에러 메시지
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // 브랜드 정보 로드
+  useEffect(() => {
+    loadBrandInfo();
+  }, []);
+
+  const loadBrandInfo = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 현재 로그인한 판매자의 정보 조회
+      const sellerInfo = await sellerService.getSellerInfo();
+
+      if (sellerInfo && sellerInfo.seller) {
+        const seller = sellerInfo.seller;
+        setBrandInfo({
+          sellerUuid: seller.sellerUuid,
+          brandName: seller.brandName || '',
+          brandProfile: seller.brandProfile || null
+        });
+        setNewBrandName(seller.brandName || '');
+      } else {
+        setError('판매자 정보를 찾을 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('브랜드 정보 로드 실패:', err);
+      setError(err.message || '브랜드 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 브랜드명 수정
+  const handleUpdateName = async () => {
+    if (!brandInfo || !newBrandName.trim()) return;
+
+    try {
+      setSavingName(true);
+      setError(null);
+
+      await brandService.updateBrandName(brandInfo.sellerUuid, {
+        brandName: newBrandName.trim()
+      });
+
+      setBrandInfo(prev => prev ? { ...prev, brandName: newBrandName.trim() } : null);
+      setIsEditingName(false);
+      showSuccess('브랜드명이 변경되었습니다.');
+    } catch (err: any) {
+      console.error('브랜드명 변경 실패:', err);
+      setError(err.message || '브랜드명 변경에 실패했습니다.');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  // 로고 파일 선택
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    // 파일 크기 검증 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    // 미리보기 생성
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setLogoPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // 업로드 실행
+    handleLogoUpload(file);
+  };
+
+  // 로고 업로드
+  const handleLogoUpload = async (file: File) => {
+    if (!brandInfo) return;
+
+    try {
+      setUploadingLogo(true);
+      setError(null);
+
+      // 1. presigned URL 획득
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'brand-profile'
+      });
+
+      // 2. S3에 직접 업로드
+      await fetch(presignedResponse.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+
+      // 3. 브랜드 프로필 업데이트
+      await brandService.updateBrandProfile(brandInfo.sellerUuid, {
+        brandProfile: presignedResponse.fileUrl
+      });
+
+      // 상태 업데이트
+      setBrandInfo(prev => prev ? { ...prev, brandProfile: presignedResponse.fileUrl } : null);
+      setLogoPreview(null);
+      showSuccess('로고 이미지가 변경되었습니다.');
+    } catch (err: any) {
+      console.error('로고 업로드 실패:', err);
+      setError(err.message || '로고 업로드에 실패했습니다.');
+      setLogoPreview(null);
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 성공 메시지 표시
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  // 편집 취소
+  const cancelNameEdit = () => {
+    setNewBrandName(brandInfo?.brandName || '');
+    setIsEditingName(false);
+  };
+
+  if (loading) {
+    return (
+      <SellerLayout title="브랜드 관리" onGo={onGo}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  return (
+    <SellerLayout title="브랜드 관리" onGo={onGo}>
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* 성공 메시지 */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            {successMessage}
+          </div>
+        )}
+
+        {/* 에러 메시지 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <FaExclamationTriangle className="w-5 h-5" />
+            {error}
+            <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* 브랜드 정보 카드 */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {/* 헤더 */}
+          <div className="border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900">브랜드 정보</h2>
+            <p className="text-sm text-gray-500 mt-1">브랜드 상세페이지에 표시되는 정보입니다.</p>
+          </div>
+
+          {/* 로고 섹션 */}
+          <div className="p-6 border-b border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 로고</label>
+            <div className="flex items-center gap-6">
+              {/* 현재 로고 또는 기본 아이콘 */}
+              <div className="relative">
+                {(logoPreview || brandInfo?.brandProfile) ? (
+                  <img
+                    src={logoPreview || brandInfo?.brandProfile || ''}
+                    alt="브랜드 로고"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
+                    <span className="text-3xl font-bold text-gray-400">
+                      {brandInfo?.brandName?.charAt(0) || 'B'}
+                    </span>
+                  </div>
+                )}
+
+                {uploadingLogo && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* 업로드 버튼 */}
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="logo-upload"
+                />
+                <label
+                  htmlFor="logo-upload"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    uploadingLogo
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {uploadingLogo ? '업로드 중...' : '이미지 변경'}
+                </label>
+                <p className="text-xs text-gray-500">JPG, PNG 형식 / 최대 5MB</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 브랜드명 섹션 */}
+          <div className="p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드명</label>
+
+            {isEditingName ? (
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="브랜드명을 입력하세요"
+                  maxLength={200}
+                />
+                <button
+                  onClick={handleUpdateName}
+                  disabled={savingName || !newBrandName.trim()}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    savingName || !newBrandName.trim()
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {savingName ? '저장 중...' : '저장'}
+                </button>
+                <button
+                  onClick={cancelNameEdit}
+                  disabled={savingName}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-medium text-gray-900">{brandInfo?.brandName || '(설정되지 않음)'}</span>
+                <button
+                  onClick={() => setIsEditingName(true)}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  수정
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 브랜드 페이지 미리보기 링크 */}
+        {brandInfo?.sellerUuid && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">브랜드 페이지</h3>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500">고객에게 보이는 브랜드 상세 페이지를 확인하세요.</p>
+              <button
+                onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                페이지 보기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 안내 메시지 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex gap-3">
+            <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">브랜드 정보 안내</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-700">
+                <li>브랜드 로고는 정사각형 이미지를 권장합니다.</li>
+                <li>브랜드명은 고객에게 노출되는 중요한 정보입니다.</li>
+                <li>배너 이미지 및 브랜드 설명 기능은 추후 업데이트 예정입니다.</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

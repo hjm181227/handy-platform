@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '../product/ProductCard';
 import { productService, brandService } from '../../services/apiService';
-import type { Product, ProductsResponse, BrandDetail } from '@handy-platform/shared';
+import type { Product, ProductsResponse, BrandDetail, ProductType } from '@handy-platform/shared';
 
 // 브랜드별 이미지 매핑 및 테마 설정
 interface BrandTheme {
@@ -78,6 +78,7 @@ export function BrandDetailPage({
   const [sortBy, setSortBy] = useState<'popular' | 'price' | 'latest'>('popular');
   const [priceFilter, setPriceFilter] = useState<{ min: number; max: number } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [productTypeFilter, setProductTypeFilter] = useState<ProductType | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -175,8 +176,9 @@ export function BrandDetailPage({
             maxPrice: priceFilter.max.toString()
           }),
           ...(categoryFilter && { search: categoryFilter }),
-          sortBy: sortBy === 'popular' ? 'trending' as const : 
-                 sortBy === 'price' ? 'price' as const : 
+          ...(productTypeFilter && { productType: productTypeFilter }),
+          sortBy: sortBy === 'popular' ? 'trending' as const :
+                 sortBy === 'price' ? 'price' as const :
                  sortBy === 'latest' ? 'createdAt' as const : 'trending' as const,
           sortOrder: sortBy === 'price' ? 'asc' as const : 'desc' as const
         };
@@ -200,7 +202,7 @@ export function BrandDetailPage({
     };
 
     fetchProducts();
-  }, [decodedSellerUuid, currentPage, sortBy, priceFilter, categoryFilter]);
+  }, [decodedSellerUuid, currentPage, sortBy, priceFilter, categoryFilter, productTypeFilter]);
 
   // 브랜드 통계 계산 (brandInfo의 서버 데이터 우선 사용)
   const brandStats = useMemo(() => {
@@ -479,11 +481,35 @@ export function BrandDetailPage({
         </div>
       </div>
 
+      {/* 상품 유형 탭 */}
+      <div className="flex gap-2 mb-6">
+        {[
+          { value: null, label: '전체' },
+          { value: 'ORIGINAL' as ProductType, label: '오리지널' },
+          { value: 'CUSTOM' as ProductType, label: '커스텀' }
+        ].map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setProductTypeFilter(tab.value)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              productTypeFilter === tab.value
+                ? 'bg-black text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* 필터 및 정렬 섹션 */}
       <div className="bg-white rounded-xl border p-6 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold">전체 상품</h2>
+            <h2 className="text-xl font-semibold">
+              {productTypeFilter === 'ORIGINAL' ? '오리지널 상품' :
+               productTypeFilter === 'CUSTOM' ? '커스텀 상품' : '전체 상품'}
+            </h2>
             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
               {sortedProducts.length}개
             </span>
@@ -499,7 +525,7 @@ export function BrandDetailPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
               </svg>
               필터
-              {(priceFilter || categoryFilter) && (
+              {(priceFilter || categoryFilter || productTypeFilter) && (
                 <span className="w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </button>
@@ -621,12 +647,50 @@ export function BrandDetailPage({
                 </div>
               </div>
 
+              {/* 상품 유형 필터 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">상품 유형</label>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setProductTypeFilter(null)}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
+                      !productTypeFilter
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    전체
+                  </button>
+                  <button
+                    onClick={() => setProductTypeFilter('ORIGINAL')}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
+                      productTypeFilter === 'ORIGINAL'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    오리지널
+                  </button>
+                  <button
+                    onClick={() => setProductTypeFilter('CUSTOM')}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
+                      productTypeFilter === 'CUSTOM'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    커스텀
+                  </button>
+                </div>
+              </div>
+
               {/* 필터 초기화 */}
               <div className="flex items-end">
                 <button
                   onClick={() => {
                     setCategoryFilter(null);
                     setPriceFilter(null);
+                    setProductTypeFilter(null);
                   }}
                   className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
                 >

@@ -170,6 +170,9 @@ export interface ProductStats {
   reviewsCount: number;
 }
 
+// 상품 유형 (커스텀/오리지널 구분)
+export type ProductType = 'ORIGINAL' | 'CUSTOM';
+
 // 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
   id: string;                     // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
@@ -210,6 +213,7 @@ export interface Product {
   stats: ProductStats;
   socialProof?: SocialProof;
   status: 'active' | 'inactive' | 'outOfStock';  // 추가: 상품 상태
+  productType?: ProductType;                      // 상품 유형 (커스텀/오리지널)
   createdAt: string;
   updatedAt: string;
 }
@@ -247,6 +251,7 @@ export interface ProductDetailResponse {
 
 // 상품 생성 요청 (서버 API 스펙에 완전 일치)
 export interface CreateProductRequest {
+  productType?: ProductType;       // 상품 유형 (커스텀/오리지널)
   name: string;                    // Required, max 200 characters
   description: string;             // Required, max 2000 characters
   shortDescription?: string;
@@ -288,6 +293,7 @@ export interface ProductFilters {
   nailShape?: NailShape;   // 네일 모양 필터
   nailLength?: NailLength; // 네일 길이 필터
   featured?: string;       // "true" for featured products
+  productType?: ProductType; // 상품 유형 필터 (ORIGINAL/CUSTOM)
   sortBy?: 'price' | 'rating' | 'createdAt' | 'likesCount' | 'trending';
   sortOrder?: 'asc' | 'desc';
 }

@@ -13,12 +13,14 @@ export function Detail({
   onAdd,
   onCartUpdate,
   currentUser,
+  onGo,
 }: {
   id: string;
   onBack: () => void;
   onAdd: (id: string) => void;
   onCartUpdate?: () => void;
   currentUser?: User | null;
+  onGo?: (to: string) => void;
 }) {
   // 모든 상태를 컴포넌트 최상단에 선언 (Hook 순서 보장)
   const [product, setProduct] = useState<Product | null>(null);
@@ -515,33 +517,52 @@ export function Detail({
           )}
 
           {/* 구매 버튼 */}
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <button
-              onClick={addToCart}
-              disabled={addingToCart || !p.isInStock}
-              className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
-                addingToCart 
-                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                  : !p.isInStock 
+          {p.productType === 'CUSTOM' ? (
+            // 커스텀 상품: 주문서 작성 버튼만 표시
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  if (onGo) {
+                    onGo(`/product/${p.id}/custom-order`);
+                  } else {
+                    goTo(`/product/${p.id}/custom-order`);
+                  }
+                }}
+                className="w-full rounded-lg py-3 text-white bg-black hover:bg-gray-800 font-medium"
+              >
+                커스텀 주문서 작성
+              </button>
+            </div>
+          ) : (
+            // 오리지널 상품: 기존 버튼 유지
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                onClick={addToCart}
+                disabled={addingToCart || !p.isInStock}
+                className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
+                  addingToCart
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : 'hover:bg-gray-50'
-              }`}
-            >
-              {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
-              {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
-            </button>
-            <button
-              onClick={buyNow}
-              disabled={addingToCart || !p.isInStock}
-              className={`rounded-lg py-2 text-white flex items-center justify-center ${
-                addingToCart || !p.isInStock
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-black hover:bg-gray-800'
-              }`}
-            >
-              바로구매
-            </button>
-          </div>
+                    : !p.isInStock
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                      : 'hover:bg-gray-50'
+                }`}
+              >
+                {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
+                {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
+              </button>
+              <button
+                onClick={buyNow}
+                disabled={addingToCart || !p.isInStock}
+                className={`rounded-lg py-2 text-white flex items-center justify-center ${
+                  addingToCart || !p.isInStock
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-black hover:bg-gray-800'
+                }`}
+              >
+                바로구매
+              </button>
+            </div>
+          )}
 
           {/* 도구 */}
           <div className="flex items-center gap-3 text-sm pt-1">

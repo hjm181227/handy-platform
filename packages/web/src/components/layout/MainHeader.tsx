@@ -35,7 +35,6 @@ export function MainHeader({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const gnb = [
-    {label:"카테고리", to:"#", isModal: true},
     {label:"랭킹", to:"/ranking"},
     {label:"브랜드", to:"/brands"},
     {label:"신상", to:"/new"},
