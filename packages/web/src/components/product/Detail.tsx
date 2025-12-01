@@ -13,12 +13,14 @@ export function Detail({
   onAdd,
   onCartUpdate,
   currentUser,
+  onGo,
 }: {
   id: string;
   onBack: () => void;
   onAdd: (id: string) => void;
   onCartUpdate?: () => void;
   currentUser?: User | null;
+  onGo?: (path: string) => void;  // ✅ sessionStorage 사용으로 1개 인자만
 }) {
   // 모든 상태를 컴포넌트 최상단에 선언 (Hook 순서 보장)
   const [product, setProduct] = useState<Product | null>(null);
@@ -128,12 +130,48 @@ export function Detail({
   };
 
   // 바로구매 함수
-  const buyNow = async () => {
+  const buyNow = () => {
+    if (!product) return;
+
+    // 로그인 체크
+    if (!currentUser) {
+      setCartMessage('로그인이 필요한 서비스입니다.');
+      setTimeout(() => setCartMessage(null), 3000);
+      return;
+    }
+
+    // onGo prop이 없으면 경고 (개발 환경)
+    if (!onGo) {
+      console.warn('onGo prop is not provided to Detail component');
+      setCartMessage('페이지 이동 기능이 설정되지 않았습니다.');
+      setTimeout(() => setCartMessage(null), 3000);
+      return;
+    }
+
     try {
-      await addToCart();
-      alert('바로구매 기능은 곧 구현됩니다!');
+      // ✅ 바로구매: 선택된 옵션으로 단일 상품을 checkout으로 전달
+      const options: Record<string, string> = {};
+      if (shape) options.nailShape = shape;
+      if (length) options.nailLength = length;
+
+      const checkoutItems = [{
+        productUuid: product.id,
+        quantity: qty,
+        options: options
+      }];
+
+      console.log('🛒 [buyNow] Navigating to checkout with item:', checkoutItems);
+
+      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
+      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+
+      // Checkout 페이지로 이동
+      onGo('/checkout');
+
     } catch (err) {
       console.error('Buy now failed:', err);
+      setCartMessage('바로구매 처리 중 오류가 발생했습니다.');
+      setTimeout(() => setCartMessage(null), 3000);
     }
   };
 

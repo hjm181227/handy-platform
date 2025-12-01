@@ -20,15 +20,34 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
   title = '배송지 정보',
   showAddressName = false
 }) => {
+  // 전화번호 하이픈 자동 포맷팅
+  const formatPhoneNumber = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    const limitedNumbers = numbers.slice(0, 11);
+
+    if (limitedNumbers.length <= 3) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 7) {
+      return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3)}`;
+    } else if (limitedNumbers.length <= 10) {
+      return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 6)}-${limitedNumbers.slice(6)}`;
+    } else {
+      return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 7)}-${limitedNumbers.slice(7)}`;
+    }
+  };
+
   const [formData, setFormData] = useState<Partial<ShippingAddress>>(() => ({
     recipientName: '',
-    phone: '',
-    zipCode: '',
-    address: '',
-    addressDetail: '',
-    memo: '',
+    recipientPhone: '',
+    postcode: '',
+    roadAddress: '',
+    detailAddress: '',
+    deliveryNote: '',
+    region: 'seoul',
     isDefault: false,
-    ...initialData
+    ...initialData,
+    // initialData의 전화번호가 있으면 포맷팅
+    ...(initialData.recipientPhone && { recipientPhone: formatPhoneNumber(initialData.recipientPhone) })
   }));
 
   const [addressName, setAddressName] = useState<string>(() => 
@@ -45,9 +64,9 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
   const validateForm = (): boolean => {
     return !!(
       formData.recipientName?.trim() &&
-      formData.phone?.trim() &&
-      formData.zipCode?.trim() &&
-      formData.address?.trim()
+      formData.recipientPhone?.trim() &&
+      formData.postcode?.trim() &&
+      formData.roadAddress?.trim()
     );
   };
 
@@ -60,11 +79,12 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
     const addressToSave: ShippingAddress = {
       id: formData.id || '',
       recipientName: formData.recipientName!,
-      phone: formData.phone!,
-      zipCode: formData.zipCode!,
-      address: formData.address!,
-      addressDetail: formData.addressDetail || '',
-      memo: formData.memo || '',
+      recipientPhone: formData.recipientPhone!,
+      postcode: formData.postcode!,
+      roadAddress: formData.roadAddress!,
+      detailAddress: formData.detailAddress || '',
+      deliveryNote: formData.deliveryNote || '',
+      region: formData.region || 'seoul',
       isDefault: formData.isDefault || false,
       ...(showAddressName && { addressName })
     };
@@ -129,8 +149,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
             </label>
             <input
               type="tel"
-              value={formData.phone || ''}
-              onChange={(e) => handleFieldChange('phone', e.target.value)}
+              value={formData.recipientPhone || ''}
+              onChange={(e) => handleFieldChange('recipientPhone', e.target.value)}
               className="w-full border rounded-lg px-3 py-2"
               placeholder="010-0000-0000"
             />
@@ -145,8 +165,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           <div className="flex gap-2 max-w-xs">
             <input
               type="text"
-              value={formData.zipCode || ''}
-              onChange={(e) => handleFieldChange('zipCode', e.target.value)}
+              value={formData.postcode || ''}
+              onChange={(e) => handleFieldChange('postcode', e.target.value)}
               className="flex-1 border rounded-lg px-3 py-2"
               placeholder="12345"
             />
@@ -172,8 +192,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           </label>
           <input
             type="text"
-            value={formData.address || ''}
-            onChange={(e) => handleFieldChange('address', e.target.value)}
+            value={formData.roadAddress || ''}
+            onChange={(e) => handleFieldChange('roadAddress', e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
             placeholder="기본 주소"
           />
@@ -195,8 +215,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
         <div>
           <label className="block text-sm font-medium mb-2">배송 메모</label>
           <textarea
-            value={formData.memo || ''}
-            onChange={(e) => handleFieldChange('memo', e.target.value)}
+            value={formData.deliveryNote || ''}
+            onChange={(e) => handleFieldChange('deliveryNote', e.target.value)}
             className="w-full border rounded-lg px-3 py-2 h-20 resize-none"
             placeholder="배송 시 요청사항이 있으면 입력해주세요"
           />

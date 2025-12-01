@@ -338,27 +338,51 @@ function AppContent() {
       return;
     }
 
-    // 체크아웃 진입 전 장바구니 확인
     try {
+      // 장바구니 데이터 가져오기
       const cartResponse = await cartService.getCart();
+      console.log('🛒 [handleCheckout] Cart response:', cartResponse);
 
-      if (!cartResponse.data || !cartResponse.data.items || cartResponse.data.items.length === 0) {
+      if (!cartResponse.success || !cartResponse.data) {
+        showToast('장바구니 정보를 불러올 수 없습니다.', 'error');
+        return;
+      }
+
+      // ✅ 실제 서버 응답 구조: data.itemsBySeller[]
+      const { itemsBySeller } = cartResponse.data;
+
+      // 장바구니가 비어있는지 확인
+      if (!itemsBySeller || itemsBySeller.length === 0) {
         showToast('장바구니가 비어있습니다.', 'error');
         return;
       }
 
-      // 장바구니에 아이템이 있으면 체크아웃 페이지로 이동
-      // ✅ 검증된 장바구니 데이터를 state로 전달하여 이중 API 호출 방지
-      nav('/checkout', { state: { validatedCart: cartResponse.data } });
+      // ✅ itemsBySeller를 flat하게 변환하여 checkoutItems 생성
+      const checkoutItems = itemsBySeller.flatMap(seller =>
+        seller.items.map(item => ({
+          productUuid: item.productUuid,
+          quantity: item.quantity,
+          options: item.options || {}
+        }))
+      );
+
+      console.log('✅ [handleCheckout] Navigating to checkout with items:', checkoutItems);
+
+      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
+      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+
+      // 체크아웃 페이지로 이동
+      nav('/checkout');
       setDrawer(false);
 
       // WebView 환경에서 네이티브 알림
       try {
         (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"}));
       } catch {}
-    } catch (err) {
-      console.error('Cart validation failed:', err);
-      showToast('장바구니를 확인할 수 없습니다.', 'error');
+
+    } catch (error: any) {
+      console.error('❌ [handleCheckout] Error:', error);
+      showToast(error.message || '체크아웃 진행 중 오류가 발생했습니다.', 'error');
     }
   };
 
@@ -442,6 +466,7 @@ function AppContent() {
       onAdd={addProduct}
       onCartUpdate={loadCartCount}
       currentUser={currentUser}
+      onGo={nav}
     />;
   } else if (pathname.startsWith("/brand/") && pathname.split("/").length === 3) {
     // 브랜드 상세 페이지: /brand/{sellerUuid}
