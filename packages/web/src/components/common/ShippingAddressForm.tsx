@@ -70,6 +70,46 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
     );
   };
 
+  // 우편번호 찾기 (Daum Postcode API)
+  const handlePostcodeSearch = () => {
+    if (typeof window === 'undefined' || !window.daum || !window.daum.Postcode) {
+      alert('우편번호 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    new window.daum.Postcode({
+      oncomplete: function(data: any) {
+        // 주소 데이터 추출
+        const postcode = data.zonecode;
+        const roadAddress = data.roadAddress;
+        const jibunAddress = data.jibunAddress;
+        const buildingName = data.buildingName;
+        const sido = data.sido;
+
+        // region 자동 감지
+        let region: 'seoul' | 'metropolitan' | 'general' | 'jeju' | 'remote' = 'general';
+        if (sido.includes('서울')) region = 'seoul';
+        else if (sido.includes('경기') || sido.includes('인천')) region = 'metropolitan';
+        else if (sido.includes('제주')) region = 'jeju';
+        else if (sido.includes('울릉') || sido.includes('백령')) region = 'remote';
+
+        // extraAddress 생성
+        const extraAddress = buildingName ? `(${buildingName})` : '';
+
+        // formData 업데이트
+        handleFieldChange('postcode', postcode);
+        handleFieldChange('roadAddress', roadAddress);
+        handleFieldChange('jibunAddress', jibunAddress);
+        handleFieldChange('extraAddress', extraAddress);
+        handleFieldChange('region', region);
+
+        console.log('✅ 주소 선택 완료:', { postcode, roadAddress, region });
+      },
+      width: '100%',
+      height: '100%'
+    }).open();
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       alert('필수 정보를 모두 입력해주세요.');
@@ -171,13 +211,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
               placeholder="12345"
             />
             <button
-              onClick={() => {
-                // TODO: 우편번호 찾기 API 연동
-                // - Daum 우편번호 서비스 또는 행정안전부 주소 API 연동
-                // - 팝업 또는 모달로 주소 검색 기능 구현
-                // - 선택한 주소를 zipCode, address 필드에 자동 입력
-                alert('우편번호 찾기는 추후 구현됩니다.');
-              }}
+              onClick={handlePostcodeSearch}
+              type="button"
               className="px-3 py-2 border rounded-lg hover:bg-gray-50 whitespace-nowrap"
             >
               검색
@@ -204,8 +239,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           <label className="block text-sm font-medium mb-2">상세 주소</label>
           <input
             type="text"
-            value={formData.addressDetail || ''}
-            onChange={(e) => handleFieldChange('addressDetail', e.target.value)}
+            value={formData.detailAddress || ''}
+            onChange={(e) => handleFieldChange('detailAddress', e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
             placeholder="상세 주소 (아파트 동/호수 등)"
           />

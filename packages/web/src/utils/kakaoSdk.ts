@@ -1,9 +1,10 @@
 // 카카오 SDK 초기화 및 관리 유틸리티
 
-// 카카오 SDK 전역 타입 정의
+// 카카오 SDK 및 Daum Postcode 전역 타입 정의
 declare global {
   interface Window {
     Kakao: any;
+    daum: any;
   }
 }
 
