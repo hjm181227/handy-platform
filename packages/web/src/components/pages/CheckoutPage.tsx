@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Star, FileText, Pencil } from 'lucide-react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
 import { ShippingAddressForm } from '../common/ShippingAddressForm';
-import { API_BASE_URL } from '@handy-platform/shared';
 import type {
   Cart,
   Order,
@@ -21,132 +20,168 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const { alert } = useAlert();
-  const location = useLocation();
   const [cart, setCart] = useState<Cart | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const hasLoadedRef = useRef(false);  // ✅ 중복 실행 방지용 ref
 
   // 배송지 정보
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     recipientName: '',
-    phone: '',
-    address: '',
-    addressDetail: '',
-    zipCode: '',
-    memo: ''
+    recipientPhone: '',
+    postcode: '',
+    roadAddress: '',
+    detailAddress: '',
+    region: 'seoul',
+    deliveryNote: ''
   });
 
   const [savedAddresses, setSavedAddresses] = useState<ShippingAddress[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
 
   // 결제 방법
   const [paymentMethod, setPaymentMethod] = useState<string>('card');
 
-  // 배송지 및 결제수단 등 추가 체크아웃 데이터 로드
-  const loadAdditionalCheckoutData = async () => {
-    // 저장된 배송지 목록 로드
+  // ✅ 배송지 목록 로드 헬퍼 함수
+  const loadAddresses = async () => {
     try {
-      const addressesResponse = await purchaseApiService.getShippingAddresses();
+      const response = await webApiService.address.getAddresses();
+      if (response.success && response.data?.addresses) {
+        const addresses: ShippingAddress[] = response.data.addresses.map((addr: any) => ({
+          id: addr.index?.toString() || '',
+          recipientName: addr.recipientName || '',
+          recipientPhone: addr.recipientPhone || '',
+          postcode: addr.postcode || '',
+          roadAddress: addr.roadAddress || '',
+          jibunAddress: addr.jibunAddress,
+          detailAddress: addr.detailAddress || '',
+          extraAddress: addr.extraAddress,
+          region: addr.region || 'seoul',
+          deliveryNote: addr.deliveryNote,
+          addressName: addr.addressName,
+          isDefault: addr.isDefault || false
+        }));
+        setSavedAddresses(addresses);
 
-      if (addressesResponse.success && addressesResponse.data) {
-        setSavedAddresses(addressesResponse.data);
+        // 기본 배송지 또는 첫 번째 배송지 선택
+        const defaultAddress = addresses.find(addr => addr.isDefault);
+        const addressToSelect = defaultAddress || addresses[0];
 
-        // 기본 배송지가 있으면 선택
-        const defaultAddress = addressesResponse.data.find(addr => addr.isDefault);
-        if (defaultAddress) {
-          setSelectedAddressId(defaultAddress.id);
-          setShippingAddress(defaultAddress);
-          setShowAddressForm(false);
-        } else if (addressesResponse.data.length > 0) {
-          // 기본 배송지가 없으면 첫 번째 배송지 선택
-          const firstAddress = addressesResponse.data[0];
-          setSelectedAddressId(firstAddress.id);
-          setShippingAddress(firstAddress);
-          setShowAddressForm(false);
-        } else {
-          // 배송지가 없으면 빈 상태 표시 (폼은 버튼을 눌러야 열림)
-          setShowAddressForm(false);
+        if (addressToSelect) {
+          setSelectedAddressId(addressToSelect.id);
+          setShippingAddress(addressToSelect);
+
+          // ✅ 초기 로드 시 validate API 호출하여 배송비 계산
+          if (cart?.sessionId) {
+            try {
+              console.log('🚚 [CheckoutPage] Initial address validation');
+              const validateResponse = await webApiService.order.validateCheckout(
+                (cart as any).sessionId,
+                {
+                  recipientName: addressToSelect.recipientName,
+                  recipientPhone: addressToSelect.recipientPhone,
+                  postcode: addressToSelect.postcode,
+                  roadAddress: addressToSelect.roadAddress,
+                  detailAddress: addressToSelect.detailAddress || '',
+                  region: addressToSelect.region || 'seoul',
+                  deliveryNote: addressToSelect.deliveryNote
+                }
+              );
+
+              if (validateResponse.success && validateResponse.data) {
+                console.log('✅ [CheckoutPage] Initial address validated, totals:', validateResponse.data.totals);
+                setCart({
+                  ...cart,
+                  totals: validateResponse.data.totals,
+                  status: 'validated'
+                } as any);
+
+                if (order) {
+                  setOrder({
+                    ...order,
+                    shippingCost: validateResponse.data.totals.shippingCost,
+                    finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
+                  });
+                }
+              }
+            } catch (error: any) {
+              console.error('❌ [CheckoutPage] Initial address validation failed:', error);
+              // 초기 검증 실패는 조용히 처리 (사용자가 수동으로 선택 가능)
+            }
+          }
         }
-      } else {
-        console.warn('배송지 목록 로드 실패:', addressesResponse.message);
-        setShowAddressForm(false);
       }
-    } catch (addressError) {
-      console.error('배송지 목록 로드 오류:', addressError);
-      setShowAddressForm(false);
+    } catch (error) {
+      console.error('❌ [CheckoutPage] Load addresses failed:', error);
     }
   };
 
-  // 장바구니와 pending 주문 로드
-  const loadCheckoutData = async (retryCount = 0) => {
+  // ✅ 체크아웃 초기화 (POST /api/checkout/initialize)
+  const loadCheckoutData = async () => {
+    // ✅ React Strict Mode 대응: 이미 실행되었으면 스킵
+    if (hasLoadedRef.current) {
+      console.log('📦 [CheckoutPage] Already loaded (prevented duplicate execution by useRef)');
+      return;
+    }
+    hasLoadedRef.current = true;
+
     try {
       setLoading(true);
       setError(null);
 
-      // ✅ 1. 먼저 navigation state에서 검증된 장바구니 데이터 확인
-      const validatedCart = (location.state as any)?.validatedCart;
+      // ✅ OrderService를 통한 체크아웃 초기화 (백엔드 스펙 준수)
+      // 백엔드가 JWT 토큰으로 사용자 장바구니를 자동으로 읽어옴
+      console.log('📦 [CheckoutPage] Initializing checkout from cart');
+      const response = await webApiService.order.initializeCheckout();
 
-      if (validatedCart && validatedCart.items && validatedCart.items.length > 0) {
-        console.log('✅ Using validated cart from navigation state (이중 API 호출 방지)');
-        console.log('🛒 Validated cart items:', validatedCart.items);
+      console.log('📦 [CheckoutPage] Initialize response:', response);
+      const result = response;
 
-        // 검증된 장바구니 데이터로 바로 설정
-        setCart(validatedCart);
+      if (result.success && result.data) {
+        // ✅ CheckoutData를 cart로 저장 (sessionId 포함)
+        setCart({
+          sessionId: result.data.sessionId,
+          ...result.data
+        } as any);
 
-        // 나머지 체크아웃 데이터 로드 (배송지, 결제수단 등)
-        await loadAdditionalCheckoutData();
-        setLoading(false);
-        return;
-      }
+        // ✅ order 정보는 totals에서 생성 (API 스펙 준수)
+        const tempOrder: Order = {
+          id: `temp_${Date.now()}`,
+          orderNumber: `ORDER_${Date.now()}`,
+          status: 'pending',
+          paymentStatus: 'pending',
+          totalAmount: result.data.totals.finalTotal,
+          items: result.data.items || [],
+          shipping: {
+            id: `shipping_${Date.now()}`,
+            status: 'preparing',
+            trackingNumber: undefined,
+            estimatedDelivery: result.data.estimatedDeliveryDateRange?.earliest,
+            carrier: { name: 'Standard', code: 'STD' }
+          } as ShippingDetails,
+          createdAt: new Date().toISOString(),
+          totalPrice: result.data.totals.subtotal,
+          shippingCost: result.data.totals.shippingCost,
+          totalDiscount: result.data.totals.discount,
+          finalPrice: result.data.totals.grandTotal
+        };
+        setOrder(tempOrder);
 
-      // ✅ 2. Fallback: navigation state가 없으면 API 호출 (뒤로가기, 새로고침 등)
-      console.log('⚠️ No validated cart in navigation state, fetching from API (fallback)');
+        // 배송지 목록 로드
+        await loadAddresses();
 
-      // 장바구니 정보 가져오기
-      const cartResponse = await purchaseApiService.getCart();
-      console.log('🛒 Full cart response:', cartResponse);
-      console.log('🛒 Response success:', cartResponse.success);
-      console.log('🛒 Response data:', cartResponse.data);
-
-      if (cartResponse.success && cartResponse.data) {
-        // 새로운 API 구조: response.data가 직접 cart 데이터
-        const cartData = cartResponse.data;
-        console.log('🛒 Checkout cart data:', cartData);
-        console.log('🛒 Cart items:', cartData.items);
-
-        // 장바구니가 비어있고 재시도 횟수가 남았으면 재시도
-        if ((!cartData || !cartData.items || cartData.items.length === 0) && retryCount < 2) {
-          console.log(`🔄 Empty cart detected, retrying (${retryCount + 1}/2)...`);
-          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms 대기
-          return loadCheckoutData(retryCount + 1);
-        }
-
-        // 재시도 후에도 비어있으면 에러 표시
-        if (!cartData || !cartData.items || cartData.items.length === 0) {
-          setError('장바구니가 비어있습니다.');
-          setTimeout(() => onGo('/cart'), 2000);
-          return;
-        }
-
-        setCart(cartData);
-
-        // 나머지 체크아웃 데이터 로드 (배송지 등)
-        await loadAdditionalCheckoutData();
       } else {
-        throw new Error('장바구니 정보를 불러올 수 없습니다.');
+        const errorMessage = result.error?.message || '주문 정보를 불러올 수 없습니다.';
+        setError(errorMessage);
       }
 
     } catch (err: any) {
-      console.error('Checkout data loading failed:', err);
-      setError(err.message || '장바구니 정보를 불러올 수 없습니다.');
-      // AlertService 에러 방지를 위해 간단한 에러 처리
-      // await showError(err, {
-      //   title: '체크아웃 로드 실패',
-      //   showRetry: true
-      // });
+      console.error('❌ [CheckoutPage] Initialize failed:', err);
+      setError(err.message || '체크아웃 초기화에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -154,13 +189,59 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
   useEffect(() => {
     loadCheckoutData();
+
+    // Cleanup: 컴포넌트 언마운트 시 예약된 타이머 취소
+    return () => {
+      // React Strict Mode에서 두 번째 마운트 시 이전 타이머 취소
+    };
   }, []);
 
-  // 배송지 선택 핸들러
-  const handleAddressSelect = (address: ShippingAddress) => {
+  // 배송지 선택 핸들러 + 배송지 검증 (validate)
+  const handleAddressSelect = async (address: ShippingAddress) => {
     setSelectedAddressId(address.id);
     setShippingAddress(address);
     setShowAddressForm(false);
+
+    // ✅ 배송지 선택 시 validate API 호출하여 배송비 재계산
+    if (cart?.sessionId) {
+      try {
+        console.log('🚚 [CheckoutPage] Validating shipping address');
+        const validateResponse = await webApiService.order.validateCheckout(
+          (cart as any).sessionId,
+          {
+            recipientName: address.recipientName,
+            recipientPhone: address.recipientPhone,
+            postcode: address.postcode,
+            roadAddress: address.roadAddress,
+            detailAddress: address.detailAddress || '',
+            region: address.region || 'seoul',
+            deliveryNote: address.deliveryNote
+          }
+        );
+
+        if (validateResponse.success && validateResponse.data) {
+          console.log('✅ [CheckoutPage] Address validated, updating totals', validateResponse.data.totals);
+          // 배송비가 재계산된 totals로 cart 업데이트
+          setCart({
+            ...cart,
+            totals: validateResponse.data.totals,
+            status: 'validated'
+          } as any);
+
+          // order도 업데이트
+          if (order) {
+            setOrder({
+              ...order,
+              shippingCost: validateResponse.data.totals.shippingCost,
+              finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
+            });
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ [CheckoutPage] Address validation failed:', error);
+        setError(error.message || '배송지 검증에 실패했습니다.');
+      }
+    }
   };
 
   // 새 배송지 추가
@@ -168,11 +249,12 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     setSelectedAddressId(null);
     setShippingAddress({
       recipientName: '',
-      phone: '',
-      address: '',
-      addressDetail: '',
-      zipCode: '',
-      memo: ''
+      recipientPhone: '',
+      postcode: '',
+      roadAddress: '',
+      detailAddress: '',
+      region: 'seoul',
+      deliveryNote: ''
     });
     setShowAddressForm(true);
   };
@@ -183,36 +265,153 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setProcessing(true);
       setError(null);
 
-      const response = await purchaseApiService.addShippingAddress(addressData);
-      if (response.success && response.data) {
-        // 배송지 목록 새로고침
-        const addressesResponse = await purchaseApiService.getShippingAddresses();
-        if (addressesResponse.success && addressesResponse.data) {
-          setSavedAddresses(addressesResponse.data);
-          // 새로 추가된 배송지 선택
-          setSelectedAddressId(response.data.id);
-          setShippingAddress(response.data);
-        } else {
-          // 새로고침 실패 시 기존 방식으로 추가
-          setSavedAddresses(prev => [...prev, response.data]);
-          setSelectedAddressId(response.data.id);
+      // ✅ 배송지 입력 시 validate API 호출하여 배송비 재계산
+      if (!cart?.sessionId) {
+        throw new Error('체크아웃 세션이 없습니다. 장바구니로 돌아가주세요.');
+      }
+
+      console.log('🚚 [CheckoutPage] Validating new shipping address:', addressData);
+      const validateResponse = await webApiService.order.validateCheckout(
+        (cart as any).sessionId,
+        addressData
+      );
+
+      if (validateResponse.success && validateResponse.data) {
+        console.log('✅ [CheckoutPage] Address validated, updating totals', validateResponse.data.totals);
+
+        // 배송비가 재계산된 totals로 cart 업데이트
+        setCart({
+          ...cart,
+          totals: validateResponse.data.totals,
+          status: 'validated',
+          shippingAddress: addressData
+        } as any);
+
+        // order도 업데이트
+        if (order) {
+          setOrder({
+            ...order,
+            shippingCost: validateResponse.data.totals.shippingCost,
+            finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
+          });
         }
 
+        // addressData에는 이미 savedAddressIndex가 포함되어 있음 (ShippingAddressForm에서 설정)
+        console.log('✅ [CheckoutPage] Using saved address, index:', addressData.savedAddressIndex);
+
+        // UI 업데이트용 배송지 객체 생성 (실제 서버 ID 사용)
+        const newAddress: ShippingAddress = {
+          id: addressData.savedAddressIndex?.toString() || `temp_${Date.now()}`,
+          recipientName: addressData.recipientName,
+          recipientPhone: addressData.recipientPhone,
+          postcode: addressData.postcode,
+          roadAddress: addressData.roadAddress,
+          detailAddress: addressData.detailAddress,
+          region: addressData.region || 'seoul',
+          deliveryNote: addressData.deliveryNote || '',
+          isDefault: false
+        };
+
+        // 1. 배송지 목록에 추가
+        setSavedAddresses(prev => [newAddress, ...prev]);
+
+        // 2. 선택된 배송지로 설정
+        setSelectedAddressId(newAddress.id);
+
+        // 3. shippingAddress state 업데이트
+        setShippingAddress(newAddress);
+
+        // 4. 폼 닫기
         setShowAddressForm(false);
-        await alert('배송지가 저장되었습니다.', {
+        await alert('배송지가 설정되었습니다. 배송비가 계산되었습니다.', {
           variant: 'success',
-          title: '저장 완료'
+          title: '배송지 설정 완료'
         });
       } else {
-        throw new Error(response.message || '배송지 저장에 실패했습니다.');
+        throw new Error(validateResponse.message || '배송지 검증에 실패했습니다.');
       }
     } catch (err: any) {
-      console.error('Address save failed:', err);
-      setError(err.message || '배송지 저장에 실패했습니다.');
-      await alert(err.message || '배송지 저장에 실패했습니다.', {
+      console.error('Address validation failed:', err);
+      setError(err.message || '배송지 검증에 실패했습니다.');
+      await alert(err.message || '배송지 검증에 실패했습니다.', {
         variant: 'error',
-        title: '저장 실패'
+        title: '검증 실패'
       });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 배송지 편집 시작
+  const handleEditAddress = (address: ShippingAddress) => {
+    console.log('✏️ [CheckoutPage] Edit address clicked:', address.id);
+    setEditingAddressId(address.id);
+    setSelectedAddressId(address.id);
+    setShippingAddress(address);
+    setShowAddressForm(true);
+  };
+
+  // 배송지 수정 저장
+  const handleUpdateAddress = async (addressData: ShippingAddress) => {
+    if (!editingAddressId) return;
+
+    try {
+      setProcessing(true);
+      setError(null);
+
+      console.log('💾 [CheckoutPage] Updating address:', editingAddressId);
+      console.log('🔍 [CheckoutPage] addressData received:', addressData);
+
+      // 배송지 목록 새로고침 (ShippingAddressForm에서 이미 UPDATE API 호출함)
+      await loadAddresses();
+
+      // 배송비 재계산 (validate API)
+      if (cart?.sessionId) {
+        console.log('📡 [CheckoutPage] Calling validateCheckout with sessionId:', (cart as any).sessionId);
+        console.log('📡 [CheckoutPage] Shipping address data:', JSON.stringify(addressData, null, 2));
+
+        const validateResponse = await webApiService.order.validateCheckout(
+          (cart as any).sessionId,
+          addressData
+        );
+
+        if (validateResponse.success && validateResponse.data) {
+          setCart({
+            ...cart,
+            totals: validateResponse.data.totals,
+            status: 'validated'
+          } as any);
+
+          if (order) {
+            setOrder({
+              ...order,
+              shippingCost: validateResponse.data.totals.shippingCost,
+              finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
+            });
+          }
+        }
+      }
+
+      // 수정된 주소로 shippingAddress 업데이트
+      const updatedAddress: ShippingAddress = {
+        ...addressData,
+        id: editingAddressId,
+        isDefault: false
+      };
+
+      setShippingAddress(updatedAddress);
+      setShowAddressForm(false);
+      setEditingAddressId(null);
+
+      await alert('배송지가 수정되었습니다.', {
+        variant: 'success',
+        title: '수정 완료'
+      });
+
+    } catch (err: any) {
+      console.error('❌ [CheckoutPage] Address update failed:', err);
+      setError(err.message || '배송지 수정에 실패했습니다.');
+      await alert(err.message, { variant: 'error' });
     } finally {
       setProcessing(false);
     }
@@ -220,8 +419,11 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
   // 배송지 유효성 검사
   const validateShipping = () => {
-    const required = ['recipientName', 'phone', 'address', 'zipCode'];
-    return required.every(field => shippingAddress[field as keyof ShippingAddress].trim());
+    const required = ['recipientName', 'recipientPhone', 'roadAddress', 'postcode'];
+    return required.every(field => {
+      const value = shippingAddress[field as keyof ShippingAddress];
+      return typeof value === 'string' && value.trim();
+    });
   };
 
   // 체크아웃 유효성 검사
@@ -233,19 +435,23 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     return hasValidAddress && hasPaymentMethod;
   };
 
-  // 결제 진행
+  // ✅ 결제 준비 (POST /api/payment/prepare) - 백엔드 스펙 준수
   const handlePayment = async () => {
-    if (!validateCheckout()) {
-      if (!selectedAddressId && !validateShipping()) {
-        setError('배송지 정보를 선택하거나 입력해주세요.');
-      } else if (!paymentMethod) {
-        setError('결제 방법을 선택해주세요.');
-      }
+    if (!cart) {
+      setError('체크아웃 정보가 없습니다.');
       return;
     }
 
-    if (!order) {
-      setError('주문 정보가 없습니다.');
+    if (!selectedAddressId) {
+      setError('배송지를 선택해주세요.');
+      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      return;
+    }
+
+    // ✅ validate 확인 (배송지가 검증되었는지 확인)
+    if ((cart as any).status !== 'validated') {
+      setError('배송지를 먼저 선택해주세요.');
+      await alert('배송지를 선택해주세요.', { variant: 'error' });
       return;
     }
 
@@ -253,41 +459,52 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setProcessing(true);
       setError(null);
 
-      // 결제 준비 직접 호출 (주문 생성은 서버에서 처리)
-      const payMethod = paymentMethod === 'kakaopay' ? 'KAKAO_PAY' :
-                       paymentMethod === 'naverpay' ? 'NAVER_PAY' :
-                       paymentMethod === 'card' ? 'CREDIT_CARD' : 'BANK_TRANSFER';
-
-      // 새로운 API 스펙: items 배열로 각 상품의 shape, size 정보 전달
-      const paymentPrepareData = {
-        amount: order?.finalPrice || 0,
-        payMethod,
-        items: cart?.items.map(item => ({
-          productUuid: item.productId || item.product.id,
-          shape: item.options?.shape || item.selectedOptions?.shape || 'default',
-          size: item.options?.size || item.selectedOptions?.size || 'default',
-          quantity: item.quantity,
-          price: item.price || 0
-        })) || [],
-        callbackUrls: {
-          success: `${API_BASE_URL}/api/payment/callback/success`,
-          cancel: `${API_BASE_URL}/api/payment/callback/cancel`,
-          fail: `${API_BASE_URL}/api/payment/callback/fail`
-        }
-      };
-
-      const prepareResponse = await purchaseApiService.preparePayment(paymentPrepareData);
-
-      if (prepareResponse.success && prepareResponse.data) {
-        // 결제 페이지로 이동
-        window.location.href = prepareResponse.data.paymentUrl;
+      // ✅ paymentMethod를 PayMethod로 변환 (백엔드 스펙: 대문자)
+      let payMethod: 'KAKAO_PAY' | 'NAVER_PAY' | 'CREDIT_CARD';
+      if (paymentMethod === 'kakaopay') {
+        payMethod = 'KAKAO_PAY';
+      } else if (paymentMethod === 'naverpay') {
+        payMethod = 'NAVER_PAY';
+      } else if (paymentMethod === 'card') {
+        payMethod = 'CREDIT_CARD';
       } else {
-        throw new Error(prepareResponse.error || '결제 준비에 실패했습니다.');
+        payMethod = 'KAKAO_PAY'; // 기본값
+      }
+
+      // ✅ OrderService를 통한 결제 준비 (백엔드 스펙 준수)
+      console.log('💳 [CheckoutPage] Preparing payment:', {
+        sessionId: (cart as any).sessionId,
+        amount: cart.totals.finalTotal,
+        payMethod
+      });
+
+      const response = await webApiService.order.preparePayment(
+        (cart as any).sessionId,
+        cart.totals.finalTotal,  // 세션의 finalTotal 전달
+        payMethod
+      );
+
+      console.log('💳 [CheckoutPage] Payment prepare response:', response);
+
+      if (response.success && response.data?.paymentUrl) {
+        // 모바일 여부 확인
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+
+        const paymentUrl = isMobile && response.data.mobilePaymentUrl
+          ? response.data.mobilePaymentUrl
+          : response.data.paymentUrl;
+
+        console.log('🔗 [CheckoutPage] Redirecting to payment URL:', paymentUrl);
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error(response.error || response.message || '결제 준비에 실패했습니다.');
       }
 
     } catch (err: any) {
-      console.error('Payment failed:', err);
-      setError('결제 처리 중 오류가 발생했습니다.');
+      console.error('❌ [CheckoutPage] Payment prepare failed:', err);
+      setError(err.message || '결제 처리 중 오류가 발생했습니다.');
     } finally {
       setProcessing(false);
     }
@@ -352,9 +569,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 return (
                   <div key={item.product.id || index} className="flex gap-4 py-4 border-b last:border-b-0">
                     <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0">
-                      {item.product?.mainImageUrl ? (
+                      {item.product?.images?.main ? (
                         <img
-                          src={item.product.mainImageUrl}
+                          src={item.product.images.main}
                           alt={item.product.name || 'Product'}
                           className="w-full h-full object-cover rounded-lg"
                         />
@@ -367,7 +584,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     <div className="flex-1">
                       <h3 className="font-medium">{item.product?.name || '상품명 없음'}</h3>
                       <div className="text-xs text-gray-500 mt-1">
-                        판매자: {item.product?.brand || ''}
+                        브랜드: {item.product?.brand || ''} {item.product?.seller?.id && `(판매자 ID: ${item.product.seller.id})`}
                       </div>
                       {item.options && Object.keys(item.options).length > 0 && (
                         <div className="text-sm text-gray-600 mt-1">
@@ -433,7 +650,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   <h3 className="text-lg font-medium text-gray-600 mb-2">등록된 배송지가 없습니다</h3>
                   <p className="text-gray-500 mb-4">주문을 완료하려면 배송지를 추가해주세요.</p>
                   <button
-                    onClick={() => onGo('/my/addresses')}
+                    onClick={() => onGo('/my/shipping-address')}
                     className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                   >
                     배송지 관리 페이지에서 추가하기 →
@@ -444,45 +661,100 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               {/* 저장된 배송지 목록 */}
               {savedAddresses.length > 0 && !showAddressForm && (
                 <div className="space-y-3 mb-6">
-                  {savedAddresses.map(address => (
-                    <div
-                      key={address.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedAddressId === address.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => handleAddressSelect(address)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="font-bold text-lg text-gray-900">
-                              {(address as any).addressName || '배송지'}
-                            </div>
+                  {savedAddresses.map(address => {
+                    const isSelected = selectedAddressId === address.id;
+                    return (
+                      <div
+                        key={address.id}
+                        className={`border rounded-lg cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => handleAddressSelect(address)}
+                      >
+                        {/* 간략 정보 (항상 표시) */}
+                        <div className="p-3 flex items-center gap-3">
+                          <input
+                            type="radio"
+                            checked={isSelected}
+                            onChange={() => handleAddressSelect(address)}
+                            className="flex-shrink-0"
+                          />
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="font-medium text-gray-900">
+                              [{address.addressName || '배송지'}]
+                            </span>
+                            <span className="text-sm text-gray-600 truncate">
+                              {address.roadAddress}
+                            </span>
                             {address.isDefault && (
-                              <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
-                                기본 배송지
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium flex-shrink-0">
+                                <Star className="w-3 h-3 fill-current" />
+                                기본
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-gray-600 mb-1">{address.recipientName}</div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {address.address} {address.addressDetail}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {address.phone}
-                          </div>
                         </div>
-                        <input
-                          type="radio"
-                          checked={selectedAddressId === address.id}
-                          onChange={() => handleAddressSelect(address)}
-                          className="mt-1"
-                        />
+
+                        {/* 상세 정보 (선택 시에만 표시) */}
+                        {isSelected && (
+                          <div className="px-3 pb-3 pt-0 border-t border-gray-200 mt-2">
+                            <div className="bg-white rounded-lg p-3 space-y-2 text-sm mt-2">
+                              {/* 배송지명 + 수정 버튼 */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-base text-gray-900">
+                                    {address.addressName || '배송지'}
+                                  </span>
+                                  {address.isDefault && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                                      <Star className="w-3 h-3 fill-current" />
+                                      기본 배송지
+                                    </span>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditAddress(address);
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                  수정
+                                </button>
+                              </div>
+
+                              <div className="text-gray-700">
+                                <span className="font-medium">{address.recipientName}</span>
+                                <span className="text-gray-500 ml-2">({address.recipientPhone})</span>
+                              </div>
+                              <div className="text-gray-600 space-y-1">
+                                <div>
+                                  <span className="inline-block font-mono text-xs bg-gray-100 border border-gray-300 px-1.5 py-0.5 rounded mr-2">
+                                    {address.postcode}
+                                  </span>
+                                  {address.roadAddress}
+                                </div>
+                                {address.detailAddress && (
+                                  <div className="text-gray-500 pl-1">
+                                    {address.detailAddress}
+                                  </div>
+                                )}
+                              </div>
+                              {address.deliveryNote && (
+                                <div className="flex items-start gap-1.5 text-xs text-gray-500 border-l-2 border-gray-300 pl-2 mt-2">
+                                  <FileText className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                                  <span>{address.deliveryNote}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -491,11 +763,19 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                     <ShippingAddressForm
-                      title="새 배송지 추가"
-                      onSave={handleSaveNewAddress}
-                      onCancel={() => setShowAddressForm(false)}
+                      title={editingAddressId ? "배송지 수정" : "새 배송지 추가"}
+                      initialData={editingAddressId ? {
+                        ...shippingAddress,
+                        savedAddressIndex: parseInt(editingAddressId)
+                      } : undefined}
+                      onSave={editingAddressId ? handleUpdateAddress : handleSaveNewAddress}
+                      onCancel={() => {
+                        setShowAddressForm(false);
+                        setEditingAddressId(null);
+                      }}
                       processing={processing}
                       showCancelButton={true}
+                      showAddressName={true}
                     />
                   </div>
                 </div>

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
-import type { 
-  KoreanAddress, 
+import { ShippingAddressForm } from '../common/ShippingAddressForm';
+import type {
   KoreanAddressResponse,
-  KoreanRegion
+  ShippingAddress
 } from '@handy-platform/shared';
 
 interface ShippingAddressPageProps {
@@ -16,18 +16,6 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [editingAddress, setEditingAddress] = useState<KoreanAddressResponse | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState<Omit<KoreanAddress, 'isDefault'>>({
-    recipientName: '',
-    recipientPhone: '',
-    postcode: '',
-    roadAddress: '',
-    jibunAddress: '',
-    detailAddress: '',
-    extraAddress: '',
-    region: 'seoul',
-    deliveryNote: '',
-    addressName: ''
-  });
   const [saving, setSaving] = useState(false);
 
   // 배송지 목록 로드
@@ -35,9 +23,9 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await webApiService.address.getAddresses();
-      
+
       if (response.success && response.data?.addresses) {
         setAddresses(response.data.addresses);
       } else {
@@ -56,100 +44,22 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
     loadAddresses();
   }, []);
 
-  // 폼 데이터 변경
-  const handleFormChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // 폼 유효성 검사
-  const validateForm = () => {
-    const required = ['recipientName', 'recipientPhone', 'roadAddress', 'postcode'] as const;
-    return required.every(field => formData[field].trim());
-  };
-
-  // 주소 유효성 검사
-  const validateAddress = async () => {
-    if (!validateForm()) {
-      setError('필수 정보를 모두 입력해주세요.');
-      return;
-    }
-
+  // 배송지 저장 (ShippingAddressForm 콜백)
+  const handleSaveAddress = async (addressData: ShippingAddress) => {
+    setSaving(true);
     try {
-      setSaving(true);
-      setError(null);
-
-      const validationData: KoreanAddress = {
-        ...formData,
-        jibunAddress: formData.jibunAddress || formData.roadAddress, // 지번주소가 없으면 도로명주소 사용
-        isDefault: addresses.length === 0 // 첫 번째 주소는 기본값
-      };
-
-      const response = await webApiService.address.validateAddress(validationData);
-      
-      if (response.success && response.data?.isValid) {
-        const { shippingEstimate } = response.data;
-        alert(`주소가 유효합니다!\n배송비: ${shippingEstimate.estimatedCost}원\n예상 배송일: ${shippingEstimate.estimatedDays}일`);
-      } else {
-        setError('유효하지 않은 주소입니다.');
-      }
-    } catch (err: any) {
-      console.error('주소 유효성 검사 실패:', err);
-      setError('주소 유효성 검사에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // 배송지 저장
-  const handleSave = async () => {
-    if (!validateForm()) {
-      setError('필수 정보를 모두 입력해주세요.');
-      return;
-    }
-
-    try {
-      setSaving(true);
-      setError(null);
-
-      const requestData: KoreanAddress = {
-        ...formData,
-        jibunAddress: formData.jibunAddress || formData.roadAddress, // 지번주소가 없으면 도로명주소 사용
-        isDefault: addresses.length === 0 // 첫 번째 주소는 기본값으로
-      };
-
-      if (editingAddress) {
-        // 수정
-        await webApiService.address.updateAddress(editingAddress.index.toString(), requestData);
-      } else {
-        // 새 추가
-        await webApiService.address.createAddress(requestData);
-      }
-
-      // 성공 시 목록 새로고침
+      // ShippingAddress는 이미 ShippingAddressForm에서 서버에 저장됨
+      // 여기서는 목록만 새로고침
       await loadAddresses();
 
-      // 폼 초기화
-      setFormData({
-        recipientName: '',
-        recipientPhone: '',
-        postcode: '',
-        roadAddress: '',
-        jibunAddress: '',
-        detailAddress: '',
-        extraAddress: '',
-        region: 'seoul',
-        deliveryNote: '',
-        addressName: ''
-      });
-      setEditingAddress(null);
+      // 폼 닫기
       setShowAddForm(false);
+      setEditingAddress(null);
+      setError(null);
 
     } catch (err: any) {
-      console.error('배송지 저장 실패:', err);
-      setError(err.message || '배송지 저장에 실패했습니다.');
+      console.error('배송지 목록 새로고침 실패:', err);
+      setError(err.message || '배송지 목록 새로고침에 실패했습니다.');
     } finally {
       setSaving(false);
     }
@@ -182,37 +92,20 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
   // 편집 시작
   const startEdit = (address: KoreanAddressResponse) => {
     setEditingAddress(address);
-    setFormData({
-      recipientName: address.recipientName,
-      recipientPhone: address.recipientPhone,
-      postcode: address.postcode,
-      roadAddress: address.roadAddress,
-      jibunAddress: address.jibunAddress,
-      detailAddress: address.detailAddress,
-      extraAddress: address.extraAddress,
-      region: address.region,
-      deliveryNote: address.deliveryNote || '',
-      addressName: address.addressName || ''
-    });
     setShowAddForm(true);
   };
 
   // 새 주소 추가 시작
   const startAdd = () => {
     setEditingAddress(null);
-    setFormData({
-      recipientName: '',
-      recipientPhone: '',
-      postcode: '',
-      roadAddress: '',
-      jibunAddress: '',
-      detailAddress: '',
-      extraAddress: '',
-      region: 'seoul',
-      deliveryNote: '',
-      addressName: ''
-    });
     setShowAddForm(true);
+  };
+
+  // 폼 닫기
+  const handleCancelForm = () => {
+    setShowAddForm(false);
+    setEditingAddress(null);
+    setError(null);
   };
 
   if (loading) {
@@ -342,152 +235,28 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
         {/* 배송지 추가/수정 폼 모달 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold">
-                    {editingAddress ? '배송지 수정' : '새 배송지 추가'}
-                  </h2>
-                  <button
-                    onClick={() => {
-                      setShowAddForm(false);
-                      setEditingAddress(null);
-                      setError(null);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      받는 분 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.recipientName}
-                      onChange={(e) => handleFormChange('recipientName', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="받는 분 성함"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      연락처 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.recipientPhone}
-                      onChange={(e) => handleFormChange('recipientPhone', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="010-0000-0000"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      우편번호 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={formData.postcode}
-                        onChange={(e) => handleFormChange('postcode', e.target.value)}
-                        className="flex-1 border rounded-lg px-3 py-2"
-                        placeholder="12345"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => alert('우편번호 찾기는 추후 구현됩니다.')}
-                        className="px-3 py-2 border rounded-lg hover:bg-gray-50"
-                      >
-                        검색
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      주소 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.roadAddress}
-                      onChange={(e) => handleFormChange('roadAddress', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="도로명 주소"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">상세 주소</label>
-                    <input
-                      type="text"
-                      value={formData.detailAddress}
-                      onChange={(e) => handleFormChange('detailAddress', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="상세 주소 (아파트 동/호수 등)"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">배송지명</label>
-                    <input
-                      type="text"
-                      value={formData.addressName}
-                      onChange={(e) => handleFormChange('addressName', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                      placeholder="예: 집, 회사, 학교 등"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">배송 메모</label>
-                    <textarea
-                      value={formData.deliveryNote}
-                      onChange={(e) => handleFormChange('deliveryNote', e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2 h-20 resize-none"
-                      placeholder="배송 시 요청사항이 있으면 입력해주세요"
-                    />
-                  </div>
-
-                  {/* 주소 유효성 검사 버튼 */}
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={validateAddress}
-                      disabled={saving || !validateForm()}
-                      className="w-full border border-blue-500 text-blue-500 py-2 px-4 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    >
-                      {saving ? '검증 중...' : '주소 유효성 검사'}
-                    </button>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setEditingAddress(null);
-                        setError(null);
-                      }}
-                      className="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50"
-                    >
-                      취소
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={saving || !validateForm()}
-                      className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {saving ? '저장 중...' : editingAddress ? '수정' : '추가'}
-                    </button>
-                  </div>
-                </form>
-              </div>
+            <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <ShippingAddressForm
+                initialData={editingAddress ? {
+                  recipientName: editingAddress.recipientName,
+                  recipientPhone: editingAddress.recipientPhone,
+                  postcode: editingAddress.postcode,
+                  roadAddress: editingAddress.roadAddress,
+                  jibunAddress: editingAddress.jibunAddress,
+                  detailAddress: editingAddress.detailAddress,
+                  extraAddress: editingAddress.extraAddress,
+                  region: editingAddress.region,
+                  deliveryNote: editingAddress.deliveryNote,
+                  addressName: editingAddress.addressName,
+                  savedAddressIndex: editingAddress.index
+                } : undefined}
+                onSave={handleSaveAddress}
+                onCancel={handleCancelForm}
+                showCancelButton={true}
+                processing={saving}
+                title={editingAddress ? '배송지 수정' : '새 배송지 추가'}
+                showAddressName={true}
+              />
             </div>
           </div>
         )}

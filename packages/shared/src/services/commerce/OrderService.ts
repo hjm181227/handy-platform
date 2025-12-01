@@ -1,11 +1,15 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { 
-  ApiResponse, 
-  Order, 
-  OrdersResponse, 
+import {
+  ApiResponse,
+  Order,
+  OrdersResponse,
   Address,
   PaymentMethod,
-  Cart
+  Cart,
+  CheckoutSession,
+  ShippingAddress,
+  PaymentPrepareResult,
+  PayMethod
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
@@ -81,6 +85,53 @@ export abstract class BaseOrderService extends BaseApiService {
     }
 
     return response;
+  }
+
+  // 체크아웃 초기화 - 장바구니에서 자동으로 items 읽기 (백엔드 스펙 준수)
+  async initializeCheckout(customRequestUuid?: string): Promise<ApiResponse<CheckoutSession>> {
+    return this.request<ApiResponse<CheckoutSession>>(
+      '/api/checkout/initialize',
+      {
+        method: 'POST',
+        body: JSON.stringify(customRequestUuid ? { customRequestUuid } : {}),
+      }
+    );
+  }
+
+  // 배송지 검증 - 배송비 재계산 및 최종 금액 확정
+  async validateCheckout(
+    sessionId: string,
+    shippingAddress: ShippingAddress
+  ): Promise<ApiResponse<CheckoutSession>> {
+    return this.request<ApiResponse<CheckoutSession>>(
+      '/api/checkout/validate',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId,
+          shippingAddress
+        }),
+      }
+    );
+  }
+
+  // 결제 준비 - 주문 생성 및 결제 URL 반환 (백엔드 스펙 준수)
+  async preparePayment(
+    sessionId: string,
+    amount: number,
+    payMethod: PayMethod
+  ): Promise<ApiResponse<PaymentPrepareResult>> {
+    return this.request<ApiResponse<PaymentPrepareResult>>(
+      '/api/payment/prepare',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId,
+          amount,
+          payMethod
+        }),
+      }
+    );
   }
 
   // 주문 생성
