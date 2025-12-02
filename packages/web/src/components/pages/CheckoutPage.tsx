@@ -74,48 +74,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         if (addressToSelect) {
           setSelectedAddressId(addressToSelect.id);
           setShippingAddress(addressToSelect);
-
-          // ✅ 초기 로드 시 validate API 호출하여 배송비 계산
-          if (cart?.sessionId) {
-            try {
-              console.log('🚚 [CheckoutPage] Initial address validation');
-              const validateResponse = await webApiService.order.validateCheckout(
-                (cart as any).sessionId,
-                {
-                  recipientName: addressToSelect.recipientName,
-                  recipientPhone: addressToSelect.recipientPhone,
-                  postcode: addressToSelect.postcode,
-                  roadAddress: addressToSelect.roadAddress,
-                  detailAddress: addressToSelect.detailAddress || '',
-                  region: addressToSelect.region || 'seoul',
-                  // Optional fields: only include if not empty
-                  ...(addressToSelect.deliveryNote?.trim() && { deliveryNote: addressToSelect.deliveryNote.trim() }),
-                  ...(addressToSelect.jibunAddress?.trim() && { jibunAddress: addressToSelect.jibunAddress.trim() }),
-                  ...(addressToSelect.extraAddress?.trim() && { extraAddress: addressToSelect.extraAddress.trim() })
-                }
-              );
-
-              if (validateResponse.success && validateResponse.data) {
-                console.log('✅ [CheckoutPage] Initial address validated, totals:', validateResponse.data.totals);
-                setCart({
-                  ...cart,
-                  totals: validateResponse.data.totals,
-                  status: 'validated'
-                } as any);
-
-                if (order) {
-                  setOrder({
-                    ...order,
-                    shippingCost: validateResponse.data.totals.shippingCost,
-                    finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
-                  });
-                }
-              }
-            } catch (error: any) {
-              console.error('❌ [CheckoutPage] Initial address validation failed:', error);
-              // 초기 검증 실패는 조용히 처리 (사용자가 수동으로 선택 가능)
-            }
-          }
+          // ✅ Validation will be handled by useEffect watching shippingAddress changes
         }
       }
     } catch (error) {
@@ -190,6 +149,57 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     }
   };
 
+  // ✅ 배송지 정보 변경 시 자동으로 validate API 호출
+  useEffect(() => {
+    // 필수 정보가 없으면 스킵
+    if (!shippingAddress.recipientName || !cart?.sessionId) {
+      return;
+    }
+
+    const validateAddress = async () => {
+      try {
+        console.log('🚚 [CheckoutPage] Auto-validating address on change');
+        const validateResponse = await webApiService.order.validateCheckout(
+          cart.sessionId!,
+          {
+            recipientName: shippingAddress.recipientName,
+            recipientPhone: shippingAddress.recipientPhone,
+            postcode: shippingAddress.postcode,
+            roadAddress: shippingAddress.roadAddress,
+            detailAddress: shippingAddress.detailAddress || '',
+            region: shippingAddress.region || 'seoul',
+            // Optional fields: only include if not empty
+            ...(shippingAddress.deliveryNote?.trim() && { deliveryNote: shippingAddress.deliveryNote.trim() }),
+            ...(shippingAddress.jibunAddress?.trim() && { jibunAddress: shippingAddress.jibunAddress.trim() }),
+            ...(shippingAddress.extraAddress?.trim() && { extraAddress: shippingAddress.extraAddress.trim() })
+          }
+        );
+
+        if (validateResponse.success && validateResponse.data) {
+          console.log('✅ [CheckoutPage] Address auto-validated, totals:', validateResponse.data.totals);
+          setCart({
+            ...cart,
+            totals: validateResponse.data.totals,
+            status: 'validated'
+          } as any);
+
+          if (order) {
+            setOrder({
+              ...order,
+              shippingCost: validateResponse.data.totals.shippingCost,
+              finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
+            });
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ [CheckoutPage] Auto-validation failed:', error);
+        // 검증 실패는 조용히 처리 (사용자가 수동으로 조정 가능)
+      }
+    };
+
+    validateAddress();
+  }, [shippingAddress, cart?.sessionId]); // shippingAddress 또는 sessionId 변경 시 자동 실행
+
   useEffect(() => {
     loadCheckoutData();
 
@@ -237,55 +247,12 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     };
   }, []);
 
-  // 배송지 선택 핸들러 + 배송지 검증 (validate)
-  const handleAddressSelect = async (address: ShippingAddress) => {
+  // 배송지 선택 핸들러
+  const handleAddressSelect = (address: ShippingAddress) => {
     setSelectedAddressId(address.id);
     setShippingAddress(address);
     setShowAddressForm(false);
-
-    // ✅ 배송지 선택 시 validate API 호출하여 배송비 재계산
-    if (cart?.sessionId) {
-      try {
-        console.log('🚚 [CheckoutPage] Validating shipping address');
-        const validateResponse = await webApiService.order.validateCheckout(
-          (cart as any).sessionId,
-          {
-            recipientName: address.recipientName,
-            recipientPhone: address.recipientPhone,
-            postcode: address.postcode,
-            roadAddress: address.roadAddress,
-            detailAddress: address.detailAddress || '',
-            region: address.region || 'seoul',
-            // Optional fields: only include if not empty
-            ...(address.deliveryNote?.trim() && { deliveryNote: address.deliveryNote.trim() }),
-            ...(address.jibunAddress?.trim() && { jibunAddress: address.jibunAddress.trim() }),
-            ...(address.extraAddress?.trim() && { extraAddress: address.extraAddress.trim() })
-          }
-        );
-
-        if (validateResponse.success && validateResponse.data) {
-          console.log('✅ [CheckoutPage] Address validated, updating totals', validateResponse.data.totals);
-          // 배송비가 재계산된 totals로 cart 업데이트
-          setCart({
-            ...cart,
-            totals: validateResponse.data.totals,
-            status: 'validated'
-          } as any);
-
-          // order도 업데이트
-          if (order) {
-            setOrder({
-              ...order,
-              shippingCost: validateResponse.data.totals.shippingCost,
-              finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
-            });
-          }
-        }
-      } catch (error: any) {
-        console.error('❌ [CheckoutPage] Address validation failed:', error);
-        setError(error.message || '배송지 검증에 실패했습니다.');
-      }
-    }
+    // ✅ Validation will be triggered automatically by useEffect watching shippingAddress
   };
 
   // 새 배송지 추가
