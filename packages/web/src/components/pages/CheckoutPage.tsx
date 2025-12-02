@@ -193,6 +193,44 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   useEffect(() => {
     loadCheckoutData();
 
+    // 결제 취소 후 복원 정보 확인
+    const restoreCheckoutData = () => {
+      try {
+        const restored = sessionStorage.getItem('restored-checkout');
+        if (!restored) return;
+
+        const restoreData = JSON.parse(restored);
+        const isRecent = Date.now() - restoreData.timestamp < 5 * 60 * 1000; // 5분 이내
+
+        if (isRecent && restoreData.shippingAddress) {
+          console.log('✅ [CheckoutPage] Restoring checkout data:', restoreData);
+
+          // 배송지 복원
+          setShippingAddress(restoreData.shippingAddress);
+          setSelectedAddressId(restoreData.shippingAddress.id);
+
+          // 결제수단 복원 (있는 경우)
+          if (restoreData.paymentMethod) {
+            setPaymentMethod(restoreData.paymentMethod);
+          }
+
+          // 사용 후 즉시 삭제
+          sessionStorage.removeItem('restored-checkout');
+          console.log('✅ [CheckoutPage] Restoration completed and data cleared');
+        } else {
+          // 만료되었거나 유효하지 않으면 삭제
+          sessionStorage.removeItem('restored-checkout');
+          console.log('⏰ [CheckoutPage] Restoration data expired or invalid');
+        }
+      } catch (error) {
+        console.error('❌ [CheckoutPage] Failed to restore checkout data:', error);
+        sessionStorage.removeItem('restored-checkout');
+      }
+    };
+
+    // 체크아웃 데이터 로드 후 복원 시도
+    setTimeout(restoreCheckoutData, 500);
+
     // Cleanup: 컴포넌트 언마운트 시 예약된 타이머 취소
     return () => {
       // React Strict Mode에서 두 번째 마운트 시 이전 타이머 취소
