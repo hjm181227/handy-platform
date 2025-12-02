@@ -88,7 +88,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   roadAddress: addressToSelect.roadAddress,
                   detailAddress: addressToSelect.detailAddress || '',
                   region: addressToSelect.region || 'seoul',
-                  deliveryNote: addressToSelect.deliveryNote
+                  // Optional fields: only include if not empty
+                  ...(addressToSelect.deliveryNote?.trim() && { deliveryNote: addressToSelect.deliveryNote.trim() }),
+                  ...(addressToSelect.jibunAddress?.trim() && { jibunAddress: addressToSelect.jibunAddress.trim() }),
+                  ...(addressToSelect.extraAddress?.trim() && { extraAddress: addressToSelect.extraAddress.trim() })
                 }
               );
 
@@ -215,7 +218,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             roadAddress: address.roadAddress,
             detailAddress: address.detailAddress || '',
             region: address.region || 'seoul',
-            deliveryNote: address.deliveryNote
+            // Optional fields: only include if not empty
+            ...(address.deliveryNote?.trim() && { deliveryNote: address.deliveryNote.trim() }),
+            ...(address.jibunAddress?.trim() && { jibunAddress: address.jibunAddress.trim() }),
+            ...(address.extraAddress?.trim() && { extraAddress: address.extraAddress.trim() })
           }
         );
 
@@ -372,7 +378,18 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
         const validateResponse = await webApiService.order.validateCheckout(
           (cart as any).sessionId,
-          addressData
+          {
+            recipientName: addressData.recipientName,
+            recipientPhone: addressData.recipientPhone,
+            postcode: addressData.postcode,
+            roadAddress: addressData.roadAddress,
+            detailAddress: addressData.detailAddress || '',
+            region: addressData.region || 'seoul',
+            // Optional fields: only include if not empty
+            ...(addressData.deliveryNote?.trim() && { deliveryNote: addressData.deliveryNote.trim() }),
+            ...(addressData.jibunAddress?.trim() && { jibunAddress: addressData.jibunAddress.trim() }),
+            ...(addressData.extraAddress?.trim() && { extraAddress: addressData.extraAddress.trim() })
+          }
         );
 
         if (validateResponse.success && validateResponse.data) {
@@ -583,12 +600,14 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{item.product?.name || '상품명 없음'}</h3>
-                      <div className="text-xs text-gray-500 mt-1">
-                        브랜드: {item.product?.brand || ''} {item.product?.seller?.id && `(판매자 ID: ${item.product.seller.id})`}
-                      </div>
+                      {item.product?.brand && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          브랜드: {item.product.brand}
+                        </div>
+                      )}
                       {item.options && Object.keys(item.options).length > 0 && (
                         <div className="text-sm text-gray-600 mt-1">
-                          {Object.entries(item.options).map(([key, value]) => {
+                          {Object.entries(item.options).map(([key, value], index, array) => {
                             const optionNames: Record<string, string> = {
                               'nailShape': '쉐입',
                               'nailLength': '길이',
@@ -608,9 +627,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
                             const displayKey = optionNames[key] || key;
                             const displayValue = optionValues[value as string] || value;
+                            const isLast = index === array.length - 1;
 
                             return (
-                              <span key={key}>{displayKey}: {displayValue} </span>
+                              <span key={key}>{displayKey}: {displayValue}{!isLast && ', '}</span>
                             );
                           })}
                         </div>
