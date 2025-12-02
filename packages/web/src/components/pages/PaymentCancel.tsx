@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { purchaseApiService } from '@/services/apiService';
+import { purchaseApiService } from '../../services/purchaseApiService';
 
 interface PaymentCancelProps {
   onGo: (path: string) => void;
