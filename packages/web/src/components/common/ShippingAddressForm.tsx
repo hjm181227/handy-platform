@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShippingAddress } from '@handy-platform/shared';
+import { ShippingAddress, KoreanAddress } from '@handy-platform/shared';
+import { webApiService } from '../../services/apiService';
 
 interface ShippingAddressFormProps {
   initialData?: Partial<ShippingAddress>;
@@ -116,23 +117,51 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
       return;
     }
 
-    const addressToSave: ShippingAddress = {
-      id: formData.id || '',
+    // ✅ 배송지 저장 API 요청 데이터 (region 제외 - 서버에서 postcode로 자동 감지)
+    const addressData: KoreanAddress = {
       recipientName: formData.recipientName!,
       recipientPhone: formData.recipientPhone!,
       postcode: formData.postcode!,
       roadAddress: formData.roadAddress!,
       detailAddress: formData.detailAddress || '',
       deliveryNote: formData.deliveryNote || '',
-      region: formData.region || 'seoul',
-      isDefault: formData.isDefault || false,
-      ...(showAddressName && { addressName })
+      // Optional fields
+      ...(formData.jibunAddress && { jibunAddress: formData.jibunAddress }),
+      ...(formData.extraAddress && { extraAddress: formData.extraAddress }),
+      ...(showAddressName && addressName && { addressName })
     };
 
     try {
-      await onSave(addressToSave);
-    } catch (error) {
-      console.error('Address save failed:', error);
+      console.log('📡 [ShippingAddressForm] Saving address to server...');
+
+      // ✅ 배송지 저장 API 호출
+      const response = await webApiService.address.createAddress(addressData);
+
+      if (response.success && response.data) {
+        console.log('✅ [ShippingAddressForm] Address saved successfully:', response.data);
+
+        // 서버 응답 데이터를 부모에게 전달 (선택 처리용)
+        const savedAddress: ShippingAddress = {
+          id: response.data.index?.toString() || `temp_${Date.now()}`,
+          recipientName: response.data.recipientName,
+          recipientPhone: response.data.recipientPhone,
+          postcode: response.data.postcode,
+          roadAddress: response.data.roadAddress,
+          detailAddress: response.data.detailAddress || '',
+          deliveryNote: response.data.deliveryNote || '',
+          region: response.data.region || 'seoul', // 서버가 자동 감지한 region
+          isDefault: response.data.isDefault || false,
+          ...(response.data.jibunAddress && { jibunAddress: response.data.jibunAddress }),
+          ...(response.data.extraAddress && { extraAddress: response.data.extraAddress })
+        };
+
+        await onSave(savedAddress);
+      } else {
+        throw new Error(response.message || '배송지 저장에 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.error('❌ [ShippingAddressForm] Address save failed:', error);
+      alert(error.message || '배송지 저장에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
