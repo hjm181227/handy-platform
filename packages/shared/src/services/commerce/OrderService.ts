@@ -122,13 +122,42 @@ export abstract class BaseOrderService extends BaseApiService {
     payMethod: PayMethod
   ): Promise<ApiResponse<PaymentPrepareResult>> {
     return this.request<ApiResponse<PaymentPrepareResult>>(
-      '/api/payment/prepare',
+      API_ENDPOINTS.PAYMENT.PREPARE,
       {
         method: 'POST',
         body: JSON.stringify({
           sessionId,
           amount,
           payMethod
+        }),
+      }
+    );
+  }
+
+  // 결제 승인 - 결제 완료 후 최종 승인 (백엔드 스펙 준수)
+  async approvePayment(
+    orderId: string,
+    pgToken: string
+  ): Promise<ApiResponse<{
+    orderId: string;
+    status: string;
+    amount: number;
+    approvedAt: string;
+    redirectUrl: string;
+  }>> {
+    return this.request<ApiResponse<{
+      orderId: string;
+      status: string;
+      amount: number;
+      approvedAt: string;
+      redirectUrl: string;
+    }>>(
+      API_ENDPOINTS.PAYMENT.APPROVE,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          orderId,
+          pgToken
         }),
       }
     );

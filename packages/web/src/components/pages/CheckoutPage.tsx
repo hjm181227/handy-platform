@@ -74,45 +74,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         if (addressToSelect) {
           setSelectedAddressId(addressToSelect.id);
           setShippingAddress(addressToSelect);
-
-          // ✅ 초기 로드 시 validate API 호출하여 배송비 계산
-          if (cart?.sessionId) {
-            try {
-              console.log('🚚 [CheckoutPage] Initial address validation');
-              const validateResponse = await webApiService.order.validateCheckout(
-                (cart as any).sessionId,
-                {
-                  recipientName: addressToSelect.recipientName,
-                  recipientPhone: addressToSelect.recipientPhone,
-                  postcode: addressToSelect.postcode,
-                  roadAddress: addressToSelect.roadAddress,
-                  detailAddress: addressToSelect.detailAddress || '',
-                  region: addressToSelect.region || 'seoul',
-                  deliveryNote: addressToSelect.deliveryNote
-                }
-              );
-
-              if (validateResponse.success && validateResponse.data) {
-                console.log('✅ [CheckoutPage] Initial address validated, totals:', validateResponse.data.totals);
-                setCart({
-                  ...cart,
-                  totals: validateResponse.data.totals,
-                  status: 'validated'
-                } as any);
-
-                if (order) {
-                  setOrder({
-                    ...order,
-                    shippingCost: validateResponse.data.totals.shippingCost,
-                    finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
-                  });
-                }
-              }
-            } catch (error: any) {
-              console.error('❌ [CheckoutPage] Initial address validation failed:', error);
-              // 초기 검증 실패는 조용히 처리 (사용자가 수동으로 선택 가능)
-            }
-          }
+          // ✅ Validation will be handled by useEffect watching shippingAddress changes
         }
       }
     } catch (error) {
@@ -187,48 +149,39 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     }
   };
 
+  // ✅ 배송지 정보 변경 시 자동으로 validate API 호출
   useEffect(() => {
-    loadCheckoutData();
+    // 필수 정보가 없으면 스킵
+    if (!shippingAddress.recipientName || !cart?.sessionId) {
+      return;
+    }
 
-    // Cleanup: 컴포넌트 언마운트 시 예약된 타이머 취소
-    return () => {
-      // React Strict Mode에서 두 번째 마운트 시 이전 타이머 취소
-    };
-  }, []);
-
-  // 배송지 선택 핸들러 + 배송지 검증 (validate)
-  const handleAddressSelect = async (address: ShippingAddress) => {
-    setSelectedAddressId(address.id);
-    setShippingAddress(address);
-    setShowAddressForm(false);
-
-    // ✅ 배송지 선택 시 validate API 호출하여 배송비 재계산
-    if (cart?.sessionId) {
+    const validateAddress = async () => {
       try {
-        console.log('🚚 [CheckoutPage] Validating shipping address');
+        console.log('🚚 [CheckoutPage] Auto-validating address on change');
         const validateResponse = await webApiService.order.validateCheckout(
-          (cart as any).sessionId,
+          cart.sessionId!,
           {
-            recipientName: address.recipientName,
-            recipientPhone: address.recipientPhone,
-            postcode: address.postcode,
-            roadAddress: address.roadAddress,
-            detailAddress: address.detailAddress || '',
-            region: address.region || 'seoul',
-            deliveryNote: address.deliveryNote
+            recipientName: shippingAddress.recipientName,
+            recipientPhone: shippingAddress.recipientPhone,
+            postcode: shippingAddress.postcode,
+            roadAddress: shippingAddress.roadAddress,
+            detailAddress: shippingAddress.detailAddress || '',
+            // Optional fields: only include if not empty
+            ...(shippingAddress.deliveryNote?.trim() && { deliveryNote: shippingAddress.deliveryNote.trim() }),
+            ...(shippingAddress.jibunAddress?.trim() && { jibunAddress: shippingAddress.jibunAddress.trim() }),
+            ...(shippingAddress.extraAddress?.trim() && { extraAddress: shippingAddress.extraAddress.trim() })
           }
         );
 
         if (validateResponse.success && validateResponse.data) {
-          console.log('✅ [CheckoutPage] Address validated, updating totals', validateResponse.data.totals);
-          // 배송비가 재계산된 totals로 cart 업데이트
+          console.log('✅ [CheckoutPage] Address auto-validated, totals:', validateResponse.data.totals);
           setCart({
             ...cart,
             totals: validateResponse.data.totals,
             status: 'validated'
           } as any);
 
-          // order도 업데이트
           if (order) {
             setOrder({
               ...order,
@@ -238,10 +191,67 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           }
         }
       } catch (error: any) {
-        console.error('❌ [CheckoutPage] Address validation failed:', error);
-        setError(error.message || '배송지 검증에 실패했습니다.');
+        console.error('❌ [CheckoutPage] Auto-validation failed:', error);
+        // 검증 실패는 조용히 처리 (사용자가 수동으로 조정 가능)
       }
-    }
+    };
+
+    validateAddress();
+  }, [shippingAddress, cart?.sessionId]); // shippingAddress 또는 sessionId 변경 시 자동 실행
+
+  useEffect(() => {
+    loadCheckoutData();
+
+    // 결제 취소 후 복원 정보 확인
+    const restoreCheckoutData = () => {
+      try {
+        const restored = sessionStorage.getItem('restored-checkout');
+        if (!restored) return;
+
+        const restoreData = JSON.parse(restored);
+        const isRecent = Date.now() - restoreData.timestamp < 5 * 60 * 1000; // 5분 이내
+
+        if (isRecent && restoreData.shippingAddress) {
+          console.log('✅ [CheckoutPage] Restoring checkout data:', restoreData);
+
+          // 배송지 복원
+          setShippingAddress(restoreData.shippingAddress);
+          setSelectedAddressId(restoreData.shippingAddress.id);
+
+          // 결제수단 복원 (있는 경우)
+          if (restoreData.paymentMethod) {
+            setPaymentMethod(restoreData.paymentMethod);
+          }
+
+          // 사용 후 즉시 삭제
+          sessionStorage.removeItem('restored-checkout');
+          console.log('✅ [CheckoutPage] Restoration completed and data cleared');
+        } else {
+          // 만료되었거나 유효하지 않으면 삭제
+          sessionStorage.removeItem('restored-checkout');
+          console.log('⏰ [CheckoutPage] Restoration data expired or invalid');
+        }
+      } catch (error) {
+        console.error('❌ [CheckoutPage] Failed to restore checkout data:', error);
+        sessionStorage.removeItem('restored-checkout');
+      }
+    };
+
+    // 체크아웃 데이터 로드 후 복원 시도
+    setTimeout(restoreCheckoutData, 500);
+
+    // Cleanup: 컴포넌트 언마운트 시 예약된 타이머 취소
+    return () => {
+      // React Strict Mode에서 두 번째 마운트 시 이전 타이머 취소
+    };
+  }, []);
+
+  // 배송지 선택 핸들러
+  const handleAddressSelect = (address: ShippingAddress) => {
+    setSelectedAddressId(address.id);
+    setShippingAddress(address);
+    setShowAddressForm(false);
+    // ✅ Validation will be triggered automatically by useEffect watching shippingAddress
   };
 
   // 새 배송지 추가
@@ -372,7 +382,18 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
         const validateResponse = await webApiService.order.validateCheckout(
           (cart as any).sessionId,
-          addressData
+          {
+            recipientName: addressData.recipientName,
+            recipientPhone: addressData.recipientPhone,
+            postcode: addressData.postcode,
+            roadAddress: addressData.roadAddress,
+            detailAddress: addressData.detailAddress || '',
+            region: addressData.region || 'seoul',
+            // Optional fields: only include if not empty
+            ...(addressData.deliveryNote?.trim() && { deliveryNote: addressData.deliveryNote.trim() }),
+            ...(addressData.jibunAddress?.trim() && { jibunAddress: addressData.jibunAddress.trim() }),
+            ...(addressData.extraAddress?.trim() && { extraAddress: addressData.extraAddress.trim() })
+          }
         );
 
         if (validateResponse.success && validateResponse.data) {
@@ -583,12 +604,14 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{item.product?.name || '상품명 없음'}</h3>
-                      <div className="text-xs text-gray-500 mt-1">
-                        브랜드: {item.product?.brand || ''} {item.product?.seller?.id && `(판매자 ID: ${item.product.seller.id})`}
-                      </div>
+                      {item.product?.brand && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          브랜드: {item.product.brand}
+                        </div>
+                      )}
                       {item.options && Object.keys(item.options).length > 0 && (
                         <div className="text-sm text-gray-600 mt-1">
-                          {Object.entries(item.options).map(([key, value]) => {
+                          {Object.entries(item.options).map(([key, value], index, array) => {
                             const optionNames: Record<string, string> = {
                               'nailShape': '쉐입',
                               'nailLength': '길이',
@@ -608,9 +631,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
                             const displayKey = optionNames[key] || key;
                             const displayValue = optionValues[value as string] || value;
+                            const isLast = index === array.length - 1;
 
                             return (
-                              <span key={key}>{displayKey}: {displayValue} </span>
+                              <span key={key}>{displayKey}: {displayValue}{!isLast && ', '}</span>
                             );
                           })}
                         </div>
