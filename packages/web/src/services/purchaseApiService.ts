@@ -422,6 +422,28 @@ export class PurchaseApiService {
     return result;
   }
 
+  // 결제 승인 API (BaseOrderService 사용)
+  async approve(orderId: string, pgToken: string) {
+    if (USE_MOCK_API) {
+      // Mock에서는 성공 응답 반환
+      return {
+        success: true,
+        message: 'Payment approved successfully',
+        data: {
+          orderId: orderId,
+          status: 'confirmed',
+          amount: 153000,
+          approvedAt: new Date().toISOString(),
+          redirectUrl: `/orders/${orderId}`
+        }
+      };
+    }
+
+    // BaseOrderService를 통한 결제 승인 (BaseApiService 패턴 따름)
+    return webApiService.order.approvePayment(orderId, pgToken);
+  }
+
+  // 레거시: 기존 approvePayment 메서드 유지 (하위 호환성)
   async approvePayment(data: {
     orderId: string;
     payMethod: string;

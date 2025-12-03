@@ -399,6 +399,12 @@ export const API_ENDPOINTS = {
     DELETE_REPLY: (reviewId: string) => `/api/seller/reviews/${reviewId}/reply`,
   },
 
+  // 통합 결제 API (단수형 payment)
+  PAYMENT: {
+    PREPARE: '/api/payment/prepare',
+    APPROVE: '/api/payment/approve',
+  },
+
   // 결제 처리 (확장)
   PAYMENT_PROCESSING: {
     INITIALIZE: '/api/payments/initialize',
