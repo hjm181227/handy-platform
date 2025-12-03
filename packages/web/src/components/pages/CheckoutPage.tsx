@@ -167,7 +167,6 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             postcode: shippingAddress.postcode,
             roadAddress: shippingAddress.roadAddress,
             detailAddress: shippingAddress.detailAddress || '',
-            region: shippingAddress.region || 'seoul',
             // Optional fields: only include if not empty
             ...(shippingAddress.deliveryNote?.trim() && { deliveryNote: shippingAddress.deliveryNote.trim() }),
             ...(shippingAddress.jibunAddress?.trim() && { jibunAddress: shippingAddress.jibunAddress.trim() }),
