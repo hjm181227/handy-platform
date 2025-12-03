@@ -270,83 +270,28 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   };
 
   // 새 배송지 저장 핸들러 (ShippingAddressForm 컴포넌트용)
-  const handleSaveNewAddress = async (addressData: ShippingAddress) => {
+  // ✅ ShippingAddressForm에서 이미 저장 완료한 배송지를 선택 처리만
+  const handleSaveNewAddress = async (savedAddress: ShippingAddress) => {
     try {
       setProcessing(true);
       setError(null);
 
-      // ✅ 배송지 입력 시 validate API 호출하여 배송비 재계산
-      if (!cart?.sessionId) {
-        throw new Error('체크아웃 세션이 없습니다. 장바구니로 돌아가주세요.');
-      }
+      console.log('✅ [CheckoutPage] New address saved, selecting it:', savedAddress);
 
-      console.log('🚚 [CheckoutPage] Validating new shipping address:', addressData);
-      const validateResponse = await webApiService.order.validateCheckout(
-        (cart as any).sessionId,
-        addressData
-      );
+      // 1. 배송지 목록에 추가
+      setSavedAddresses(prev => [savedAddress, ...prev]);
 
-      if (validateResponse.success && validateResponse.data) {
-        console.log('✅ [CheckoutPage] Address validated, updating totals', validateResponse.data.totals);
+      // 2. 선택된 배송지로 설정 (useEffect가 자동으로 validate 처리)
+      setSelectedAddressId(savedAddress.id);
+      setShippingAddress(savedAddress);
 
-        // 배송비가 재계산된 totals로 cart 업데이트
-        setCart({
-          ...cart,
-          totals: validateResponse.data.totals,
-          status: 'validated',
-          shippingAddress: addressData
-        } as any);
+      // 3. 폼 닫기
+      setShowAddressForm(false);
 
-        // order도 업데이트
-        if (order) {
-          setOrder({
-            ...order,
-            shippingCost: validateResponse.data.totals.shippingCost,
-            finalPrice: validateResponse.data.totals.grandTotal || validateResponse.data.totals.finalTotal
-          });
-        }
-
-        // addressData에는 이미 savedAddressIndex가 포함되어 있음 (ShippingAddressForm에서 설정)
-        console.log('✅ [CheckoutPage] Using saved address, index:', addressData.savedAddressIndex);
-
-        // UI 업데이트용 배송지 객체 생성 (실제 서버 ID 사용)
-        const newAddress: ShippingAddress = {
-          id: addressData.savedAddressIndex?.toString() || `temp_${Date.now()}`,
-          recipientName: addressData.recipientName,
-          recipientPhone: addressData.recipientPhone,
-          postcode: addressData.postcode,
-          roadAddress: addressData.roadAddress,
-          detailAddress: addressData.detailAddress,
-          region: addressData.region || 'seoul',
-          deliveryNote: addressData.deliveryNote || '',
-          isDefault: false
-        };
-
-        // 1. 배송지 목록에 추가
-        setSavedAddresses(prev => [newAddress, ...prev]);
-
-        // 2. 선택된 배송지로 설정
-        setSelectedAddressId(newAddress.id);
-
-        // 3. shippingAddress state 업데이트
-        setShippingAddress(newAddress);
-
-        // 4. 폼 닫기
-        setShowAddressForm(false);
-        await alert('배송지가 설정되었습니다. 배송비가 계산되었습니다.', {
-          variant: 'success',
-          title: '배송지 설정 완료'
-        });
-      } else {
-        throw new Error(validateResponse.message || '배송지 검증에 실패했습니다.');
-      }
+      console.log('✅ [CheckoutPage] New address selected, auto-validation will trigger');
     } catch (err: any) {
-      console.error('Address validation failed:', err);
-      setError(err.message || '배송지 검증에 실패했습니다.');
-      await alert(err.message || '배송지 검증에 실패했습니다.', {
-        variant: 'error',
-        title: '검증 실패'
-      });
+      console.error('Address selection failed:', err);
+      setError(err.message || '배송지 선택에 실패했습니다.');
     } finally {
       setProcessing(false);
     }
@@ -388,7 +333,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             postcode: addressData.postcode,
             roadAddress: addressData.roadAddress,
             detailAddress: addressData.detailAddress || '',
-            region: addressData.region || 'seoul',
+            // ✅ region 제거 - 서버에서 postcode로 자동 감지
             // Optional fields: only include if not empty
             ...(addressData.deliveryNote?.trim() && { deliveryNote: addressData.deliveryNote.trim() }),
             ...(addressData.jibunAddress?.trim() && { jibunAddress: addressData.jibunAddress.trim() }),
