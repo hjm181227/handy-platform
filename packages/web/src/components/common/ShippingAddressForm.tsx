@@ -137,22 +137,22 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
       // ✅ 배송지 저장 API 호출
       const response = await webApiService.address.createAddress(addressData);
 
-      if (response.success && response.data) {
-        console.log('✅ [ShippingAddressForm] Address saved successfully:', response.data);
+      if (response.success && response.data?.address) {
+        console.log('✅ [ShippingAddressForm] Address saved successfully:', response.data.address);
 
         // 서버 응답 데이터를 부모에게 전달 (선택 처리용)
         const savedAddress: ShippingAddress = {
-          id: response.data.index?.toString() || `temp_${Date.now()}`,
-          recipientName: response.data.recipientName,
-          recipientPhone: response.data.recipientPhone,
-          postcode: response.data.postcode,
-          roadAddress: response.data.roadAddress,
-          detailAddress: response.data.detailAddress || '',
-          deliveryNote: response.data.deliveryNote || '',
-          region: response.data.region || 'seoul', // 서버가 자동 감지한 region
-          isDefault: response.data.isDefault || false,
-          ...(response.data.jibunAddress && { jibunAddress: response.data.jibunAddress }),
-          ...(response.data.extraAddress && { extraAddress: response.data.extraAddress })
+          id: response.data.address.index?.toString() || `temp_${Date.now()}`,
+          recipientName: response.data.address.recipientName,
+          recipientPhone: response.data.address.recipientPhone,
+          postcode: response.data.address.postcode,
+          roadAddress: response.data.address.roadAddress,
+          detailAddress: response.data.address.detailAddress || '',
+          deliveryNote: response.data.address.deliveryNote || '',
+          region: response.data.address.region || 'seoul', // 서버가 자동 감지한 region
+          isDefault: response.data.address.isDefault || false,
+          ...(response.data.address.jibunAddress && { jibunAddress: response.data.address.jibunAddress }),
+          ...(response.data.address.extraAddress && { extraAddress: response.data.address.extraAddress })
         };
 
         await onSave(savedAddress);
