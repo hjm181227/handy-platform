@@ -565,7 +565,7 @@ function AppContent() {
     screen = <PaymentFail onGo={nav} />;
   } else if (pathname === "/payment/test") {
     screen = <PaymentTest onGo={nav} />;
-  } else if (pathname.match(/^\/order-complete\/(.+)$/)) {
+  } else if (pathname.match(/^\/orders\/(.+)$/)) {
     const orderId = pathname.split("/")[2];
     screen = (
       <RequireAuth>
