@@ -27,6 +27,11 @@ export function MainHeader({
 }) {
   const [q,setQ]=useState("");
 
+  // 🔍 디버깅: cartCount 변경 감지
+  useEffect(() => {
+    console.log('🎨 [MainHeader] Cart count updated to:', cartCount);
+  }, [cartCount]);
+
   // AuthContext에서 인증 상태 가져오기
   const { currentUser: user, authLoading, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);

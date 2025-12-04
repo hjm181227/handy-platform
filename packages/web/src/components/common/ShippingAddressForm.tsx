@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShippingAddress } from '@handy-platform/shared';
+import { ShippingAddress, KoreanAddress } from '@handy-platform/shared';
+import { webApiService } from '../../services/apiService';
 
 interface ShippingAddressFormProps {
   initialData?: Partial<ShippingAddress>;
@@ -20,15 +21,34 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
   title = '배송지 정보',
   showAddressName = false
 }) => {
+  // 전화번호 하이픈 자동 포맷팅
+  const formatPhoneNumber = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    const limitedNumbers = numbers.slice(0, 11);
+
+    if (limitedNumbers.length <= 3) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 7) {
+      return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3)}`;
+    } else if (limitedNumbers.length <= 10) {
+      return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 6)}-${limitedNumbers.slice(6)}`;
+    } else {
+      return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 7)}-${limitedNumbers.slice(7)}`;
+    }
+  };
+
   const [formData, setFormData] = useState<Partial<ShippingAddress>>(() => ({
     recipientName: '',
-    phone: '',
-    zipCode: '',
-    address: '',
-    addressDetail: '',
-    memo: '',
+    recipientPhone: '',
+    postcode: '',
+    roadAddress: '',
+    detailAddress: '',
+    deliveryNote: '',
+    region: 'seoul',
     isDefault: false,
-    ...initialData
+    ...initialData,
+    // initialData의 전화번호가 있으면 포맷팅
+    ...(initialData.recipientPhone && { recipientPhone: formatPhoneNumber(initialData.recipientPhone) })
   }));
 
   const [addressName, setAddressName] = useState<string>(() => 
@@ -45,10 +65,50 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
   const validateForm = (): boolean => {
     return !!(
       formData.recipientName?.trim() &&
-      formData.phone?.trim() &&
-      formData.zipCode?.trim() &&
-      formData.address?.trim()
+      formData.recipientPhone?.trim() &&
+      formData.postcode?.trim() &&
+      formData.roadAddress?.trim()
     );
+  };
+
+  // 우편번호 찾기 (Daum Postcode API)
+  const handlePostcodeSearch = () => {
+    if (typeof window === 'undefined' || !window.daum || !window.daum.Postcode) {
+      alert('우편번호 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    new window.daum.Postcode({
+      oncomplete: function(data: any) {
+        // 주소 데이터 추출
+        const postcode = data.zonecode;
+        const roadAddress = data.roadAddress;
+        const jibunAddress = data.jibunAddress;
+        const buildingName = data.buildingName;
+        const sido = data.sido;
+
+        // region 자동 감지
+        let region: 'seoul' | 'metropolitan' | 'general' | 'jeju' | 'remote' = 'general';
+        if (sido.includes('서울')) region = 'seoul';
+        else if (sido.includes('경기') || sido.includes('인천')) region = 'metropolitan';
+        else if (sido.includes('제주')) region = 'jeju';
+        else if (sido.includes('울릉') || sido.includes('백령')) region = 'remote';
+
+        // extraAddress 생성
+        const extraAddress = buildingName ? `(${buildingName})` : '';
+
+        // formData 업데이트
+        handleFieldChange('postcode', postcode);
+        handleFieldChange('roadAddress', roadAddress);
+        handleFieldChange('jibunAddress', jibunAddress);
+        handleFieldChange('extraAddress', extraAddress);
+        handleFieldChange('region', region);
+
+        console.log('✅ 주소 선택 완료:', { postcode, roadAddress, region });
+      },
+      width: '100%',
+      height: '100%'
+    }).open();
   };
 
   const handleSubmit = async () => {
@@ -57,22 +117,51 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
       return;
     }
 
-    const addressToSave: ShippingAddress = {
-      id: formData.id || '',
+    // ✅ 배송지 저장 API 요청 데이터 (region 제외 - 서버에서 postcode로 자동 감지)
+    const addressData: KoreanAddress = {
       recipientName: formData.recipientName!,
-      phone: formData.phone!,
-      zipCode: formData.zipCode!,
-      address: formData.address!,
-      addressDetail: formData.addressDetail || '',
-      memo: formData.memo || '',
-      isDefault: formData.isDefault || false,
-      ...(showAddressName && { addressName })
+      recipientPhone: formData.recipientPhone!,
+      postcode: formData.postcode!,
+      roadAddress: formData.roadAddress!,
+      detailAddress: formData.detailAddress || '',
+      deliveryNote: formData.deliveryNote || '',
+      // Optional fields
+      ...(formData.jibunAddress && { jibunAddress: formData.jibunAddress }),
+      ...(formData.extraAddress && { extraAddress: formData.extraAddress }),
+      ...(showAddressName && addressName && { addressName })
     };
 
     try {
-      await onSave(addressToSave);
-    } catch (error) {
-      console.error('Address save failed:', error);
+      console.log('📡 [ShippingAddressForm] Saving address to server...');
+
+      // ✅ 배송지 저장 API 호출
+      const response = await webApiService.address.createAddress(addressData);
+
+      if (response.success && response.data?.address) {
+        console.log('✅ [ShippingAddressForm] Address saved successfully:', response.data.address);
+
+        // 서버 응답 데이터를 부모에게 전달 (선택 처리용)
+        const savedAddress: ShippingAddress = {
+          id: response.data.address.index?.toString() || `temp_${Date.now()}`,
+          recipientName: response.data.address.recipientName,
+          recipientPhone: response.data.address.recipientPhone,
+          postcode: response.data.address.postcode,
+          roadAddress: response.data.address.roadAddress,
+          detailAddress: response.data.address.detailAddress || '',
+          deliveryNote: response.data.address.deliveryNote || '',
+          region: response.data.address.region || 'seoul', // 서버가 자동 감지한 region
+          isDefault: response.data.address.isDefault || false,
+          ...(response.data.address.jibunAddress && { jibunAddress: response.data.address.jibunAddress }),
+          ...(response.data.address.extraAddress && { extraAddress: response.data.address.extraAddress })
+        };
+
+        await onSave(savedAddress);
+      } else {
+        throw new Error(response.message || '배송지 저장에 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.error('❌ [ShippingAddressForm] Address save failed:', error);
+      alert(error.message || '배송지 저장에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -129,8 +218,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
             </label>
             <input
               type="tel"
-              value={formData.phone || ''}
-              onChange={(e) => handleFieldChange('phone', e.target.value)}
+              value={formData.recipientPhone || ''}
+              onChange={(e) => handleFieldChange('recipientPhone', e.target.value)}
               className="w-full border rounded-lg px-3 py-2"
               placeholder="010-0000-0000"
             />
@@ -145,19 +234,14 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           <div className="flex gap-2 max-w-xs">
             <input
               type="text"
-              value={formData.zipCode || ''}
-              onChange={(e) => handleFieldChange('zipCode', e.target.value)}
+              value={formData.postcode || ''}
+              onChange={(e) => handleFieldChange('postcode', e.target.value)}
               className="flex-1 border rounded-lg px-3 py-2"
               placeholder="12345"
             />
             <button
-              onClick={() => {
-                // TODO: 우편번호 찾기 API 연동
-                // - Daum 우편번호 서비스 또는 행정안전부 주소 API 연동
-                // - 팝업 또는 모달로 주소 검색 기능 구현
-                // - 선택한 주소를 zipCode, address 필드에 자동 입력
-                alert('우편번호 찾기는 추후 구현됩니다.');
-              }}
+              onClick={handlePostcodeSearch}
+              type="button"
               className="px-3 py-2 border rounded-lg hover:bg-gray-50 whitespace-nowrap"
             >
               검색
@@ -172,8 +256,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           </label>
           <input
             type="text"
-            value={formData.address || ''}
-            onChange={(e) => handleFieldChange('address', e.target.value)}
+            value={formData.roadAddress || ''}
+            onChange={(e) => handleFieldChange('roadAddress', e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
             placeholder="기본 주소"
           />
@@ -184,8 +268,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           <label className="block text-sm font-medium mb-2">상세 주소</label>
           <input
             type="text"
-            value={formData.addressDetail || ''}
-            onChange={(e) => handleFieldChange('addressDetail', e.target.value)}
+            value={formData.detailAddress || ''}
+            onChange={(e) => handleFieldChange('detailAddress', e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
             placeholder="상세 주소 (아파트 동/호수 등)"
           />
@@ -195,8 +279,8 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
         <div>
           <label className="block text-sm font-medium mb-2">배송 메모</label>
           <textarea
-            value={formData.memo || ''}
-            onChange={(e) => handleFieldChange('memo', e.target.value)}
+            value={formData.deliveryNote || ''}
+            onChange={(e) => handleFieldChange('deliveryNote', e.target.value)}
             className="w-full border rounded-lg px-3 py-2 h-20 resize-none"
             placeholder="배송 시 요청사항이 있으면 입력해주세요"
           />

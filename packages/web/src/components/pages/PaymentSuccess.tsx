@@ -13,68 +13,66 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
   const [paymentResult, setPaymentResult] = useState<any>(null);
 
   useEffect(() => {
-    const loadOrderInformation = async () => {
+    const approvePaymentAndRedirect = async () => {
       try {
-        // URL 파라미터에서 주문 ID 추출
+        // URL 파라미터에서 orderId와 pg_token 추출
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('orderId');
+        const pgToken = urlParams.get('pg_token');
+
+        console.log('Payment success callback:', { orderId, pgToken });
 
         if (!orderId || orderId === 'undefined') {
           throw new Error('주문 정보가 올바르지 않습니다.');
         }
 
-        // 완료된 주문 정보 조회
-        const orderResponse = await purchaseApiService.getOrder(orderId);
+        if (!pgToken) {
+          throw new Error('결제 토큰 정보가 없습니다.');
+        }
 
-        console.log('Order API Response:', orderResponse);
+        // 결제 승인 API 호출
+        console.log('Calling payment approve API...');
+        const approvalResponse = await purchaseApiService.approve(orderId, pgToken);
 
-        if (orderResponse.success && orderResponse.order) {
-          const order = orderResponse.order;
-          setPaymentResult({
-            success: true,
-            orderId: order.id || orderId,
-            orderNumber: order.orderNumber,
-            payMethod: order.paymentMethod || 'KAKAO_PAY',
-            amount: {
-              total: order.totalAmount || 0
-            },
-            items: order.items || [],
-            shippingAddress: order.shippingAddress,
-            approvedAt: order.createdAt || new Date().toISOString(),
-            status: order.status,
-            paymentStatus: order.paymentStatus,
-            paymentDetails: order.paymentDetails
-          });
+        console.log('Payment approve response:', approvalResponse);
+
+        if (approvalResponse.success && approvalResponse.data) {
+          // 승인 성공 - 주문 상세 페이지로 리다이렉트
+          const redirectUrl = approvalResponse.data.redirectUrl || `/orders/${orderId}`;
+          console.log('✅ Payment approved, redirecting to:', redirectUrl);
 
           // 성공 알림
           await alert('결제가 완료되었습니다!', {
             variant: 'success',
             title: '결제 완료'
           });
+
+          // 주문 상세 페이지로 이동
+          onGo(redirectUrl);
         } else {
-          throw new Error(orderResponse.message || '주문 정보를 불러올 수 없습니다.');
+          throw new Error(approvalResponse.message || approvalResponse.error || '결제 승인에 실패했습니다.');
         }
 
       } catch (error: any) {
-        console.error('Order information loading failed:', error);
+        console.error('❌ Payment approval failed:', error);
         await showError(error, {
-          title: '주문 정보 로드 실패'
+          title: '결제 승인 실패'
         });
         setPaymentResult({ success: false, error: error.message });
-      } finally {
         setIsProcessing(false);
       }
     };
 
-    loadOrderInformation();
-  }, []);
+    approvePaymentAndRedirect();
+  }, [onGo]);
 
   if (isProcessing) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">결제를 완료하는 중입니다...</p>
+          <p className="text-gray-600 font-medium">결제 승인을 처리하고 있습니다...</p>
+          <p className="text-gray-500 text-sm mt-2">잠시만 기다려주세요</p>
         </div>
       </div>
     );
@@ -85,14 +83,14 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
           <div className="text-red-500 text-4xl mb-4">❌</div>
-          <h2 className="text-xl font-bold mb-2">결제 실패</h2>
+          <h2 className="text-xl font-bold mb-2">결제 승인 실패</h2>
           <p className="text-gray-600 mb-6">{paymentResult.error}</p>
           <div className="space-y-3">
             <button
-              onClick={() => onGo('/checkout')}
+              onClick={() => onGo('/cart')}
               className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
             >
-              다시 시도
+              장바구니로 돌아가기
             </button>
             <button
               onClick={() => onGo('/')}

@@ -286,26 +286,13 @@ export class AlertService implements IAlertService {
     const isReactNative = typeof window === 'undefined' || (typeof navigator !== 'undefined' && navigator.product === 'ReactNative');
 
     if (isReactNative) {
-      // React Native 환경: ToastAndroid 사용
-      try {
-        // React Native에서만 동적으로 import
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { ToastAndroid, Platform } = require('react-native');
+      // React Native 환경: 콘솔에만 출력
+      // 실제 React Native 앱에서는 native alert 컴포넌트를 사용해야 함
+      console.log('[Toast]', message);
 
-        if (Platform.OS === 'android') {
-          // Android: ToastAndroid 사용
-          const toastDuration = duration > 2000 ? ToastAndroid.LONG : ToastAndroid.SHORT;
-          ToastAndroid.show(message, toastDuration);
-        } else {
-          // iOS: Alert 사용 (간단한 알림)
-          const { Alert } = require('react-native');
-          Alert.alert('알림', message);
-        }
-      } catch (error) {
-        console.warn('Toast display failed in React Native:', error);
-        // Fallback: 콘솔에만 출력
-        console.log('[Toast]', message);
-      }
+      // React Native에서 toast를 사용하려면:
+      // 1. react-native-toast-message 같은 라이브러리 사용
+      // 2. 또는 네이티브 모듈에서 직접 처리
     } else {
       // Web 환경: 기존 alert 시스템 활용하여 자동으로 닫히는 알림 생성
       this.createAlert<void>('toast', message, {

@@ -7,18 +7,9 @@ import { io, Socket } from 'socket.io-client';
 import { BaseChatService } from './BaseChatService';
 import type { Message, TypingIndicator, ChatServiceConfig } from './types';
 
-// React Native에서는 Platform과 AppState를 사용
-// 동적 import를 통해 웹 환경에서 에러 방지
-let Platform: any = null;
-let AppState: any = null;
-
-try {
-  Platform = require('react-native').Platform;
-  AppState = require('react-native').AppState;
-} catch (e) {
-  // 웹 환경에서는 무시
-  console.warn('React Native modules not available');
-}
+// React Native 모듈 - 이 파일은 React Native 환경에서만 import됨
+// 웹 빌드에서는 tree-shaking으로 제거되므로 안전
+import { Platform, AppState } from 'react-native';
 
 export class ChatServiceNative extends BaseChatService {
   private static instance: ChatServiceNative | null = null;
@@ -44,8 +35,6 @@ export class ChatServiceNative extends BaseChatService {
    * 앱 상태 리스너 설정 (백그라운드 연결 관리)
    */
   private setupAppStateListener(): void {
-    if (!AppState) return;
-
     this.appStateSubscription = AppState.addEventListener('change', (nextAppState: string) => {
       if (nextAppState === 'active') {
         console.log('[ChatService] App became active, reconnecting...');
@@ -83,7 +72,7 @@ export class ChatServiceNative extends BaseChatService {
         let serverUrl = config?.serverUrl || 'http://16.176.147.141';
 
         // Android Emulator는 localhost 대신 10.0.2.2 사용
-        if (Platform && Platform.OS === 'android' && __DEV__) {
+        if (Platform.OS === 'android' && __DEV__) {
           serverUrl = serverUrl.replace('localhost', '10.0.2.2');
         }
 

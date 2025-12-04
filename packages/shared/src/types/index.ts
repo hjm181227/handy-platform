@@ -1138,12 +1138,17 @@ export interface BulkOperationResult {
 export interface ShippingAddress {
   id?: string;                    // 저장된 배송지의 경우 포함
   recipientName: string;
-  phone: string;
-  address: string;
-  addressDetail?: string;
-  zipCode: string;
-  memo?: string;
+  recipientPhone: string;
+  postcode: string;
+  roadAddress: string;
+  jibunAddress?: string;          // 지번 주소 (선택)
+  detailAddress: string;
+  extraAddress?: string;
+  region: 'seoul' | 'metropolitan' | 'general' | 'jeju' | 'remote';
+  deliveryNote?: string;
+  addressName?: string;
   isDefault?: boolean;           // 기본 배송지 여부
+  savedAddressIndex?: number;    // 서버에 저장된 배송지 ID
 }
 
 // 사용자가 저장한 배송지 목록 관리용
@@ -1740,4 +1745,143 @@ export interface EventBanner {
 export interface EventBannerListResponse {
   success: boolean;
   eventBanners: EventBanner[];
+}
+
+// ==========================================
+// Checkout & Payment Types (백엔드 스펙 준수)
+// ==========================================
+
+// 체크아웃 세션 타입
+export interface CheckoutSession {
+  sessionId: string;
+  orderType: 'standard' | 'custom';  // standard: 장바구니 기반, custom: 견적서 기반
+  status?: 'initialized' | 'validated';
+  totals: {
+    subtotal: number;
+    shippingCost: number;
+    discount: number;
+    couponDiscount: number;
+    pointsDiscount: number;
+    finalTotal: number;
+    grandTotal?: number;
+    itemCount: number;
+  };
+  productionInfo: {
+    estimatedProductionTime: number;
+    earliestDeliveryDate: string;
+    productionSchedule: Array<{
+      sellerId: string;
+      sellerName?: string;
+      itemCount: number;
+      estimatedCompletionDate: string;
+      processingDays: number;
+    }>;
+    totalCapacityRequired: number;
+  };
+  expiresAt: string;
+  estimatedDeliveryDateRange: {
+    earliest: string;
+    latest: string;
+  };
+  items: Array<{
+    product: Product;
+    quantity: number;
+    price: number;
+    options?: Record<string, string>;
+    subtotal: number;
+  }>;
+  shippingAddress?: ShippingAddress;
+}
+
+// 결제 준비 결과 타입
+export interface PaymentPrepareResult {
+  paymentUrl: string;
+  mobilePaymentUrl: string;
+  orderId: string;
+  transactionId: string;
+  payMethod: string;
+  amount: number;
+  createdAt: string;
+}
+
+// 결제 수단 타입
+export type PayMethod = 'KAKAO_PAY' | 'NAVER_PAY' | 'CREDIT_CARD';
+
+// ============================================
+// Daum Postcode API 관련 타입 정의
+// ============================================
+
+// Daum Postcode API 응답 데이터 타입
+export interface DaumPostcodeData {
+  zonecode: string;              // 새 우편번호 (5자리)
+  address: string;               // 기본 주소 (도로명 또는 지번)
+  roadAddress: string;           // 도로명 주소
+  jibunAddress: string;          // 지번 주소
+  autoRoadAddress?: string;      // 자동 입력될 도로명 주소
+  autoJibunAddress?: string;     // 자동 입력될 지번 주소
+  addressType: 'R' | 'J';        // 기본 주소 타입 (R: 도로명, J: 지번)
+  userSelectedType: 'R' | 'J';   // 사용자가 선택한 주소 타입
+  buildingName: string;          // 건물명
+  buildingCode: string;          // 건물 관리 번호
+  apartment: 'Y' | 'N';          // 아파트 여부
+  sido: string;                  // 도/시 (예: "경기")
+  sigungu: string;               // 시/군/구 (예: "성남시 분당구")
+  sigunguCode: string;           // 시/군/구 코드
+  bname: string;                 // 법정동/법정리명 (예: "백현동")
+  bcode: string;                 // 법정동/법정리 코드
+  roadname: string;              // 도로명
+  roadnameCode: string;          // 도로명 코드
+  query: string;                 // 검색어
+}
+
+// Daum Postcode 옵션 타입
+export interface DaumPostcodeOptions {
+  oncomplete?: (data: DaumPostcodeData) => void;  // 주소 선택 완료 시 콜백
+  onclose?: () => void;                           // 창 닫기 콜백
+  onresize?: (size: { width: number; height: number }) => void;  // 크기 변경 콜백
+  width?: string | number;                        // 너비
+  height?: string | number;                       // 높이
+  animation?: boolean;                            // 애니메이션 사용 여부
+  focusInput?: boolean;                           // 입력 필드 자동 포커스
+  focusContent?: boolean;                         // 컨텐츠 자동 포커스
+  autoMapping?: boolean;                          // 주소 자동 매핑
+  shorthand?: boolean;                            // 간략 주소 사용
+  pleaseReadGuide?: number;                       // 가이드 팝업 노출 주기 (일)
+  pleaseReadGuideTimer?: number;                  // 가이드 팝업 자동 닫힘 시간 (ms)
+  maxSuggestItems?: number;                       // 검색 결과 최대 개수
+  showMoreHName?: boolean;                        // 지번 상세 주소 노출
+  hideMapBtn?: boolean;                           // 지도 버튼 숨김
+  hideEngBtn?: boolean;                           // 영문 주소 버튼 숨김
+  alwaysShowEngAddr?: boolean;                    // 영문 주소 항상 노출
+  zonecodeOnly?: boolean;                         // 우편번호만 검색
+  theme?: {                                       // 테마 설정
+    bgColor?: string;
+    searchBgColor?: string;
+    contentBgColor?: string;
+    pageBgColor?: string;
+    textColor?: string;
+    queryTextColor?: string;
+    postcodeTextColor?: string;
+    emphTextColor?: string;
+    outlineColor?: string;
+  };
+}
+
+// Daum Postcode 서비스 인터페이스
+export interface DaumPostcode {
+  new (options: DaumPostcodeOptions): DaumPostcodeInstance;
+}
+
+export interface DaumPostcodeInstance {
+  open(options?: { popupKey?: string; autoClose?: boolean }): void;  // 팝업으로 열기
+  embed(element: HTMLElement | null, options?: { autoClose?: boolean; q?: string }): void;  // 임베드(레이어) 방식
+}
+
+// window 객체에 daum.Postcode 타입 추가
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: DaumPostcode;
+    };
+  }
 }

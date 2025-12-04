@@ -137,6 +137,7 @@ function AppContent() {
 
   // Cart state
   const [cartCount, setCartCount] = useState(0);
+  const [cartRefreshTrigger, setCartRefreshTrigger] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
 
@@ -173,19 +174,28 @@ function AppContent() {
 
   // 장바구니 개수 로딩 (로그인된 사용자만)
   const loadCartCount = async () => {
+    console.log('🔄 [loadCartCount] Started');
     try {
-      console.log('Loading cart count...');
       const response = await cartService.getCartCount();
-
-      console.log('Cart count response:', response);
+      console.log('📦 [loadCartCount] API Response:', response);
+      console.log('📦 [loadCartCount] Response data:', response.data);
+      console.log('📦 [loadCartCount] Count value:', response.data?.count);
 
       if (response.success && response.data) {
-        setCartCount(response.data.count || 0);
+        const newCount = response.data.count || 0;
+        console.log('✅ [loadCartCount] Setting count to:', newCount);
+        setCartCount(newCount);
+        // 장바구니 갱신 트리거 증가
+        setCartRefreshTrigger(prev => {
+          console.log('🔄 [loadCartCount] Incrementing trigger:', prev, '→', prev + 1);
+          return prev + 1;
+        });
       } else {
+        console.warn('⚠️ [loadCartCount] Invalid response, setting count to 0');
         setCartCount(0);
       }
     } catch (error) {
-      console.warn('Cart count fetch failed:', error);
+      console.error('❌ [loadCartCount] Error:', error);
       setCartCount(0);
     }
   };
@@ -322,7 +332,7 @@ function AppContent() {
   };
 
   // 체크아웃 처리
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     // 로그인 확인
     if (!currentUser) {
       showToast('로그인이 필요한 서비스입니다.', 'error');
@@ -330,14 +340,52 @@ function AppContent() {
       return;
     }
 
-    // 체크아웃 페이지로 이동
-    nav('/checkout');
-    setDrawer(false);
-
-    // WebView 환경에서 네이티브 알림
     try {
-      (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"}));
-    } catch {}
+      // 장바구니 데이터 가져오기
+      const cartResponse = await cartService.getCart();
+      console.log('🛒 [handleCheckout] Cart response:', cartResponse);
+
+      if (!cartResponse.success || !cartResponse.data) {
+        showToast('장바구니 정보를 불러올 수 없습니다.', 'error');
+        return;
+      }
+
+      // ✅ 실제 서버 응답 구조: data.itemsBySeller[]
+      const { itemsBySeller } = cartResponse.data;
+
+      // 장바구니가 비어있는지 확인
+      if (!itemsBySeller || itemsBySeller.length === 0) {
+        showToast('장바구니가 비어있습니다.', 'error');
+        return;
+      }
+
+      // ✅ itemsBySeller를 flat하게 변환하여 checkoutItems 생성
+      const checkoutItems = itemsBySeller.flatMap(seller =>
+        seller.items.map(item => ({
+          productUuid: item.productUuid,
+          quantity: item.quantity,
+          options: item.options || {}
+        }))
+      );
+
+      console.log('✅ [handleCheckout] Navigating to checkout with items:', checkoutItems);
+
+      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
+      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+
+      // 체크아웃 페이지로 이동
+      nav('/checkout');
+      setDrawer(false);
+
+      // WebView 환경에서 네이티브 알림
+      try {
+        (window as any).ReactNativeWebView?.postMessage(JSON.stringify({type:"checkout"}));
+      } catch {}
+
+    } catch (error: any) {
+      console.error('❌ [handleCheckout] Error:', error);
+      showToast(error.message || '체크아웃 진행 중 오류가 발생했습니다.', 'error');
+    }
   };
 
   // Routing
@@ -510,6 +558,7 @@ function AppContent() {
       onBack={() => history.back()}
       onCheckout={handleCheckout}
       onCartUpdate={loadCartCount}
+      refreshTrigger={cartRefreshTrigger}
       currentUser={currentUser}
       showToast={showToast}
     />;
@@ -1205,6 +1254,7 @@ function AppContent() {
             onClose={() => setDrawer(false)}
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
+            refreshTrigger={cartRefreshTrigger}
             currentUser={currentUser}
             showToast={showToast}
           />

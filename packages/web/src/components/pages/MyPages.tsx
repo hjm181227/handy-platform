@@ -35,6 +35,11 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // 주문 취소 관련 상태
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+
   // 필터 상태
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -83,6 +88,51 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
     setFilters(newFilters);
     setCurrentPage(1);
     loadOrders(1, newFilters);
+  };
+
+  // 주문 취소 핸들러
+  const handleCancelOrder = async () => {
+    if (!cancellingOrderId) return;
+
+    try {
+      setLoading(true);
+
+      // 주문 취소 API 호출
+      const response = await purchaseApiService.cancelOrder(cancellingOrderId, cancelReason || '고객 요청');
+
+      if (response.success) {
+        alert('주문이 성공적으로 취소되었습니다.');
+
+        // 모달 닫기 및 상태 초기화
+        setShowCancelModal(false);
+        setCancellingOrderId(null);
+        setCancelReason('');
+
+        // 주문 목록 새로고침
+        await loadOrders(currentPage, filters);
+      } else {
+        throw new Error(response.message || '주문 취소에 실패했습니다.');
+      }
+    } catch (err: any) {
+      console.error('Order cancellation failed:', err);
+      alert(err.message || '주문 취소 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 취소 모달 열기
+  const openCancelModal = (orderId: string) => {
+    setCancellingOrderId(orderId);
+    setShowCancelModal(true);
+    setCancelReason('');
+  };
+
+  // 취소 모달 닫기
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setCancellingOrderId(null);
+    setCancelReason('');
   };
 
   useEffect(() => {
@@ -393,7 +443,10 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                   </button>
                 )}
                 {(order.status === 'pending' || order.status === 'confirmed') && (
-                  <button className="flex-1 py-2 px-4 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                  <button
+                    onClick={() => openCancelModal(order.id)}
+                    className="flex-1 py-2 px-4 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  >
                     주문취소
                   </button>
                 )}
@@ -449,6 +502,49 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
           </div>
         )}
       </div>
+
+      {/* 주문 취소 모달 */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">주문 취소</h3>
+
+            <p className="text-gray-600 mb-4">
+              주문을 취소하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </p>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                취소 사유 (선택사항)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="취소 사유를 입력해주세요"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={closeCancelModal}
+                disabled={loading}
+                className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                돌아가기
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={loading}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {loading ? '취소 중...' : '주문 취소'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

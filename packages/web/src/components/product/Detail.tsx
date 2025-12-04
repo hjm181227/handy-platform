@@ -20,7 +20,7 @@ export function Detail({
   onAdd: (id: string) => void;
   onCartUpdate?: () => void;
   currentUser?: User | null;
-  onGo?: (to: string) => void;
+  onGo?: (path: string) => void;  // ✅ sessionStorage 사용으로 1개 인자만
 }) {
   // 모든 상태를 컴포넌트 최상단에 선언 (Hook 순서 보장)
   const [product, setProduct] = useState<Product | null>(null);
@@ -93,8 +93,12 @@ export function Detail({
       setCartMessage('장바구니에 추가되었습니다!');
       // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거
 
+      console.log('🛒 [Detail] Calling onCartUpdate after adding to cart');
       if (onCartUpdate) {
         onCartUpdate();
+        console.log('🛒 [Detail] onCartUpdate called successfully');
+      } else {
+        console.warn('⚠️ [Detail] onCartUpdate is not provided!');
       }
 
       setTimeout(() => setCartMessage(null), 3000);
@@ -126,12 +130,48 @@ export function Detail({
   };
 
   // 바로구매 함수
-  const buyNow = async () => {
+  const buyNow = () => {
+    if (!product) return;
+
+    // 로그인 체크
+    if (!currentUser) {
+      setCartMessage('로그인이 필요한 서비스입니다.');
+      setTimeout(() => setCartMessage(null), 3000);
+      return;
+    }
+
+    // onGo prop이 없으면 경고 (개발 환경)
+    if (!onGo) {
+      console.warn('onGo prop is not provided to Detail component');
+      setCartMessage('페이지 이동 기능이 설정되지 않았습니다.');
+      setTimeout(() => setCartMessage(null), 3000);
+      return;
+    }
+
     try {
-      await addToCart();
-      alert('바로구매 기능은 곧 구현됩니다!');
+      // ✅ 바로구매: 선택된 옵션으로 단일 상품을 checkout으로 전달
+      const options: Record<string, string> = {};
+      if (shape) options.nailShape = shape;
+      if (length) options.nailLength = length;
+
+      const checkoutItems = [{
+        productUuid: product.id,
+        quantity: qty,
+        options: options
+      }];
+
+      console.log('🛒 [buyNow] Navigating to checkout with item:', checkoutItems);
+
+      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
+      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+
+      // Checkout 페이지로 이동
+      onGo('/checkout');
+
     } catch (err) {
       console.error('Buy now failed:', err);
+      setCartMessage('바로구매 처리 중 오류가 발생했습니다.');
+      setTimeout(() => setCartMessage(null), 3000);
     }
   };
 
@@ -517,52 +557,33 @@ export function Detail({
           )}
 
           {/* 구매 버튼 */}
-          {p.productType === 'CUSTOM' ? (
-            // 커스텀 상품: 주문서 작성 버튼만 표시
-            <div className="pt-2">
-              <button
-                onClick={() => {
-                  if (onGo) {
-                    onGo(`/product/${p.id}/custom-order`);
-                  } else {
-                    goTo(`/product/${p.id}/custom-order`);
-                  }
-                }}
-                className="w-full rounded-lg py-3 text-white bg-black hover:bg-gray-800 font-medium"
-              >
-                커스텀 주문서 작성
-              </button>
-            </div>
-          ) : (
-            // 오리지널 상품: 기존 버튼 유지
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                onClick={addToCart}
-                disabled={addingToCart || !p.isInStock}
-                className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
-                  addingToCart
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <button
+              onClick={addToCart}
+              disabled={addingToCart || !p.isInStock}
+              className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
+                addingToCart 
+                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                  : !p.isInStock 
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : !p.isInStock
-                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                      : 'hover:bg-gray-50'
-                }`}
-              >
-                {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
-                {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
-              </button>
-              <button
-                onClick={buyNow}
-                disabled={addingToCart || !p.isInStock}
-                className={`rounded-lg py-2 text-white flex items-center justify-center ${
-                  addingToCart || !p.isInStock
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-black hover:bg-gray-800'
-                }`}
-              >
-                바로구매
-              </button>
-            </div>
-          )}
+                    : 'hover:bg-gray-50'
+              }`}
+            >
+              {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
+              {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
+            </button>
+            <button
+              onClick={buyNow}
+              disabled={addingToCart || !p.isInStock}
+              className={`rounded-lg py-2 text-white flex items-center justify-center ${
+                addingToCart || !p.isInStock
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-black hover:bg-gray-800'
+              }`}
+            >
+              바로구매
+            </button>
+          </div>
 
           {/* 도구 */}
           <div className="flex items-center gap-3 text-sm pt-1">
