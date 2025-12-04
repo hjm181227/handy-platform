@@ -136,7 +136,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                   <div className="flex justify-between">
                     <span className="text-gray-600">결제금액</span>
                     <span className="font-bold text-blue-600">
-                      {money(paymentResult.amount?.total || 0)}원
+                      {money(paymentResult.amount?.total || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -178,9 +178,9 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                           <h4 className="font-medium">{item.productName || '상품명'}</h4>
                           <p className="text-sm text-gray-500">판매자: {item.sellerName || ''}</p>
                           <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
-                          <p className="text-sm font-medium">{money(item.price || 0)}원</p>
+                          <p className="text-sm font-medium">{money(item.price || 0)}</p>
                           {item.subtotal && item.subtotal !== item.price && (
-                            <p className="text-sm font-semibold text-blue-600">소계: {money(item.subtotal)}원</p>
+                            <p className="text-sm font-semibold text-blue-600">소계: {money(item.subtotal)}</p>
                           )}
                         </div>
                       </div>

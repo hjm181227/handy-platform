@@ -448,10 +448,10 @@ export function Detail({
           <h1 className="text-xl font-semibold">{p.name}</h1>
 
           <div className="flex items-end gap-2">
-            <div className="text-2xl font-bold">{money(salePrice)}원</div>
+            <div className="text-2xl font-bold">{money(salePrice)}</div>
             {p.salePrice && p.salePrice < p.price ? (
               <>
-                <div className="text-sm text-gray-400 line-through">{money(p.price)}원</div>
+                <div className="text-sm text-gray-400 line-through">{money(p.price)}</div>
                 <span className="rounded bg-red-500 px-2 py-0.5 text-xs text-white">할인</span>
               </>
             ) : null}
@@ -644,7 +644,7 @@ export function Detail({
       {/* 모바일 하단 고정 구매바 */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white p-3 md:hidden">
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
-          <div className="text-base font-semibold">{money(salePrice)}원</div>
+          <div className="text-base font-semibold">{money(salePrice)}</div>
           <div className="flex gap-2">
             <button
               onClick={addToCart}
