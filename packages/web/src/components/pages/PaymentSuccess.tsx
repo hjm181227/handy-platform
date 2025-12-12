@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
+import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
 
 interface PaymentSuccessProps {
@@ -37,7 +38,13 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
         console.log('Payment approve response:', approvalResponse);
 
         if (approvalResponse.success && approvalResponse.data) {
-          // 승인 성공 - 주문 상세 페이지로 리다이렉트
+          // 승인 성공 - 장바구니 비우기
+          console.log('🛒 Clearing cart after successful payment...');
+          await webApiService.cart.clearCart().catch((err) => {
+            console.error('❌ Failed to clear cart:', err);
+          });
+
+          // 주문 상세 페이지로 리다이렉트
           const redirectUrl = approvalResponse.data.redirectUrl || `/orders/${orderId}`;
           console.log('✅ Payment approved, redirecting to:', redirectUrl);
 

@@ -401,6 +401,68 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     return hasValidAddress && hasPaymentMethod;
   };
 
+  // ✅ 스테이징 환경 체크
+  const isStaging = import.meta.env.VITE_ENVIRONMENT === 'stage';
+
+  // ✅ 테스트 결제 (스테이징 전용 - 결제 스킵)
+  const handleTestPayment = async () => {
+    if (!cart) {
+      setError('체크아웃 정보가 없습니다.');
+      return;
+    }
+
+    if (!selectedAddressId) {
+      setError('배송지를 선택해주세요.');
+      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      return;
+    }
+
+    if ((cart as any).status !== 'validated') {
+      setError('배송지를 먼저 선택해주세요.');
+      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      setError(null);
+
+      // 1. 결제 준비 (주문 생성)
+      console.log('🧪 [CheckoutPage] Test payment - preparing order...');
+      const prepareResponse = await webApiService.order.preparePayment(
+        (cart as any).sessionId,
+        cart.totals.finalTotal,
+        'KAKAO_PAY' // 테스트용 기본값
+      );
+
+      if (!prepareResponse.success || !prepareResponse.data?.orderId) {
+        throw new Error(prepareResponse.error || '주문 생성에 실패했습니다.');
+      }
+
+      const orderId = prepareResponse.data.orderId;
+      console.log('🧪 [CheckoutPage] Test payment - order created:', orderId);
+
+      // 2. 결제 스킵 API 호출
+      console.log('🧪 [CheckoutPage] Test payment - skipping payment...');
+      const skipResponse = await webApiService.order.skipPayment(orderId);
+
+      if (skipResponse.success) {
+        console.log('✅ [CheckoutPage] Test payment completed:', skipResponse.data);
+        // 주문 완료 페이지로 이동
+        onGo(`/order-complete?orderId=${orderId}`);
+      } else {
+        throw new Error(skipResponse.error || '결제 스킵에 실패했습니다.');
+      }
+
+    } catch (err: any) {
+      console.error('❌ [CheckoutPage] Test payment failed:', err);
+      setError(err.message || '테스트 결제 처리 중 오류가 발생했습니다.');
+      await alert(err.message || '테스트 결제에 실패했습니다.', { variant: 'error' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   // ✅ 결제 준비 (POST /api/payment/prepare) - 백엔드 스펙 준수
   const handlePayment = async () => {
     if (!cart) {
@@ -819,9 +881,27 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 {processing ? '결제 중...' : `${money(order?.finalPrice || 0)}원 결제하기`}
               </button>
 
+              {/* 스테이징 환경 전용: 테스트 결제 버튼 */}
+              {isStaging && (
+                <button
+                  onClick={handleTestPayment}
+                  disabled={processing || !validateCheckout()}
+                  className="w-full mt-3 bg-orange-500 text-white font-semibold py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processing ? '처리 중...' : '🧪 테스트 결제 (결제 스킵)'}
+                </button>
+              )}
+
               <p className="text-xs text-gray-500 text-center mt-3">
                 결제 진행 시 주문 내용 확인 및 서비스 약관에 동의한 것으로 간주됩니다.
               </p>
+
+              {/* 스테이징 환경 안내 */}
+              {isStaging && (
+                <p className="text-xs text-orange-600 text-center mt-2 bg-orange-50 p-2 rounded">
+                  🧪 스테이징 환경: 테스트 결제 버튼을 사용하면 실제 결제 없이 주문이 완료됩니다.
+                </p>
+              )}
             </div>
           </div>
         </div>

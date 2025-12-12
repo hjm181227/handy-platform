@@ -185,11 +185,8 @@ function AppContent() {
         const newCount = response.data.count || 0;
         console.log('✅ [loadCartCount] Setting count to:', newCount);
         setCartCount(newCount);
-        // 장바구니 갱신 트리거 증가
-        setCartRefreshTrigger(prev => {
-          console.log('🔄 [loadCartCount] Incrementing trigger:', prev, '→', prev + 1);
-          return prev + 1;
-        });
+        // 참고: refreshTrigger는 장바구니 전체 리로드를 트리거하므로
+        // 카운트 업데이트 시에는 증가시키지 않음 (CartContent에서 이미 최신 데이터를 가지고 있음)
       } else {
         console.warn('⚠️ [loadCartCount] Invalid response, setting count to 0');
         setCartCount(0);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
 import { money } from '../../utils';
@@ -90,8 +90,6 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{ productId: string; options?: Record<string, string>; name: string } | null>(null);
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
-  const [pendingUndo, setPendingUndo] = useState<{ productId: string; options?: Record<string, string>; previousCart: Cart } | null>(null);
-  const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 장바구니 데이터 로딩
   const loadCart = async () => {
@@ -180,129 +178,58 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     }
   };
 
-  // 아이템 제거 - 개선된 버전
+  // 아이템 제거 - 확인 모달 표시
   const removeItem = (productId: string, options?: Record<string, string>, itemName?: string) => {
     setItemToRemove({ productId, options, name: itemName || '상품' });
     setShowRemoveModal(true);
   };
 
-  // 실제 아이템 제거 처리 (낙관적 업데이트 + Undo 기능)
+  // 실제 아이템 제거 처리 (즉시 API 호출)
   const confirmRemoveItem = async () => {
     if (!itemToRemove || !cart) return;
 
     const { productId, options, name } = itemToRemove;
     setShowRemoveModal(false);
+    setItemToRemove(null);
 
-    // 이전 장바구니 상태 저장
-    const previousCart = { ...cart };
+    try {
+      // 로딩 상태 표시
+      setRemovingItems(prev => new Set(prev).add(productId));
 
-    // 낙관적 UI 업데이트 - 즉시 아이템 제거 표시
-    setRemovingItems(prev => new Set(prev).add(productId));
+      console.log('Removing cart item:', { productId, options });
+      const response = await cartService.removeFromCart(productId, options);
 
-    // 이전 장바구니 상태를 저장하기 전에 현재 상태 기반으로 필터링
-    setCart(prev => {
-      if (!prev) return null;
+      console.log('Remove cart response:', response);
 
-      // prev.items를 사용하여 최신 상태에서 필터링 (stale closure 방지)
-      const updatedItems = prev.items.filter(item => {
-        const itemProductId = item.productUuid || item.product?.id;
-        if (itemProductId !== productId) return true;
-        if (options && JSON.stringify(item.options) !== JSON.stringify(options)) return true;
-        return false;
-      });
+      if (response.success && response.data) {
+        // API 응답을 프론트엔드 타입에 맞게 변환
+        const cartData = mapApiResponseToCart(response.data);
 
-      return { ...prev, items: updatedItems };
-    });
+        setCart(cartData);
+        setRemovedItems(response.removedItems || []);
+        setCapacityWarnings(response.capacityWarnings || []);
+        setMessage(response.message || null);
+        onCartUpdate?.();
 
-    // Undo 상태 설정
-    setPendingUndo({ productId, options, previousCart });
-
-    // 토스트 메시지 표시 (fallback)
-    if (showToast) {
-      showToast(`${name}이(가) 장바구니에서 제거되었어요`, 'info');
-    }
-
-    // ✅ 즉시 장바구니 업데이트 (헤더 카운트 및 드로어 갱신)
-    onCartUpdate?.();
-
-    // 3초 후 API 호출
-    if (undoTimerRef.current) {
-      clearTimeout(undoTimerRef.current);
-    }
-
-    undoTimerRef.current = setTimeout(async () => {
-      try {
-        console.log('Removing cart item:', { productId, options });
-        const response = await cartService.removeFromCart(productId, options);
-
-        console.log('Remove cart response:', response);
-
-        if (response.success && response.data) {
-          // API 응답을 프론트엔드 타입에 맞게 변환
-          const cartData = mapApiResponseToCart(response.data);
-
-          setCart(cartData);
-          setRemovedItems(response.removedItems || []);
-          setCapacityWarnings(response.capacityWarnings || []);
-          setMessage(response.message || null);
-          onCartUpdate?.();
-        } else {
-          throw new Error('상품 제거에 실패했습니다.');
-        }
-      } catch (err: any) {
-        console.error('Remove cart item failed:', err);
-        // 실패 시 이전 상태로 복원
-        setCart(previousCart);
         if (showToast) {
-          showToast(err.message || '상품 제거에 실패했습니다', 'error');
+          showToast(`${name}이(가) 장바구니에서 제거되었어요`, 'success');
         }
-      } finally {
-        setRemovingItems(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(productId);
-          return newSet;
-        });
-        setPendingUndo(null);
+      } else {
+        throw new Error('상품 제거에 실패했습니다.');
       }
-    }, 3000);
-  };
-
-  // Undo 처리
-  const handleUndo = () => {
-    if (!pendingUndo) return;
-
-    // 타이머 취소
-    if (undoTimerRef.current) {
-      clearTimeout(undoTimerRef.current);
-      undoTimerRef.current = null;
-    }
-
-    // 이전 상태로 복원
-    setCart(pendingUndo.previousCart);
-
-    // ✅ Undo 시에도 장바구니 업데이트 (헤더 카운트 및 드로어 갱신)
-    onCartUpdate?.();
-
-    setRemovingItems(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(pendingUndo.productId);
-      return newSet;
-    });
-    setPendingUndo(null);
-
-    if (showToast) {
-      showToast('취소되었습니다', 'info');
+    } catch (err: any) {
+      console.error('Remove cart item failed:', err);
+      if (showToast) {
+        showToast(err.message || '상품 제거에 실패했습니다', 'error');
+      }
+    } finally {
+      setRemovingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
     }
   };
-
-  // 컴포넌트 언마운트 시 타이머 정리
-  useEffect(() => {
-    return () => {
-      if (undoTimerRef.current) {
-        clearTimeout(undoTimerRef.current);
-      }
-    };
-  }, []);
 
   // 전체 장바구니 비우기 (page 모드에서만)
   const clearAllItems = async () => {
@@ -756,37 +683,15 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     );
   };
 
-  // Undo 토스트 렌더링
-  const renderUndoToast = () => {
-    if (!pendingUndo) return null;
-
-    return (
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-slideUp">
-        <div className="bg-gray-900 text-white rounded-lg shadow-2xl px-5 py-4 flex items-center gap-4 min-w-[320px]">
-          <div className="flex-1">
-            <p className="text-sm font-medium">장바구니에서 제거되었어요</p>
-          </div>
-          <button
-            onClick={handleUndo}
-            className="px-3 py-1.5 text-sm font-medium bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-all"
-          >
-            실행취소
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   // 메인 콘텐츠 렌더링
   const renderContent = () => {
     if (loading) return renderLoading();
     if (error) return renderError();
 
-    // 빈 장바구니 체크: 아이템이 없고, 제거 중인 아이템도 없고, 대기 중인 취소도 없는 경우에만 빈 상태 표시
+    // 빈 장바구니 체크: 아이템이 없고, 제거 중인 아이템도 없는 경우에만 빈 상태 표시
     const hasItemsBeingRemoved = removingItems.size > 0;
-    const hasPendingUndo = pendingUndo !== null;
 
-    if (!cart || (itemsBySeller.length === 0 && !hasItemsBeingRemoved && !hasPendingUndo)) {
+    if (!cart || (itemsBySeller.length === 0 && !hasItemsBeingRemoved)) {
       return renderEmpty();
     }
 
@@ -802,7 +707,6 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
             {renderOrderSummary()}
           </div>
           {renderConfirmModal()}
-          {renderUndoToast()}
         </>
       );
     }
@@ -822,7 +726,6 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
           </div>
         </div>
         {renderConfirmModal()}
-        {renderUndoToast()}
       </>
     );
   };

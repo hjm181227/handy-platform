@@ -170,8 +170,8 @@ export interface ProductStats {
   reviewsCount: number;
 }
 
-// 상품 유형 (커스텀/오리지널 구분)
-export type ProductType = 'ORIGINAL' | 'CUSTOM';
+// 상품 유형 (커스텀/오리지널 구분) - 서버 API 스펙에 맞게 소문자 사용
+export type ProductType = 'original' | 'custom';
 
 // 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
@@ -275,6 +275,7 @@ export interface CreateProductRequest {
   isFeatured?: boolean;
   isNewProduct?: boolean;
   tags?: string[];                 // Max 20 tags
+  customOrderRequestUuid?: string; // 커스텀 상품일 때 연결된 주문서 UUID
 }
 
 // 상품 업데이트 요청 인터페이스
@@ -510,8 +511,10 @@ export type PaymentMethod =
   | 'cash_on_delivery';
 
 export interface OrderItem {
+  productUuid?: string;            // 상품 UUID (서버 응답에서 사용)
   product: {
     id: string;                   // UUID format - product identifier
+    uuid?: string;                // 상품 UUID (대체 필드)
     name: string;
     mainImage: any;               // Updated to match server response type
     brand: string;
@@ -614,6 +617,8 @@ export interface SellerOrder {
   createdAt: string;
   updatedAt: string;       // 서버 스펙에 추가됨
   estimatedDelivery?: string;
+  orderType?: 'normal' | 'custom';  // 주문 타입 (커스텀 주문 식별용)
+  customRequestUuid?: string;       // 커스텀 주문서 UUID (커스텀 주문 시 연결)
 }
 
 // Seller Order Detail Interface - 서버 SellerOrderDetailData 기반
@@ -923,6 +928,9 @@ export interface ReviewImage {
 
 export interface DetailedReview {
   id: string;
+  // 서버에서 productUuid를 반환 (객체 또는 문자열 형태)
+  productUuid?: string | { _id: string; name?: string; price?: number };
+  productId?: string;  // 편의를 위한 추가 필드
   user: {
     name: string;
     avatar?: string;
@@ -1877,6 +1885,64 @@ export interface DaumPostcodeInstance {
   embed(element: HTMLElement | null, options?: { autoClose?: boolean; q?: string }): void;  // 임베드(레이어) 방식
 }
 
+// 커스텀 주문서 관련 타입
+export interface CustomOrderRequest {
+  id: string;                    // 주문서 UUID
+  customerName: string;          // 고객명
+  customerEmail?: string;        // 고객 이메일
+  requestedDesign?: string;      // 요청 디자인 설명
+  nailShape?: NailShape;         // 요청 네일 쉐입
+  nailLength?: NailLength;       // 요청 네일 길이
+  attachments?: string[];        // 첨부 이미지 URL 목록
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  createdAt: string;             // 생성일시
+  updatedAt?: string;            // 수정일시
+  isRegisteredAsProduct?: boolean; // 이미 상품으로 등록됐는지 여부
+}
+
+// 커스텀 주문서 상세 (판매자 조회용) - specifications 포함
+export interface CustomOrderDetail {
+  id: string;                    // 주문서 UUID
+  userUuid: string;              // 주문 고객 UUID
+  sellerUuid: string;            // 판매자 UUID
+  title: string;                 // 주문서 제목
+  baseProductUuid?: string;      // 기반 상품 UUID
+  baseProductType?: 'original' | 'custom';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  specifications: {
+    shape: NailShape;
+    length: NailLength;
+    sizes: {
+      thumb: string;
+      index: string;
+      middle: string;
+      ring: string;
+      pinky: string;
+    };
+    desiredColor?: string;
+    desiredDate?: string;
+    designNotes?: string;
+    referenceImages?: string[];
+  };
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 주문서 기반 상품 프리필 응답
+export interface PrefillProductResponse {
+  name: string;
+  description: string;
+  shortDescription?: string;
+  brand?: string;
+  price: number;
+  processingDays: number;
+  mainImageUrl?: string;
+  detailImages?: Array<{ url: string; description?: string; order: number }>;
+  nailShape: NailShape;
+  nailLength: NailLength;
+  nailCategories?: NailCategories;
+  customOrderRequestUuid: string;
+}
 // window 객체에 daum.Postcode 타입 추가
 declare global {
   interface Window {
@@ -1884,4 +1950,39 @@ declare global {
       Postcode: DaumPostcode;
     };
   }
+}
+
+// 커스텀 주문서 생성 요청
+export interface CreateCustomOrderRequest {
+  sellerUuid: string;
+  baseProductUuid?: string;
+  baseProductType?: 'original' | 'custom';
+  title: string;
+  specifications: {
+    shape: NailShape;
+    length: NailLength;
+    sizes: {
+      thumb: string;
+      index: string;
+      middle: string;
+      ring: string;
+      pinky: string;
+    };
+    desiredColor?: string;
+    desiredDate?: string;  // ISO 문자열: "2025-12-25"
+    designNotes?: string;
+    referenceImages?: string[];
+  };
+}
+
+// 커스텀 주문서 생성 응답
+export interface CreateCustomOrderResponse {
+  requestUuid: string;
+  userUuid: string;
+  sellerUuid: string;
+  brandName?: string;
+  title: string;
+  specifications: CreateCustomOrderRequest['specifications'];
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  createdAt: string;
 }

@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { SellerOrder, OrderStatus } from '@handy-platform/shared';
+import { SellerOrder, OrderStatus, CustomOrderDetail, SellerOrderDetail } from '@handy-platform/shared';
+import { webApiService } from '../../../services/apiService';
+import { CustomOrderModal } from './CustomOrderModal';
+import { OrderDetailModal } from './OrderDetailModal';
 
 interface SellerOrderCardProps {
   order: SellerOrder;
@@ -11,6 +14,7 @@ interface SellerOrderCardProps {
 
 // 주문 상태 매핑 (판매자 관점)
 const ORDER_STATUS_MAP = {
+  pending: { label: '대기중', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
   confirmed: { label: '확인됨', color: 'bg-blue-100 text-blue-800', icon: '✓' },
   processing: { label: '처리중', color: 'bg-purple-100 text-purple-800', icon: '🔄' },
   shipped: { label: '배송중', color: 'bg-green-100 text-green-800', icon: '🚛' },
@@ -71,7 +75,80 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
   const [updating, setUpdating] = useState(false);
   const [trackingError, setTrackingError] = useState('');
 
+  // 커스텀 주문서 모달 상태
+  const [showCustomOrderModal, setShowCustomOrderModal] = useState(false);
+  const [customOrderDetail, setCustomOrderDetail] = useState<CustomOrderDetail | null>(null);
+  const [customOrderLoading, setCustomOrderLoading] = useState(false);
+  const [customOrderError, setCustomOrderError] = useState<string | null>(null);
+
+  // 주문 상세 모달 상태
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [orderDetail, setOrderDetail] = useState<SellerOrderDetail | null>(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  const [orderDetailError, setOrderDetailError] = useState<string | null>(null);
+
   const orderStatusConfig = ORDER_STATUS_MAP[order.status as keyof typeof ORDER_STATUS_MAP];
+
+  // 커스텀 주문서 조회
+  const handleViewCustomOrder = async () => {
+    if (!order.customRequestUuid) return;
+
+    setShowCustomOrderModal(true);
+    setCustomOrderLoading(true);
+    setCustomOrderError(null);
+
+    try {
+      const response = await webApiService.seller.getCustomOrderDetail(order.customRequestUuid);
+      if (response.data) {
+        setCustomOrderDetail(response.data);
+      } else {
+        setCustomOrderError('주문서 정보를 찾을 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('커스텀 주문서 조회 실패:', err);
+      setCustomOrderError('주문서를 불러오는데 실패했습니다.');
+    } finally {
+      setCustomOrderLoading(false);
+    }
+  };
+
+  const handleCloseCustomOrderModal = () => {
+    setShowCustomOrderModal(false);
+    setCustomOrderDetail(null);
+    setCustomOrderError(null);
+  };
+
+  // 주문 상세 조회
+  const handleViewOrderDetail = async () => {
+    // 더블클릭/중복 요청 방지
+    if (orderDetailLoading) return;
+
+    setShowOrderDetailModal(true);
+    setOrderDetailLoading(true);
+    setOrderDetailError(null);
+
+    try {
+      // 보안을 위해 orderUuid 사용 (order.id가 UUID)
+      const response = await webApiService.seller.getSellerOrderDetail(order.id);
+      if (response.data) {
+        setOrderDetail(response.data);
+      } else {
+        setOrderDetailError('주문 정보를 찾을 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('주문 상세 조회 실패:', err);
+      setOrderDetailError('주문 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setOrderDetailLoading(false);
+    }
+  };
+
+  // 주문 상세 모달 닫기 (상태 정리 포함)
+  const handleCloseOrderDetailModal = () => {
+    setShowOrderDetailModal(false);
+    setOrderDetail(null);
+    setOrderDetailError(null);
+  };
 
   // 송장번호 입력 시 실시간 검증
   const handleTrackingNumberChange = (value: string) => {
@@ -110,9 +187,11 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
     }
   };
 
+  const canConfirm = order.status === 'pending';
   const canShip = order.status === 'processing';
   const canStartProcessing = order.status === 'confirmed';
-  const canCancel = ['confirmed', 'processing'].includes(order.status);
+  const canDeliver = order.status === 'shipped';
+  const canCancel = ['pending', 'confirmed', 'processing'].includes(order.status);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -135,6 +214,24 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${orderStatusConfig.color}`}>
                 {orderStatusConfig.icon} {orderStatusConfig.label}
               </span>
+              {/* 상세보기 버튼 */}
+              <button
+                onClick={handleViewOrderDetail}
+                disabled={orderDetailLoading}
+                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {orderDetailLoading ? '로딩...' : '상세보기'}
+              </button>
+              {/* 커스텀 주문인 경우 주문서 보기 버튼 */}
+              {order.customRequestUuid && (
+                <button
+                  onClick={handleViewCustomOrder}
+                  className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-200 transition-colors flex items-center gap-1"
+                >
+                  <span>📋</span>
+                  <span>주문서</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -253,6 +350,25 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
         {/* 액션 버튼들 - 하단에 배치 */}
         <div className="border-t border-gray-100 pt-4">
           <div className="flex flex-col sm:flex-row gap-2">
+            {canConfirm && (
+              <button
+                onClick={async () => {
+                  const confirmed = await onConfirm('이 주문을 확인하시겠습니까?', {
+                    variant: 'info',
+                    confirmLabel: '주문 확인',
+                    cancelLabel: '취소'
+                  });
+                  if (confirmed && order.id) {
+                    await onUpdateStatus(order.id, 'confirmed');
+                  }
+                }}
+                className="flex-1 sm:flex-none px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors duration-200 text-sm font-medium"
+              >
+                <span className="sm:hidden">확인</span>
+                <span className="hidden sm:inline">주문 확인</span>
+              </button>
+            )}
+
             {canStartProcessing && (
               <button
                 onClick={async () => {
@@ -290,6 +406,25 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
               >
                 <span className="sm:hidden">배송</span>
                 <span className="hidden sm:inline">배송 처리</span>
+              </button>
+            )}
+
+            {canDeliver && (
+              <button
+                onClick={async () => {
+                  const confirmed = await onConfirm('배송이 완료되었습니까?', {
+                    variant: 'success',
+                    confirmLabel: '배송 완료',
+                    cancelLabel: '취소'
+                  });
+                  if (confirmed && order.id) {
+                    await onUpdateStatus(order.id, 'delivered');
+                  }
+                }}
+                className="flex-1 sm:flex-none px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 text-sm font-medium"
+              >
+                <span className="sm:hidden">완료</span>
+                <span className="hidden sm:inline">배송 완료</span>
               </button>
             )}
 
@@ -471,6 +606,24 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
           </div>
         )}
       </div>
+
+      {/* 커스텀 주문서 모달 */}
+      <CustomOrderModal
+        isOpen={showCustomOrderModal}
+        onClose={handleCloseCustomOrderModal}
+        orderDetail={customOrderDetail}
+        loading={customOrderLoading}
+        error={customOrderError}
+      />
+
+      {/* 주문 상세 모달 */}
+      <OrderDetailModal
+        isOpen={showOrderDetailModal}
+        onClose={handleCloseOrderDetailModal}
+        orderDetail={orderDetail}
+        loading={orderDetailLoading}
+        error={orderDetailError}
+      />
     </div>
   );
 }

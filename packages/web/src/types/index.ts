@@ -7,7 +7,9 @@ export type {
   Seller,
   User,
   ApiResponse,
-  PaginationInfo
+  PaginationInfo,
+  CustomOrderRequest,
+  PrefillProductResponse
 } from '@handy-platform/shared';
 
 // 웹 전용 타입들

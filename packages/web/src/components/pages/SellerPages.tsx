@@ -7,7 +7,7 @@ import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
 import { FaDollarSign, FaChartLine, FaClipboardList, FaBox, FaPlus, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
-import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType } from '../../types';
+import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType, CustomOrderRequest, PrefillProductResponse } from '../../types';
 
 // 생산 관리 컴포넌트 임포트
 import { ProductionDashboard } from './seller/ProductionDashboard';
@@ -781,7 +781,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
   const isEdit = !!productId;
   const [ formData, setFormData ] = useState({
     // 상품 유형
-    productType: 'ORIGINAL' as ProductType,
+    productType: 'original' as ProductType,
 
     // 기본 정보
     name: '',
@@ -823,12 +823,20 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
     // 상품 옵션
     isFeatured: false,
     isNewProduct: true,
-    tags: [] as string[]
+    tags: [] as string[],
+
+    // 커스텀 주문서 연결
+    customOrderRequestUuid: ''
   });
 
   const [ isSubmitting, setIsSubmitting ] = useState(false);
   const [ error, setError ] = useState<string | null>(null);
   const [ isLoading, setIsLoading ] = useState(false);
+
+  // 커스텀 주문서 모달 관련 상태
+  const [ showOrderModal, setShowOrderModal ] = useState(false);
+  const [ customOrders, setCustomOrders ] = useState<CustomOrderRequest[]>([]);
+  const [ loadingOrders, setLoadingOrders ] = useState(false);
 
   // 상품 수정 모드일 때 기존 상품 정보 불러오기
   useEffect(() => {
@@ -858,8 +866,8 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
           // 폼 데이터 업데이트 (API 응답 구조에 맞게, 안전한 접근)
           setFormData({
-            // 상품 유형
-            productType: (product.productType as ProductType) || 'ORIGINAL',
+            // 상품 유형 (서버와 동일하게 소문자 사용)
+            productType: (product.productType as ProductType) || 'original',
 
             // 기본 정보
             name: String(product.name || ''),
@@ -914,6 +922,68 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
     }
   }, [productId, isEdit]);
 
+  // 커스텀 주문서 목록 불러오기
+  const handleLoadOrderRequest = async () => {
+    setLoadingOrders(true);
+    try {
+      const response = await sellerService.getCustomOrderRequests();
+      if (response.success && response.data) {
+        // 이미 등록된 주문서는 필터링 (isRegisteredAsProduct가 true인 경우)
+        const availableOrders = response.data.filter(order => !order.isRegisteredAsProduct);
+        setCustomOrders(availableOrders);
+        setShowOrderModal(true);
+      } else {
+        alert('주문서 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to load custom order requests:', error);
+      alert('주문서 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  // 주문서 선택 시 프리필 데이터로 폼 채우기
+  const handleSelectOrder = async (requestUuid: string) => {
+    try {
+      setLoadingOrders(true);
+      const response = await sellerService.getPrefillData(requestUuid);
+
+      if (response.success && response.data) {
+        const data = response.data;
+        setFormData(prev => ({
+          ...prev,
+          name: data.name || prev.name,
+          description: data.description || prev.description,
+          shortDescription: data.shortDescription || prev.shortDescription,
+          brand: data.brand || prev.brand,
+          price: data.price ? String(data.price) : prev.price,
+          processingDays: data.processingDays ? String(data.processingDays) : prev.processingDays,
+          mainImageUrl: data.mainImageUrl || prev.mainImageUrl,
+          detailImages: data.detailImages || prev.detailImages,
+          nailShape: data.nailShape || prev.nailShape,
+          nailLength: data.nailLength || prev.nailLength,
+          nailCategories: data.nailCategories || prev.nailCategories,
+          productType: 'custom',
+          customOrderRequestUuid: data.customOrderRequestUuid,
+          stockQuantity: '0', // 커스텀 상품은 재고 0
+        }));
+        setShowOrderModal(false);
+        alert('주문서 정보가 적용되었습니다.');
+      }
+    } catch (error: any) {
+      console.error('Failed to get prefill data:', error);
+      // 이미 등록된 주문서 에러 처리
+      if (error?.data?.error === 'This custom order request is already registered as a product') {
+        alert('이 주문서는 이미 상품으로 등록되어 있습니다.');
+      } else {
+        alert('주문서 정보를 불러오는데 실패했습니다.');
+      }
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -948,14 +1018,13 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         throw new Error('태그는 최대 20개까지 등록할 수 있습니다.');
       }
 
-      // 2. 상품 데이터 구성 (서버 API 스펙에 완전 일치)
-      const productData: CreateProductRequest = {
-        productType: formData.productType,
+      // 2. 상품 데이터 구성
+      // 공통 필드 (등록/수정 모두 사용)
+      const commonData = {
         name: formData.name,
         description: formData.description,
         shortDescription: formData.shortDescription || formData.description.substring(0, 100),
         brand: formData.brand || '네일아트',
-        sku: formData.sku || `NAIL-${Date.now()}`,
         price: parseInt(formData.price),
         salePrice: formData.salePrice ? parseInt(formData.salePrice) : undefined,
         discountRate: formData.discountRate ? parseInt(formData.discountRate) : null,
@@ -965,7 +1034,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           description: img.description,
           order: img.order || index + 1
         })),
-        stockQuantity: parseInt(formData.stockQuantity),
+        stockQuantity: formData.productType === 'custom' ? 0 : parseInt(formData.stockQuantity),
         processingDays: parseInt(formData.processingDays),
         nailCategories: formData.nailCategories,
         nailShape: formData.nailShape,
@@ -977,17 +1046,29 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         },
         isFeatured: formData.isFeatured,
         isNewProduct: formData.isNewProduct,
-        tags: formData.tags
+        tags: formData.tags,
       };
-
-      console.log(isEdit ? '수정할 상품 데이터:' : '등록할 상품 데이터:', productData);
 
       // 3. API 호출 (등록 vs 수정)
       let response;
       if (isEdit && productId) {
-        const updateData: UpdateProductRequest = { ...productData, productId };
+        // 수정: customOrderRequestUuid만 제외, productType은 포함 (서버는 소문자 요구)
+        const updateData: UpdateProductRequest = {
+          ...commonData,
+          productId,
+          productType: formData.productType.toLowerCase() as any
+        };
+        console.log('수정할 상품 데이터:', updateData);
         response = await productService.updateProduct(productId, updateData);
       } else {
+        // 등록: 모든 필드 포함 (서버는 소문자 productType 요구)
+        const productData: CreateProductRequest = {
+          ...commonData,
+          productType: formData.productType.toLowerCase() as any,
+          sku: formData.sku || `NAIL-${Date.now()}`,
+          customOrderRequestUuid: formData.customOrderRequestUuid || undefined
+        };
+        console.log('등록할 상품 데이터:', productData);
         response = await productService.createProduct(productData);
       }
 
@@ -1374,9 +1455,9 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, productType: 'ORIGINAL' })}
+                onClick={() => setFormData({ ...formData, productType: 'original' })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
-                  formData.productType === 'ORIGINAL'
+                  formData.productType === 'original'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                 }`}
@@ -1385,9 +1466,9 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, productType: 'CUSTOM' })}
+                onClick={() => setFormData({ ...formData, productType: 'custom' })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
-                  formData.productType === 'CUSTOM'
+                  formData.productType === 'custom'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                 }`}
@@ -1401,21 +1482,34 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           </div>
 
           {/* 커스텀 선택 시 주문서 불러오기 버튼 */}
-          {formData.productType === 'CUSTOM' && (
+          {formData.productType === 'custom' && (
             <div className="mb-6">
               <button
                 type="button"
-                onClick={() => {
-                  // TODO: 주문서 불러오기 기능 구현
-                  alert('주문서 불러오기 기능은 추후 구현됩니다.');
-                }}
-                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2"
+                onClick={handleLoadOrderRequest}
+                disabled={loadingOrders}
+                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                주문서 불러오기
+                {loadingOrders ? (
+                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
+                {loadingOrders ? '불러오는 중...' : '주문서 불러오기'}
               </button>
+              {formData.customOrderRequestUuid && (
+                <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  주문서가 연결되었습니다
+                </p>
+              )}
             </div>
           )}
 
@@ -2086,6 +2180,92 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           </button>
         </div>
         </form>
+      )}
+
+      {/* 커스텀 주문서 선택 모달 */}
+      {showOrderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">주문서 선택</h3>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {loadingOrders ? (
+                <div className="flex items-center justify-center py-8">
+                  <svg className="animate-spin w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : customOrders.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p>등록 가능한 주문서가 없습니다.</p>
+                  <p className="text-sm mt-1">새로운 커스텀 주문이 들어오면 여기에 표시됩니다.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {customOrders.map((order) => (
+                    <button
+                      key={order.id}
+                      onClick={() => handleSelectOrder(order.id)}
+                      disabled={loadingOrders}
+                      className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left transition-colors disabled:opacity-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{order.customerName}</div>
+                          {order.requestedDesign && (
+                            <div className="text-sm text-gray-600 mt-1 line-clamp-2">{order.requestedDesign}</div>
+                          )}
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(order.createdAt).toLocaleDateString('ko-KR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {order.nailShape && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                              {order.nailShape}
+                            </span>
+                          )}
+                          {order.nailLength && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                              {order.nailLength}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t">
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </SellerLayout>
   );
@@ -2895,6 +3075,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
     sellerUuid: string;
     brandName: string;
     brandProfile: string | null;
+    acceptsCustomOrders: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -2909,6 +3090,9 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 커스텀 주문 설정 상태
+  const [savingCustomOrder, setSavingCustomOrder] = useState(false);
+
   // 성공/에러 메시지
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -2922,15 +3106,19 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       setLoading(true);
       setError(null);
 
-      // 현재 로그인한 판매자의 정보 조회
-      const sellerInfo = await sellerService.getSellerInfo();
+      // 현재 로그인한 판매자의 정보 조회 + 커스텀 주문 설정 조회
+      const [sellerInfo, customOrderSetting] = await Promise.all([
+        sellerService.getMySellerInfo(),
+        sellerService.getCustomOrderSetting()
+      ]);
 
-      if (sellerInfo && sellerInfo.seller) {
-        const seller = sellerInfo.seller;
+      if (sellerInfo && sellerInfo.success && sellerInfo.data) {
+        const seller = sellerInfo.data;
         setBrandInfo({
-          sellerUuid: seller.sellerUuid,
+          sellerUuid: seller.sellerInfoId,
           brandName: seller.brandName || '',
-          brandProfile: seller.brandProfile || null
+          brandProfile: seller.brandProfile || null,
+          acceptsCustomOrders: customOrderSetting?.data?.acceptsCustomOrders ?? false
         });
         setNewBrandName(seller.brandName || '');
       } else {
@@ -2952,7 +3140,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       setSavingName(true);
       setError(null);
 
-      await brandService.updateBrandName(brandInfo.sellerUuid, {
+      await sellerService.updateSellerProfile({
         brandName: newBrandName.trim()
       });
 
@@ -3011,7 +3199,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       });
 
       // 2. S3에 직접 업로드
-      await fetch(presignedResponse.uploadUrl, {
+      await fetch(presignedResponse.presignedUrl, {
         method: 'PUT',
         body: file,
         headers: {
@@ -3020,12 +3208,12 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       });
 
       // 3. 브랜드 프로필 업데이트
-      await brandService.updateBrandProfile(brandInfo.sellerUuid, {
-        brandProfile: presignedResponse.fileUrl
+      await sellerService.updateSellerProfile({
+        brandProfile: presignedResponse.imageUrl
       });
 
       // 상태 업데이트
-      setBrandInfo(prev => prev ? { ...prev, brandProfile: presignedResponse.fileUrl } : null);
+      setBrandInfo(prev => prev ? { ...prev, brandProfile: presignedResponse.imageUrl } : null);
       setLogoPreview(null);
       showSuccess('로고 이미지가 변경되었습니다.');
     } catch (err: any) {
@@ -3044,6 +3232,31 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  // 커스텀 주문 설정 토글
+  const handleToggleCustomOrder = async () => {
+    if (!brandInfo || savingCustomOrder) return;
+
+    try {
+      setSavingCustomOrder(true);
+      setError(null);
+
+      const newValue = !brandInfo.acceptsCustomOrders;
+      const response = await sellerService.updateCustomOrderSetting({
+        acceptsCustomOrders: newValue
+      });
+
+      // 서버 응답값으로 상태 업데이트
+      const updatedValue = response?.data?.acceptsCustomOrders ?? newValue;
+      setBrandInfo(prev => prev ? { ...prev, acceptsCustomOrders: updatedValue } : null);
+      showSuccess(updatedValue ? '커스텀 주문을 받을 수 있게 설정되었습니다.' : '커스텀 주문이 비활성화되었습니다.');
+    } catch (err: any) {
+      console.error('커스텀 주문 설정 변경 실패:', err);
+      setError(err.message || '커스텀 주문 설정 변경에 실패했습니다.');
+    } finally {
+      setSavingCustomOrder(false);
+    }
   };
 
   // 편집 취소
@@ -3193,6 +3406,55 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 >
                   수정
                 </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 커스텀 주문 설정 카드 */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900">커스텀 주문 설정</h2>
+            <p className="text-sm text-gray-500 mt-1">고객이 맞춤 주문서를 제출할 수 있도록 설정합니다.</p>
+          </div>
+
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">커스텀 주문 받기</label>
+                <p className="text-sm text-gray-500 mt-1">
+                  활성화하면 고객이 브랜드 페이지에서 맞춤 주문서를 제출할 수 있습니다.
+                </p>
+              </div>
+              <button
+                onClick={handleToggleCustomOrder}
+                disabled={savingCustomOrder}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  savingCustomOrder ? 'opacity-50 cursor-not-allowed' : ''
+                } ${brandInfo?.acceptsCustomOrders ? 'bg-blue-600' : 'bg-gray-200'}`}
+                role="switch"
+                aria-checked={brandInfo?.acceptsCustomOrders}
+              >
+                <span className="sr-only">커스텀 주문 받기</span>
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    brandInfo?.acceptsCustomOrders ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {brandInfo?.acceptsCustomOrders && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-green-800">
+                    <p className="font-medium">커스텀 주문이 활성화되었습니다</p>
+                    <p className="mt-1 text-green-700">고객이 브랜드 페이지에서 맞춤 주문서를 제출할 수 있습니다.</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

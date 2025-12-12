@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Product, NAIL_SHAPES, NAIL_SHAPE_NAME, NAIL_LENGTHS, NAIL_LENGTH_NAME } from '@handy-platform/shared';
-import { productService } from '../../services/apiService';
-import { money } from '../../utils';
+import { Product, NAIL_SHAPES, NAIL_SHAPE_NAME, NAIL_LENGTHS, NAIL_LENGTH_NAME, NailShape, NailLength } from '@handy-platform/shared';
+import { productService, orderService } from '../../services/apiService';
 import { FaArrowLeft, FaPlus, FaTimes } from 'react-icons/fa';
 
 interface CustomOrderFormProps {
@@ -47,6 +46,9 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   });
   const [request, setRequest] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [desiredColor, setDesiredColor] = useState('');
+  const [desiredDate, setDesiredDate] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // 상품 정보 로드
   useEffect(() => {
@@ -83,19 +85,85 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
     setSizes(prev => ({ ...prev, [finger]: value }));
   };
 
+  // 최소 선택 가능 날짜 (오늘 + 7일)
+  const getMinDate = (): string => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return date.toISOString().split('T')[0];
+  };
+
   // 주문하기 핸들러
-  const handleSubmit = () => {
-    // TODO: 백엔드 API 연동
-    const orderData = {
-      productId,
-      shape,
-      length,
-      sizes,
-      request,
-      attachments: attachments.map(f => f.name)
-    };
-    console.log('커스텀 주문 데이터:', orderData);
-    alert('주문서 제출 기능은 추후 구현됩니다.');
+  const handleSubmit = async () => {
+    // 사이즈 필수 검증
+    const allSizesFilled = Object.values(sizes).every(s => s.trim() !== '');
+    if (!allSizesFilled) {
+      alert('모든 손가락 사이즈를 입력해주세요.');
+      return;
+    }
+
+    // sellerUuid 확인
+    if (!product?.sellerUuid) {
+      alert('판매자 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // 1. 첨부파일 업로드 (있는 경우)
+      const imageUrls: string[] = [];
+      for (const file of attachments) {
+        // 이미지 파일만 업로드
+        if (!file.type.startsWith('image/')) {
+          console.warn('이미지가 아닌 파일 스킵:', file.name);
+          continue;
+        }
+
+        // 1-1. Presigned URL 요청
+        const presignedRes = await orderService.getPresignedUrl({
+          filename: file.name,
+          contentType: file.type,
+          uploadType: 'general'
+        });
+
+        // 1-2. S3에 직접 업로드 (Content-Type 헤더 필수)
+        await orderService.uploadToS3(presignedRes.data.presignedUrl, file);
+        imageUrls.push(presignedRes.data.imageUrl);
+      }
+
+      // 2. 커스텀 주문서 생성
+      await orderService.createCustomOrder({
+        sellerUuid: product.sellerUuid,
+        baseProductUuid: productId,
+        baseProductType: product.productType || 'original',
+        title: `${product.name} 커스텀 주문`,
+        specifications: {
+          shape: shape as NailShape,
+          length: length as NailLength,
+          sizes,
+          desiredColor: desiredColor || undefined,
+          desiredDate: desiredDate || undefined,
+          designNotes: request || undefined,
+          referenceImages: imageUrls.length > 0 ? imageUrls : undefined
+        }
+      });
+
+      // 3. 성공 처리
+      alert('주문서가 성공적으로 제출되었습니다!');
+      onBack();
+
+    } catch (error: any) {
+      console.error('주문 제출 실패:', error);
+
+      // 판매자가 커스텀 주문을 받지 않는 경우
+      if (error.message?.includes('custom orders') || error.status === 400) {
+        alert('이 판매자는 현재 커스텀 주문을 받지 않습니다.');
+      } else {
+        alert('주문 제출에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -130,19 +198,14 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* 상품 정보 미리보기 */}
-        <div className="bg-white rounded-xl p-4 border flex gap-4">
-          <img
-            src={product.mainImageUrl}
-            alt={product.name}
-            className="w-20 h-20 object-cover rounded-lg"
-          />
-          <div className="flex-1 min-w-0">
-            <h2 className="font-medium text-gray-900 line-clamp-2">{product.name}</h2>
-            <p className="text-lg font-bold mt-1">
-              {money(product.salePrice || product.price)}원
-            </p>
-          </div>
+        {/* 브랜드 정보 */}
+        <div className="bg-white rounded-xl p-4 border">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            브랜드
+          </label>
+          <p className="text-base text-gray-700">
+            {product.seller?.companyName || product.brand || '브랜드 정보 없음'}
+          </p>
         </div>
 
         {/* 쉐입 선택 */}
@@ -257,6 +320,23 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
           )}
         </div>
 
+        {/* 원하는 컬러 */}
+        <div className="bg-white rounded-xl p-4 border">
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            원하는 컬러
+          </label>
+          <input
+            type="text"
+            value={desiredColor}
+            onChange={(e) => setDesiredColor(e.target.value)}
+            placeholder="예: 연한 핑크, 베이지, 빨간색 등"
+            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            원하는 색상을 자유롭게 입력해주세요
+          </p>
+        </div>
+
         {/* 요청사항 */}
         <div className="bg-white rounded-xl p-4 border">
           <label className="block text-sm font-semibold text-gray-900 mb-3">
@@ -302,14 +382,43 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
           </label>
         </div>
 
+        {/* 수령 희망 날짜 */}
+        <div className="bg-white rounded-xl p-4 border">
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            수령 희망 날짜
+          </label>
+          <input
+            type="date"
+            value={desiredDate}
+            onChange={(e) => setDesiredDate(e.target.value)}
+            min={getMinDate()}
+            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            제작 기간을 고려하여 최소 7일 이후 날짜를 선택해주세요
+          </p>
+        </div>
+
         {/* 주문하기 버튼 */}
         <div className="sticky bottom-0 bg-gray-50 pt-4 pb-6">
           <button
             type="button"
             onClick={handleSubmit}
-            className="w-full py-4 bg-black hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors"
+            disabled={submitting}
+            className={`w-full py-4 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+              submitting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-black hover:bg-gray-800 text-white'
+            }`}
           >
-            주문하기
+            {submitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>주문서 제출 중...</span>
+              </>
+            ) : (
+              '주문하기'
+            )}
           </button>
         </div>
       </div>
