@@ -557,7 +557,7 @@ function AppContent() {
         <CheckoutPage onGo={nav} />
       </RequireAuth>
     );
-  } else if (pathname === "/payment/success") {
+  } else if (pathname === "/payment/result") {
     screen = <PaymentSuccess onGo={nav} />;
   } else if (pathname === "/payment/cancel") {
     screen = <PaymentCancel onGo={nav} />;
