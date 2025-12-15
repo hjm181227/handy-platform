@@ -42,10 +42,11 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
         console.log('📦 [PaymentSuccess] Fetching order details...');
         const response = await orderService.getOrder(orderId);
 
-        console.log('✅ [PaymentSuccess] Order fetched:', response.data);
+        console.log('✅ [PaymentSuccess] Order fetched:', response);
 
-        if (response.success && response.data?.order) {
-          const order = response.data.order;
+        // 서버 응답: { success: true, order: { ... } } (data 래핑 없음)
+        if (response.success && (response as any).order) {
+          const order = (response as any).order;
 
           // Order 결제 상태 검증 (중요!)
           if (order.paymentStatus !== 'paid') {
