@@ -51,8 +51,8 @@ export function RankedProductCard({
         <div className="text-[11px] text-gray-500">{p.seller?.name || ''}</div>
         <div className="text-[13px] leading-snug h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
         <div className="flex items-baseline gap-2">
-          <div className="text-[15px] font-bold">{money(salePrice)}원</div>
-          {p.discountedPrice < p.price ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}원</div> : null}
+          <div className="text-[15px] font-bold">{money(salePrice)}</div>
+          {p.discountedPrice < p.price ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}</div> : null}
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">

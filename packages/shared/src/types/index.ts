@@ -504,31 +504,15 @@ export type PaymentMethod =
   | 'cash_on_delivery';
 
 export interface OrderItem {
-  product: {
-    id: string;                   // UUID format - product identifier
-    name: string;
-    mainImage: any;               // Updated to match server response type
-    brand: string;
-    price: number;
-    discountedPrice?: number;
-  };
-  variant?: {
-    id: string;
-    sku: string;
-    priceModifier: number;
-  };
-  options?: Record<string, string>;
-  quantity: number;
-  price: number;
-  basePrice: number;
-  priceModifier: number;
-  subtotal: number;
-  seller: {
-    id: string;                   // UUID format - seller identifier
-    name: string;
-    companyName: string;
-    isVerified: boolean;
-  };
+  productUuid: string;            // 상품 UUID
+  productName: string;            // 상품명
+  productImage?: string;          // 상품 이미지 URL
+  sellerName: string;             // 판매자명
+  quantity: number;               // 수량
+  price: number;                  // 단가
+  subtotal: number;               // 소계 (price * quantity)
+  options?: Record<string, any>;  // 선택 옵션
+  priceModifier?: number;         // 가격 조정값
 }
 
 export interface ShippingDetails {
@@ -558,14 +542,7 @@ export interface BaseOrder {
 // Customer Order Interface - 소비자가 보는 주문 (다중 판매자 주문)
 export interface CustomerOrder extends BaseOrder {
   paymentMethod: PaymentMethod;   // 결제 수단 (필수)
-  shippingAddress: {              // 배송 주소 (필수)
-    recipientName: string;        // 받는 분
-    phone: string;                // 연락처
-    zipCode: string;              // 우편번호
-    address: string;              // 주소
-    addressDetail?: string;       // 상세주소
-    memo?: string;                // 배송메모
-  };
+  shippingAddress: ShippingAddress; // 배송 주소 (필수) - ShippingAddress 타입 재사용
 
   // 다중 판매자 배송 정보 - 각 판매자별로 다른 배송 정보를 가질 수 있음
   sellerShippings?: Array<{

@@ -559,13 +559,16 @@ function AppContent() {
     );
   } else if (pathname === "/payment/success") {
     screen = <PaymentSuccess onGo={nav} />;
-  } else if (pathname === "/payment/cancel") {
+  } else if (pathname === "/payment/result") {
+    screen = <PaymentSuccess onGo={nav} />;
+  }
+  else if (pathname === "/payment/cancel") {
     screen = <PaymentCancel onGo={nav} />;
   } else if (pathname === "/payment/fail") {
     screen = <PaymentFail onGo={nav} />;
   } else if (pathname === "/payment/test") {
     screen = <PaymentTest onGo={nav} />;
-  } else if (pathname.match(/^\/order-complete\/(.+)$/)) {
+  } else if (pathname.match(/^\/orders\/(.+)$/)) {
     const orderId = pathname.split("/")[2];
     screen = (
       <RequireAuth>
