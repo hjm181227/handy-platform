@@ -28,8 +28,8 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           throw new Error('주문 정보가 올바르지 않습니다.');
         }
 
-        // 결제 상태 확인
-        if (status !== 'success') {
+        // 결제 상태 확인 (백엔드는 성공 시 'completed' 전달)
+        if (status !== 'completed') {
           const errorMsg = status === 'fail'
             ? '결제 처리 중 오류가 발생했습니다.'
             : status === 'cancel'
@@ -45,7 +45,29 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
         console.log('✅ [PaymentSuccess] Order fetched:', response.data);
 
         if (response.success && response.data?.order) {
-          setOrder(response.data.order);
+          const order = response.data.order;
+
+          // Order 결제 상태 검증 (중요!)
+          if (order.paymentStatus !== 'paid') {
+            console.error('❌ [PaymentSuccess] Order payment not completed:', {
+              paymentStatus: order.paymentStatus,
+              status: order.status
+            });
+            throw new Error('결제가 아직 완료되지 않았습니다. 잠시 후 다시 시도해주세요.');
+          }
+
+          // Order 주문 상태 검증 (경고)
+          if (order.status !== 'confirmed') {
+            console.warn('⚠️ [PaymentSuccess] Order status is not confirmed:', order.status);
+            // confirmed가 아니어도 paymentStatus가 paid면 허용 (백엔드 업데이트 지연 가능)
+          }
+
+          console.log('✅ [PaymentSuccess] Order payment verified:', {
+            paymentStatus: order.paymentStatus,
+            status: order.status
+          });
+
+          setOrder(order);
 
           // 성공 알림
           await alert('결제가 완료되었습니다!', {
