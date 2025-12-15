@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, Package } from 'lucide-react';
 import { useAlert } from '../common';
 import { orderService } from '../../services/apiService';
 import { money } from '../../utils';
@@ -109,7 +110,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
-          <div className="text-red-500 text-4xl mb-4">❌</div>
+          <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">주문 조회 실패</h2>
           <p className="text-gray-600 mb-6">{errorMessage}</p>
           <div className="space-y-3">
@@ -135,7 +136,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
-          <div className="text-gray-400 text-4xl mb-4">📦</div>
+          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">주문 정보 없음</h2>
           <p className="text-gray-600 mb-6">주문 정보를 찾을 수 없습니다.</p>
           <button
@@ -160,7 +161,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg border p-8 text-center mb-6">
-          <div className="text-green-500 text-6xl mb-4">✅</div>
+          <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">결제가 완료되었습니다!</h2>
           <p className="text-gray-600 mb-6">주문이 성공적으로 처리되었습니다.</p>
 
@@ -213,21 +214,21 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                   {order.items.map((item: any, index: number) => (
                     <div key={index} className="flex gap-4 p-3 bg-white rounded-lg">
                       <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0">
-                        {item.product?.mainImageUrl ? (
+                        {item.productImage ? (
                           <img
-                            src={item.product.mainImageUrl}
-                            alt={item.product?.name || 'Product'}
+                            src={item.productImage}
+                            alt={item.productName || 'Product'}
                             className="w-full h-full object-cover rounded-lg"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                            📦
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-8 h-8 text-gray-400" />
                           </div>
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium">{item.product?.name || '상품명'}</h4>
-                        <p className="text-sm text-gray-500">판매자: {item.seller?.name || ''}</p>
+                        <h4 className="font-medium">{item.productName || '상품명'}</h4>
+                        <p className="text-sm text-gray-500">판매자: {item.sellerName || ''}</p>
                         <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
                         <p className="text-sm font-medium">{money(item.price || 0)}</p>
                         {item.subtotal && item.subtotal !== item.price && (
@@ -245,13 +246,13 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
               <div className="bg-gray-50 rounded-lg p-6 text-left">
                 <h3 className="text-lg font-semibold mb-4">배송지 정보</h3>
                 <div className="space-y-2">
-                  <p className="font-medium">{order.shippingAddress.recipientName || '수령인'}</p>
-                  <p className="text-gray-600">{order.shippingAddress.phone || '연락처'}</p>
+                  <p className="font-medium">{(order.shippingAddress as any).recipientName || '수령인'}</p>
+                  <p className="text-gray-600">{(order.shippingAddress as any).recipientPhone || '연락처'}</p>
                   <p className="text-gray-600">
-                    {order.shippingAddress.address}
-                    {order.shippingAddress.addressDetail && `, ${order.shippingAddress.addressDetail}`}
+                    {(order.shippingAddress as any).roadAddress}
+                    {(order.shippingAddress as any).detailAddress && `, ${(order.shippingAddress as any).detailAddress}`}
                   </p>
-                  <p className="text-gray-600">우편번호: {order.shippingAddress.zipCode}</p>
+                  <p className="text-gray-600">우편번호: {(order.shippingAddress as any).postcode}</p>
                 </div>
               </div>
             )}
