@@ -96,9 +96,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setError(null);
 
       // ✅ OrderService를 통한 체크아웃 초기화 (백엔드 스펙 준수)
-      // 백엔드가 JWT 토큰으로 사용자 장바구니를 자동으로 읽어옴
-      console.log('📦 [CheckoutPage] Initializing checkout from cart');
-      const response = await webApiService.order.initializeCheckout();
+      // 견적서 구매: quoteId 파라미터 사용 / 장바구니 구매: 빈 값
+      const quoteId = new URLSearchParams(window.location.search).get('quoteId');
+      console.log('📦 [CheckoutPage] Initializing checkout', quoteId ? `from quote: ${quoteId}` : 'from cart');
+      const response = await webApiService.order.initializeCheckout(quoteId || undefined);
 
       console.log('📦 [CheckoutPage] Initialize response:', response);
       const result = response;
