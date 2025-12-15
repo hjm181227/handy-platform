@@ -33,7 +33,7 @@ jobs:
         run: npm run build:stage
         working-directory: packages/web
         env:
-          VITE_API_BASE_URL: https://www.stage-handy.com
+          VITE_API_BASE_URL: https://api.stage-handy.com
           VITE_ENVIRONMENT: staging
 
       - name: Install Vercel CLI
