@@ -503,7 +503,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
                 {/* 가격 */}
                 <div className="text-right">
                   <div className="font-bold text-sm whitespace-nowrap">
-                    {money(item.subtotal)}원
+                    {money(item.subtotal)}
                   </div>
                 </div>
 
@@ -540,7 +540,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
         <div className="flex items-center justify-between flex-wrap gap-1.5 sm:gap-2">
           <div>
             <div className="font-semibold text-xs sm:text-sm md:text-base">
-              소계: {money(seller.subtotal)}원 ({seller.itemCount}개)
+              소계: {money(seller.subtotal)} ({seller.itemCount}개)
             </div>
           </div>
           <div className="text-right">
@@ -549,11 +549,11 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
             ) : (
               <div>
                 <span className="text-gray-700 text-xs sm:text-sm md:text-base">
-                  배송비: {money(seller.shipping.shippingCost)}원
+                  배송비: {money(seller.shipping.shippingCost)}
                 </span>
                 {seller.shipping.freeShippingRemaining > 0 && (
                   <div className="text-[10px] sm:text-xs text-blue-600 mt-0.5 sm:mt-1">
-                    {money(seller.shipping.freeShippingRemaining)}원 더 구매하면 무료배송
+                    {money(seller.shipping.freeShippingRemaining)} 더 구매하면 무료배송
                   </div>
                 )}
               </div>
@@ -585,19 +585,19 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
         <div className="space-y-2 text-sm sm:text-base mb-4">
           <div className="flex items-center justify-between">
             <span>상품 금액</span>
-            <span className="font-medium">{money(totals.subtotal)}원</span>
+            <span className="font-medium">{money(totals.subtotal)}</span>
           </div>
           
           {/* 배송비 표시 */}
           {totals.shippingCost > 0 && (
             <div className="flex items-center justify-between">
               <span>배송비</span>
-              <span className="font-medium">{money(totals.shippingCost)}원</span>
+              <span className="font-medium">{money(totals.shippingCost)}</span>
             </div>
           )}
           {totals.freeShippingRemaining > 0 && (
             <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-              {money(totals.freeShippingRemaining)}원 더 구매하면 무료배송!
+              {money(totals.freeShippingRemaining)} 더 구매하면 무료배송!
             </div>
           )}
           
@@ -607,7 +607,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
         <div className="mb-4 flex items-center justify-between border-t pt-3">
           <span className="font-semibold text-base sm:text-lg">총 결제금액</span>
           <span className={`font-bold ${mode === 'drawer' ? 'text-lg' : 'text-xl sm:text-2xl'} text-blue-600`}>
-            {money(totals.total)}원
+            {money(totals.total)}
           </span>
         </div>
         <button

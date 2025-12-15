@@ -166,7 +166,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
           <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">오늘 매출</p>
-              <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}원</p>
+              <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
               <FaDollarSign className="w-6 h-6 text-blue-600" />
@@ -176,7 +176,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
           <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">이달 매출</p>
-              <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.month)}원</p>
+              <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.month)}</p>
               <p className={`text-sm ${Number(salesGrowth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {Number(salesGrowth) >= 0 ? '+' : ''}{salesGrowth}% vs 지난달
               </p>
@@ -642,7 +642,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {money(product.discountedPrice || product.price)}원
+                        {money(product.discountedPrice || product.price)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(product.status || (product.isActive ? 'active' : 'inactive'))}
@@ -2392,7 +2392,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">총 매출</p>
-                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.revenue.total)}원</p>
+                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.revenue.total)}</p>
                 <p className="text-sm text-green-600 mt-1">
                   +{analyticsData.revenue.growth}% vs 지난 기간
                 </p>
@@ -2426,7 +2426,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">평균 주문 금액</p>
-                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.customers.averageOrderValue)}원</p>
+                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.customers.averageOrderValue)}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2451,7 +2451,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
                   <div
                     className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
                     style={{ height: `${height}%` }}
-                    title={`${item.date}: ${money(item.amount)}원`}
+                    title={`${item.date}: ${money(item.amount)}`}
                   />
                   <div className="text-xs text-gray-500 mt-2">{item.date}</div>
                 </div>
@@ -2476,7 +2476,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-lg">{money(product.revenue)}원</p>
+                  <p className="font-bold text-lg">{money(product.revenue)}</p>
                   <p className="text-sm text-gray-500">매출</p>
                 </div>
               </div>
@@ -2619,11 +2619,11 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="text-center p-6 bg-blue-50 rounded-lg">
-              <p className="text-3xl font-bold text-blue-600">{money(settlementData.summary.totalSales)}원</p>
+              <p className="text-3xl font-bold text-blue-600">{money(settlementData.summary.totalSales)}</p>
               <p className="text-sm text-gray-600">총 매출</p>
             </div>
             <div className="text-center p-6 bg-green-50 rounded-lg">
-              <p className="text-3xl font-bold text-green-600">{money(settlementData.summary.finalAmount)}원</p>
+              <p className="text-3xl font-bold text-green-600">{money(settlementData.summary.finalAmount)}</p>
               <p className="text-sm text-gray-600">실 정산액</p>
             </div>
             <div className="text-center p-6 bg-purple-50 rounded-lg">
@@ -2675,10 +2675,10 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                     {settlement.period}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {money(settlement.totalSales)}원
+                    {money(settlement.totalSales)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
-                    {money(settlement.netAmount)}원
+                    {money(settlement.netAmount)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(settlement.status)}

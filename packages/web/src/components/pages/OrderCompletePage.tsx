@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAlert } from '../common';
-import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
 import type { CustomerOrder } from '@handy-platform/shared';
@@ -21,15 +20,23 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await purchaseApiService.getOrder(orderId);
-      
-      if (response.success && response.data) {
-        setOrder(response.data);
+
+      console.log('📡 [OrderCompletePage] Fetching order:', orderId);
+      const response = await webApiService.order.getOrder(orderId);
+
+      console.log('📡 [OrderCompletePage] Raw response:', response);
+
+      // 서버 응답 구조: { success: true, order: { ... } }
+      if (response.success && (response as any).order) {
+        console.log('✅ [OrderCompletePage] Order loaded successfully:', (response as any).order);
+        setOrder((response as any).order);
       } else {
-        throw new Error('주문 정보를 불러올 수 없습니다.');
+        console.error('❌ [OrderCompletePage] Invalid response structure:', response);
+        throw new Error((response as any).message || '주문 정보를 불러올 수 없습니다.');
       }
     } catch (err: any) {
-      console.error('Order loading failed:', err);
+      console.error('❌ [OrderCompletePage] Order loading failed:', err);
+      setError(err.message || '주문 조회에 실패했습니다.');
       await showError(err, {
         title: '주문 조회 실패',
         showRetry: true
@@ -108,10 +115,9 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             <div className="flex justify-between items-center pb-2 border-b">
               <span className="text-gray-600">결제방법</span>
               <span>
-                {order.paymentMethod === 'card' && '신용카드'}
-                {order.paymentMethod === 'kakaopay' && '카카오페이'}
-                {order.paymentMethod === 'naverpay' && '네이버페이'}
-                {order.paymentMethod === 'bank' && '계좌이체'}
+                {order.paymentMethod === 'CREDIT_CARD' && '신용카드'}
+                {order.paymentMethod === 'KAKAO_PAY' && '카카오페이'}
+                {order.paymentMethod === 'NAVER_PAY' && '네이버페이'}
               </span>
             </div>
             
@@ -119,7 +125,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
               <span className="text-gray-600">주문상태</span>
               <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
                 {order.status === 'pending' && '결제대기'}
-                {order.status === 'paid' && '결제완료'}
+                {order.status === 'confirmed' && '결제완료'}
                 {order.status === 'processing' && '제작중'}
                 {order.status === 'shipped' && '배송중'}
                 {order.status === 'delivered' && '배송완료'}
@@ -136,10 +142,10 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             {order.items.map((item, index) => (
               <div key={index} className="flex gap-4 py-4 border-b last:border-b-0">
                 <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0">
-                  {item.product?.images?.[0] ? (
-                    <img 
-                      src={item.product.images[0]}
-                      alt={item.product.name}
+                  {item.productImage ? (
+                    <img
+                      src={item.productImage}
+                      alt={item.productName}
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (
@@ -149,7 +155,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium">{item.product?.name}</h3>
+                  <h3 className="font-medium">{item.productName}</h3>
                   {item.options && Object.keys(item.options).length > 0 && (
                     <div className="text-sm text-gray-600 mt-1">
                       {Object.entries(item.options).map(([key, value]) => (
@@ -173,13 +179,13 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             <h2 className="text-lg font-semibold mb-4">배송지 정보</h2>
             <div className="space-y-2 text-sm">
               <div><strong>받는 분:</strong> {order.shippingAddress.recipientName}</div>
-              <div><strong>연락처:</strong> {order.shippingAddress.phone}</div>
+              <div><strong>연락처:</strong> {order.shippingAddress.recipientPhone}</div>
               <div>
-                <strong>주소:</strong> ({order.shippingAddress.zipCode}) {order.shippingAddress.address}
-                {order.shippingAddress.addressDetail && `, ${order.shippingAddress.addressDetail}`}
+                <strong>주소:</strong> ({order.shippingAddress.postcode}) {order.shippingAddress.roadAddress}
+                {order.shippingAddress.detailAddress && `, ${order.shippingAddress.detailAddress}`}
               </div>
-              {order.shippingAddress.memo && (
-                <div><strong>배송메모:</strong> {order.shippingAddress.memo}</div>
+              {order.shippingAddress.deliveryNote && (
+                <div><strong>배송메모:</strong> {order.shippingAddress.deliveryNote}</div>
               )}
             </div>
           </div>
