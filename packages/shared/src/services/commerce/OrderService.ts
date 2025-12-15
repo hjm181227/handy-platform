@@ -12,6 +12,7 @@ import {
   PayMethod,
   CreateCustomOrderRequest,
   CreateCustomOrderResponse,
+  CustomOrderDetail,
   PresignedUrlRequest,
   PresignedUrlResponse
 } from '../../types';
@@ -310,6 +311,13 @@ export abstract class BaseOrderService extends BaseApiService {
         method: 'POST',
         body: JSON.stringify(request),
       }
+    );
+  }
+
+  // 커스텀 주문서 상세 조회
+  async getCustomOrderDetail(uuid: string): Promise<ApiResponse<CustomOrderDetail>> {
+    return this.request<ApiResponse<CustomOrderDetail>>(
+      API_ENDPOINTS.CUSTOM_ORDER.DETAIL(uuid)
     );
   }
 

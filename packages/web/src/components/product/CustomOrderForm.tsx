@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Product, NAIL_SHAPES, NAIL_SHAPE_NAME, NAIL_LENGTHS, NAIL_LENGTH_NAME, NailShape, NailLength } from '@handy-platform/shared';
+import { Product, NAIL_SHAPES, NAIL_SHAPE_NAME, NAIL_LENGTHS, NAIL_LENGTH_NAME, NailShape, NailLength, CreateCustomOrderResponse } from '@handy-platform/shared';
 import { productService, orderService } from '../../services/apiService';
-import { FaArrowLeft, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaPlus, FaTimes, FaCheckCircle, FaComments, FaShoppingBag } from 'react-icons/fa';
+import { sendCustomOrderToChat, getChatRoomPath } from '../../lib/chat/orderChatService';
 
 interface CustomOrderFormProps {
   productId: string;
@@ -49,6 +50,11 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   const [desiredColor, setDesiredColor] = useState('');
   const [desiredDate, setDesiredDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // 성공 모달 상태
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdOrderData, setCreatedOrderData] = useState<CreateCustomOrderResponse | null>(null);
+  const [chatRoomId, setChatRoomId] = useState<string | null>(null);
 
   // 상품 정보 로드
   useEffect(() => {
@@ -132,7 +138,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
       }
 
       // 2. 커스텀 주문서 생성
-      await orderService.createCustomOrder({
+      const orderResponse = await orderService.createCustomOrder({
         sellerUuid: product.sellerUuid,
         baseProductUuid: productId,
         baseProductType: product.productType || 'original',
@@ -148,9 +154,20 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
         }
       });
 
-      // 3. 성공 처리
-      alert('주문서가 성공적으로 제출되었습니다!');
-      onBack();
+      // 3. 응답 데이터 확인
+      if (!orderResponse.data) {
+        throw new Error('주문서 생성 응답이 올바르지 않습니다');
+      }
+
+      // 4. 채팅방 생성 및 주문서 메시지 전송 시도
+      const chatResult = await sendCustomOrderToChat(product.sellerUuid!, orderResponse.data);
+      if (chatResult.success && chatResult.roomId) {
+        setChatRoomId(chatResult.roomId);
+      }
+
+      // 5. 성공 모달 표시
+      setCreatedOrderData(orderResponse.data);
+      setShowSuccessModal(true);
 
     } catch (error: any) {
       console.error('주문 제출 실패:', error);
@@ -422,6 +439,63 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
           </button>
         </div>
       </div>
+
+      {/* 성공 모달 */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* 배경 오버레이 */}
+          <div className="absolute inset-0 bg-black bg-opacity-50" />
+
+          {/* 모달 컨텐츠 */}
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+            {/* 성공 아이콘 */}
+            <div className="pt-8 pb-4 text-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaCheckCircle className="w-10 h-10 text-green-500" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                주문서가 전송되었습니다!
+              </h2>
+              <p className="text-sm text-gray-600 px-6">
+                판매자가 주문서를 확인하면 채팅으로 연락드릴 예정이에요.
+              </p>
+            </div>
+
+            {/* 주문 요약 */}
+            {createdOrderData && (
+              <div className="mx-6 mb-6 p-4 bg-gray-50 rounded-xl">
+                <p className="text-sm font-medium text-gray-900 mb-1">{createdOrderData.title}</p>
+                <p className="text-xs text-gray-500">
+                  {NAIL_SHAPE_NAME[createdOrderData.specifications.shape as NailShape]} · {NAIL_LENGTH_NAME[createdOrderData.specifications.length as NailLength]}
+                </p>
+              </div>
+            )}
+
+            {/* 버튼들 */}
+            <div className="px-6 pb-6 space-y-3">
+              {chatRoomId && (
+                <button
+                  onClick={() => onGo(getChatRoomPath(chatRoomId))}
+                  className="w-full py-3.5 bg-purple-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
+                >
+                  <FaComments className="w-4 h-4" />
+                  채팅으로 이동
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  onBack();
+                }}
+                className="w-full py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+              >
+                <FaShoppingBag className="w-4 h-4" />
+                계속 쇼핑하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

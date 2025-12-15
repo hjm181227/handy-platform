@@ -444,6 +444,7 @@ export const API_ENDPOINTS = {
   // 커스텀 주문
   CUSTOM_ORDER: {
     CREATE: '/api/custom-orders',               // POST - 커스텀 주문서 생성
+    DETAIL: (uuid: string) => `/api/custom-orders/${uuid}`, // GET - 커스텀 주문서 상세 조회
   },
 };
 

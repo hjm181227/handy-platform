@@ -1,5 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useChat } from '../lib/chat';
+import { useAuth } from '../hooks/useAuth';
+import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCard';
+import { CustomOrderBottomSheet } from '../components/chat/CustomOrderBottomSheet';
+import { QuoteMessageCard } from '../components/chat/QuoteMessageCard';
+import { QuoteBottomSheet } from '../components/chat/QuoteBottomSheet';
+import type { Message } from '../lib/chat/types';
 
 interface ChatRoomPageProps {
   nav: (path: string) => void;
@@ -9,6 +15,12 @@ interface ChatRoomPageProps {
 export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
   // localStorage에서 JWT 토큰 가져오기
   const token = localStorage.getItem('accessToken') || undefined;
+
+  // useAuth 훅으로 현재 사용자 정보 가져오기
+  const { currentUser } = useAuth();
+
+  // 현재 사용자가 판매자인지 확인
+  const isSeller = currentUser?.role === 'seller' || currentUser?.role === 'admin';
 
   // 로그인 체크 - 토큰 없으면 로그인 페이지로 리다이렉트
   useEffect(() => {
@@ -45,6 +57,32 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
 
   // 자동 스크롤을 위한 ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 주문서 바텀 시트 상태
+  const [showOrderSheet, setShowOrderSheet] = useState(false);
+  const [selectedCustomOrderId, setSelectedCustomOrderId] = useState<string | null>(null);
+
+  // 견적서 바텀 시트 상태
+  const [showQuoteSheet, setShowQuoteSheet] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+
+  // 주문서 카드 클릭 핸들러
+  const handleOrderCardClick = (customOrderId: string) => {
+    setSelectedCustomOrderId(customOrderId);
+    setShowOrderSheet(true);
+  };
+
+  // 견적서 카드 클릭 핸들러
+  const handleQuoteCardClick = (quoteId: string) => {
+    setSelectedQuoteId(quoteId);
+    setShowQuoteSheet(true);
+  };
+
+  // 견적서 구매하기 핸들러
+  const handlePurchase = (quoteId: string) => {
+    // 견적서 기반 체크아웃 페이지로 이동
+    nav(`/checkout?quoteId=${quoteId}`);
+  };
 
   // 메시지 변경 시 자동 스크롤
   useEffect(() => {
@@ -251,20 +289,36 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
                         </div>
                       )}
 
-                      {/* 메시지 버블 */}
-                      <div
-                        className={`
-                          px-4 py-2.5 rounded-2xl transition-all
-                          ${isMe
-                            ? 'bg-blue-600 text-white rounded-br-sm shadow-md hover:shadow-lg'
-                            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-                          }
-                        `}
-                      >
-                        <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                          {message.text}
-                        </p>
-                      </div>
+                      {/* 커스텀 주문서 메시지 */}
+                      {message.messageType === 'custom_order' && message.metadata?.customOrderId && message.metadata?.type !== 'quote' ? (
+                        <CustomOrderMessageCard
+                          customOrderId={message.metadata.customOrderId as string}
+                          isMine={isMe}
+                          onClick={() => handleOrderCardClick(message.metadata!.customOrderId as string)}
+                        />
+                      ) : message.messageType === 'custom_order' && message.metadata?.type === 'quote' && message.metadata?.quoteId ? (
+                        /* 견적서 메시지 */
+                        <QuoteMessageCard
+                          quoteId={message.metadata.quoteId as string}
+                          isMine={isMe}
+                          onClick={() => handleQuoteCardClick(message.metadata!.quoteId as string)}
+                        />
+                      ) : (
+                        /* 일반 텍스트 메시지 버블 */
+                        <div
+                          className={`
+                            px-4 py-2.5 rounded-2xl transition-all
+                            ${isMe
+                              ? 'bg-blue-600 text-white rounded-br-sm shadow-md hover:shadow-lg'
+                              : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                            }
+                          `}
+                        >
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                            {message.text}
+                          </p>
+                        </div>
+                      )}
 
                       {/* 상대방 메시지: 타임스탬프 (오른쪽) */}
                       {!isMe && isGroupEnd && (
@@ -328,6 +382,28 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
           </div>
         </div>
       </div>
+
+      {/* 커스텀 주문서 바텀 시트 */}
+      <CustomOrderBottomSheet
+        isOpen={showOrderSheet}
+        onClose={() => setShowOrderSheet(false)}
+        customOrderId={selectedCustomOrderId}
+        isSeller={isSeller}
+        buyerUuid={roomId}
+        onQuoteSent={() => {
+          // 견적서 전송 후 바텀시트 닫기
+          setShowOrderSheet(false);
+        }}
+      />
+
+      {/* 견적서 바텀 시트 */}
+      <QuoteBottomSheet
+        isOpen={showQuoteSheet}
+        onClose={() => setShowQuoteSheet(false)}
+        quoteId={selectedQuoteId}
+        isSeller={isSeller}
+        onPurchase={handlePurchase}
+      />
     </div>
   );
 };

@@ -663,12 +663,17 @@ export abstract class BaseSellerService extends BaseApiService {
       estimatedDays: number;
       notes?: string;
     }
-  ): Promise<ApiResponse<{ message: string }>> {
-    return this.request<ApiResponse<{ message: string }>>(
+  ): Promise<ApiResponse<{ message: string; quoteUuid?: string }>> {
+    return this.request<ApiResponse<{ message: string; quoteUuid?: string }>>(
       API_ENDPOINTS.SELLER.CUSTOM_ORDER_QUOTE(requestUuid),
       {
         method: 'POST',
-        body: JSON.stringify(quoteData),
+        // 백엔드 API가 기대하는 필드명으로 변환
+        body: JSON.stringify({
+          price: quoteData.estimatedPrice,
+          processingDays: quoteData.estimatedDays,
+          sellerNotes: quoteData.notes,
+        }),
       }
     );
   }
@@ -682,11 +687,17 @@ export abstract class BaseSellerService extends BaseApiService {
       notes?: string;
     }
   ): Promise<ApiResponse<{ message: string }>> {
+    // 백엔드 API가 기대하는 필드명으로 변환
+    const apiData: Record<string, unknown> = {};
+    if (quoteData.estimatedPrice !== undefined) apiData.price = quoteData.estimatedPrice;
+    if (quoteData.estimatedDays !== undefined) apiData.processingDays = quoteData.estimatedDays;
+    if (quoteData.notes !== undefined) apiData.sellerNotes = quoteData.notes;
+
     return this.request<ApiResponse<{ message: string }>>(
       API_ENDPOINTS.SELLER.CUSTOM_ORDER_QUOTE(requestUuid),
       {
         method: 'PATCH',
-        body: JSON.stringify(quoteData),
+        body: JSON.stringify(apiData),
       }
     );
   }
