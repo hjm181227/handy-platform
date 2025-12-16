@@ -162,8 +162,11 @@ export function Detail({
 
       console.log('🛒 [buyNow] Navigating to checkout with item:', checkoutItems);
 
-      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
-      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+      // ✅ CheckoutPage로 items 전달 (타입과 함께 sessionStorage 사용)
+      sessionStorage.setItem('checkoutData', JSON.stringify({
+        type: 'direct',
+        directItems: checkoutItems
+      }));
 
       // Checkout 페이지로 이동
       onGo('/checkout');

@@ -96,14 +96,57 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setError(null);
 
       // ✅ OrderService를 통한 체크아웃 초기화 (백엔드 스펙 준수)
-      // 백엔드가 JWT 토큰으로 사용자 장바구니를 자동으로 읽어옴
-      console.log('📦 [CheckoutPage] Initializing checkout from cart');
-      const response = await webApiService.order.initializeCheckout();
+      // sessionStorage 확인: 바로구매 vs 맞춤제작 vs 장바구니
+      const checkoutDataStr = sessionStorage.getItem('checkoutData');
+      let requestBody: any = undefined;
+
+      if (checkoutDataStr) {
+        try {
+          const checkoutData = JSON.parse(checkoutDataStr);
+
+          // 타입에 따라 requestBody 구성
+          switch (checkoutData.type) {
+            case 'direct':
+              // 바로구매: { directItems: [...] }
+              requestBody = { directItems: checkoutData.directItems };
+              console.log('📦 [CheckoutPage] Direct purchase mode:', checkoutData.directItems);
+              break;
+
+            case 'custom':
+              // 맞춤제작: { customRequestUuid: "uuid" }
+              requestBody = { customRequestUuid: checkoutData.customRequestUuid };
+              console.log('📦 [CheckoutPage] Custom request mode:', checkoutData.customRequestUuid);
+              break;
+
+            default:
+              // 알 수 없는 타입은 장바구니로 처리
+              console.warn('⚠️ [CheckoutPage] Unknown checkout type:', checkoutData.type);
+              requestBody = undefined;
+          }
+        } catch (err) {
+          console.error('❌ [CheckoutPage] Failed to parse checkoutData:', err);
+          // 파싱 실패 시에만 즉시 삭제
+          sessionStorage.removeItem('checkoutData');
+          requestBody = undefined;
+        }
+      } else {
+        // sessionStorage 없으면 장바구니 모드 (기존 동작)
+        console.log('📦 [CheckoutPage] Cart mode - loading from user cart');
+        requestBody = undefined;
+      }
+
+      console.log('🔍 [CheckoutPage] Final requestBody:', JSON.stringify(requestBody, null, 2));
+
+      const response = await webApiService.order.initializeCheckout(requestBody);
 
       console.log('📦 [CheckoutPage] Initialize response:', response);
       const result = response;
 
       if (result.success && result.data) {
+        // ✅ Initialize 성공 - sessionStorage 정리 (다음 주문에 영향 방지)
+        sessionStorage.removeItem('checkoutData');
+        console.log('🗑️ [CheckoutPage] Cleared checkoutData from sessionStorage');
+
         // ✅ CheckoutData를 cart로 저장 (sessionId 포함)
         setCart({
           sessionId: result.data.sessionId,
