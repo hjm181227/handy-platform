@@ -66,15 +66,15 @@ interface CartContentProps {
   onCheckout: () => void;
   /** 장바구니 변경 시 호출될 콜백 (헤더 카운트 업데이트용) */
   onCartUpdate?: () => void;
-  /** 새로고침 트리거 - 이 값이 변경될 때마다 장바구니 새로고침 */
-  refreshTrigger?: any;
   /** 현재 로그인한 사용자 정보 */
   currentUser?: User | null;
   /** 토스트 메시지 표시 핸들러 (App.tsx에서 전달) */
   showToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  /** Drawer 열림 상태 (drawer 모드에서만 사용, drawer가 열릴 때 장바구니 갱신) */
+  isDrawerOpen?: boolean;
 }
 
-export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, refreshTrigger, currentUser, showToast }: CartContentProps) {
+export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, currentUser, showToast, isDrawerOpen }: CartContentProps) {
   // 상태 관리
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,42 +134,104 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     loadCart();
   }, [currentUser]);
 
-  // refreshTrigger가 변경될 때마다 장바구니 새로고침 (drawer가 열릴 때)
+  // Drawer가 열릴 때 장바구니 갱신 (drawer 모드일 때만)
   useEffect(() => {
-    if (refreshTrigger) {
+    if (mode === 'drawer' && isDrawerOpen) {
       loadCart();
     }
-  }, [refreshTrigger]);
+  }, [isDrawerOpen, mode]);
 
   // 수량 변경
   const updateQuantity = async (productId: string, quantity: number, options?: Record<string, string>) => {
     if (quantity < 1) return;
-    
+
+    // 안전성 체크: cart가 없으면 실행하지 않음
+    if (!cart) {
+      console.warn('Cart is not loaded, skipping update');
+      return;
+    }
+
     try {
       setUpdatingItems(prev => new Set(prev).add(productId));
-      
+
+      // ✅ 1. 낙관적 UI 업데이트 - 즉시 수량 변경 반영 (UI 흔들림 방지)
+      setCart(prev => {
+        if (!prev) return prev; // null이면 그대로 유지 (빈 장바구니 표시 방지)
+
+        // items 배열 업데이트
+        const updatedItems = prev.items.map(item => {
+          const itemProductId = item.productUuid || item.product?.id;
+          const matchesProduct = itemProductId === productId;
+          const matchesOptions = !options || JSON.stringify(item.options) === JSON.stringify(options);
+
+          if (matchesProduct && matchesOptions) {
+            return { ...item, quantity, subtotal: item.price * quantity };
+          }
+          return item;
+        });
+
+        // itemsBySeller 배열 업데이트
+        const updatedItemsBySeller = (prev.itemsBySeller || []).map(seller => {
+          const updatedSellerItems = seller.items.map(item => {
+            const itemProductId = item.productUuid || item.product?.id;
+            const matchesProduct = itemProductId === productId;
+            const matchesOptions = !options || JSON.stringify(item.options) === JSON.stringify(options);
+
+            if (matchesProduct && matchesOptions) {
+              return { ...item, quantity, subtotal: item.price * quantity };
+            }
+            return item;
+          });
+
+          const itemCount = updatedSellerItems.reduce((sum, item) => sum + item.quantity, 0);
+          const subtotal = updatedSellerItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+          return {
+            ...seller,
+            items: updatedSellerItems,
+            itemCount,
+            subtotal
+          };
+        });
+
+        // 전체 totals 재계산
+        const totalItemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+        const newSubtotal = updatedItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+        return {
+          ...prev,
+          items: updatedItems,
+          itemsBySeller: updatedItemsBySeller,
+          totals: {
+            ...prev.totals,
+            itemCount: totalItemCount,
+            subtotal: newSubtotal,
+            total: newSubtotal + (prev.totals?.shippingCost || 0)
+          }
+        };
+      });
+
+      // ✅ 2. API 호출 (백그라운드에서)
       console.log('Updating cart item:', { productId, quantity, options });
       const response = await cartService.updateCartItem(productId, quantity, options);
-      
+
       console.log('Update cart response:', response);
 
-      if (response.success && response.data) {
-        // API 응답을 프론트엔드 타입에 맞게 변환
-        const cartData = mapApiResponseToCart(response.data);
-
-        setCart(cartData);
-
-        // 제작 용량 관련 정보도 업데이트
-        setRemovedItems(response.removedItems || []);
-        setCapacityWarnings(response.capacityWarnings || []);
-        setMessage(response.message || null);
-
+      if (response.success) {
+        // ✅ 3. 수량 변경 성공 → 최신 cart 정보 재로드
+        // 서버 DB에 이미 수량이 변경되었으므로, GET /api/cart로 최신 정보 패치
+        // 서버가 정확한 배송비, totals를 계산해서 보내줌
+        await loadCart();
         onCartUpdate?.();
       } else {
         throw new Error('수량 변경에 실패했습니다.');
       }
     } catch (err: any) {
       console.error('Update cart item failed:', err);
+
+      // ✅ 4. 실패 시 원래 데이터로 롤백 (재로드)
+      await loadCart();
+
       alert(err.message || '수량 변경에 실패했습니다.');
     } finally {
       setUpdatingItems(prev => {
@@ -203,7 +265,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     setCart(prev => {
       if (!prev) return null;
 
-      // prev.items를 사용하여 최신 상태에서 필터링 (stale closure 방지)
+      // ✅ 1. items 배열 필터링 (stale closure 방지)
       const updatedItems = prev.items.filter(item => {
         const itemProductId = item.productUuid || item.product?.id;
         if (itemProductId !== productId) return true;
@@ -211,16 +273,53 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
         return false;
       });
 
-      return { ...prev, items: updatedItems };
+      // ✅ 2. itemsBySeller 배열도 필터링 (UI 즉시 업데이트)
+      const updatedItemsBySeller = (prev.itemsBySeller || [])
+        .map(seller => {
+          // 판매자의 아이템 필터링
+          const filteredItems = seller.items.filter(item => {
+            const itemProductId = item.productUuid || item.product?.id;
+            if (itemProductId !== productId) return true;
+            if (options && JSON.stringify(item.options) !== JSON.stringify(options)) return true;
+            return false;
+          });
+
+          // 판매자별 아이템 개수 및 소계 재계산
+          const itemCount = filteredItems.reduce((sum, item) => sum + item.quantity, 0);
+          const subtotal = filteredItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+          return {
+            ...seller,
+            items: filteredItems,
+            itemCount,
+            subtotal
+          };
+        })
+        .filter(seller => seller.items.length > 0); // 빈 판매자 그룹 제거
+
+      // ✅ 3. 전체 totals 재계산
+      const totalItemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+      const newSubtotal = updatedItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+      return {
+        ...prev,
+        items: updatedItems,
+        itemsBySeller: updatedItemsBySeller,
+        totals: {
+          ...prev.totals,
+          itemCount: totalItemCount,
+          subtotal: newSubtotal,
+          total: newSubtotal + (prev.totals?.shippingCost || 0)
+        }
+      };
     });
 
     // Undo 상태 설정
     setPendingUndo({ productId, options, previousCart });
 
-    // 토스트 메시지 표시 (fallback)
-    if (showToast) {
-      showToast(`${name}이(가) 장바구니에서 제거되었어요`, 'info');
-    }
+    // 토스트 메시지 제거 - 낙관적 UI 업데이트만으로 충분
+    // 사용자는 이미 아이템이 화면에서 사라지는 것을 보고 있으며,
+    // Undo 알림도 표시되므로 추가 토스트 불필요
 
     // ✅ 즉시 장바구니 업데이트 (헤더 카운트 및 드로어 갱신)
     onCartUpdate?.();
@@ -237,14 +336,10 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
 
         console.log('Remove cart response:', response);
 
-        if (response.success && response.data) {
-          // API 응답을 프론트엔드 타입에 맞게 변환
-          const cartData = mapApiResponseToCart(response.data);
-
-          setCart(cartData);
-          setRemovedItems(response.removedItems || []);
-          setCapacityWarnings(response.capacityWarnings || []);
-          setMessage(response.message || null);
+        if (response.success) {
+          // 제거 성공 → 최신 cart 정보 재로드
+          // 서버 DB에서 상품이 이미 제거되었으므로, GET /api/cart로 최신 정보 패치
+          await loadCart();
           onCartUpdate?.();
         } else {
           throw new Error('상품 제거에 실패했습니다.');
@@ -782,11 +877,13 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, r
     if (loading) return renderLoading();
     if (error) return renderError();
 
-    // 빈 장바구니 체크: 아이템이 없고, 제거 중인 아이템도 없고, 대기 중인 취소도 없는 경우에만 빈 상태 표시
+    // 빈 장바구니 체크: 진행 중인 작업이 모두 없을 때만 빈 상태 표시
     const hasItemsBeingRemoved = removingItems.size > 0;
+    const hasItemsBeingUpdated = updatingItems.size > 0;
     const hasPendingUndo = pendingUndo !== null;
+    const hasActiveOperations = hasItemsBeingRemoved || hasItemsBeingUpdated || hasPendingUndo;
 
-    if (!cart || (itemsBySeller.length === 0 && !hasItemsBeingRemoved && !hasPendingUndo)) {
+    if (!cart || (itemsBySeller.length === 0 && !hasActiveOperations)) {
       return renderEmpty();
     }
 

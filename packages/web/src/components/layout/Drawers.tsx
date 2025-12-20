@@ -25,9 +25,9 @@ export function CartDrawer({
         onClose={onClose}
         onCheckout={onCheckout}
         onCartUpdate={onCartUpdate}
-        refreshTrigger={open} // drawer가 열릴 때마다 새로고침
         currentUser={currentUser}
         showToast={showToast}
+        isDrawerOpen={open}
       />
     </Drawer>
   );

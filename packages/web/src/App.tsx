@@ -135,7 +135,6 @@ function AppContent() {
 
   // Cart state
   const [cartCount, setCartCount] = useState(0);
-  const [cartRefreshTrigger, setCartRefreshTrigger] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
 
@@ -183,11 +182,6 @@ function AppContent() {
         const newCount = response.data.count || 0;
         console.log('✅ [loadCartCount] Setting count to:', newCount);
         setCartCount(newCount);
-        // 장바구니 갱신 트리거 증가
-        setCartRefreshTrigger(prev => {
-          console.log('🔄 [loadCartCount] Incrementing trigger:', prev, '→', prev + 1);
-          return prev + 1;
-        });
       } else {
         console.warn('⚠️ [loadCartCount] Invalid response, setting count to 0');
         setCartCount(0);
@@ -536,7 +530,6 @@ function AppContent() {
       onBack={() => history.back()}
       onCheckout={handleCheckout}
       onCartUpdate={loadCartCount}
-      refreshTrigger={cartRefreshTrigger}
       currentUser={currentUser}
       showToast={showToast}
     />;
@@ -1229,7 +1222,6 @@ function AppContent() {
             onClose={() => setDrawer(false)}
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
-            refreshTrigger={cartRefreshTrigger}
             currentUser={currentUser}
             showToast={showToast}
           />
