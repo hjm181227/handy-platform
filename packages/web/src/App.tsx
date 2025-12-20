@@ -357,22 +357,11 @@ function AppContent() {
         return;
       }
 
-      // ✅ itemsBySeller를 flat하게 변환하여 checkoutItems 생성
-      const checkoutItems = itemsBySeller.flatMap(seller =>
-        seller.items.map(item => ({
-          productUuid: item.productUuid,
-          quantity: item.quantity,
-          options: item.options || {}
-        }))
-      );
+      console.log('✅ [handleCheckout] Navigating to cart checkout');
 
-      console.log('✅ [handleCheckout] Navigating to checkout with items:', checkoutItems);
-
-      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
-      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
-
-      // 체크아웃 페이지로 이동
-      nav('/checkout');
+      // 장바구니 체크아웃은 서버가 장바구니를 직접 읽으므로 sessionStorage 불필요
+      // mode 파라미터로 체크아웃 방식 구분
+      nav('/checkout?mode=cart');
       setDrawer(false);
 
       // WebView 환경에서 네이티브 알림

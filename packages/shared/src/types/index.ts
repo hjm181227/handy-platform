@@ -1749,6 +1749,16 @@ export interface CheckoutSession {
     }>;
     totalCapacityRequired: number;
   };
+  shippingEstimate?: {
+    estimatedCost: number;
+    basedOnRegion: string;
+    note?: string;
+    willBeRecalculatedDuring?: string;
+    regionOptions?: Array<{
+      region: string;
+      label: string;
+    }>;
+  };
   expiresAt: string;
   estimatedDeliveryDateRange: {
     earliest: string;

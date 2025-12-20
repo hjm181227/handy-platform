@@ -96,43 +96,62 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setError(null);
 
       // ✅ OrderService를 통한 체크아웃 초기화 (백엔드 스펙 준수)
-      // sessionStorage 확인: 바로구매 vs 맞춤제작 vs 장바구니
-      const checkoutDataStr = sessionStorage.getItem('checkoutData');
+      // URL 파라미터에서 mode 읽기 (cart / direct / custom)
+      const urlParams = new URLSearchParams(window.location.search);
+      const checkoutMode = urlParams.get('mode') || 'cart'; // 기본값: 장바구니
+      console.log('🔍 [CheckoutPage] Checkout mode from URL:', checkoutMode);
+
       let requestBody: any = undefined;
 
-      if (checkoutDataStr) {
-        try {
-          const checkoutData = JSON.parse(checkoutDataStr);
+      // mode에 따라 requestBody 구성
+      switch (checkoutMode) {
+        case 'cart':
+          // 장바구니: 빈 body (서버가 장바구니를 직접 읽음)
+          requestBody = undefined;
+          console.log('📦 [CheckoutPage] Cart checkout - server will load from user cart');
+          break;
 
-          // 타입에 따라 requestBody 구성
-          switch (checkoutData.type) {
-            case 'direct':
-              // 바로구매: { directItems: [...] }
-              requestBody = { directItems: checkoutData.directItems };
-              console.log('📦 [CheckoutPage] Direct purchase mode:', checkoutData.directItems);
-              break;
+        case 'direct':
+          // 바로구매: sessionStorage에서 directItem 읽기 (단일 객체)
+          try {
+            const checkoutDataStr = sessionStorage.getItem('checkoutData');
+            if (checkoutDataStr) {
+              const checkoutData = JSON.parse(checkoutDataStr);
+              requestBody = { directItem: checkoutData.directItem };
+              console.log('📦 [CheckoutPage] Direct purchase mode:', checkoutData.directItem);
+            } else {
+              console.error('❌ [CheckoutPage] No checkoutData found for direct mode');
+              throw new Error('바로구매 정보를 찾을 수 없습니다.');
+            }
+          } catch (err) {
+            console.error('❌ [CheckoutPage] Failed to load direct purchase data:', err);
+            sessionStorage.removeItem('checkoutData');
+            throw err;
+          }
+          break;
 
-            case 'custom':
-              // 맞춤제작: { customRequestUuid: "uuid" }
+        case 'custom':
+          // 맞춤제작: sessionStorage에서 customRequestUuid 읽기
+          try {
+            const checkoutDataStr = sessionStorage.getItem('checkoutData');
+            if (checkoutDataStr) {
+              const checkoutData = JSON.parse(checkoutDataStr);
               requestBody = { customRequestUuid: checkoutData.customRequestUuid };
               console.log('📦 [CheckoutPage] Custom request mode:', checkoutData.customRequestUuid);
-              break;
-
-            default:
-              // 알 수 없는 타입은 장바구니로 처리
-              console.warn('⚠️ [CheckoutPage] Unknown checkout type:', checkoutData.type);
-              requestBody = undefined;
+            } else {
+              console.error('❌ [CheckoutPage] No checkoutData found for custom mode');
+              throw new Error('맞춤제작 정보를 찾을 수 없습니다.');
+            }
+          } catch (err) {
+            console.error('❌ [CheckoutPage] Failed to load custom request data:', err);
+            sessionStorage.removeItem('checkoutData');
+            throw err;
           }
-        } catch (err) {
-          console.error('❌ [CheckoutPage] Failed to parse checkoutData:', err);
-          // 파싱 실패 시에만 즉시 삭제
-          sessionStorage.removeItem('checkoutData');
+          break;
+
+        default:
+          console.warn('⚠️ [CheckoutPage] Unknown checkout mode:', checkoutMode);
           requestBody = undefined;
-        }
-      } else {
-        // sessionStorage 없으면 장바구니 모드 (기존 동작)
-        console.log('📦 [CheckoutPage] Cart mode - loading from user cart');
-        requestBody = undefined;
       }
 
       console.log('🔍 [CheckoutPage] Final requestBody:', JSON.stringify(requestBody, null, 2));
@@ -180,13 +199,35 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         await loadAddresses();
 
       } else {
-        const errorMessage = result.error?.message || '주문 정보를 불러올 수 없습니다.';
+        // 에러 코드별 사용자 친화적 메시지
+        const errorCode = result.errorCode || result.error?.code;
+        let errorMessage = result.error?.message || result.error || '주문 정보를 불러올 수 없습니다.';
+
+        switch (errorCode) {
+          case 'CART_EMPTY':
+            errorMessage = '장바구니가 비어있습니다. 상품을 먼저 추가해주세요.';
+            break;
+          case 'PRODUCT_NOT_FOUND':
+            errorMessage = '상품을 찾을 수 없습니다. 상품이 삭제되었거나 판매가 중단되었을 수 있습니다.';
+            break;
+          case 'CUSTOM_REQUEST_NOT_FOUND':
+            errorMessage = '맞춤제작 요청을 찾을 수 없습니다.';
+            break;
+          case 'INVALID_CUSTOM_REQUEST_STATUS':
+            errorMessage = '맞춤제작 요청이 아직 견적 승인 단계가 아닙니다.';
+            break;
+          case 'INITIALIZATION_ERROR':
+            errorMessage = '체크아웃 초기화 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+            break;
+        }
+
         setError(errorMessage);
       }
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Initialize failed:', err);
-      setError(err.message || '체크아웃 초기화에 실패했습니다.');
+      const errorMessage = err.message || '체크아웃 초기화에 실패했습니다.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -640,6 +681,75 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 </div>
               )}
             </div>
+
+            {/* 제작 및 배송 안내 */}
+            {cart?.productionInfo && (
+              <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <span className="text-blue-600">⏱️</span>
+                  제작 및 배송 안내
+                </h2>
+
+                {/* 제작 소요 기간 */}
+                <div className="mb-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">
+                    총 제작 소요 기간: <span className="text-blue-600 font-bold">{cart.productionInfo.estimatedProductionTime}일</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    예상 배송일: {new Date(cart.productionInfo.earliestDeliveryDate).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })} 이후
+                  </div>
+                </div>
+
+                {/* 판매자별 제작 일정 */}
+                {cart.productionInfo.productionSchedule && cart.productionInfo.productionSchedule.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      판매자별 제작 일정:
+                    </div>
+                    {cart.productionInfo.productionSchedule.map((schedule, index) => (
+                      <div key={index} className="bg-white rounded-lg p-3 text-sm">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">{schedule.sellerName || `판매자 ${index + 1}`}</span>
+                            <span className="text-gray-500 ml-2">({schedule.itemCount}개 상품)</span>
+                          </div>
+                          <span className="text-blue-600 font-medium">{schedule.processingDays}일 소요</span>
+                        </div>
+                        <div className="text-gray-600 mt-1">
+                          예상 완성일: {new Date(schedule.estimatedCompletionDate).toLocaleDateString('ko-KR', {
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 배송비 추정 정보 */}
+                {cart.shippingEstimate && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700">예상 배송비</span>
+                      <span className="font-semibold text-blue-600">
+                        {cart.shippingEstimate.estimatedCost === 0
+                          ? '무료 배송'
+                          : `${money(cart.shippingEstimate.estimatedCost)}`}
+                      </span>
+                    </div>
+                    {cart.shippingEstimate.note && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        💡 {cart.shippingEstimate.note}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 배송지 정보 */}
             <div className="bg-white rounded-lg border p-6">
