@@ -232,11 +232,11 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
           )}
 
           {/* 액션 버튼들 */}
-          <div className="bg-white border-b border-gray-200 sticky top-0 z-10 p-4 flex justify-end gap-3">
+          <div className="sticky top-0 z-10 p-4 flex justify-end gap-3">
             <button
               onClick={handleReset}
               disabled={!hasChanges || saving}
-              className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               초기화
             </button>
