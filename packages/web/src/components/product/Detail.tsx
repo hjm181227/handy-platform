@@ -220,19 +220,23 @@ export function Detail({
       if (shape) options.nailShape = shape;
       if (length) options.nailLength = length;
 
-      const checkoutItems = [{
+      // 바로구매는 단일 상품만 지원 (서버 스펙: directItem 객체)
+      const directItem = {
         productUuid: product.id,
         quantity: qty,
         options: options
-      }];
+      };
 
-      console.log('🛒 [buyNow] Navigating to checkout with item:', checkoutItems);
+      console.log('🛒 [buyNow] Navigating to direct checkout with item:', directItem);
 
-      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
-      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+      // ✅ CheckoutPage로 directItem 전달 (단일 객체, sessionStorage 사용)
+      sessionStorage.setItem('checkoutData', JSON.stringify({
+        type: 'direct',
+        directItem: directItem
+      }));
 
-      // Checkout 페이지로 이동
-      onGo('/checkout');
+      // Checkout 페이지로 이동 (mode 파라미터로 방식 명시)
+      onGo('/checkout?mode=direct');
 
     } catch (err) {
       console.error('Buy now failed:', err);

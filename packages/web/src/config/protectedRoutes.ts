@@ -168,12 +168,6 @@ export const PROTECTED_ROUTES: ProtectedRoute[] = [
     description: '생산 설정',
   },
   {
-    path: '/seller/production/manage',
-    requireAuth: true,
-    requiredRole: 'seller',
-    description: '생산 관리',
-  },
-  {
     path: '/seller/production/status',
     requireAuth: true,
     requiredRole: 'seller',

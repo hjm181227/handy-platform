@@ -92,13 +92,21 @@ export abstract class BaseOrderService extends BaseApiService {
     return response;
   }
 
-  // 체크아웃 초기화 - 장바구니 또는 견적서 기반 (백엔드 스펙 준수)
-  async initializeCheckout(quoteUuid?: string): Promise<ApiResponse<CheckoutSession>> {
+  // 체크아웃 초기화 - 장바구니, 바로구매, 맞춤제작 지원 (백엔드 스펙 준수)
+  async initializeCheckout(data?: {
+    quoteUuid?: string;
+    directItem?: {
+      productUuid: string;
+      quantity: number;
+      options?: Record<string, string>;
+    };
+    estimatedRegion?: 'general' | 'jeju' | 'remote';
+  }): Promise<ApiResponse<CheckoutSession>> {
     return this.request<ApiResponse<CheckoutSession>>(
       '/api/checkout/initialize',
       {
         method: 'POST',
-        body: JSON.stringify(quoteUuid ? { quoteUuid } : {}),
+        body: JSON.stringify(data || {}),
       }
     );
   }

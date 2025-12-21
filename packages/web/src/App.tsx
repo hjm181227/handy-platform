@@ -112,7 +112,6 @@ import {
   BrandManagement,
   ProductionDashboard,
   ProductionSettings,
-  ProductionManage,
   ProductionStatus
 } from './components/pages/SellerPages';
 
@@ -137,7 +136,6 @@ function AppContent() {
 
   // Cart state
   const [cartCount, setCartCount] = useState(0);
-  const [cartRefreshTrigger, setCartRefreshTrigger] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
 
@@ -185,8 +183,6 @@ function AppContent() {
         const newCount = response.data.count || 0;
         console.log('✅ [loadCartCount] Setting count to:', newCount);
         setCartCount(newCount);
-        // 참고: refreshTrigger는 장바구니 전체 리로드를 트리거하므로
-        // 카운트 업데이트 시에는 증가시키지 않음 (CartContent에서 이미 최신 데이터를 가지고 있음)
       } else {
         console.warn('⚠️ [loadCartCount] Invalid response, setting count to 0');
         setCartCount(0);
@@ -356,22 +352,11 @@ function AppContent() {
         return;
       }
 
-      // ✅ itemsBySeller를 flat하게 변환하여 checkoutItems 생성
-      const checkoutItems = itemsBySeller.flatMap(seller =>
-        seller.items.map(item => ({
-          productUuid: item.productUuid,
-          quantity: item.quantity,
-          options: item.options || {}
-        }))
-      );
+      console.log('✅ [handleCheckout] Navigating to cart checkout');
 
-      console.log('✅ [handleCheckout] Navigating to checkout with items:', checkoutItems);
-
-      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
-      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
-
-      // 체크아웃 페이지로 이동
-      nav('/checkout');
+      // 장바구니 체크아웃은 서버가 장바구니를 직접 읽으므로 sessionStorage 불필요
+      // mode 파라미터로 체크아웃 방식 구분
+      nav('/checkout?mode=cart');
       setDrawer(false);
 
       // WebView 환경에서 네이티브 알림
@@ -555,7 +540,6 @@ function AppContent() {
       onBack={() => history.back()}
       onCheckout={handleCheckout}
       onCartUpdate={loadCartCount}
-      refreshTrigger={cartRefreshTrigger}
       currentUser={currentUser}
       showToast={showToast}
     />;
@@ -779,19 +763,7 @@ function AppContent() {
   } else if (pathname === "/seller/production") {
     screen = (
       <RequireRole requiredRole="seller">
-        <ProductionDashboard onGo={nav} />
-      </RequireRole>
-    );
-  } else if (pathname === "/seller/production/settings") {
-    screen = (
-      <RequireRole requiredRole="seller">
         <ProductionSettings onGo={nav} />
-      </RequireRole>
-    );
-  } else if (pathname === "/seller/production/manage") {
-    screen = (
-      <RequireRole requiredRole="seller">
-        <ProductionManage onGo={nav} />
       </RequireRole>
     );
   } else if (pathname === "/seller/production/status") {
@@ -1254,7 +1226,6 @@ function AppContent() {
             onClose={() => setDrawer(false)}
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
-            refreshTrigger={cartRefreshTrigger}
             currentUser={currentUser}
             showToast={showToast}
           />

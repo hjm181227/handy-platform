@@ -14,11 +14,9 @@ interface ProductionSettingsProps {
 export function ProductionSettings({ onGo }: ProductionSettingsProps) {
   const { alert, error: showError } = useAlert();
   const [settings, setSettings] = useState<ProductionSettingsType>({
-    weeklyCapacity: 50,
-    monthlyCapacity: 200,
+    orderCapacity: 10,
     averageProcessingDays: 3,
     isAvailableForOrders: true,
-    vacationMode: false,
     specialNotice: ''
   });
   
@@ -45,17 +43,12 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
       // 로드된 설정이 유효한지 확인하고 기본값과 병합
       if (loadedSettings && typeof loadedSettings === 'object') {
         const mergedSettings = {
-          weeklyCapacity: loadedSettings.weeklyCapacity ?? 50,
-          monthlyCapacity: loadedSettings.monthlyCapacity ?? 200,
+          orderCapacity: loadedSettings.orderCapacity ?? 10,
           averageProcessingDays: loadedSettings.averageProcessingDays ?? 3,
           isAvailableForOrders: loadedSettings.isAvailableForOrders ?? true,
-          vacationMode: loadedSettings.vacationMode ?? false,
-          specialNotice: loadedSettings.specialNotice ?? '',
-          // 휴가 날짜 필드들도 포함
-          ...(loadedSettings.vacationStartDate && { vacationStartDate: loadedSettings.vacationStartDate }),
-          ...(loadedSettings.vacationEndDate && { vacationEndDate: loadedSettings.vacationEndDate })
+          specialNotice: loadedSettings.specialNotice ?? ''
         };
-        
+
         console.log('병합된 설정:', mergedSettings);
         setSettings(mergedSettings);
         setOriginalSettings(mergedSettings);
@@ -63,11 +56,9 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
         console.warn('유효하지 않은 생산 설정 데이터:', loadedSettings);
         // 기본값을 유지하되 originalSettings는 현재 settings로 설정
         const defaultSettings = {
-          weeklyCapacity: 50,
-          monthlyCapacity: 200,
+          orderCapacity: 10,
           averageProcessingDays: 3,
           isAvailableForOrders: true,
-          vacationMode: false,
           specialNotice: ''
         };
         setSettings(defaultSettings);
@@ -90,23 +81,21 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
     setSettings(prev => {
       // prev가 undefined인 경우를 대비해 기본값 사용
       const currentSettings = prev || {
-        weeklyCapacity: 50,
-        monthlyCapacity: 200,
+        orderCapacity: 10,
         averageProcessingDays: 3,
         isAvailableForOrders: true,
-        vacationMode: false,
         specialNotice: ''
       };
-      
+
       const newSettings = {
         ...currentSettings,
         [field]: value
       };
-      
+
       // 실시간 유효성 검사 (새로운 settings 값 사용)
       const errors = webApiService.production.validateProductionSettings(newSettings);
       setValidationErrors(errors);
-      
+
       return newSettings;
     });
   };
@@ -267,103 +256,84 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
             </button>
           </div>
 
-          {/* 기본 생산량 설정 */}
+          {/* 생산 능력 설정 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">기본 생산량 설정</h2>
-            <p className="text-sm text-gray-600 mt-1">생산 능력에 맞는 주문량을 설정하세요</p>
+            <h2 className="text-lg font-semibold text-gray-900">생산 능력 설정</h2>
+            <p className="text-sm text-gray-600 mt-1">동시에 처리 가능한 주문 수와 제작 기간을 설정하세요</p>
           </div>
-          
+
           <div className="p-6 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* 주간 생산량 */}
+              {/* 적정 생산량 */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900">
-                      주간 생산량
+                      적정 생산량
                     </label>
-                    <p className="text-xs text-gray-500">일주일에 제작 가능한 최대 주문 수</p>
+                    <p className="text-xs text-gray-500">동시에 처리 가능한 최대 주문 수</p>
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <input
                       type="number"
                       min="1"
-                      max="500"
-                      value={settings?.weeklyCapacity ?? 50}
-                      onChange={(e) => handleSettingsChange('weeklyCapacity', parseInt(e.target.value) || 0)}
+                      max="100"
+                      value={settings?.orderCapacity ?? 10}
+                      onChange={(e) => handleSettingsChange('orderCapacity', parseInt(e.target.value) || 1)}
                       className="flex-1 border-2 border-gray-200 rounded-lg px-4 py-3 text-center text-lg font-semibold focus:border-blue-500 focus:ring-0 transition-colors duration-200"
-                      placeholder="50"
+                      placeholder="10"
                     />
-                    <div className="text-sm text-gray-600 font-medium">개/주</div>
+                    <div className="text-sm text-gray-600 font-medium">개</div>
                   </div>
-                  <div className="mt-2 text-xs text-gray-500 text-center">
-                    권장: 20-100개 (소규모), 100-300개 (중규모), 300개 이상 (대규모)
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-blue-700 font-medium mb-2">💡 설정 가이드</p>
+                    <ul className="text-xs text-blue-600 space-y-1">
+                      <li>• <strong>5-10개</strong>: 1인 작업실, 취미 수준</li>
+                      <li>• <strong>10-20개</strong>: 전문 작가, 소규모 스튜디오</li>
+                      <li>• <strong>20-30개</strong>: 중규모 스튜디오, 팀 작업</li>
+                      <li>• <strong>30개 이상</strong>: 대형 스튜디오, 여러 작가</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* 작업량 경고 시스템 안내 */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-xs text-amber-700">
+                      진행 중인 주문이 적정 생산량의 90% 초과 시 고객에게 지연 안내가 자동으로 표시됩니다
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* 월간 생산량 */}
+              {/* 평균 제작 소요일 */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">
-                      월간 생산량
-                    </label>
-                    <p className="text-xs text-gray-500">실제 주문 제한 기준</p>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min={Math.ceil((settings?.weeklyCapacity ?? 50) * 4.3)}
-                      max="2000"
-                      value={settings?.monthlyCapacity ?? 200}
-                      onChange={(e) => handleSettingsChange('monthlyCapacity', parseInt(e.target.value) || 0)}
-                      className="flex-1 border-2 border-gray-200 rounded-lg px-4 py-3 text-center text-lg font-semibold focus:border-green-500 focus:ring-0 transition-colors duration-200"
-                      placeholder="200"
-                    />
-                    <div className="text-sm text-gray-600 font-medium">개/월</div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500 text-center">
-                    최소: {Math.ceil((settings?.weeklyCapacity ?? 50) * 4.3)}개 (주간 생산량 × 4.3)
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 제작 소요일 */}
-            <div className="border-t border-gray-100 pt-8">
-              <div className="max-w-md mx-auto space-y-4">
-                <div className="flex items-center gap-3 justify-center mb-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div className="text-center">
+                  <div>
                     <label className="block text-sm font-semibold text-gray-900">
                       평균 제작 소요일
                     </label>
-                    <p className="text-xs text-gray-500">주문부터 완제품까지 걸리는 평균 시간</p>
+                    <p className="text-xs text-gray-500">주문부터 완제품까지 걸리는 시간</p>
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center justify-center gap-3">
                     <input
@@ -371,14 +341,20 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       min="1"
                       max="30"
                       value={settings?.averageProcessingDays ?? 3}
-                      onChange={(e) => handleSettingsChange('averageProcessingDays', parseInt(e.target.value) || 0)}
-                      className="w-24 border-2 border-gray-200 rounded-lg px-4 py-3 text-center text-lg font-semibold focus:border-orange-500 focus:ring-0 transition-colors duration-200"
+                      onChange={(e) => handleSettingsChange('averageProcessingDays', parseInt(e.target.value) || 1)}
+                      className="w-32 border-2 border-gray-200 rounded-lg px-4 py-3 text-center text-lg font-semibold focus:border-orange-500 focus:ring-0 transition-colors duration-200"
                       placeholder="3"
                     />
                     <div className="text-sm text-gray-600 font-medium">일</div>
                   </div>
-                  <div className="mt-2 text-xs text-gray-500 text-center">
-                    일반적으로 1-7일 (단순), 7-14일 (보통), 14일 이상 (복잡)
+                  <div className="mt-3 p-3 bg-orange-50 rounded-lg">
+                    <p className="text-xs text-orange-700 font-medium mb-2">⏱️ 설정 가이드</p>
+                    <ul className="text-xs text-orange-600 space-y-1">
+                      <li>• <strong>1-3일</strong>: 단순 디자인, 재고 있음</li>
+                      <li>• <strong>3-7일</strong>: 일반 맞춤 제작</li>
+                      <li>• <strong>7-14일</strong>: 복잡한 디자인</li>
+                      <li>• <strong>14일 이상</strong>: 특수 재료, 고난도</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -439,108 +415,6 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       주문 접수를 비활성화하면 고객들이 새로운 주문을 할 수 없습니다. 
                       기존 진행 중인 주문은 영향을 받지 않습니다.
                     </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 휴가 모드 설정 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">휴가 모드</h2>
-            <p className="text-sm text-gray-600 mt-1">일정 기간 동안 주문 접수를 일시 중단하세요</p>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  settings?.vacationMode 
-                    ? 'bg-orange-100 text-orange-600' 
-                    : 'bg-gray-100 text-gray-400'
-                }`}>
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">휴가 모드 활성화</h3>
-                  <p className="text-sm text-gray-600">
-                    {settings?.vacationMode 
-                      ? '휴가 모드가 활성화되어 있습니다' 
-                      : '휴가 기간 동안 주문 접수를 중단할 수 있습니다'
-                    }
-                  </p>
-                </div>
-              </div>
-              
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings?.vacationMode ?? false}
-                  onChange={(e) => handleSettingsChange('vacationMode', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600 shadow-sm"></div>
-              </label>
-            </div>
-
-            {(settings?.vacationMode ?? false) && (
-              <div className="space-y-6">
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <div>
-                      <p className="text-orange-800 font-medium">휴가 모드 안내</p>
-                      <p className="text-orange-700 text-sm mt-1">
-                        설정된 휴가 기간 동안 새로운 주문이 자동으로 차단됩니다. 
-                        고객에게는 휴가 중임을 알리는 메시지가 표시됩니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <label className="block text-sm font-semibold text-gray-900">
-                      휴가 시작일
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="datetime-local"
-                        value={settings?.vacationStartDate ?? ''}
-                        onChange={(e) => handleSettingsChange('vacationStartDate', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-orange-500 focus:ring-0 transition-colors duration-200"
-                        min={new Date().toISOString().slice(0, -8)}
-                      />
-                      <svg className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-xs text-gray-500">휴가가 시작되는 날짜와 시간을 설정하세요</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <label className="block text-sm font-semibold text-gray-900">
-                      휴가 종료일
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="datetime-local"
-                        value={settings?.vacationEndDate ?? ''}
-                        onChange={(e) => handleSettingsChange('vacationEndDate', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-orange-500 focus:ring-0 transition-colors duration-200"
-                        min={settings?.vacationStartDate ?? new Date().toISOString().slice(0, -8)}
-                      />
-                      <svg className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-xs text-gray-500">휴가가 끝나는 날짜와 시간을 설정하세요</p>
                   </div>
                 </div>
               </div>

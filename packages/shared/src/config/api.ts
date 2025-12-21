@@ -314,6 +314,7 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: '/api/seller/profile',         // PUT /profile
     DASHBOARD: '/api/seller/dashboard',            // GET /dashboard
     INFO: (sellerUuid: string) => `/api/seller/info/${sellerUuid}`, // GET /info/:sellerUuid - 판매자 기본 정보
+    CURRENT_INFO: '/api/seller/info',              // GET /info - 현재 로그인한 판매자 정보 (생산 설정 포함)
     MY_INFO: '/api/seller/info',                   // GET/PUT /info - 현재 로그인한 판매자 정보 조회/수정
 
     // 상품 관리 (판매자 전용)
@@ -336,7 +337,7 @@ export const API_ENDPOINTS = {
     SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',     // GET /available/amount
 
     // 생산 관리
-    PRODUCTION_SETTINGS: '/api/seller/production-settings',             // GET/PUT
+    // 참고: 생산 설정은 CURRENT_INFO (/api/seller/info) 엔드포인트를 통해 조회/업데이트합니다
     PRODUCTION_CAPACITY: (year?: number, month?: number) =>
       `/api/seller/production-capacity${year ? `/${year}` : ''}${month ? `/${month}` : ''}`, // GET
     PRODUCTION_CAPACITY_UPDATE: (year: number, month: number) =>

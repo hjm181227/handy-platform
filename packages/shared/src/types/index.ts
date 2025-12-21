@@ -1180,13 +1180,9 @@ export interface QRCodeResponse {
 
 // 생산 관리 관련 타입 (서버 API 스펙에 완전 일치)
 export interface ProductionSettings {
-  weeklyCapacity: number;           // 주간 생산량 (1-500)
-  monthlyCapacity: number;          // 월간 생산량 (1-2000, 주별 × 4.3배 이상)
+  orderCapacity: number;            // 동시 처리 가능 주문 수 (min: 1)
   averageProcessingDays: number;    // 평균 제작 소요일 (1-30)
   isAvailableForOrders: boolean;    // 주문 접수 여부
-  vacationMode: boolean;            // 휴가 모드
-  vacationStartDate?: string;       // 휴가 시작일 (ISO 날짜)
-  vacationEndDate?: string;         // 휴가 종료일 (ISO 날짜)
   specialNotice?: string;           // 특별 안내사항 (최대 500자)
   lastUpdatedAt?: string;           // 마지막 업데이트 시간
 }
@@ -1265,13 +1261,9 @@ export interface CurrentCapacityInfo {
 
 // 생산 관리 API 요청 타입들
 export interface UpdateProductionSettingsRequest {
-  weeklyCapacity?: number;
-  monthlyCapacity?: number;
+  orderCapacity?: number;
   averageProcessingDays?: number;
   isAvailableForOrders?: boolean;
-  vacationMode?: boolean;
-  vacationStartDate?: string;
-  vacationEndDate?: string;
   specialNotice?: string;
 }
 
@@ -1760,6 +1752,16 @@ export interface CheckoutSession {
       processingDays: number;
     }>;
     totalCapacityRequired: number;
+  };
+  shippingEstimate?: {
+    estimatedCost: number;
+    basedOnRegion: string;
+    note?: string;
+    willBeRecalculatedDuring?: string;
+    regionOptions?: Array<{
+      region: string;
+      label: string;
+    }>;
   };
   expiresAt: string;
   estimatedDeliveryDateRange: {

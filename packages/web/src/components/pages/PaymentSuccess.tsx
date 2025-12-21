@@ -92,7 +92,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
     };
 
     fetchOrderResult();
-  }, [onGo, alert, showError]);
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
 
   if (isLoading) {
     return (
