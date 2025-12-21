@@ -12,7 +12,6 @@ import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLe
 // 생산 관리 컴포넌트 임포트
 import { ProductionDashboard } from './seller/ProductionDashboard';
 import { ProductionSettings } from './seller/ProductionSettings';
-import { ProductionManage } from './seller/ProductionManage';
 import { ProductionStatus } from './seller/ProductionStatus';
 
 // 주문 관리 컴포넌트 임포트
@@ -2830,4 +2829,4 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
 }
 
 // 생산 관리 컴포넌트들 내보내기
-export { ProductionDashboard, ProductionSettings, ProductionManage, ProductionStatus };
+export { ProductionSettings, ProductionStatus };

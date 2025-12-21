@@ -108,9 +108,7 @@ import {
   SellerAnalytics,
   SellerSettlement,
   SellerReviews,
-  ProductionDashboard,
   ProductionSettings,
-  ProductionManage,
   ProductionStatus
 } from './components/pages/SellerPages';
 
@@ -747,19 +745,7 @@ function AppContent() {
   } else if (pathname === "/seller/production") {
     screen = (
       <RequireRole requiredRole="seller">
-        <ProductionDashboard onGo={nav} />
-      </RequireRole>
-    );
-  } else if (pathname === "/seller/production/settings") {
-    screen = (
-      <RequireRole requiredRole="seller">
         <ProductionSettings onGo={nav} />
-      </RequireRole>
-    );
-  } else if (pathname === "/seller/production/manage") {
-    screen = (
-      <RequireRole requiredRole="seller">
-        <ProductionManage onGo={nav} />
       </RequireRole>
     );
   } else if (pathname === "/seller/production/status") {

@@ -467,17 +467,38 @@ export abstract class BaseSellerService extends BaseApiService {
     };
     isConfigured?: boolean;
   }>> {
-    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS);
+    // GET /api/seller/info - 현재 판매자 정보 조회 (생산 설정 포함)
+    const response = await this.request<any>(API_ENDPOINTS.SELLER.CURRENT_INFO);
+
+    // 응답 구조에서 productionSettings 추출
+    // 서버 응답: { success: true, data: { sellerInfo: { productionSettings: {...} } } }
+    return {
+      success: response.success,
+      data: {
+        productionSettings: response.data?.sellerInfo?.productionSettings || response.data?.productionSettings,
+        currentCapacity: response.data?.currentCapacity,
+        isConfigured: response.data?.isConfigured
+      }
+    };
   }
 
-  // PUT /production-settings - 생산 설정 업데이트
+  // PUT /api/seller/info - 생산 설정 업데이트
   async updateProductionSettings(settings: UpdateProductionSettingsRequest): Promise<ApiResponse<{
     productionSettings: ProductionSettings;
   }>> {
-    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS, {
+    // PUT /api/seller/info with nested productionSettings
+    const response = await this.request<any>(API_ENDPOINTS.SELLER.CURRENT_INFO, {
       method: 'PUT',
-      body: JSON.stringify(settings),
+      body: JSON.stringify({ productionSettings: settings }),
     });
+
+    // 응답 구조에서 productionSettings 추출
+    return {
+      success: response.success,
+      data: {
+        productionSettings: response.data?.sellerInfo?.productionSettings || response.data?.productionSettings
+      }
+    };
   }
 
   // GET /production-capacity/:year?/:month? - 특정 월 생산 현황 조회
