@@ -1,12 +1,15 @@
 // 공유 타입들을 가져오기 (실제로 export된 것들만)
 export type {
   Product,
+  ProductType,
   ProductRating,
   ProductReview,
   Seller,
   User,
   ApiResponse,
-  PaginationInfo
+  PaginationInfo,
+  CustomOrderRequest,
+  PrefillProductResponse
 } from '@handy-platform/shared';
 
 // 웹 전용 타입들

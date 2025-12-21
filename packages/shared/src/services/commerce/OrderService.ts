@@ -9,7 +9,12 @@ import {
   CheckoutSession,
   ShippingAddress,
   PaymentPrepareResult,
-  PayMethod
+  PayMethod,
+  CreateCustomOrderRequest,
+  CreateCustomOrderResponse,
+  CustomOrderDetail,
+  PresignedUrlRequest,
+  PresignedUrlResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
@@ -89,7 +94,7 @@ export abstract class BaseOrderService extends BaseApiService {
 
   // 체크아웃 초기화 - 장바구니, 바로구매, 맞춤제작 지원 (백엔드 스펙 준수)
   async initializeCheckout(data?: {
-    customRequestUuid?: string;
+    quoteUuid?: string;
     directItem?: {
       productUuid: string;
       quantity: number;
@@ -274,6 +279,78 @@ export abstract class BaseOrderService extends BaseApiService {
    */
   protected getOrderApiId(order: { id: string }): string {
     return normalizeOrderId(order);
+  }
+
+  // ============================================
+  // 커스텀 주문 관련 메서드
+  // ============================================
+
+  // Presigned URL 요청 (이미지 업로드용)
+  async getPresignedUrl(request: PresignedUrlRequest): Promise<ApiResponse<PresignedUrlResponse>> {
+    return this.request<ApiResponse<PresignedUrlResponse>>(
+      API_ENDPOINTS.UPLOAD.PRESIGNED_URL,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  // S3에 이미지 직접 업로드 (Presigned URL 사용)
+  async uploadToS3(presignedUrl: string, file: File): Promise<void> {
+    const response = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`S3 업로드 실패: ${response.status} ${response.statusText}`);
+    }
+  }
+
+  // 커스텀 주문서 생성
+  async createCustomOrder(request: CreateCustomOrderRequest): Promise<ApiResponse<CreateCustomOrderResponse>> {
+    return this.request<ApiResponse<CreateCustomOrderResponse>>(
+      API_ENDPOINTS.CUSTOM_ORDER.CREATE,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  // 커스텀 주문서 상세 조회
+  async getCustomOrderDetail(uuid: string): Promise<ApiResponse<CustomOrderDetail>> {
+    return this.request<ApiResponse<CustomOrderDetail>>(
+      API_ENDPOINTS.CUSTOM_ORDER.DETAIL(uuid)
+    );
+  }
+
+  // 결제 스킵 (스테이징 환경 테스트 전용)
+  async skipPayment(orderUuid: string): Promise<ApiResponse<{
+    message: string;
+    order: {
+      orderUuid: string;
+      status: string;
+      paymentStatus: string;
+    };
+  }>> {
+    return this.request<ApiResponse<{
+      message: string;
+      order: {
+        orderUuid: string;
+        status: string;
+        paymentStatus: string;
+      };
+    }>>(
+      API_ENDPOINTS.ORDERS.SKIP_PAYMENT(orderUuid),
+      {
+        method: 'POST',
+      }
+    );
   }
 }
 

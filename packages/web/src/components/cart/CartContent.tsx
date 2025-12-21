@@ -98,14 +98,14 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
     try {
       setLoading(true);
       setError(null);
-      
+
       // 로그인되지 않은 경우 빈 장바구니로 설정
       if (!currentUser) {
         setCart({ items: [], totals: {}, user: undefined });
         setLoading(false);
         return;
       }
-      
+
       const response = await cartService.getCart();
 
       if (response.success && response.data) {
@@ -402,22 +402,22 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   // 전체 장바구니 비우기 (page 모드에서만)
   const clearAllItems = async () => {
     if (!confirm('장바구니를 전체 비우시겠습니까?')) return;
-    
+
     try {
       setLoading(true);
-      
+
       console.log('Clearing all cart items...');
       const response = await cartService.clearCart();
-      
+
       console.log('Clear cart response:', response);
-      
+
       if (response.success) {
         // 빈 장바구니 상태로 설정
         setCart(null);
         setRemovedItems([]);
         setCapacityWarnings([]);
         setMessage(null);
-        
+
         onCartUpdate?.();
       } else {
         throw new Error('장바구니 비우기에 실패했습니다.');
@@ -755,7 +755,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
             <span>상품 금액</span>
             <span className="font-medium">{money(totals.subtotal)}</span>
           </div>
-          
+
           {/* 배송비 표시 */}
           {totals.shippingCost > 0 && (
             <div className="flex items-center justify-between">
@@ -768,7 +768,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
               {money(totals.freeShippingRemaining)} 더 구매하면 무료배송!
             </div>
           )}
-          
+
 
           <hr />
         </div>

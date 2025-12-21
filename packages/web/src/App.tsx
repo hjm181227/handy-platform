@@ -23,6 +23,7 @@ import { CategoryModal } from './components/common/CategoryModal';
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
 import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
+import { CustomOrderForm } from './components/product/CustomOrderForm';
 
 // Page Components
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
@@ -108,6 +109,8 @@ import {
   SellerAnalytics,
   SellerSettlement,
   SellerReviews,
+  BrandManagement,
+  ProductionDashboard,
   ProductionSettings,
   ProductionStatus
 } from './components/pages/SellerPages';
@@ -438,6 +441,15 @@ function AppContent() {
   if (mChatRoom) {
     screen = <ChatRoomPage nav={nav} roomId={decodeURIComponent(mChatRoom[1])} />;
   }
+  // Custom order form (커스텀 주문서 작성 페이지)
+  else if (pathname.match(/^\/product\/(.+)\/custom-order$/)) {
+    const mCustomOrder = pathname.match(/^\/product\/(.+)\/custom-order$/)!;
+    screen = <CustomOrderForm
+      productId={decodeURIComponent(mCustomOrder[1])}
+      onBack={() => nav(`/product/${decodeURIComponent(mCustomOrder[1])}`)}
+      onGo={nav}
+    />;
+  }
   // Product detail
   else if (pathname.match(/^\/product\/(.+)$/)) {
     const mDetail = pathname.match(/^\/product\/(.+)$/)!;
@@ -697,6 +709,12 @@ function AppContent() {
     screen = (
       <RequireRole requiredRole="seller">
         <SellerDashboard onGo={nav} />
+      </RequireRole>
+    );
+  } else if (pathname === "/seller/brand") {
+    screen = (
+      <RequireRole requiredRole="seller">
+        <BrandManagement onGo={nav} />
       </RequireRole>
     );
   } else if (pathname === "/seller/products") {

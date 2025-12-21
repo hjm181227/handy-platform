@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { ProductCard } from '../product/ProductCard';
 import { productService, brandService } from '../../services/apiService';
-import type { Product, ProductsResponse, BrandDetail } from '@handy-platform/shared';
+import type { Product, ProductsResponse, BrandDetail, ProductType } from '@handy-platform/shared';
 
 // 브랜드별 이미지 매핑 및 테마 설정
 interface BrandTheme {
@@ -78,6 +78,7 @@ export function BrandDetailPage({
   const [sortBy, setSortBy] = useState<'popular' | 'price' | 'latest'>('popular');
   const [priceFilter, setPriceFilter] = useState<{ min: number; max: number } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [productTypeFilter, setProductTypeFilter] = useState<ProductType | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -93,6 +94,12 @@ export function BrandDetailPage({
   const [productsError, setProductsError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  // 무한 스크롤을 위한 observer ref
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   
   // URL 디코딩 대신 seller UUID 사용
   const decodedSellerUuid = decodeURIComponent(sellerUuid);
@@ -159,48 +166,105 @@ export function BrandDetailPage({
     fetchBrandInfo();
   }, [decodedSellerUuid]);
 
-  // 상품 목록 가져오기 (독립적)
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
+  // 상품 목록 가져오기 함수
+  const fetchProducts = useCallback(async (page: number, isLoadMore: boolean = false) => {
+    try {
+      if (isLoadMore) {
+        setLoadingMore(true);
+      } else {
         setProductsLoading(true);
         setProductsError(null);
-        
-        const filters = {
-          sellerUuid: decodedSellerUuid,
-          page: currentPage.toString(),
-          limit: '20',
-          ...(priceFilter && {
-            minPrice: priceFilter.min.toString(),
-            maxPrice: priceFilter.max.toString()
-          }),
-          ...(categoryFilter && { search: categoryFilter }),
-          sortBy: sortBy === 'popular' ? 'trending' as const : 
-                 sortBy === 'price' ? 'price' as const : 
-                 sortBy === 'latest' ? 'createdAt' as const : 'trending' as const,
-          sortOrder: sortBy === 'price' ? 'asc' as const : 'desc' as const
-        };
-        
-        const response: ProductsResponse = await productService.getProducts(filters);
-        
-        if (response.success && response.data) {
-          setProducts(response.data);
-          setPagination(response.pagination);
+      }
+
+      const filters = {
+        sellerUuid: decodedSellerUuid,
+        page: page.toString(),
+        limit: '20',
+        ...(priceFilter && {
+          minPrice: priceFilter.min.toString(),
+          maxPrice: priceFilter.max.toString()
+        }),
+        ...(categoryFilter && { search: categoryFilter }),
+        ...(productTypeFilter && { productType: productTypeFilter }),
+        sortBy: sortBy === 'popular' ? 'trending' as const :
+               sortBy === 'price' ? 'price' as const :
+               sortBy === 'latest' ? 'createdAt' as const : 'trending' as const,
+        sortOrder: sortBy === 'price' ? 'asc' as const : 'desc' as const
+      };
+
+      const response: ProductsResponse = await productService.getProducts(filters);
+
+      if (response.success && response.data) {
+        if (isLoadMore) {
+          // 기존 상품에 추가 (중복 제거)
+          setProducts(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const newProducts = response.data.filter(p => !existingIds.has(p.id));
+            return [...prev, ...newProducts];
+          });
         } else {
+          setProducts(response.data);
+        }
+        setPagination(response.pagination);
+        setHasMore(response.pagination?.hasNext ?? false);
+      } else {
+        if (!isLoadMore) {
           setProductsError('상품을 불러오는 데 실패했습니다.');
           setProducts([]);
         }
-      } catch (err) {
-        console.error('Product fetch error:', err);
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error('Product fetch error:', err);
+      if (!isLoadMore) {
         setProductsError('상품을 불러오는 데 오류가 발생했습니다.');
         setProducts([]);
-      } finally {
+      }
+      setHasMore(false);
+    } finally {
+      if (isLoadMore) {
+        setLoadingMore(false);
+      } else {
         setProductsLoading(false);
       }
-    };
+    }
+  }, [decodedSellerUuid, sortBy, priceFilter, categoryFilter, productTypeFilter]);
 
-    fetchProducts();
-  }, [decodedSellerUuid, currentPage, sortBy, priceFilter, categoryFilter]);
+  // 필터 변경 시 초기 로드
+  useEffect(() => {
+    setProducts([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchProducts(1, false);
+  }, [decodedSellerUuid, sortBy, priceFilter, categoryFilter, productTypeFilter, fetchProducts]);
+
+  // 무한 스크롤 - Intersection Observer
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !productsLoading) {
+          const nextPage = currentPage + 1;
+          setCurrentPage(nextPage);
+          fetchProducts(nextPage, true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loadingMore, productsLoading, currentPage, fetchProducts]);
 
   // 브랜드 통계 계산 (brandInfo의 서버 데이터 우선 사용)
   const brandStats = useMemo(() => {
@@ -479,11 +543,35 @@ export function BrandDetailPage({
         </div>
       </div>
 
+      {/* 상품 유형 탭 */}
+      <div className="flex gap-2 mb-6">
+        {[
+          { value: null, label: '전체' },
+          { value: 'original' as ProductType, label: '오리지널' },
+          { value: 'custom' as ProductType, label: '커스텀' }
+        ].map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setProductTypeFilter(tab.value)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              productTypeFilter === tab.value
+                ? 'bg-black text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* 필터 및 정렬 섹션 */}
       <div className="bg-white rounded-xl border p-6 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold">전체 상품</h2>
+            <h2 className="text-xl font-semibold">
+              {productTypeFilter === 'original' ? '오리지널 상품' :
+               productTypeFilter === 'custom' ? '커스텀 상품' : '전체 상품'}
+            </h2>
             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
               {sortedProducts.length}개
             </span>
@@ -499,7 +587,7 @@ export function BrandDetailPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
               </svg>
               필터
-              {(priceFilter || categoryFilter) && (
+              {(priceFilter || categoryFilter || productTypeFilter) && (
                 <span className="w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </button>
@@ -621,12 +709,50 @@ export function BrandDetailPage({
                 </div>
               </div>
 
+              {/* 상품 유형 필터 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">상품 유형</label>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setProductTypeFilter(null)}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
+                      !productTypeFilter
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    전체
+                  </button>
+                  <button
+                    onClick={() => setProductTypeFilter('original')}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
+                      productTypeFilter === 'original'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    오리지널
+                  </button>
+                  <button
+                    onClick={() => setProductTypeFilter('custom')}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
+                      productTypeFilter === 'custom'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    커스텀
+                  </button>
+                </div>
+              </div>
+
               {/* 필터 초기화 */}
               <div className="flex items-end">
                 <button
                   onClick={() => {
                     setCategoryFilter(null);
                     setPriceFilter(null);
+                    setProductTypeFilter(null);
                   }}
                   className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
                 >
@@ -668,21 +794,36 @@ export function BrandDetailPage({
             <p className="text-gray-600">이 브랜드는 아직 상품을 등록하지 않았습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {sortedProducts.map((product) => {
-              const productId = product.id || product.productUuid;
-              return (
-                <ProductCard 
-                  key={product.id || product.productId} 
-                  p={product} 
-                  onOpen={onOpen} 
-                  onAdd={onAdd} 
-                  onLike={onLike} 
-                  isLiked={likedProducts.includes(productId)} 
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {sortedProducts.map((product) => {
+                const productId = product.id || product.productUuid;
+                return (
+                  <ProductCard
+                    key={product.id || product.productId}
+                    p={product}
+                    onOpen={onOpen}
+                    onAdd={onAdd}
+                    onLike={onLike}
+                    isLiked={likedProducts.includes(productId)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* 무한 스크롤 로딩 인디케이터 */}
+            <div ref={loadMoreRef} className="py-8 flex justify-center">
+              {loadingMore && (
+                <div className="flex items-center gap-2 text-gray-500">
+                  <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                  <span>더 불러오는 중...</span>
+                </div>
+              )}
+              {!hasMore && products.length > 0 && (
+                <p className="text-gray-400 text-sm">모든 상품을 불러왔습니다</p>
+              )}
+            </div>
+          </>
         )}
       </div>
 

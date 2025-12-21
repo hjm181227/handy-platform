@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS } from '@handy-platform/shared';
-import { productService, cartService } from '../../services/apiService';
+import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview } from '@handy-platform/shared';
+import { productService, cartService, reviewService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
 import { Stars } from '../ui';
@@ -34,6 +34,15 @@ export function Detail({
   const [liked, setLiked] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("상세정보");
 
+  // 리뷰 관련 상태
+  const [reviews, setReviews] = useState<DetailedReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsPagination, setReviewsPagination] = useState<any>(null);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewSort, setReviewSort] = useState<'newest' | 'rating' | 'photo'>('newest');
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [ratingDistribution, setRatingDistribution] = useState<Record<string, number>>({});
+
   // 상품 데이터 로딩
   useEffect(() => {
     const loadProduct = async () => {
@@ -62,6 +71,63 @@ export function Detail({
       setLength(product.nailLength || "SHORT");
     }
   }, [product]);
+
+  // 리뷰 로드 함수
+  const loadProductReviews = async (page: number = 1) => {
+    if (!product) return;
+
+    try {
+      setReviewsLoading(true);
+
+      console.log('🔍 [Detail] Loading reviews for product:', product.id);
+      console.log('🔍 [Detail] Product info:', { id: product.id, productUuid: (product as any).productUuid, name: product.name });
+
+      const response = await reviewService.getProductReviews(product.id, {
+        page,
+        rating: ratingFilter || undefined,
+        sortBy: reviewSort === 'newest' ? 'createdAt' : reviewSort === 'rating' ? 'rating' : 'createdAt',
+        verifiedOnly: false
+      });
+
+      console.log('📝 [Detail] Reviews API response:', response);
+
+      let fetchedReviews = response.reviews || [];
+
+      // 사진 리뷰 우선 정렬 (photo 모드일 때)
+      if (reviewSort === 'photo') {
+        fetchedReviews = [...fetchedReviews].sort((a, b) => {
+          const aHasPhotos = (a.images?.length || 0) > 0;
+          const bHasPhotos = (b.images?.length || 0) > 0;
+          if (aHasPhotos && !bHasPhotos) return -1;
+          if (!aHasPhotos && bHasPhotos) return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+      }
+
+      setReviews(fetchedReviews);
+      setReviewsPagination(response.pagination);
+      setRatingDistribution(response.distribution || {});
+      setReviewsPage(page);
+    } catch (err) {
+      console.error('Failed to load reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // 리뷰 탭 활성화 시 로드
+  useEffect(() => {
+    if (activeTab === '리뷰' && product && reviews.length === 0) {
+      loadProductReviews(1);
+    }
+  }, [activeTab, product]);
+
+  // 정렬/필터 변경 시 리뷰 새로고침
+  useEffect(() => {
+    if (activeTab === '리뷰' && product) {
+      loadProductReviews(1);
+    }
+  }, [reviewSort, ratingFilter]);
 
   // 장바구니 담기 함수
   const addToCart = async () => {
@@ -285,6 +351,7 @@ export function Detail({
       case "리뷰":
         return (
           <div className="space-y-6">
+            {/* 평점 요약 */}
             <div className="flex items-center gap-4 pb-4 border-b">
               <div className="flex items-center gap-2">
                 <IoMdStar className="w-8 h-8 text-yellow-400" />
@@ -294,26 +361,160 @@ export function Detail({
                 총 {p.rating.count.toLocaleString()}개의 리뷰
               </div>
             </div>
-            <div className="space-y-4">
-              {[
-                { user: "김민정", rating: 5, date: "2024.01.15", comment: "정말 예쁘고 오래 지속돼요! 접착력도 좋고 자연스러워서 만족합니다." },
-                { user: "박소영", rating: 4, date: "2024.01.12", comment: "색깔이 너무 예뻐요. 다만 조금 두꺼운 느낌이 있어서 별 하나 뺐어요." },
-                { user: "이지원", rating: 5, date: "2024.01.10", comment: "처음 사용해봤는데 생각보다 쉽게 붙일 수 있었어요. 퀄리티 좋습니다!" },
-                { user: "최유진", rating: 4, date: "2024.01.08", comment: "디자인이 고급스럽고 착용감도 좋아요. 재구매 의향 있습니다." }
-              ].map((review, index) => (
-                <div key={index} className="border-b pb-4 last:border-b-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-medium text-sm">{review.user}</span>
-                    <Stars v={review.rating} />
-                    <span className="text-xs text-gray-500">{review.date}</span>
-                  </div>
-                  <p className="text-sm text-gray-700">{review.comment}</p>
-                </div>
-              ))}
+
+            {/* 별점 분포 막대 */}
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map(rating => {
+                const count = ratingDistribution[rating.toString()] || 0;
+                const percentage = p.rating.count > 0 ? (count / p.rating.count) * 100 : 0;
+                return (
+                  <button
+                    key={rating}
+                    onClick={() => setRatingFilter(ratingFilter === rating ? null : rating)}
+                    className={`flex items-center gap-2 w-full p-1 rounded transition-colors ${
+                      ratingFilter === rating ? 'bg-purple-50' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="w-12 text-sm text-gray-600">{rating}점</span>
+                    <div className="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
+                      <div
+                        className="h-full bg-yellow-400 rounded transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="w-10 text-xs text-gray-500 text-right">{count}</span>
+                  </button>
+                );
+              })}
             </div>
-            <button className="w-full py-3 border rounded-lg text-sm hover:bg-gray-50">
-              리뷰 더보기
-            </button>
+
+            {/* 정렬 옵션 */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setReviewSort('newest')}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                  reviewSort === 'newest' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                최신순
+              </button>
+              <button
+                onClick={() => setReviewSort('rating')}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                  reviewSort === 'rating' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                평점순
+              </button>
+              <button
+                onClick={() => setReviewSort('photo')}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                  reviewSort === 'photo' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                사진리뷰
+              </button>
+              {ratingFilter && (
+                <button
+                  onClick={() => setRatingFilter(null)}
+                  className="px-3 py-1.5 text-sm text-purple-600 hover:underline"
+                >
+                  필터 해제
+                </button>
+              )}
+            </div>
+
+            {/* 리뷰 목록 */}
+            {reviewsLoading ? (
+              <div className="py-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2" />
+                <p className="text-gray-500">리뷰를 불러오는 중...</p>
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                {ratingFilter ? `${ratingFilter}점 리뷰가 없습니다.` : '아직 리뷰가 없습니다.'}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div key={(review as any).reviewUuid || (review as any)._id || review.id} className="border-b pb-4 last:border-b-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium text-sm">{(review as any).userUuid?.name || review.user?.name || '익명'}</span>
+                      <Stars v={review.rating} />
+                      <span className="text-xs text-gray-500">
+                        {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+                      </span>
+                      {review.verifiedPurchase && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                          구매인증
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 리뷰 이미지 */}
+                    {review.images && review.images.length > 0 && (
+                      <div className="flex gap-2 mb-2 overflow-x-auto">
+                        {review.images.map((img, idx) => (
+                          <img
+                            key={idx}
+                            src={img.url}
+                            alt={`리뷰 이미지 ${idx + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer hover:opacity-90"
+                            onClick={() => window.open(img.url, '_blank')}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-sm text-gray-700">{review.content}</p>
+
+                    {/* 도움이 됐어요 */}
+                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                      <button className="flex items-center gap-1 hover:text-purple-600">
+                        <span>👍</span>
+                        <span>도움이 됐어요 ({review.helpful?.upVotes || 0})</span>
+                      </button>
+                    </div>
+
+                    {/* 판매자 답변 */}
+                    {review.reply && (
+                      <div className="mt-3 bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-medium text-purple-700">판매자 답변</span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(review.reply.createdAt).toLocaleDateString('ko-KR')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">{review.reply.content}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 페이지네이션 */}
+            {reviewsPagination && reviewsPagination.totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <button
+                  onClick={() => loadProductReviews(reviewsPage - 1)}
+                  disabled={!reviewsPagination.hasPrev}
+                  className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  이전
+                </button>
+                <span className="text-sm text-gray-600">
+                  {reviewsPage} / {reviewsPagination.totalPages}
+                </span>
+                <button
+                  onClick={() => loadProductReviews(reviewsPage + 1)}
+                  disabled={!reviewsPagination.hasNext}
+                  className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  다음
+                </button>
+              </div>
+            )}
           </div>
         );
 
@@ -560,34 +761,45 @@ export function Detail({
             </div>
           )}
 
-          {/* 구매 버튼 */}
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <button
-              onClick={addToCart}
-              disabled={addingToCart || !p.isInStock}
-              className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
-                addingToCart 
-                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                  : !p.isInStock 
+          {/* 구매 버튼 - productType에 따라 분기 */}
+          {p.productType === 'custom' ? (
+            <div className="pt-2">
+              <button
+                onClick={() => onGo(`/product/${p.id}/custom-order`)}
+                className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
+              >
+                커스텀 주문하기
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                onClick={addToCart}
+                disabled={addingToCart || !p.isInStock}
+                className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
+                  addingToCart
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : 'hover:bg-gray-50'
-              }`}
-            >
-              {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
-              {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
-            </button>
-            <button
-              onClick={buyNow}
-              disabled={addingToCart || !p.isInStock}
-              className={`rounded-lg py-2 text-white flex items-center justify-center ${
-                addingToCart || !p.isInStock
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-black hover:bg-gray-800'
-              }`}
-            >
-              바로구매
-            </button>
-          </div>
+                    : !p.isInStock
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                      : 'hover:bg-gray-50'
+                }`}
+              >
+                {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
+                {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
+              </button>
+              <button
+                onClick={buyNow}
+                disabled={addingToCart || !p.isInStock}
+                className={`rounded-lg py-2 text-white flex items-center justify-center ${
+                  addingToCart || !p.isInStock
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-black hover:bg-gray-800'
+                }`}
+              >
+                바로구매
+              </button>
+            </div>
+          )}
 
           {/* 도구 */}
           <div className="flex items-center gap-3 text-sm pt-1">
@@ -645,34 +857,43 @@ export function Detail({
         </div>
       </div>
 
-      {/* 모바일 하단 고정 구매바 */}
+      {/* 모바일 하단 고정 구매바 - productType에 따라 분기 */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white p-3 md:hidden">
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
           <div className="text-base font-semibold">{money(salePrice)}</div>
-          <div className="flex gap-2">
+          {p.productType === 'custom' ? (
             <button
-              onClick={addToCart}
-              disabled={addingToCart || !p.isInStock}
-              className={`rounded-lg border px-4 py-2 text-sm ${
-                addingToCart || !p.isInStock
-                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : 'hover:bg-gray-50'
-              }`}
+              onClick={() => onGo?.(`/product/${p.id}/custom-order`)}
+              className="rounded-lg px-6 py-2 text-sm text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
             >
-              {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니'}
+              커스텀 주문하기
             </button>
-            <button
-              onClick={buyNow}
-              disabled={addingToCart || !p.isInStock}
-              className={`rounded-lg px-4 py-2 text-sm text-white ${
-                addingToCart || !p.isInStock
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-black hover:bg-gray-800'
-              }`}
-            >
-              구매하기
-            </button>
-          </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={addToCart}
+                disabled={addingToCart || !p.isInStock}
+                className={`rounded-lg border px-4 py-2 text-sm ${
+                  addingToCart || !p.isInStock
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니'}
+              </button>
+              <button
+                onClick={buyNow}
+                disabled={addingToCart || !p.isInStock}
+                className={`rounded-lg px-4 py-2 text-sm text-white ${
+                  addingToCart || !p.isInStock
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-black hover:bg-gray-800'
+                }`}
+              >
+                구매하기
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

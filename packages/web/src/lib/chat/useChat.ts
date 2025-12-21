@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getChatSocket } from './ChatSocketService';
 import type { Message, UseChatReturn, ChatRoom } from './types';
 
-// Dummy data as fallback
+// Dummy data as fallback (일반 텍스트 메시지만 - 커스텀 주문서는 API 연동)
 const DUMMY_MESSAGES: Record<string, Message[]> = {
   '1': [
     { id: '1', roomId: '1', sender: 'other', senderId: 'user1', text: '안녕하세요!', timestamp: '오전 10:30', createdAt: '2025-11-25T01:30:00Z', read: true },
@@ -123,6 +123,9 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
               }),
               createdAt: msg.createdAt, // 날짜 구분용
               read: msg.status === 'read',
+              // 커스텀 주문서 메시지 처리
+              messageType: msg.messageType || 'text',
+              metadata: msg.metadata || undefined,
             }));
 
             // createdAt 기준 오름차순 정렬 (오래된 메시지가 위로)
@@ -214,6 +217,9 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
           }),
           createdAt: now.toISOString(), // 날짜 구분용
           read: false,
+          // 커스텀 주문서 메시지 처리
+          messageType: (message as any).messageType || 'text',
+          metadata: (message as any).metadata || undefined,
         };
         setMessages(prev => [...prev, transformedMessage]);
       }

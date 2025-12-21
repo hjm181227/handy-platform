@@ -3,6 +3,53 @@
  * 채팅 관련 타입 정의
  */
 
+// 메시지 타입 열거
+export type MessageType = 'text' | 'custom_order' | 'quote' | 'system';
+
+// 커스텀 주문 메시지 데이터
+export interface CustomOrderMessageData {
+  customOrderId: string;
+  title: string;
+  shape: string;
+  length: string;
+  sizes: {
+    thumb: string;
+    index: string;
+    middle: string;
+    ring: string;
+    pinky: string;
+  };
+  desiredColor?: string;
+  desiredDate?: string;
+  designNotes?: string;
+  referenceImages?: string[];
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  brandName?: string;
+}
+
+// 견적서 메시지 데이터
+export interface QuoteMessageData {
+  quoteId: string;
+  customOrderId: string;
+  price: number;
+  processingDays: number;
+  sellerNotes?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  sellerName?: string;
+  createdAt?: string;
+}
+
+// 메시지 메타데이터 타입 (서버에서 전송되는 실제 형식)
+export interface MessageMetadata {
+  // 커스텀 주문 메시지용
+  customOrderId?: string;
+  // 견적서 메시지용
+  quoteId?: string;
+  // 시스템 메시지용
+  action?: string;
+  description?: string;
+}
+
 export interface Message {
   id: string;
   roomId: string;
@@ -13,6 +60,8 @@ export interface Message {
   createdAt?: string; // ISO 형식 전체 날짜 (날짜 구분용)
   read: boolean;
   clientMessageId?: string;
+  messageType?: MessageType;  // 메시지 타입 (기본: text)
+  metadata?: MessageMetadata; // 추가 메타데이터
 }
 
 export interface ChatRoom {
