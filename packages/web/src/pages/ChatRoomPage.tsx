@@ -80,8 +80,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
 
   // 견적서 구매하기 핸들러
   const handlePurchase = (quoteId: string) => {
-    // 견적서 기반 체크아웃 페이지로 이동
-    nav(`/checkout?quoteId=${quoteId}`);
+    // 견적서 기반 체크아웃 페이지로 이동 (mode=quote, quoteUuid 전달)
+    nav(`/checkout?mode=custom&quoteUuid=${quoteId}`);
   };
 
   // 메시지 변경 시 자동 스크롤

@@ -131,21 +131,18 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           break;
 
         case 'custom':
-          // 맞춤제작: sessionStorage에서 quiteId 읽기
+          // 견적서 기반 주문: URL 파라미터에서 quoteUuid 읽기
           try {
-            const quoteId = new URLSearchParams(window.location.search).get('quoteId');
-            const checkoutDataStr = sessionStorage.getItem('checkoutData');
-            if (quoteId) {
-              const checkoutData = JSON.parse(checkoutDataStr);
-              requestBody = { customRequestUuid: quoteId };
-              console.log('📦 [CheckoutPage] Custom request mode:', checkoutData.customRequestUuid);
+            const quoteUuid = new URLSearchParams(window.location.search).get('quoteUuid');
+            if (quoteUuid) {
+              requestBody = { quoteUuid };
+              console.log('📦 [CheckoutPage] Quote-based checkout:', quoteUuid);
             } else {
-              console.error('❌ [CheckoutPage] No checkoutData found for custom mode');
-              throw new Error('맞춤제작 정보를 찾을 수 없습니다.');
+              console.error('❌ [CheckoutPage] No quoteUuid found in URL for custom mode');
+              throw new Error('견적서 정보를 찾을 수 없습니다.');
             }
           } catch (err) {
-            console.error('❌ [CheckoutPage] Failed to load custom request data:', err);
-            sessionStorage.removeItem('checkoutData');
+            console.error('❌ [CheckoutPage] Failed to load quote data:', err);
             throw err;
           }
           break;
