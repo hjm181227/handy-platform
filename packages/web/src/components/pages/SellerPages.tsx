@@ -317,7 +317,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   const [ products, setProducts ] = useState<any[]>([]);
   const [ isLoading, setIsLoading ] = useState(true);
   const [ error, setError ] = useState<string | null>(null);
-  
+
   // 삭제 관련 상태
   const [ showDeleteModal, setShowDeleteModal ] = useState(false);
   const [ productToDelete, setProductToDelete ] = useState<any | null>(null);
@@ -344,7 +344,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       try {
         isLoadingRef.current = true;
         abortControllerRef.current = new AbortController();
-        
+
         setIsLoading(true);
         setError(null);
 
@@ -382,7 +382,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           if (abortControllerRef.current?.signal.aborted) {
             return;
           }
-          
+
           console.error('Failed to load seller products:', apiError);
           // API 오류 시 사용자에게 알림
           setError('상품 목록을 불러오는데 실패했습니다.');
@@ -482,7 +482,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       await sellerService.deleteProduct(productToDelete.productId);
 
       // 성공 시 목록에서 제거
-      setProducts(prevProducts => 
+      setProducts(prevProducts =>
         prevProducts.filter(p => p.productId !== productToDelete.productId)
       );
 
@@ -715,7 +715,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
@@ -723,7 +723,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 <h3 className="text-lg font-medium text-gray-900">상품 삭제</h3>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <p className="text-sm text-gray-500">
                 상품을 삭제하시겠습니까?
@@ -846,13 +846,13 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
           console.log('Loading product data for ID:', productId);
           const response = await sellerService.getSellerProduct(productId);
-          
+
           console.log('Full API response:', response);
-          
+
           if (!response.success || !response.data) {
             throw new Error('Failed to load product data');
           }
-          
+
           const product = response.data; // 실제 API 응답 구조에 맞게 수정
 
           console.log('Loaded product data:', product);
@@ -873,12 +873,12 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
             shortDescription: String(product.shortDescription || ''),
             brand: String(product.brand || 'Seller Store'),
             sku: String(product.sku || ''),
-            
+
             // 가격 정보 (숫자를 안전하게 문자열로 변환)
             price: product.price ? String(product.price) : '',
             salePrice: product.salePrice ? String(product.salePrice) : '',
             discountRate: product.discountRate !== null && product.discountRate !== undefined ? String(product.discountRate) : '',
-            
+
             // 재고 및 처리 정보
             stockQuantity: product.stockQuantity ? String(product.stockQuantity) : '100',
             processingDays: product.processingDays ? String(product.processingDays) : '3',
@@ -1119,7 +1119,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         body: file,
         headers: uploadHeaders,
       });
-      
+
       if (!uploadResponse.ok) {
         throw new Error(`S3 upload failed: ${uploadResponse.status}`);
       }
@@ -1179,7 +1179,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         body: file,
         headers: uploadHeaders,
       });
-      
+
       if (!uploadResponse.ok) {
         throw new Error(`S3 upload failed: ${uploadResponse.status}`);
       }
@@ -1267,7 +1267,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         body: detailImage.file,
         headers: uploadHeaders,
       });
-      
+
       if (!uploadResponse.ok) {
         throw new Error(`S3 retry upload failed: ${uploadResponse.status}`);
       }
