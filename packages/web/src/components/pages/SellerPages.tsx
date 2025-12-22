@@ -10,7 +10,6 @@ import { MdDashboard } from 'react-icons/md';
 import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType, CustomOrderRequest, PrefillProductResponse } from '../../types';
 
 // 생산 관리 컴포넌트 임포트
-import { ProductionDashboard } from './seller/ProductionDashboard';
 import { ProductionSettings } from './seller/ProductionSettings';
 import { ProductionStatus } from './seller/ProductionStatus';
 

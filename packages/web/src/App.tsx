@@ -110,7 +110,6 @@ import {
   SellerSettlement,
   SellerReviews,
   BrandManagement,
-  ProductionDashboard,
   ProductionSettings,
   ProductionStatus
 } from './components/pages/SellerPages';
