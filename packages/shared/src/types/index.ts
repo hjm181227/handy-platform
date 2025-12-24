@@ -775,7 +775,7 @@ export interface PushNotification {
 export interface PresignedUrlRequest {
   filename: string;
   contentType: string;  // 다시 필수 필드로 복원
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference';
 }
 
 export interface PresignedUrlResponse {
@@ -1355,11 +1355,17 @@ export interface UpdateBrandProfileRequest {
   brandProfile: string;        // 브랜드 프로필 이미지 URL
 }
 
+// 브랜드 배너 이미지 변경 요청
+export interface UpdateBrandBannerRequest {
+  brandBanner: string;         // 브랜드 배너 이미지 URL
+}
+
 // 브랜드 상세 정보 (서버 API 스펙)
 export interface BrandDetail {
   sellerUuid: string;                    // 판매자 UUID
   brandName: string;                     // 브랜드명
   brandProfile: string | null;           // 브랜드 프로필 이미지 URL
+  brandBanner: string | null;            // 브랜드 배너 이미지 URL
   representativeName: string;            // 대표자명
   description: string | null;            // 브랜드 설명
   contact: {
@@ -1417,6 +1423,7 @@ export interface BrandUpdateResponse {
     sellerUuid: string;
     brandName: string;
     brandProfile: string | null;
+    brandBanner?: string | null;
   };
 }
 
