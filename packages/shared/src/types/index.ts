@@ -170,6 +170,9 @@ export interface ProductStats {
   reviewsCount: number;
 }
 
+// 상품 유형 (커스텀/오리지널 구분) - 서버 API 스펙에 맞게 소문자 사용
+export type ProductType = 'original' | 'custom';
+
 // 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
   id: string;                     // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
@@ -210,6 +213,7 @@ export interface Product {
   stats: ProductStats;
   socialProof?: SocialProof;
   status: 'active' | 'inactive' | 'outOfStock';  // 추가: 상품 상태
+  productType?: ProductType;                      // 상품 유형 (커스텀/오리지널)
   createdAt: string;
   updatedAt: string;
 }
@@ -247,6 +251,7 @@ export interface ProductDetailResponse {
 
 // 상품 생성 요청 (서버 API 스펙에 완전 일치)
 export interface CreateProductRequest {
+  productType?: ProductType;       // 상품 유형 (커스텀/오리지널)
   name: string;                    // Required, max 200 characters
   description: string;             // Required, max 2000 characters
   shortDescription?: string;
@@ -270,6 +275,7 @@ export interface CreateProductRequest {
   isFeatured?: boolean;
   isNewProduct?: boolean;
   tags?: string[];                 // Max 20 tags
+  customOrderRequestUuid?: string; // 커스텀 상품일 때 연결된 주문서 UUID
 }
 
 // 상품 업데이트 요청 인터페이스
@@ -288,6 +294,7 @@ export interface ProductFilters {
   nailShape?: NailShape;   // 네일 모양 필터
   nailLength?: NailLength; // 네일 길이 필터
   featured?: string;       // "true" for featured products
+  productType?: ProductType; // 상품 유형 필터 (ORIGINAL/CUSTOM)
   sortBy?: 'price' | 'rating' | 'createdAt' | 'likesCount' | 'trending';
   sortOrder?: 'asc' | 'desc';
 }
@@ -585,6 +592,8 @@ export interface SellerOrder {
   createdAt: string;
   updatedAt: string;       // 서버 스펙에 추가됨
   estimatedDelivery?: string;
+  orderType?: 'normal' | 'custom';  // 주문 타입 (커스텀 주문 식별용)
+  customRequestUuid?: string;       // 커스텀 주문서 UUID (커스텀 주문 시 연결)
 }
 
 // Seller Order Detail Interface - 서버 SellerOrderDetailData 기반
@@ -766,7 +775,7 @@ export interface PushNotification {
 export interface PresignedUrlRequest {
   filename: string;
   contentType: string;  // 다시 필수 필드로 복원
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference';
 }
 
 export interface PresignedUrlResponse {
@@ -894,6 +903,9 @@ export interface ReviewImage {
 
 export interface DetailedReview {
   id: string;
+  // 서버에서 productUuid를 반환 (객체 또는 문자열 형태)
+  productUuid?: string | { _id: string; name?: string; price?: number };
+  productId?: string;  // 편의를 위한 추가 필드
   user: {
     name: string;
     avatar?: string;
@@ -1168,13 +1180,9 @@ export interface QRCodeResponse {
 
 // 생산 관리 관련 타입 (서버 API 스펙에 완전 일치)
 export interface ProductionSettings {
-  weeklyCapacity: number;           // 주간 생산량 (1-500)
-  monthlyCapacity: number;          // 월간 생산량 (1-2000, 주별 × 4.3배 이상)
+  orderCapacity: number;            // 동시 처리 가능 주문 수 (min: 1)
   averageProcessingDays: number;    // 평균 제작 소요일 (1-30)
   isAvailableForOrders: boolean;    // 주문 접수 여부
-  vacationMode: boolean;            // 휴가 모드
-  vacationStartDate?: string;       // 휴가 시작일 (ISO 날짜)
-  vacationEndDate?: string;         // 휴가 종료일 (ISO 날짜)
   specialNotice?: string;           // 특별 안내사항 (최대 500자)
   lastUpdatedAt?: string;           // 마지막 업데이트 시간
 }
@@ -1253,13 +1261,9 @@ export interface CurrentCapacityInfo {
 
 // 생산 관리 API 요청 타입들
 export interface UpdateProductionSettingsRequest {
-  weeklyCapacity?: number;
-  monthlyCapacity?: number;
+  orderCapacity?: number;
   averageProcessingDays?: number;
   isAvailableForOrders?: boolean;
-  vacationMode?: boolean;
-  vacationStartDate?: string;
-  vacationEndDate?: string;
   specialNotice?: string;
 }
 
@@ -1351,11 +1355,17 @@ export interface UpdateBrandProfileRequest {
   brandProfile: string;        // 브랜드 프로필 이미지 URL
 }
 
+// 브랜드 배너 이미지 변경 요청
+export interface UpdateBrandBannerRequest {
+  brandBanner: string;         // 브랜드 배너 이미지 URL
+}
+
 // 브랜드 상세 정보 (서버 API 스펙)
 export interface BrandDetail {
   sellerUuid: string;                    // 판매자 UUID
   brandName: string;                     // 브랜드명
   brandProfile: string | null;           // 브랜드 프로필 이미지 URL
+  brandBanner: string | null;            // 브랜드 배너 이미지 URL
   representativeName: string;            // 대표자명
   description: string | null;            // 브랜드 설명
   contact: {
@@ -1413,6 +1423,7 @@ export interface BrandUpdateResponse {
     sellerUuid: string;
     brandName: string;
     brandProfile: string | null;
+    brandBanner?: string | null;
   };
 }
 
@@ -1749,6 +1760,16 @@ export interface CheckoutSession {
     }>;
     totalCapacityRequired: number;
   };
+  shippingEstimate?: {
+    estimatedCost: number;
+    basedOnRegion: string;
+    note?: string;
+    willBeRecalculatedDuring?: string;
+    regionOptions?: Array<{
+      region: string;
+      label: string;
+    }>;
+  };
   expiresAt: string;
   estimatedDeliveryDateRange: {
     earliest: string;
@@ -1848,6 +1869,64 @@ export interface DaumPostcodeInstance {
   embed(element: HTMLElement | null, options?: { autoClose?: boolean; q?: string }): void;  // 임베드(레이어) 방식
 }
 
+// 커스텀 주문서 관련 타입
+export interface CustomOrderRequest {
+  id: string;                    // 주문서 UUID
+  customerName: string;          // 고객명
+  customerEmail?: string;        // 고객 이메일
+  requestedDesign?: string;      // 요청 디자인 설명
+  nailShape?: NailShape;         // 요청 네일 쉐입
+  nailLength?: NailLength;       // 요청 네일 길이
+  attachments?: string[];        // 첨부 이미지 URL 목록
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  createdAt: string;             // 생성일시
+  updatedAt?: string;            // 수정일시
+  isRegisteredAsProduct?: boolean; // 이미 상품으로 등록됐는지 여부
+}
+
+// 커스텀 주문서 상세 (판매자 조회용) - specifications 포함
+export interface CustomOrderDetail {
+  id: string;                    // 주문서 UUID
+  userUuid: string;              // 주문 고객 UUID
+  sellerUuid: string;            // 판매자 UUID
+  title: string;                 // 주문서 제목
+  baseProductUuid?: string;      // 기반 상품 UUID
+  baseProductType?: 'original' | 'custom';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  specifications: {
+    shape: NailShape;
+    length: NailLength;
+    sizes: {
+      thumb: string;
+      index: string;
+      middle: string;
+      ring: string;
+      pinky: string;
+    };
+    desiredColor?: string;
+    desiredDate?: string;
+    designNotes?: string;
+    referenceImages?: string[];
+  };
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 주문서 기반 상품 프리필 응답
+export interface PrefillProductResponse {
+  name: string;
+  description: string;
+  shortDescription?: string;
+  brand?: string;
+  price: number;
+  processingDays: number;
+  mainImageUrl?: string;
+  detailImages?: Array<{ url: string; description?: string; order: number }>;
+  nailShape: NailShape;
+  nailLength: NailLength;
+  nailCategories?: NailCategories;
+  customOrderRequestUuid: string;
+}
 // window 객체에 daum.Postcode 타입 추가
 declare global {
   interface Window {
@@ -1855,4 +1934,39 @@ declare global {
       Postcode: DaumPostcode;
     };
   }
+}
+
+// 커스텀 주문서 생성 요청
+export interface CreateCustomOrderRequest {
+  sellerUuid: string;
+  baseProductUuid?: string;
+  baseProductType?: 'original' | 'custom';
+  title: string;
+  specifications: {
+    shape: NailShape;
+    length: NailLength;
+    sizes: {
+      thumb: string;
+      index: string;
+      middle: string;
+      ring: string;
+      pinky: string;
+    };
+    desiredColor?: string;
+    desiredDate?: string;  // ISO 문자열: "2025-12-25"
+    designNotes?: string;
+    referenceImages?: string[];
+  };
+}
+
+// 커스텀 주문서 생성 응답
+export interface CreateCustomOrderResponse {
+  requestUuid: string;
+  userUuid: string;
+  sellerUuid: string;
+  brandName?: string;
+  title: string;
+  specifications: CreateCustomOrderRequest['specifications'];
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  createdAt: string;
 }

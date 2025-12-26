@@ -2,17 +2,15 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { CategorySelector } from '../product/CategorySelector';
-import { imageService, productService, sellerService } from '../../services/apiService';
+import { imageService, productService, sellerService, brandService } from '../../services/apiService';
 import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
 import { FaDollarSign, FaChartLine, FaClipboardList, FaBox, FaPlus, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
-import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions } from '../../types';
+import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType, CustomOrderRequest, PrefillProductResponse } from '../../types';
 
 // 생산 관리 컴포넌트 임포트
-import { ProductionDashboard } from './seller/ProductionDashboard';
 import { ProductionSettings } from './seller/ProductionSettings';
-import { ProductionManage } from './seller/ProductionManage';
 import { ProductionStatus } from './seller/ProductionStatus';
 
 // 주문 관리 컴포넌트 임포트
@@ -319,7 +317,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   const [ products, setProducts ] = useState<any[]>([]);
   const [ isLoading, setIsLoading ] = useState(true);
   const [ error, setError ] = useState<string | null>(null);
-  
+
   // 삭제 관련 상태
   const [ showDeleteModal, setShowDeleteModal ] = useState(false);
   const [ productToDelete, setProductToDelete ] = useState<any | null>(null);
@@ -346,7 +344,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       try {
         isLoadingRef.current = true;
         abortControllerRef.current = new AbortController();
-        
+
         setIsLoading(true);
         setError(null);
 
@@ -384,7 +382,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           if (abortControllerRef.current?.signal.aborted) {
             return;
           }
-          
+
           console.error('Failed to load seller products:', apiError);
           // API 오류 시 사용자에게 알림
           setError('상품 목록을 불러오는데 실패했습니다.');
@@ -484,7 +482,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       await sellerService.deleteProduct(productToDelete.productId);
 
       // 성공 시 목록에서 제거
-      setProducts(prevProducts => 
+      setProducts(prevProducts =>
         prevProducts.filter(p => p.productId !== productToDelete.productId)
       );
 
@@ -717,7 +715,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
@@ -725,7 +723,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 <h3 className="text-lg font-medium text-gray-900">상품 삭제</h3>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <p className="text-sm text-gray-500">
                 상품을 삭제하시겠습니까?
@@ -780,6 +778,9 @@ interface DetailImage {
 export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => void; productId?: string }) {
   const isEdit = !!productId;
   const [ formData, setFormData ] = useState({
+    // 상품 유형
+    productType: 'original' as ProductType,
+
     // 기본 정보
     name: '',
     description: '',
@@ -820,12 +821,20 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
     // 상품 옵션
     isFeatured: false,
     isNewProduct: true,
-    tags: [] as string[]
+    tags: [] as string[],
+
+    // 커스텀 주문서 연결
+    customOrderRequestUuid: ''
   });
 
   const [ isSubmitting, setIsSubmitting ] = useState(false);
   const [ error, setError ] = useState<string | null>(null);
   const [ isLoading, setIsLoading ] = useState(false);
+
+  // 커스텀 주문서 모달 관련 상태
+  const [ showOrderModal, setShowOrderModal ] = useState(false);
+  const [ customOrders, setCustomOrders ] = useState<CustomOrderRequest[]>([]);
+  const [ loadingOrders, setLoadingOrders ] = useState(false);
 
   // 상품 수정 모드일 때 기존 상품 정보 불러오기
   useEffect(() => {
@@ -837,13 +846,13 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
           console.log('Loading product data for ID:', productId);
           const response = await sellerService.getSellerProduct(productId);
-          
+
           console.log('Full API response:', response);
-          
+
           if (!response.success || !response.data) {
             throw new Error('Failed to load product data');
           }
-          
+
           const product = response.data; // 실제 API 응답 구조에 맞게 수정
 
           console.log('Loaded product data:', product);
@@ -855,18 +864,21 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
           // 폼 데이터 업데이트 (API 응답 구조에 맞게, 안전한 접근)
           setFormData({
+            // 상품 유형 (서버와 동일하게 소문자 사용)
+            productType: (product.productType as ProductType) || 'original',
+
             // 기본 정보
             name: String(product.name || ''),
             description: String(product.description || ''),
             shortDescription: String(product.shortDescription || ''),
             brand: String(product.brand || 'Seller Store'),
             sku: String(product.sku || ''),
-            
+
             // 가격 정보 (숫자를 안전하게 문자열로 변환)
             price: product.price ? String(product.price) : '',
             salePrice: product.salePrice ? String(product.salePrice) : '',
             discountRate: product.discountRate !== null && product.discountRate !== undefined ? String(product.discountRate) : '',
-            
+
             // 재고 및 처리 정보
             stockQuantity: product.stockQuantity ? String(product.stockQuantity) : '100',
             processingDays: product.processingDays ? String(product.processingDays) : '3',
@@ -908,6 +920,68 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
     }
   }, [productId, isEdit]);
 
+  // 커스텀 주문서 목록 불러오기
+  const handleLoadOrderRequest = async () => {
+    setLoadingOrders(true);
+    try {
+      const response = await sellerService.getCustomOrderRequests();
+      if (response.success && response.data) {
+        // 이미 등록된 주문서는 필터링 (isRegisteredAsProduct가 true인 경우)
+        const availableOrders = response.data.filter(order => !order.isRegisteredAsProduct);
+        setCustomOrders(availableOrders);
+        setShowOrderModal(true);
+      } else {
+        alert('주문서 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to load custom order requests:', error);
+      alert('주문서 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  // 주문서 선택 시 프리필 데이터로 폼 채우기
+  const handleSelectOrder = async (requestUuid: string) => {
+    try {
+      setLoadingOrders(true);
+      const response = await sellerService.getPrefillData(requestUuid);
+
+      if (response.success && response.data) {
+        const data = response.data;
+        setFormData(prev => ({
+          ...prev,
+          name: data.name || prev.name,
+          description: data.description || prev.description,
+          shortDescription: data.shortDescription || prev.shortDescription,
+          brand: data.brand || prev.brand,
+          price: data.price ? String(data.price) : prev.price,
+          processingDays: data.processingDays ? String(data.processingDays) : prev.processingDays,
+          mainImageUrl: data.mainImageUrl || prev.mainImageUrl,
+          detailImages: data.detailImages || prev.detailImages,
+          nailShape: data.nailShape || prev.nailShape,
+          nailLength: data.nailLength || prev.nailLength,
+          nailCategories: data.nailCategories || prev.nailCategories,
+          productType: 'custom',
+          customOrderRequestUuid: data.customOrderRequestUuid,
+          stockQuantity: '0', // 커스텀 상품은 재고 0
+        }));
+        setShowOrderModal(false);
+        alert('주문서 정보가 적용되었습니다.');
+      }
+    } catch (error: any) {
+      console.error('Failed to get prefill data:', error);
+      // 이미 등록된 주문서 에러 처리
+      if (error?.data?.error === 'This custom order request is already registered as a product') {
+        alert('이 주문서는 이미 상품으로 등록되어 있습니다.');
+      } else {
+        alert('주문서 정보를 불러오는데 실패했습니다.');
+      }
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -942,13 +1016,13 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         throw new Error('태그는 최대 20개까지 등록할 수 있습니다.');
       }
 
-      // 2. 상품 데이터 구성 (서버 API 스펙에 완전 일치)
-      const productData: CreateProductRequest = {
+      // 2. 상품 데이터 구성
+      // 공통 필드 (등록/수정 모두 사용)
+      const commonData = {
         name: formData.name,
         description: formData.description,
         shortDescription: formData.shortDescription || formData.description.substring(0, 100),
         brand: formData.brand || '네일아트',
-        sku: formData.sku || `NAIL-${Date.now()}`,
         price: parseInt(formData.price),
         salePrice: formData.salePrice ? parseInt(formData.salePrice) : undefined,
         discountRate: formData.discountRate ? parseInt(formData.discountRate) : null,
@@ -958,7 +1032,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           description: img.description,
           order: img.order || index + 1
         })),
-        stockQuantity: parseInt(formData.stockQuantity),
+        stockQuantity: formData.productType === 'custom' ? 0 : parseInt(formData.stockQuantity),
         processingDays: parseInt(formData.processingDays),
         nailCategories: formData.nailCategories,
         nailShape: formData.nailShape,
@@ -970,17 +1044,29 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         },
         isFeatured: formData.isFeatured,
         isNewProduct: formData.isNewProduct,
-        tags: formData.tags
+        tags: formData.tags,
       };
-
-      console.log(isEdit ? '수정할 상품 데이터:' : '등록할 상품 데이터:', productData);
 
       // 3. API 호출 (등록 vs 수정)
       let response;
       if (isEdit && productId) {
-        const updateData: UpdateProductRequest = { ...productData, productId };
+        // 수정: customOrderRequestUuid만 제외, productType은 포함 (서버는 소문자 요구)
+        const updateData: UpdateProductRequest = {
+          ...commonData,
+          productId,
+          productType: formData.productType.toLowerCase() as any
+        };
+        console.log('수정할 상품 데이터:', updateData);
         response = await productService.updateProduct(productId, updateData);
       } else {
+        // 등록: 모든 필드 포함 (서버는 소문자 productType 요구)
+        const productData: CreateProductRequest = {
+          ...commonData,
+          productType: formData.productType.toLowerCase() as any,
+          sku: formData.sku || `NAIL-${Date.now()}`,
+          customOrderRequestUuid: formData.customOrderRequestUuid || undefined
+        };
+        console.log('등록할 상품 데이터:', productData);
         response = await productService.createProduct(productData);
       }
 
@@ -1033,7 +1119,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         body: file,
         headers: uploadHeaders,
       });
-      
+
       if (!uploadResponse.ok) {
         throw new Error(`S3 upload failed: ${uploadResponse.status}`);
       }
@@ -1093,7 +1179,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         body: file,
         headers: uploadHeaders,
       });
-      
+
       if (!uploadResponse.ok) {
         throw new Error(`S3 upload failed: ${uploadResponse.status}`);
       }
@@ -1181,7 +1267,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         body: detailImage.file,
         headers: uploadHeaders,
       });
-      
+
       if (!uploadResponse.ok) {
         throw new Error(`S3 retry upload failed: ${uploadResponse.status}`);
       }
@@ -1358,6 +1444,72 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
         {/* 기본 정보 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
+
+          {/* 상품 유형 선택 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              상품 유형 *
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, productType: 'original' })}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                  formData.productType === 'original'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                오리지널
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, productType: 'custom' })}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                  formData.productType === 'custom'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                커스텀
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              오리지널: 기성품 / 커스텀: 주문제작 상품
+            </p>
+          </div>
+
+          {/* 커스텀 선택 시 주문서 불러오기 버튼 */}
+          {formData.productType === 'custom' && (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={handleLoadOrderRequest}
+                disabled={loadingOrders}
+                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingOrders ? (
+                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
+                {loadingOrders ? '불러오는 중...' : '주문서 불러오기'}
+              </button>
+              {formData.customOrderRequestUuid && (
+                <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  주문서가 연결되었습니다
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
@@ -2026,6 +2178,92 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
           </button>
         </div>
         </form>
+      )}
+
+      {/* 커스텀 주문서 선택 모달 */}
+      {showOrderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">주문서 선택</h3>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {loadingOrders ? (
+                <div className="flex items-center justify-center py-8">
+                  <svg className="animate-spin w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : customOrders.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p>등록 가능한 주문서가 없습니다.</p>
+                  <p className="text-sm mt-1">새로운 커스텀 주문이 들어오면 여기에 표시됩니다.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {customOrders.map((order) => (
+                    <button
+                      key={order.id}
+                      onClick={() => handleSelectOrder(order.id)}
+                      disabled={loadingOrders}
+                      className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left transition-colors disabled:opacity-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{order.customerName}</div>
+                          {order.requestedDesign && (
+                            <div className="text-sm text-gray-600 mt-1 line-clamp-2">{order.requestedDesign}</div>
+                          )}
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(order.createdAt).toLocaleDateString('ko-KR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {order.nailShape && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                              {order.nailShape}
+                            </span>
+                          )}
+                          {order.nailLength && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                              {order.nailLength}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t">
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </SellerLayout>
   );
@@ -2829,5 +3067,656 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
   );
 }
 
+// 브랜드 관리 컴포넌트
+export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
+  const [brandInfo, setBrandInfo] = useState<{
+    sellerUuid: string;
+    brandName: string;
+    brandProfile: string | null;
+    brandBanner: string | null;
+    acceptsCustomOrders: boolean;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 편집 상태
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+
+  // 로고 업로드 상태
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 배너 업로드 상태
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  // 커스텀 주문 설정 상태
+  const [savingCustomOrder, setSavingCustomOrder] = useState(false);
+
+  // 성공/에러 메시지
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // 브랜드 정보 로드
+  useEffect(() => {
+    loadBrandInfo();
+  }, []);
+
+  const loadBrandInfo = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 현재 로그인한 판매자의 정보 조회 + 커스텀 주문 설정 조회
+      const [sellerInfo, customOrderSetting] = await Promise.all([
+        sellerService.getMySellerInfo(),
+        sellerService.getCustomOrderSetting()
+      ]);
+
+      if (sellerInfo && sellerInfo.success && sellerInfo.data) {
+        const seller = sellerInfo.data;
+
+        // 브랜드 상세 정보 조회 (brandBanner 포함)
+        let brandBanner: string | null = null;
+        try {
+          const brandDetail = await brandService.getBrandDetail(seller.userUuid);
+          brandBanner = brandDetail.data?.brandBanner || null;
+        } catch (err) {
+          console.log('Brand detail fetch failed, using default banner');
+        }
+
+        setBrandInfo({
+          sellerUuid: seller.userUuid,
+          brandName: seller.brandName || '',
+          brandProfile: seller.brandProfile || null,
+          brandBanner,
+          acceptsCustomOrders: customOrderSetting?.data?.acceptsCustomOrders ?? false
+        });
+        setNewBrandName(seller.brandName || '');
+      } else {
+        setError('판매자 정보를 찾을 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('브랜드 정보 로드 실패:', err);
+      setError(err.message || '브랜드 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 브랜드명 수정
+  const handleUpdateName = async () => {
+    if (!brandInfo || !newBrandName.trim()) return;
+
+    try {
+      setSavingName(true);
+      setError(null);
+
+      await sellerService.updateSellerProfile({
+        brandName: newBrandName.trim()
+      });
+
+      setBrandInfo(prev => prev ? { ...prev, brandName: newBrandName.trim() } : null);
+      setIsEditingName(false);
+      showSuccess('브랜드명이 변경되었습니다.');
+    } catch (err: any) {
+      console.error('브랜드명 변경 실패:', err);
+      setError(err.message || '브랜드명 변경에 실패했습니다.');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  // 로고 파일 선택
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    // 파일 크기 검증 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    // 미리보기 생성
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setLogoPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // 업로드 실행
+    handleLogoUpload(file);
+  };
+
+  // 로고 업로드
+  const handleLogoUpload = async (file: File) => {
+    if (!brandInfo) return;
+
+    try {
+      setUploadingLogo(true);
+      setError(null);
+
+      // 1. presigned URL 획득
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'brand-profile'
+      });
+
+      // 2. S3에 직접 업로드
+      await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+
+      // 3. 브랜드 프로필 업데이트
+      await sellerService.updateSellerProfile({
+        brandProfile: presignedResponse.imageUrl
+      });
+
+      // 상태 업데이트
+      setBrandInfo(prev => prev ? { ...prev, brandProfile: presignedResponse.imageUrl } : null);
+      setLogoPreview(null);
+      showSuccess('로고 이미지가 변경되었습니다.');
+    } catch (err: any) {
+      console.error('로고 업로드 실패:', err);
+      setError(err.message || '로고 업로드에 실패했습니다.');
+      setLogoPreview(null);
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 배너 파일 선택
+  const handleBannerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    // 파일 크기 검증 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('파일 크기는 10MB 이하여야 합니다.');
+      return;
+    }
+
+    // 미리보기 생성
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setBannerPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // 업로드 실행
+    handleBannerUpload(file);
+  };
+
+  // 배너 업로드
+  const handleBannerUpload = async (file: File) => {
+    if (!brandInfo) return;
+
+    try {
+      setUploadingBanner(true);
+      setError(null);
+
+      // 1. presigned URL 획득
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'brand-banner'
+      });
+
+      // 2. S3에 직접 업로드
+      const uploadHeaders: Record<string, string> = {
+        'Content-Type': file.type,
+        ...(presignedResponse.uploadHeaders || {})
+      };
+      const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: uploadHeaders,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`S3 upload failed: ${uploadResponse.status}`);
+      }
+
+      // 3. 브랜드 배너 업데이트
+      await brandService.updateBrandBanner(brandInfo.sellerUuid, {
+        brandBanner: presignedResponse.imageUrl
+      });
+
+      // 4. 브랜드 정보 새로고침
+      const updatedBrand = await brandService.getBrandDetail(brandInfo.sellerUuid);
+      setBrandInfo(prev => prev ? { ...prev, brandBanner: updatedBrand.data?.brandBanner || null } : null);
+
+      setBannerPreview(null);
+      showSuccess('배너 이미지가 변경되었습니다!');
+    } catch (err: any) {1
+      console.error('배너 업로드 실패:', err);
+      setError(err.message || '배너 업로드에 실패했습니다.');
+      setBannerPreview(null);
+    } finally {
+      setUploadingBanner(false);
+      if (bannerInputRef.current) {
+        bannerInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 성공 메시지 표시
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  // 커스텀 주문 설정 토글
+  const handleToggleCustomOrder = async () => {
+    if (!brandInfo || savingCustomOrder) return;
+
+    try {
+      setSavingCustomOrder(true);
+      setError(null);
+
+      const newValue = !brandInfo.acceptsCustomOrders;
+      const response = await sellerService.updateCustomOrderSetting({
+        acceptsCustomOrders: newValue
+      });
+
+      // 서버 응답값으로 상태 업데이트
+      const updatedValue = response?.data?.acceptsCustomOrders ?? newValue;
+      setBrandInfo(prev => prev ? { ...prev, acceptsCustomOrders: updatedValue } : null);
+      showSuccess(updatedValue ? '커스텀 주문을 받을 수 있게 설정되었습니다.' : '커스텀 주문이 비활성화되었습니다.');
+    } catch (err: any) {
+      console.error('커스텀 주문 설정 변경 실패:', err);
+      setError(err.message || '커스텀 주문 설정 변경에 실패했습니다.');
+    } finally {
+      setSavingCustomOrder(false);
+    }
+  };
+
+  // 편집 취소
+  const cancelNameEdit = () => {
+    setNewBrandName(brandInfo?.brandName || '');
+    setIsEditingName(false);
+  };
+
+  if (loading) {
+    return (
+      <SellerLayout title="브랜드 관리" onGo={onGo}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  return (
+    <SellerLayout title="브랜드 관리" onGo={onGo}>
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* 성공 메시지 */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            {successMessage}
+          </div>
+        )}
+
+        {/* 에러 메시지 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <FaExclamationTriangle className="w-5 h-5" />
+            {error}
+            <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* 브랜드 정보 카드 */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {/* 헤더 */}
+          <div className="border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900">브랜드 정보</h2>
+            <p className="text-sm text-gray-500 mt-1">브랜드 상세페이지에 표시되는 정보입니다.</p>
+          </div>
+
+          {/* 로고 섹션 */}
+          <div className="p-6 border-b border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 로고</label>
+            <div className="flex items-center gap-6">
+              {/* 현재 로고 또는 기본 아이콘 */}
+              <div className="relative">
+                {(logoPreview || brandInfo?.brandProfile) ? (
+                  <img
+                    src={logoPreview || brandInfo?.brandProfile || ''}
+                    alt="브랜드 로고"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
+                    <span className="text-3xl font-bold text-gray-400">
+                      {brandInfo?.brandName?.charAt(0) || 'B'}
+                    </span>
+                  </div>
+                )}
+
+                {uploadingLogo && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* 업로드 버튼 */}
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="logo-upload"
+                />
+                <label
+                  htmlFor="logo-upload"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    uploadingLogo
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {uploadingLogo ? '업로드 중...' : '이미지 변경'}
+                </label>
+                <p className="text-xs text-gray-500">JPG, PNG 형식 / 최대 5MB</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 배너 섹션 */}
+          <div className="p-6 border-b border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 배너</label>
+            <div className="space-y-4">
+              {/* 현재 배너 또는 기본 이미지 */}
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+                {(bannerPreview || brandInfo?.brandBanner) ? (
+                  <img
+                    src={bannerPreview || brandInfo?.brandBanner || ''}
+                    alt="브랜드 배너"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="w-16 h-16 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-gray-500">배너 이미지가 없습니다</p>
+                    </div>
+                  </div>
+                )}
+
+                {uploadingBanner && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                      <p className="text-white text-sm">업로드 중...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 업로드 버튼 및 안내 */}
+              <div className="flex items-start gap-4">
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleBannerFileSelect}
+                  className="hidden"
+                  id="banner-upload"
+                />
+                <label
+                  htmlFor="banner-upload"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    uploadingBanner
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {uploadingBanner ? '업로드 중...' : '배너 변경'}
+                </label>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-600">
+                    <span className="font-medium">권장 사이즈:</span> 1920x600px
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPG, PNG, WebP 형식 / 최대 10MB
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 브랜드명 섹션 */}
+          <div className="p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드명</label>
+
+            {isEditingName ? (
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="브랜드명을 입력하세요"
+                  maxLength={200}
+                />
+                <button
+                  onClick={handleUpdateName}
+                  disabled={savingName || !newBrandName.trim()}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    savingName || !newBrandName.trim()
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {savingName ? '저장 중...' : '저장'}
+                </button>
+                <button
+                  onClick={cancelNameEdit}
+                  disabled={savingName}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-medium text-gray-900">{brandInfo?.brandName || '(설정되지 않음)'}</span>
+                <button
+                  onClick={() => setIsEditingName(true)}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  수정
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 커스텀 주문 설정 카드 */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900">커스텀 주문 설정</h2>
+            <p className="text-sm text-gray-500 mt-1">고객이 맞춤 주문서를 제출할 수 있도록 설정합니다.</p>
+          </div>
+
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">커스텀 주문 받기</label>
+                <p className="text-sm text-gray-500 mt-1">
+                  활성화하면 고객이 브랜드 페이지에서 맞춤 주문서를 제출할 수 있습니다.
+                </p>
+              </div>
+              <button
+                onClick={handleToggleCustomOrder}
+                disabled={savingCustomOrder}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  savingCustomOrder ? 'opacity-50 cursor-not-allowed' : ''
+                } ${brandInfo?.acceptsCustomOrders ? 'bg-blue-600' : 'bg-gray-200'}`}
+                role="switch"
+                aria-checked={brandInfo?.acceptsCustomOrders}
+              >
+                <span className="sr-only">커스텀 주문 받기</span>
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    brandInfo?.acceptsCustomOrders ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {brandInfo?.acceptsCustomOrders && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-green-800">
+                    <p className="font-medium">커스텀 주문이 활성화되었습니다</p>
+                    <p className="mt-1 text-green-700">고객이 브랜드 페이지에서 맞춤 주문서를 제출할 수 있습니다.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 브랜드 페이지 미리보기 카드 */}
+        {brandInfo && (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h3 className="text-lg font-semibold text-gray-900">브랜드 페이지 미리보기</h3>
+              <p className="text-sm text-gray-500 mt-1">고객에게 보여질 브랜드 페이지 모습입니다</p>
+            </div>
+
+            <div className="p-6">
+              {/* 미니 프리뷰 */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                {/* 배너 미리보기 */}
+                <div className="relative h-32 bg-gradient-to-r from-blue-100 to-purple-100">
+                  {brandInfo.brandBanner ? (
+                    <img
+                      src={brandInfo.brandBanner}
+                      alt="배너 미리보기"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-sm text-gray-400">배너 이미지가 없습니다</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 프로필 + 브랜드명 미리보기 */}
+                <div className="px-6 py-4 bg-white">
+                  <div className="flex items-center gap-4">
+                    {/* 프로필 이미지 */}
+                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex-shrink-0 overflow-hidden border-2 border-white shadow-lg -mt-10 relative z-10">
+                      {brandInfo.brandProfile ? (
+                        <img
+                          src={brandInfo.brandProfile}
+                          alt="프로필 미리보기"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-2xl font-bold text-gray-400">
+                            {brandInfo.brandName?.charAt(0) || 'B'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 브랜드명 */}
+                    <div className="flex-1">
+                      <h4 className="text-lg font-bold text-gray-900">
+                        {brandInfo.brandName || '브랜드명 없음'}
+                      </h4>
+                      <p className="text-sm text-gray-500">브랜드 페이지</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 페이지 보기 버튼 */}
+              {brandInfo.sellerUuid && (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    전체 페이지 보기
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 안내 메시지 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex gap-3">
+            <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">브랜드 정보 안내</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-700">
+                <li>브랜드 로고는 정사각형 이미지(512x512px)를 권장합니다.</li>
+                <li>브랜드 배너는 가로형 이미지(1920x600px)를 권장합니다.</li>
+                <li>브랜드명은 고객에게 노출되는 중요한 정보입니다.</li>
+                <li>변경사항은 즉시 브랜드 페이지에 반영됩니다.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SellerLayout>
+  );
+}
+
 // 생산 관리 컴포넌트들 내보내기
-export { ProductionDashboard, ProductionSettings, ProductionManage, ProductionStatus };
+export { ProductionSettings, ProductionStatus };

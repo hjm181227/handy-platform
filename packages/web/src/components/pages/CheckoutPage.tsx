@@ -96,14 +96,74 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setError(null);
 
       // ✅ OrderService를 통한 체크아웃 초기화 (백엔드 스펙 준수)
-      // 백엔드가 JWT 토큰으로 사용자 장바구니를 자동으로 읽어옴
-      console.log('📦 [CheckoutPage] Initializing checkout from cart');
-      const response = await webApiService.order.initializeCheckout();
+      // URL 파라미터에서 mode 읽기 (cart / direct / custom)
+      const urlParams = new URLSearchParams(window.location.search);
+      const checkoutMode = urlParams.get('mode') || 'cart'; // 기본값: 장바구니
+      console.log('🔍 [CheckoutPage] Checkout mode from URL:', checkoutMode);
+
+      let requestBody: any = undefined;
+
+      // mode에 따라 requestBody 구성
+      switch (checkoutMode) {
+        case 'cart':
+          // 장바구니: 빈 body (서버가 장바구니를 직접 읽음)
+          requestBody = undefined;
+          console.log('📦 [CheckoutPage] Cart checkout - server will load from user cart');
+          break;
+
+        case 'direct':
+          // 바로구매: sessionStorage에서 directItem 읽기 (단일 객체)
+          try {
+            const checkoutDataStr = sessionStorage.getItem('checkoutData');
+            if (checkoutDataStr) {
+              const checkoutData = JSON.parse(checkoutDataStr);
+              requestBody = { directItem: checkoutData.directItem };
+              console.log('📦 [CheckoutPage] Direct purchase mode:', checkoutData.directItem);
+            } else {
+              console.error('❌ [CheckoutPage] No checkoutData found for direct mode');
+              throw new Error('바로구매 정보를 찾을 수 없습니다.');
+            }
+          } catch (err) {
+            console.error('❌ [CheckoutPage] Failed to load direct purchase data:', err);
+            sessionStorage.removeItem('checkoutData');
+            throw err;
+          }
+          break;
+
+        case 'custom':
+          // 견적서 기반 주문: URL 파라미터에서 quoteUuid 읽기
+          try {
+            const quoteUuid = new URLSearchParams(window.location.search).get('quoteUuid');
+            if (quoteUuid) {
+              requestBody = { quoteUuid };
+              console.log('📦 [CheckoutPage] Quote-based checkout:', quoteUuid);
+            } else {
+              console.error('❌ [CheckoutPage] No quoteUuid found in URL for custom mode');
+              throw new Error('견적서 정보를 찾을 수 없습니다.');
+            }
+          } catch (err) {
+            console.error('❌ [CheckoutPage] Failed to load quote data:', err);
+            throw err;
+          }
+          break;
+
+        default:
+          console.warn('⚠️ [CheckoutPage] Unknown checkout mode:', checkoutMode);
+          requestBody = undefined;
+      }
+
+      console.log('🔍 [CheckoutPage] Final requestBody:', JSON.stringify(requestBody, null, 2));
+
+      const response = await webApiService.order.initializeCheckout(requestBody);
 
       console.log('📦 [CheckoutPage] Initialize response:', response);
       const result = response;
 
       if (result.success && result.data) {
+        // ✅ Initialize 성공 - sessionStorage 정리 (다음 주문에 영향 방지)
+        sessionStorage.removeItem('checkoutData');
+        console.log('🗑️ [CheckoutPage] Cleared checkoutData from sessionStorage');
+
         // ✅ CheckoutData를 cart로 저장 (sessionId 포함)
         setCart({
           sessionId: result.data.sessionId,
@@ -137,13 +197,35 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         await loadAddresses();
 
       } else {
-        const errorMessage = result.error?.message || '주문 정보를 불러올 수 없습니다.';
+        // 에러 코드별 사용자 친화적 메시지
+        const errorCode = result.errorCode || result.error?.code;
+        let errorMessage = result.error?.message || result.error || '주문 정보를 불러올 수 없습니다.';
+
+        switch (errorCode) {
+          case 'CART_EMPTY':
+            errorMessage = '장바구니가 비어있습니다. 상품을 먼저 추가해주세요.';
+            break;
+          case 'PRODUCT_NOT_FOUND':
+            errorMessage = '상품을 찾을 수 없습니다. 상품이 삭제되었거나 판매가 중단되었을 수 있습니다.';
+            break;
+          case 'CUSTOM_REQUEST_NOT_FOUND':
+            errorMessage = '맞춤제작 요청을 찾을 수 없습니다.';
+            break;
+          case 'INVALID_CUSTOM_REQUEST_STATUS':
+            errorMessage = '맞춤제작 요청이 아직 견적 승인 단계가 아닙니다.';
+            break;
+          case 'INITIALIZATION_ERROR':
+            errorMessage = '체크아웃 초기화 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+            break;
+        }
+
         setError(errorMessage);
       }
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Initialize failed:', err);
-      setError(err.message || '체크아웃 초기화에 실패했습니다.');
+      const errorMessage = err.message || '체크아웃 초기화에 실패했습니다.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -401,6 +483,68 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     return hasValidAddress && hasPaymentMethod;
   };
 
+  // ✅ 스테이징 환경 체크
+  const isStaging = import.meta.env.VITE_ENVIRONMENT === 'stage';
+
+  // ✅ 테스트 결제 (스테이징 전용 - 결제 스킵)
+  const handleTestPayment = async () => {
+    if (!cart) {
+      setError('체크아웃 정보가 없습니다.');
+      return;
+    }
+
+    if (!selectedAddressId) {
+      setError('배송지를 선택해주세요.');
+      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      return;
+    }
+
+    if ((cart as any).status !== 'validated') {
+      setError('배송지를 먼저 선택해주세요.');
+      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      setError(null);
+
+      // 1. 결제 준비 (주문 생성)
+      console.log('🧪 [CheckoutPage] Test payment - preparing order...');
+      const prepareResponse = await webApiService.order.preparePayment(
+        (cart as any).sessionId,
+        cart.totals.finalTotal,
+        'KAKAO_PAY' // 테스트용 기본값
+      );
+
+      if (!prepareResponse.success || !prepareResponse.data?.orderId) {
+        throw new Error(prepareResponse.error || '주문 생성에 실패했습니다.');
+      }
+
+      const orderId = prepareResponse.data.orderId;
+      console.log('🧪 [CheckoutPage] Test payment - order created:', orderId);
+
+      // 2. 결제 스킵 API 호출
+      console.log('🧪 [CheckoutPage] Test payment - skipping payment...');
+      const skipResponse = await webApiService.order.skipPayment(orderId);
+
+      if (skipResponse.success) {
+        console.log('✅ [CheckoutPage] Test payment completed:', skipResponse.data);
+        // 주문 완료 페이지로 이동
+        onGo(`/order-complete?orderId=${orderId}`);
+      } else {
+        throw new Error(skipResponse.error || '결제 스킵에 실패했습니다.');
+      }
+
+    } catch (err: any) {
+      console.error('❌ [CheckoutPage] Test payment failed:', err);
+      setError(err.message || '테스트 결제 처리 중 오류가 발생했습니다.');
+      await alert(err.message || '테스트 결제에 실패했습니다.', { variant: 'error' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   // ✅ 결제 준비 (POST /api/payment/prepare) - 백엔드 스펙 준수
   const handlePayment = async () => {
     if (!cart) {
@@ -597,6 +741,75 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 </div>
               )}
             </div>
+
+            {/* 제작 및 배송 안내 */}
+            {cart?.productionInfo && (
+              <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <span className="text-blue-600">⏱️</span>
+                  제작 및 배송 안내
+                </h2>
+
+                {/* 제작 소요 기간 */}
+                <div className="mb-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">
+                    총 제작 소요 기간: <span className="text-blue-600 font-bold">{cart.productionInfo.estimatedProductionTime}일</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    예상 배송일: {new Date(cart.productionInfo.earliestDeliveryDate).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })} 이후
+                  </div>
+                </div>
+
+                {/* 판매자별 제작 일정 */}
+                {cart.productionInfo.productionSchedule && cart.productionInfo.productionSchedule.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      판매자별 제작 일정:
+                    </div>
+                    {cart.productionInfo.productionSchedule.map((schedule, index) => (
+                      <div key={index} className="bg-white rounded-lg p-3 text-sm">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">{schedule.sellerName || `판매자 ${index + 1}`}</span>
+                            <span className="text-gray-500 ml-2">({schedule.itemCount}개 상품)</span>
+                          </div>
+                          <span className="text-blue-600 font-medium">{schedule.processingDays}일 소요</span>
+                        </div>
+                        <div className="text-gray-600 mt-1">
+                          예상 완성일: {new Date(schedule.estimatedCompletionDate).toLocaleDateString('ko-KR', {
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 배송비 추정 정보 */}
+                {cart.shippingEstimate && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700">예상 배송비</span>
+                      <span className="font-semibold text-blue-600">
+                        {cart.shippingEstimate.estimatedCost === 0
+                          ? '무료 배송'
+                          : `${money(cart.shippingEstimate.estimatedCost)}`}
+                      </span>
+                    </div>
+                    {cart.shippingEstimate.note && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        💡 {cart.shippingEstimate.note}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 배송지 정보 */}
             <div className="bg-white rounded-lg border p-6">
@@ -819,9 +1032,27 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 {processing ? '결제 중...' : `${money(order?.finalPrice || 0)} 결제하기`}
               </button>
 
+              {/* 스테이징 환경 전용: 테스트 결제 버튼 */}
+              {isStaging && (
+                <button
+                  onClick={handleTestPayment}
+                  disabled={processing || !validateCheckout()}
+                  className="w-full mt-3 bg-orange-500 text-white font-semibold py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processing ? '처리 중...' : '🧪 테스트 결제 (결제 스킵)'}
+                </button>
+              )}
+
               <p className="text-xs text-gray-500 text-center mt-3">
                 결제 진행 시 주문 내용 확인 및 서비스 약관에 동의한 것으로 간주됩니다.
               </p>
+
+              {/* 스테이징 환경 안내 */}
+              {isStaging && (
+                <p className="text-xs text-orange-600 text-center mt-2 bg-orange-50 p-2 rounded">
+                  🧪 스테이징 환경: 테스트 결제 버튼을 사용하면 실제 결제 없이 주문이 완료됩니다.
+                </p>
+              )}
             </div>
           </div>
         </div>

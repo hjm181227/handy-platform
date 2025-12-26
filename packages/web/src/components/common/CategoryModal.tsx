@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { webApiService } from '../../services/apiService';
-import type { CategoryData, CategoryItem } from '@handy-platform/shared';
+import type { CategoryData, CategoryItem, Brand } from '@handy-platform/shared';
 import { FaTimes, FaSearch } from 'react-icons/fa';
 import { FiShoppingBag } from 'react-icons/fi';
 
@@ -23,6 +23,13 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
   const [selectedType, setSelectedType] = useState<string>('style'); // 왼쪽 사이드바에서 선택된 타입
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+
+  // 브랜드 관련 상태
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(false);
+  const [brandsError, setBrandsError] = useState<string | null>(null);
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
+  const [brandSearchFocused, setBrandSearchFocused] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -79,11 +86,64 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
     }
   };
 
+  // 브랜드 데이터 로드
+  const loadBrands = async (search?: string) => {
+    // 검색어가 없고 이미 로드된 경우 스킵
+    if (!search && brands.length > 0) return;
+    try {
+      setBrandsLoading(true);
+      setBrandsError(null);
+      const response = await webApiService.brand.getBrands({
+        listNum: '30',
+        sortBy: 'totalProducts',
+        sortOrder: 'desc',
+        ...(search && { search })
+      });
+      if (response.brands) {
+        setBrands(response.brands);
+      } else {
+        setBrandsError('브랜드를 불러올 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('Failed to load brands:', err);
+      setBrandsError(err.message || '브랜드를 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setBrandsLoading(false);
+    }
+  };
+
+  // 브랜드 검색 핸들러
+  const handleBrandSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadBrands(brandSearchQuery.trim() || undefined);
+  };
+
+  // 브랜드 검색 취소 핸들러
+  const handleBrandSearchCancel = () => {
+    setBrandSearchQuery('');
+    setBrandSearchFocused(false);
+    setBrands([]); // 기존 목록 초기화하여 다시 로드되도록
+    loadBrands(); // 전체 브랜드 목록 다시 로드
+  };
+
   // 카테고리 클릭 핸들러
   const handleCategoryClick = (categoryType: string, categoryValue: string) => {
     onClose();
     onNavigate(`/cat/${categoryType}/${categoryValue}`);
   };
+
+  // 브랜드 클릭 핸들러
+  const handleBrandClick = (sellerUuid: string) => {
+    onClose();
+    onNavigate(`/brands/${sellerUuid}`);
+  };
+
+  // 브랜드 탭 전환 시 데이터 로드
+  useEffect(() => {
+    if (activeTab === 'brand' && isOpen) {
+      loadBrands();
+    }
+  }, [activeTab, isOpen]);
 
   // 검색 핸들러
   const handleSearchSubmit = () => {
@@ -325,8 +385,85 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               </div>
             )
           ) : (
-            <div className="text-center py-12 text-gray-500 w-full">
-              브랜드 목록은 준비 중입니다.
+            // 브랜드 탭 콘텐츠
+            <div className="flex-1 overflow-y-auto p-3">
+              {/* 브랜드 검색바 */}
+              <form onSubmit={handleBrandSearch} className="mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={brandSearchQuery}
+                      onChange={(e) => setBrandSearchQuery(e.target.value)}
+                      onFocus={() => setBrandSearchFocused(true)}
+                      placeholder="브랜드 검색"
+                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <FaSearch className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {(brandSearchFocused || brandSearchQuery) && (
+                    <button
+                      type="button"
+                      onClick={handleBrandSearchCancel}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                    >
+                      취소
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {brandsLoading ? (
+                <div className="flex items-center justify-center py-12 w-full">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+              ) : brandsError ? (
+                <div className="text-center py-12 w-full">
+                  <p className="text-red-600 mb-4">{brandsError}</p>
+                  <button
+                    onClick={() => loadBrands()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              ) : brands.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 w-full">
+                  {brandSearchQuery ? `"${brandSearchQuery}" 검색 결과가 없습니다.` : '등록된 브랜드가 없습니다.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {brands.map((brand) => (
+                    <button
+                      key={brand.sellerUuid}
+                      onClick={() => handleBrandClick(brand.sellerUuid)}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-blue-600 hover:shadow-md transition-all group bg-white"
+                    >
+                      {brand.brandProfile ? (
+                        <img
+                          src={brand.brandProfile}
+                          alt={brand.brandName}
+                          className="w-12 h-12 mb-2 object-contain rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 mb-2 rounded-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-400">
+                            {brand.brandName.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 text-center line-clamp-1">
+                        {brand.brandName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -512,8 +649,85 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               </div>
             )
           ) : (
-            <div className="text-center py-12 text-gray-500 w-full">
-              브랜드 목록은 준비 중입니다.
+            // 브랜드 탭 콘텐츠 (모달 모드)
+            <div className="flex-1 overflow-y-auto p-3 md:p-6">
+              {/* 브랜드 검색바 */}
+              <form onSubmit={handleBrandSearch} className="mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={brandSearchQuery}
+                      onChange={(e) => setBrandSearchQuery(e.target.value)}
+                      onFocus={() => setBrandSearchFocused(true)}
+                      placeholder="브랜드 검색"
+                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <FaSearch className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {(brandSearchFocused || brandSearchQuery) && (
+                    <button
+                      type="button"
+                      onClick={handleBrandSearchCancel}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                    >
+                      취소
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {brandsLoading ? (
+                <div className="flex items-center justify-center py-12 w-full">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+              ) : brandsError ? (
+                <div className="text-center py-12 w-full">
+                  <p className="text-red-600 mb-4">{brandsError}</p>
+                  <button
+                    onClick={() => loadBrands()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              ) : brands.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 w-full">
+                  {brandSearchQuery ? `"${brandSearchQuery}" 검색 결과가 없습니다.` : '등록된 브랜드가 없습니다.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 md:gap-3">
+                  {brands.map((brand) => (
+                    <button
+                      key={brand.sellerUuid}
+                      onClick={() => handleBrandClick(brand.sellerUuid)}
+                      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-lg border border-gray-200 hover:border-blue-600 hover:shadow-md transition-all group bg-white"
+                    >
+                      {brand.brandProfile ? (
+                        <img
+                          src={brand.brandProfile}
+                          alt={brand.brandName}
+                          className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 object-contain rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 rounded-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-lg md:text-xl font-bold text-gray-400">
+                            {brand.brandName.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 text-center line-clamp-1">
+                        {brand.brandName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

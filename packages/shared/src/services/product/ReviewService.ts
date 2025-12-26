@@ -35,19 +35,25 @@ export abstract class BaseReviewService extends BaseApiService {
     return this.request<ApiResponse<{ reviews: DetailedReview[]; pagination: any }>>(endpoint);
   }
 
-  // 리뷰 작성
+  // 리뷰 작성 (서버 API 스펙: POST /api/products/{productUuid}/reviews)
   async createReview(
-    productId: string, 
-    reviewData: ReviewForm & { 
-      title?: string;
-      images?: string[];
+    productId: string,
+    reviewData: {
+      rating: number;           // 필수: 1-5 (정수)
+      content: string;          // 필수: 10-2000자
+      title?: string;           // 선택: 최대 100자
+      images?: Array<{          // 선택: 최대 5개
+        imageUrl: string;       // S3 temp 폴더 URL
+        filename: string;       // 파일명
+        caption?: string;       // 최대 200자
+      }>;
       detailRatings?: {
-        quality: number;
-        price: number;
-        shipping: number;
-        service: number;
+        quality?: number;       // 1-5
+        price?: number;         // 1-5
+        shipping?: number;      // 1-5
+        service?: number;       // 1-5
       };
-      tags?: string[];
+      tags?: string[];          // 허용 태그 값 중 선택
     }
   ): Promise<ApiResponse<{ review: DetailedReview }>> {
     return this.request<ApiResponse<{ review: DetailedReview }>>(

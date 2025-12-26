@@ -155,6 +155,9 @@ export const API_ENDPOINTS = {
     UPDATE: (productId: string) => `/api/products/${productId}`,     // PUT /:productId - 상품 수정
     DELETE: (productId: string) => `/api/products/${productId}`,     // DELETE /:productId - 상품 삭제
 
+    // 주문서 기반 프리필 (커스텀 상품 등록용)
+    PREFILL: (requestUuid: string) => `/api/products/prefill/${requestUuid}`,  // GET /prefill/:requestUuid
+
     // 리뷰 시스템
     REVIEWS: (productId: string) => `/api/products/${productId}/reviews`,
     REVIEW_CREATE: (productId: string) => `/api/products/${productId}/reviews`,
@@ -189,6 +192,7 @@ export const API_ENDPOINTS = {
     TRACK: (id: string) => `/api/orders/${id}/track`,
     REORDER: (id: string) => `/api/orders/${id}/reorder`,
     REVIEW_REMINDER: (id: string) => `/api/orders/${id}/review-reminder`,
+    SKIP_PAYMENT: (orderUuid: string) => `/api/orders/${orderUuid}/skip-payment`,
   },
 
   // 배송
@@ -310,6 +314,8 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: '/api/seller/profile',         // PUT /profile
     DASHBOARD: '/api/seller/dashboard',            // GET /dashboard
     INFO: (sellerUuid: string) => `/api/seller/info/${sellerUuid}`, // GET /info/:sellerUuid - 판매자 기본 정보
+    CURRENT_INFO: '/api/seller/info',              // GET /info - 현재 로그인한 판매자 정보 (생산 설정 포함)
+    MY_INFO: '/api/seller/info',                   // GET/PUT /info - 현재 로그인한 판매자 정보 조회/수정
 
     // 상품 관리 (판매자 전용)
     PRODUCTS: '/api/seller/products',                                    // GET / - 판매자 상품 목록
@@ -331,7 +337,7 @@ export const API_ENDPOINTS = {
     SETTLEMENT_AVAILABLE: '/api/seller/settlement/available/amount',     // GET /available/amount
 
     // 생산 관리
-    PRODUCTION_SETTINGS: '/api/seller/production-settings',             // GET/PUT
+    // 참고: 생산 설정은 CURRENT_INFO (/api/seller/info) 엔드포인트를 통해 조회/업데이트합니다
     PRODUCTION_CAPACITY: (year?: number, month?: number) =>
       `/api/seller/production-capacity${year ? `/${year}` : ''}${month ? `/${month}` : ''}`, // GET
     PRODUCTION_CAPACITY_UPDATE: (year: number, month: number) =>
@@ -345,6 +351,13 @@ export const API_ENDPOINTS = {
     SHIPPING_POLICY: '/api/seller/shipping',                            // GET/PUT
     SHIPPING_REGIONS: '/api/seller/shipping/regions',                   // PUT
     SHIPPING_TOGGLE: '/api/seller/shipping/toggle',                     // PATCH
+    // 커스텀 주문서 관리
+    CUSTOM_ORDERS: '/api/seller/custom-orders',                      // GET - 커스텀 주문서 목록
+    CUSTOM_ORDER_DETAIL: (requestUuid: string) => `/api/seller/custom-orders/${requestUuid}`, // GET - 커스텀 주문서 상세
+    CUSTOM_ORDER_QUOTE: (requestUuid: string) => `/api/seller/custom-orders/${requestUuid}/quote`, // POST/PATCH - 견적서 발급/수정
+    CUSTOM_ORDER_COMPLETE: (requestUuid: string) => `/api/seller/custom-orders/${requestUuid}/complete`, // POST - 제작 완료
+    CUSTOM_ORDER_SETTING: '/api/seller/custom-order',                 // GET, PATCH - 커스텀 주문 설정 조회/변경
+
     SHIPPING_PREVIEW: '/api/seller/shipping/preview',                   // POST
   },
 
@@ -361,6 +374,7 @@ export const API_ENDPOINTS = {
     PRODUCTS: (sellerUuid: string) => `/api/brands/${sellerUuid}/products`,      // GET /:sellerUuid/products - 브랜드 상품 목록
     UPDATE_NAME: (sellerUuid: string) => `/api/brands/${sellerUuid}/name`,       // PUT /:sellerUuid/name - 브랜드명 변경
     UPDATE_PROFILE: (sellerUuid: string) => `/api/brands/${sellerUuid}/profile`, // PUT /:sellerUuid/profile - 브랜드 프로필 변경
+    UPDATE_BANNER: (sellerUuid: string) => `/api/brands/${sellerUuid}/banner`,   // PUT /:sellerUuid/banner - 브랜드 배너 변경
   },
 
   // 배송지 관리 (한국 주소 시스템)
@@ -428,6 +442,12 @@ export const API_ENDPOINTS = {
 
   // 이벤트 배너 (Public)
   EVENT_BANNERS: '/api/event-banners',          // GET - 공개 이벤트 배너 목록 조회
+
+  // 커스텀 주문
+  CUSTOM_ORDER: {
+    CREATE: '/api/custom-orders',               // POST - 커스텀 주문서 생성
+    DETAIL: (uuid: string) => `/api/custom-orders/${uuid}`, // GET - 커스텀 주문서 상세 조회
+  },
 };
 
 // 환경별 디버그 설정

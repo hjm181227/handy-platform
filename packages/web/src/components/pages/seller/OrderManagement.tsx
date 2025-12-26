@@ -21,6 +21,7 @@ interface OrderFilter {
 }
 
 const ORDER_STATUS_MAP = {
+  pending: { label: '대기중', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
   confirmed: { label: '확인됨', color: 'bg-blue-100 text-blue-800', icon: '✓' },
   processing: { label: '처리중', color: 'bg-purple-100 text-purple-800', icon: '🔄' },
   shipped: { label: '배송중', color: 'bg-green-100 text-green-800', icon: '🚛' },

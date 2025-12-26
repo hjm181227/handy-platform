@@ -23,6 +23,7 @@ import { CategoryModal } from './components/common/CategoryModal';
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
 import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
+import { CustomOrderForm } from './components/product/CustomOrderForm';
 
 // Page Components
 import { NewsPage, NewsArticle } from './components/pages/NewsPage';
@@ -108,9 +109,8 @@ import {
   SellerAnalytics,
   SellerSettlement,
   SellerReviews,
-  ProductionDashboard,
+  BrandManagement,
   ProductionSettings,
-  ProductionManage,
   ProductionStatus
 } from './components/pages/SellerPages';
 
@@ -135,7 +135,6 @@ function AppContent() {
 
   // Cart state
   const [cartCount, setCartCount] = useState(0);
-  const [cartRefreshTrigger, setCartRefreshTrigger] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
 
@@ -183,11 +182,6 @@ function AppContent() {
         const newCount = response.data.count || 0;
         console.log('✅ [loadCartCount] Setting count to:', newCount);
         setCartCount(newCount);
-        // 장바구니 갱신 트리거 증가
-        setCartRefreshTrigger(prev => {
-          console.log('🔄 [loadCartCount] Incrementing trigger:', prev, '→', prev + 1);
-          return prev + 1;
-        });
       } else {
         console.warn('⚠️ [loadCartCount] Invalid response, setting count to 0');
         setCartCount(0);
@@ -357,22 +351,11 @@ function AppContent() {
         return;
       }
 
-      // ✅ itemsBySeller를 flat하게 변환하여 checkoutItems 생성
-      const checkoutItems = itemsBySeller.flatMap(seller =>
-        seller.items.map(item => ({
-          productUuid: item.productUuid,
-          quantity: item.quantity,
-          options: item.options || {}
-        }))
-      );
+      console.log('✅ [handleCheckout] Navigating to cart checkout');
 
-      console.log('✅ [handleCheckout] Navigating to checkout with items:', checkoutItems);
-
-      // ✅ CheckoutPage로 items 전달 (sessionStorage 사용)
-      sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
-
-      // 체크아웃 페이지로 이동
-      nav('/checkout');
+      // 장바구니 체크아웃은 서버가 장바구니를 직접 읽으므로 sessionStorage 불필요
+      // mode 파라미터로 체크아웃 방식 구분
+      nav('/checkout?mode=cart');
       setDrawer(false);
 
       // WebView 환경에서 네이티브 알림
@@ -456,6 +439,15 @@ function AppContent() {
   const mChatRoom = pathname.match(/^\/chat\/(.+)$/);
   if (mChatRoom) {
     screen = <ChatRoomPage nav={nav} roomId={decodeURIComponent(mChatRoom[1])} />;
+  }
+  // Custom order form (커스텀 주문서 작성 페이지)
+  else if (pathname.match(/^\/product\/(.+)\/custom-order$/)) {
+    const mCustomOrder = pathname.match(/^\/product\/(.+)\/custom-order$/)!;
+    screen = <CustomOrderForm
+      productId={decodeURIComponent(mCustomOrder[1])}
+      onBack={() => nav(`/product/${decodeURIComponent(mCustomOrder[1])}`)}
+      onGo={nav}
+    />;
   }
   // Product detail
   else if (pathname.match(/^\/product\/(.+)$/)) {
@@ -547,7 +539,6 @@ function AppContent() {
       onBack={() => history.back()}
       onCheckout={handleCheckout}
       onCartUpdate={loadCartCount}
-      refreshTrigger={cartRefreshTrigger}
       currentUser={currentUser}
       showToast={showToast}
     />;
@@ -719,6 +710,12 @@ function AppContent() {
         <SellerDashboard onGo={nav} />
       </RequireRole>
     );
+  } else if (pathname === "/seller/brand") {
+    screen = (
+      <RequireRole requiredRole="seller">
+        <BrandManagement onGo={nav} />
+      </RequireRole>
+    );
   } else if (pathname === "/seller/products") {
     screen = (
       <RequireRole requiredRole="seller">
@@ -765,19 +762,7 @@ function AppContent() {
   } else if (pathname === "/seller/production") {
     screen = (
       <RequireRole requiredRole="seller">
-        <ProductionDashboard onGo={nav} />
-      </RequireRole>
-    );
-  } else if (pathname === "/seller/production/settings") {
-    screen = (
-      <RequireRole requiredRole="seller">
         <ProductionSettings onGo={nav} />
-      </RequireRole>
-    );
-  } else if (pathname === "/seller/production/manage") {
-    screen = (
-      <RequireRole requiredRole="seller">
-        <ProductionManage onGo={nav} />
       </RequireRole>
     );
   } else if (pathname === "/seller/production/status") {
@@ -1240,7 +1225,6 @@ function AppContent() {
             onClose={() => setDrawer(false)}
             onCheckout={handleCheckout}
             onCartUpdate={loadCartCount}
-            refreshTrigger={cartRefreshTrigger}
             currentUser={currentUser}
             showToast={showToast}
           />

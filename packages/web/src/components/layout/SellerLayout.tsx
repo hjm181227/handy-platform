@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MdDashboard, MdInventory, MdFactory, MdInsertChart } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdFactory, MdInsertChart, MdStorefront } from 'react-icons/md';
 import { FaClipboardList, FaMoneyBillWave, FaHome, FaSignOutAlt } from 'react-icons/fa';
 import { IoMdStar } from 'react-icons/io';
 import { useAuth } from '../../hooks/useAuth';
@@ -20,6 +20,12 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
       icon: MdDashboard,
       path: "/seller",
       description: "매출 현황 및 통계"
+    },
+    {
+      label: "브랜드 관리",
+      icon: MdStorefront,
+      path: "/seller/brand",
+      description: "브랜드 정보 편집"
     },
     {
       label: "상품 관리",

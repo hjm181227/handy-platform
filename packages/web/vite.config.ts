@@ -16,9 +16,9 @@ export default defineConfig(({ mode }) => {
     // 일반 API는 stage 백엔드로 프록시, 채팅은 직접 연결
     proxy: {
       '/api': {
-        target: 'http://handy-server-prod-ALB-596032555.ap-northeast-2.elb.amazonaws.com:8080',
+        target: 'https://api.stage-handy.com',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
     },
   },

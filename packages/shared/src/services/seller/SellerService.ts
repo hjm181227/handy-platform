@@ -21,7 +21,10 @@ import {
   ProductionBoostRequest,
   SellerOrder,
   SellerOrderDetail,
-  SellerOrderPagination
+  SellerOrderPagination,
+  CustomOrderRequest,
+  CustomOrderDetail,
+  PrefillProductResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -256,6 +259,8 @@ export abstract class BaseSellerService extends BaseApiService {
       status: string;
       note?: string;
       trackingNumber?: string;
+      carrierCode?: string;    // 배송 처리 시 필수
+      carrierName?: string;    // 배송 처리 시 필수
     }
   ): Promise<{
     message: string;
@@ -266,6 +271,11 @@ export abstract class BaseSellerService extends BaseApiService {
       trackingNumber?: string;
     };
   }> {
+    console.log('🚛 [updateOrderStatus] Request:', {
+      orderUuid,
+      endpoint: API_ENDPOINTS.SELLER.ORDER_STATUS(orderUuid),
+      updates
+    });
     return this.request<{
       message: string;
       order: any;
@@ -298,6 +308,8 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.updateOrderStatus(orderUuid, {
       status: 'shipped',
       trackingNumber: shippingInfo.trackingNumber,
+      carrierCode: shippingInfo.carrierCode,     // 서버 필수 필드
+      carrierName: shippingInfo.carrierName,     // 서버 필수 필드
       note: shippingInfo.note || `배송 시작됨 (${shippingInfo.carrierName}: ${shippingInfo.trackingNumber})`
     });
   }
@@ -467,17 +479,38 @@ export abstract class BaseSellerService extends BaseApiService {
     };
     isConfigured?: boolean;
   }>> {
-    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS);
+    // GET /api/seller/info - 현재 판매자 정보 조회 (생산 설정 포함)
+    const response = await this.request<any>(API_ENDPOINTS.SELLER.CURRENT_INFO);
+
+    // 응답 구조에서 productionSettings 추출
+    // 서버 응답: { success: true, data: { sellerInfo: { productionSettings: {...} } } }
+    return {
+      success: response.success,
+      data: {
+        productionSettings: response.data?.sellerInfo?.productionSettings || response.data?.productionSettings,
+        currentCapacity: response.data?.currentCapacity,
+        isConfigured: response.data?.isConfigured
+      }
+    };
   }
 
-  // PUT /production-settings - 생산 설정 업데이트
+  // PUT /api/seller/info - 생산 설정 업데이트
   async updateProductionSettings(settings: UpdateProductionSettingsRequest): Promise<ApiResponse<{
     productionSettings: ProductionSettings;
   }>> {
-    return this.request(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS, {
+    // PUT /api/seller/info with nested productionSettings
+    const response = await this.request<any>(API_ENDPOINTS.SELLER.CURRENT_INFO, {
       method: 'PUT',
-      body: JSON.stringify(settings),
+      body: JSON.stringify({ productionSettings: settings }),
     });
+
+    // 응답 구조에서 productionSettings 추출
+    return {
+      success: response.success,
+      data: {
+        productionSettings: response.data?.sellerInfo?.productionSettings || response.data?.productionSettings
+      }
+    };
   }
 
   // GET /production-capacity/:year?/:month? - 특정 월 생산 현황 조회
@@ -624,6 +657,211 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request(endpoint, {
       method: 'POST',
       body: JSON.stringify(policy),
+    });
+  }
+
+  // ==================== 커스텀 주문서 관련 API ====================
+
+  // GET /seller/custom-orders - 커스텀 주문서 목록 조회
+  async getCustomOrderRequests(): Promise<ApiResponse<CustomOrderRequest[]>> {
+    return this.request<ApiResponse<CustomOrderRequest[]>>(
+      API_ENDPOINTS.SELLER.CUSTOM_ORDERS
+    );
+  }
+
+  // GET /seller/custom-orders/:requestUuid - 커스텀 주문서 상세 조회
+  async getCustomOrderDetail(requestUuid: string): Promise<ApiResponse<CustomOrderDetail>> {
+    return this.request<ApiResponse<CustomOrderDetail>>(
+      API_ENDPOINTS.SELLER.CUSTOM_ORDER_DETAIL(requestUuid)
+    );
+  }
+
+  // POST /seller/custom-orders/:requestUuid/quote - 견적서 발급
+  async createCustomOrderQuote(
+    requestUuid: string,
+    quoteData: {
+      estimatedPrice: number;
+      estimatedDays: number;
+      notes?: string;
+    }
+  ): Promise<ApiResponse<{ message: string; quoteUuid?: string }>> {
+    return this.request<ApiResponse<{ message: string; quoteUuid?: string }>>(
+      API_ENDPOINTS.SELLER.CUSTOM_ORDER_QUOTE(requestUuid),
+      {
+        method: 'POST',
+        // 백엔드 API가 기대하는 필드명으로 변환
+        body: JSON.stringify({
+          price: quoteData.estimatedPrice,
+          processingDays: quoteData.estimatedDays,
+          sellerNotes: quoteData.notes,
+        }),
+      }
+    );
+  }
+
+  // PATCH /seller/custom-orders/:requestUuid/quote - 견적서 수정
+  async updateCustomOrderQuote(
+    requestUuid: string,
+    quoteData: {
+      estimatedPrice?: number;
+      estimatedDays?: number;
+      notes?: string;
+    }
+  ): Promise<ApiResponse<{ message: string }>> {
+    // 백엔드 API가 기대하는 필드명으로 변환
+    const apiData: Record<string, unknown> = {};
+    if (quoteData.estimatedPrice !== undefined) apiData.price = quoteData.estimatedPrice;
+    if (quoteData.estimatedDays !== undefined) apiData.processingDays = quoteData.estimatedDays;
+    if (quoteData.notes !== undefined) apiData.sellerNotes = quoteData.notes;
+
+    return this.request<ApiResponse<{ message: string }>>(
+      API_ENDPOINTS.SELLER.CUSTOM_ORDER_QUOTE(requestUuid),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(apiData),
+      }
+    );
+  }
+
+  // POST /seller/custom-orders/:requestUuid/complete - 제작 완료
+  async completeCustomOrder(
+    requestUuid: string,
+    completionData?: {
+      notes?: string;
+    }
+  ): Promise<ApiResponse<{ message: string }>> {
+    return this.request<ApiResponse<{ message: string }>>(
+      API_ENDPOINTS.SELLER.CUSTOM_ORDER_COMPLETE(requestUuid),
+      {
+        method: 'POST',
+        body: JSON.stringify(completionData || {}),
+      }
+    );
+  }
+
+  // GET /products/prefill/:requestUuid - 주문서 기반 상품 프리필 데이터 조회
+  async getPrefillData(requestUuid: string): Promise<ApiResponse<PrefillProductResponse>> {
+    return this.request<ApiResponse<PrefillProductResponse>>(
+      API_ENDPOINTS.PRODUCTS.PREFILL(requestUuid)
+    );
+  }
+
+  // GET /seller/custom-order - 커스텀 주문 설정 조회
+  async getCustomOrderSetting(): Promise<{
+    success: boolean;
+    data: { acceptsCustomOrders: boolean };
+  }> {
+    return this.request<{
+      success: boolean;
+      data: { acceptsCustomOrders: boolean };
+    }>(API_ENDPOINTS.SELLER.CUSTOM_ORDER_SETTING);
+  }
+
+  // PATCH /seller/custom-order - 커스텀 주문 설정 변경
+  async updateCustomOrderSetting(data: {
+    acceptsCustomOrders: boolean;
+  }): Promise<{
+    success: boolean;
+    data: { acceptsCustomOrders: boolean };
+  }> {
+    return this.request<{
+      success: boolean;
+      data: { acceptsCustomOrders: boolean };
+    }>(API_ENDPOINTS.SELLER.CUSTOM_ORDER_SETTING, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // ==================== 현재 로그인한 판매자 정보 관련 API ====================
+
+  // GET /seller/info - 현재 로그인한 판매자 정보 조회
+  async getMySellerInfo(): Promise<{
+    success: boolean;
+    data: {
+      sellerInfoId: string;
+      userId: string;
+      brandName: string;
+      brandProfile: string | null;
+      acceptsCustomOrders: boolean;
+      representativeName: string;
+      businessNumber: string;
+      businessType: string;
+      businessCategory: string;
+      contactEmail: string;
+      contactPhone: string;
+      isVerified: boolean;
+      isActive: boolean;
+      status: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    message: string;
+  }> {
+    return this.request<{
+      success: boolean;
+      data: {
+        sellerInfoId: string;
+        userId: string;
+        brandName: string;
+        brandProfile: string | null;
+        acceptsCustomOrders: boolean;
+        representativeName: string;
+        businessNumber: string;
+        businessType: string;
+        businessCategory: string;
+        contactEmail: string;
+        contactPhone: string;
+        isVerified: boolean;
+        isActive: boolean;
+        status: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+      message: string;
+    }>(API_ENDPOINTS.SELLER.MY_INFO);
+  }
+
+  // PUT /seller/info - 판매자 정보 수정 (커스텀 주문 설정 포함)
+  async updateSellerInfo(data: {
+    acceptsCustomOrders?: boolean;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    seller: {
+      sellerUuid: string;
+      brandName: string;
+      acceptsCustomOrders: boolean;
+    };
+  }> {
+    return this.request<{
+      success: boolean;
+      message: string;
+      seller: {
+        sellerUuid: string;
+        brandName: string;
+        acceptsCustomOrders: boolean;
+      };
+    }>(API_ENDPOINTS.SELLER.MY_INFO, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // PUT /seller/profile - 브랜드 정보 수정 (브랜드명, 로고)
+  async updateSellerProfile(data: {
+    brandName?: string;
+    brandProfile?: string;
+  }): Promise<{
+    message: string;
+    user: any;
+  }> {
+    return this.request<{
+      message: string;
+      user: any;
+    }>(API_ENDPOINTS.SELLER.UPDATE_PROFILE, {
+      method: 'PUT',
+      body: JSON.stringify(data),
     });
   }
 }

@@ -14,19 +14,34 @@ import { API_ENDPOINTS } from '../../config/api';
 export abstract class BaseProductionService extends BaseApiService {
   /**
    * 판매자의 현재 생산 설정을 조회합니다.
+   * GET /api/seller/info - 현재 판매자 정보 조회 (생산 설정 포함)
    */
   async getProductionSettings(): Promise<ProductionSettingsResponse> {
-    return this.request<ProductionSettingsResponse>(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS);
+    const response = await this.request<any>(API_ENDPOINTS.SELLER.CURRENT_INFO);
+
+    // 서버 응답에서 productionSettings 추출
+    // 응답 구조: { success: true, data: { sellerInfo: { productionSettings: {...} } } }
+    return {
+      productionSettings: response.data?.sellerInfo?.productionSettings || response.data?.productionSettings,
+      currentCapacity: response.data?.currentCapacity,
+      isConfigured: response.data?.isConfigured
+    };
   }
 
   /**
    * 판매자의 생산 설정을 업데이트합니다.
+   * PUT /api/seller/info - 생산 설정 업데이트 (중첩된 구조로 전송)
    */
   async updateProductionSettings(data: UpdateProductionSettingsRequest): Promise<ProductionSettingsResponse> {
-    return this.request<ProductionSettingsResponse>(API_ENDPOINTS.SELLER.PRODUCTION_SETTINGS, {
+    const response = await this.request<any>(API_ENDPOINTS.SELLER.CURRENT_INFO, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ productionSettings: data }),
     });
+
+    // 서버 응답에서 productionSettings 추출
+    return {
+      productionSettings: response.data?.sellerInfo?.productionSettings || response.data?.productionSettings
+    };
   }
 
   /**
@@ -108,51 +123,29 @@ export abstract class BaseProductionService extends BaseApiService {
   validateProductionSettings(settings: UpdateProductionSettingsRequest): string[] {
     const errors: string[] = [];
 
-    if (settings.weeklyCapacity !== undefined) {
-      if (settings.weeklyCapacity < 1 || settings.weeklyCapacity > 500) {
-        errors.push('주간 생산량은 1~500개 사이여야 합니다.');
+    // orderCapacity 검증
+    if (settings.orderCapacity !== undefined) {
+      if (!settings.orderCapacity || settings.orderCapacity < 1) {
+        errors.push('적정 생산량은 최소 1개 이상이어야 합니다.');
+      }
+      if (settings.orderCapacity > 100) {
+        errors.push('적정 생산량은 100개 이하로 설정해주세요.');
       }
     }
 
-    if (settings.monthlyCapacity !== undefined) {
-      if (settings.monthlyCapacity < 1 || settings.monthlyCapacity > 2000) {
-        errors.push('월간 생산량은 1~2000개 사이여야 합니다.');
-      }
-      
-      // 월간 생산량은 주간 생산량의 4.3배 이상이어야 함
-      if (settings.weeklyCapacity !== undefined) {
-        const minMonthlyCapacity = Math.ceil(settings.weeklyCapacity * 4.3);
-        if (settings.monthlyCapacity < minMonthlyCapacity) {
-          errors.push(`월간 생산량은 최소 ${minMonthlyCapacity}개 이상이어야 합니다 (주간 생산량 × 4.3배).`);
-        }
-      }
-    }
-
+    // averageProcessingDays 검증
     if (settings.averageProcessingDays !== undefined) {
-      if (settings.averageProcessingDays < 1 || settings.averageProcessingDays > 30) {
-        errors.push('평균 제작 소요일은 1~30일 사이여야 합니다.');
+      if (!settings.averageProcessingDays || settings.averageProcessingDays < 1) {
+        errors.push('평균 제작 소요일은 최소 1일 이상이어야 합니다.');
+      }
+      if (settings.averageProcessingDays > 30) {
+        errors.push('평균 제작 소요일은 30일 이하로 설정해주세요.');
       }
     }
 
-    if (settings.vacationMode === true) {
-      if (!settings.vacationStartDate || !settings.vacationEndDate) {
-        errors.push('휴가 모드 설정 시 휴가 시작일과 종료일이 필요합니다.');
-      } else {
-        const startDate = new Date(settings.vacationStartDate);
-        const endDate = new Date(settings.vacationEndDate);
-        
-        if (startDate >= endDate) {
-          errors.push('휴가 종료일은 시작일보다 늦어야 합니다.');
-        }
-        
-        if (startDate < new Date()) {
-          errors.push('휴가 시작일은 현재 날짜보다 늦어야 합니다.');
-        }
-      }
-    }
-
+    // 특별 안내사항 검증
     if (settings.specialNotice !== undefined && settings.specialNotice.length > 500) {
-      errors.push('특별 안내사항은 500자 이하여야 합니다.');
+      errors.push('특별 안내사항은 500자 이내로 작성해주세요.');
     }
 
     return errors;

@@ -9,7 +9,10 @@ import {
   CheckoutSession,
   ShippingAddress,
   PaymentPrepareResult,
-  PayMethod
+  PayMethod,
+  CreateCustomOrderRequest,
+  CreateCustomOrderResponse,
+  CustomOrderDetail
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
@@ -87,13 +90,21 @@ export abstract class BaseOrderService extends BaseApiService {
     return response;
   }
 
-  // 체크아웃 초기화 - 장바구니에서 자동으로 items 읽기 (백엔드 스펙 준수)
-  async initializeCheckout(customRequestUuid?: string): Promise<ApiResponse<CheckoutSession>> {
+  // 체크아웃 초기화 - 장바구니, 바로구매, 맞춤제작 지원 (백엔드 스펙 준수)
+  async initializeCheckout(data?: {
+    quoteUuid?: string;
+    directItem?: {
+      productUuid: string;
+      quantity: number;
+      options?: Record<string, string>;
+    };
+    estimatedRegion?: 'general' | 'jeju' | 'remote';
+  }): Promise<ApiResponse<CheckoutSession>> {
     return this.request<ApiResponse<CheckoutSession>>(
       '/api/checkout/initialize',
       {
         method: 'POST',
-        body: JSON.stringify(customRequestUuid ? { customRequestUuid } : {}),
+        body: JSON.stringify(data || {}),
       }
     );
   }
@@ -266,6 +277,52 @@ export abstract class BaseOrderService extends BaseApiService {
    */
   protected getOrderApiId(order: { id: string }): string {
     return normalizeOrderId(order);
+  }
+
+  // ============================================
+  // 커스텀 주문 관련 메서드
+  // ============================================
+
+  // 커스텀 주문서 생성
+  async createCustomOrder(request: CreateCustomOrderRequest): Promise<ApiResponse<CreateCustomOrderResponse>> {
+    return this.request<ApiResponse<CreateCustomOrderResponse>>(
+      API_ENDPOINTS.CUSTOM_ORDER.CREATE,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  // 커스텀 주문서 상세 조회
+  async getCustomOrderDetail(uuid: string): Promise<ApiResponse<CustomOrderDetail>> {
+    return this.request<ApiResponse<CustomOrderDetail>>(
+      API_ENDPOINTS.CUSTOM_ORDER.DETAIL(uuid)
+    );
+  }
+
+  // 결제 스킵 (스테이징 환경 테스트 전용)
+  async skipPayment(orderUuid: string): Promise<ApiResponse<{
+    message: string;
+    order: {
+      orderUuid: string;
+      status: string;
+      paymentStatus: string;
+    };
+  }>> {
+    return this.request<ApiResponse<{
+      message: string;
+      order: {
+        orderUuid: string;
+        status: string;
+        paymentStatus: string;
+      };
+    }>>(
+      API_ENDPOINTS.ORDERS.SKIP_PAYMENT(orderUuid),
+      {
+        method: 'POST',
+      }
+    );
   }
 }
 
