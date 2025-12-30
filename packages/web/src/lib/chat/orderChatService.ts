@@ -43,7 +43,7 @@ export async function sendCustomOrderToChat(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ otherUserId: sellerUuid }),
+      body: JSON.stringify({ partnerId: sellerUuid }),
     });
 
     if (!ensureResponse.ok) {
@@ -142,7 +142,7 @@ export async function sendQuoteToChat(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ otherUserId: buyerUuid }),
+      body: JSON.stringify({ partnerId: buyerUuid }),
     });
 
     if (!ensureResponse.ok) {

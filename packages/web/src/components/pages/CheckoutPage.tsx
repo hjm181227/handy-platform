@@ -641,7 +641,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => onGo('/cart')}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+            className="w-full bg-[#FF073A] text-white py-2 px-4 rounded-lg hover:bg-[#E0062F]"
           >
             장바구니로 돌아가기
           </button>
@@ -1027,7 +1027,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               <button
                 onClick={handlePayment}
                 disabled={processing || !validateCheckout()}
-                className="w-full mt-6 bg-blue-500 text-white font-semibold py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-6 bg-[#FF073A] text-white font-semibold py-3 rounded-lg hover:bg-[#E0062F] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing ? '결제 중...' : `${money(order?.finalPrice || 0)} 결제하기`}
               </button>

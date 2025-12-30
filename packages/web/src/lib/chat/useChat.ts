@@ -85,7 +85,7 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ otherUserId: roomId }),
+            body: JSON.stringify({ partnerId: roomId }),
           });
 
           if (!ensureResponse.ok) {

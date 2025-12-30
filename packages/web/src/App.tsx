@@ -714,7 +714,7 @@ function AppContent() {
       </RequireAuth>
     );
   } else if (pathname === "/chat") {
-    screen = <ChatPage nav={nav} />;
+    screen = <ChatPage nav={nav} currentUser={currentUser} />;
   } else if (pathname.startsWith("/chat/")) {
     const roomId = pathname.split("/")[2];
     screen = <ChatRoomPage nav={nav} roomId={roomId} />;

@@ -372,7 +372,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
               className={`
                 px-6 py-3 rounded-lg font-medium transition-colors
                 ${inputText.trim()
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  ? 'bg-[#FF073A] text-white hover:bg-[#E0062F]'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }
               `}
