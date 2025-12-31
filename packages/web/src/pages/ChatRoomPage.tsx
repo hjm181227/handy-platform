@@ -5,19 +5,53 @@ import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCar
 import { CustomOrderBottomSheet } from '../components/chat/CustomOrderBottomSheet';
 import { QuoteMessageCard } from '../components/chat/QuoteMessageCard';
 import { QuoteBottomSheet } from '../components/chat/QuoteBottomSheet';
+import { config } from '../config/environment';
 import type { Message } from '../lib/chat/types';
 
 interface ChatRoomPageProps {
   nav: (path: string) => void;
   roomId: string;
+  partnerUsername?: string;
 }
 
-export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
+export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partnerUsername: propPartnerUsername }) => {
   // localStorage에서 JWT 토큰 가져오기
   const token = localStorage.getItem('accessToken') || undefined;
 
+  // URL 쿼리 파라미터에서 name 추출 (props보다 우선)
+  const urlParams = new URLSearchParams(window.location.search);
+  const partnerUsernameFromUrl = urlParams.get('name') || propPartnerUsername;
+
+  // 표시될 이름 상태 (브랜드명 또는 username)
+  const [displayName, setDisplayName] = useState<string>(partnerUsernameFromUrl || roomId);
+
   // useAuth 훅으로 현재 사용자 정보 가져오기
   const { currentUser } = useAuth();
+
+  // 브랜드 정보 조회 (판매자인 경우 브랜드명 사용)
+  useEffect(() => {
+    const fetchPartnerDisplayName = async () => {
+      // URL에서 이름이 제공된 경우 그대로 사용
+      if (partnerUsernameFromUrl) {
+        setDisplayName(partnerUsernameFromUrl);
+        return;
+      }
+
+      // 브랜드 정보 조회 시도 (판매자인지 확인)
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/api/brands/${roomId}`);
+        if (response.ok) {
+          const brandData = await response.json();
+          setDisplayName(brandData.brandName || roomId);
+        }
+        // 404 등의 경우 roomId 유지 (구매자)
+      } catch {
+        // 브랜드 조회 실패 시 roomId 유지
+      }
+    };
+
+    fetchPartnerDisplayName();
+  }, [roomId, partnerUsernameFromUrl]);
 
   // 현재 사용자가 판매자인지 확인
   const isSeller = currentUser?.role === 'seller' || currentUser?.role === 'admin';
@@ -51,9 +85,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
     isLoading,
     isConnected,
     error,
-    currentRoom,
     clearError,
-  } = useChat(roomId, token);
+  } = useChat(roomId, token, partnerUsernameFromUrl);
 
   // 자동 스크롤을 위한 ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -112,7 +145,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId }) => {
     );
   }
 
-  const roomName = currentRoom?.name || '알 수 없음';
+  // 채팅방 표시 이름 (브랜드명 또는 username)
+  const roomName = displayName || '알 수 없음';
 
   // 날짜 포맷팅 헬퍼 함수
   const formatDateSeparator = (dateString?: string): string => {

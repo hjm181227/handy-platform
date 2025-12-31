@@ -96,7 +96,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
   if (showNewInquiry) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BackButton onBack={() => setShowNewInquiry(false)} title="1:1 문의 작성" />
+        <PageHeader onBack={() => setShowNewInquiry(false)} title="1:1 문의 작성" />
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div className="bg-white rounded-lg border p-4">
             <label className="block text-sm font-medium mb-2">문의 분류</label>
@@ -226,7 +226,7 @@ export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="자주 묻는 질문" />
+      <PageHeader onBack={() => onGo("/my")} title="자주 묻는 질문" />
       
       {/* 카테고리 탭 */}
       <div className="bg-white border-b">
@@ -323,7 +323,7 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="알림 설정" />
+      <PageHeader onBack={() => onGo("/my")} title="알림 설정" />
       
       <div className="p-4 space-y-4">
         <NotificationItem
@@ -389,6 +389,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
     points: 0,
     totalOrders: 0,
     joinedDate: "",
+    role: "",
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -421,6 +422,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             points: user.points?.balance || 0,
             totalOrders: user.stats?.totalOrders || 0,
             joinedDate: user.stats?.joinedDate || user.createdAt || "",
+            role: user.role || "",
           });
         }
       } catch (error: any) {
@@ -543,7 +545,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BackButton onBack={() => onGo("/my")} title="회원정보 수정" />
+        <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
@@ -558,7 +560,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BackButton onBack={() => onGo("/my")} title="회원정보 수정" />
+        <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
@@ -576,7 +578,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="회원정보 수정" />
+      <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
 
       <div className="p-4">
         {/* 사용자 요약 정보 */}
@@ -699,17 +701,19 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <div className="text-sm text-gray-600">계정 보안을 위해 정기적으로 변경하세요</div>
           </button>
 
-          <button
-            onClick={() => {
-              if (confirm("판매자로 전환하시겠습니까? 승인 후 상품 등록 및 판매가 가능합니다.")) {
-                onGo("/seller/register");
-              }
-            }}
-            className="w-full bg-white border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-50"
-          >
-            <div className="font-medium text-blue-600">판매자 전환</div>
-            <div className="text-sm text-gray-600">상품을 판매하고 수익을 창출하세요</div>
-          </button>
+          {userInfo.role !== 'seller' && (
+            <button
+              onClick={() => {
+                if (confirm("판매자로 전환하시겠습니까? 승인 후 상품 등록 및 판매가 가능합니다.")) {
+                  onGo("/seller/register");
+                }
+              }}
+              className="w-full bg-white border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-50"
+            >
+              <div className="font-medium text-blue-600">판매자 전환</div>
+              <div className="text-sm text-gray-600">상품을 판매하고 수익을 창출하세요</div>
+            </button>
+          )}
 
           <button
             onClick={() => {
@@ -739,7 +743,7 @@ export function PromoPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BackButton onBack={() => onGo("/my")} title="핸디플러스" />
+      <PageHeader onBack={() => onGo("/my")} title="핸디플러스" />
       
       {/* 헤로 섹션 */}
       <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white p-6">

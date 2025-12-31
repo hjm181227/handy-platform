@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { config } from '../config/environment';
 
 const CHAT_API_URL = 'http://16.176.147.141';
 
@@ -15,7 +16,7 @@ interface ChatPageProps {
 
 interface ChatRoomResponse {
   roomId: string;
-  partner: { id: string; username: string };
+  partner: { id: string; username: string; displayName?: string };
   lastMessage?: {
     text: string;
     messageType: string;
@@ -64,8 +65,9 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChatClick = (partnerId: string) => {
-    nav(`/chat/${partnerId}`);
+  const handleChatClick = (partnerId: string, partnerUsername?: string) => {
+    const queryParam = partnerUsername ? `?name=${encodeURIComponent(partnerUsername)}` : '';
+    nav(`/chat/${partnerId}${queryParam}`);
   };
 
   const handleBack = () => {
@@ -109,7 +111,39 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
         }
 
         const data = await response.json();
-        setRooms(data.rooms || []);
+        const roomsData = data.rooms || [];
+
+        // 각 partner에 대해 브랜드 정보 조회 (판매자인 경우 브랜드명 사용)
+        const roomsWithDisplayNames = await Promise.all(
+          roomsData.map(async (room: ChatRoomResponse) => {
+            try {
+              const brandResponse = await fetch(
+                `${config.apiBaseUrl}/api/brands/${room.partner.id}`
+              );
+              if (brandResponse.ok) {
+                const brandData = await brandResponse.json();
+                return {
+                  ...room,
+                  partner: {
+                    ...room.partner,
+                    displayName: brandData.brandName || room.partner.username,
+                  },
+                };
+              }
+            } catch {
+              // 브랜드 조회 실패 시 기존 username 사용
+            }
+            return {
+              ...room,
+              partner: {
+                ...room.partner,
+                displayName: room.partner.username,
+              },
+            };
+          })
+        );
+
+        setRooms(roomsWithDisplayNames);
       } catch (err) {
         console.error('[ChatPage] Error fetching rooms:', err);
         setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
@@ -241,14 +275,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
           {rooms.map((room) => (
             <div
               key={room.roomId}
-              onClick={() => handleChatClick(room.partner.id)}
+              onClick={() => handleChatClick(room.partner.id, room.partner.displayName || room.partner.username)}
               className="bg-white border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
             >
               <div className="px-4 py-4 flex items-center gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold text-lg">
-                    {room.partner.username?.charAt(0)?.toUpperCase() || '?'}
+                    {(room.partner.displayName || room.partner.username)?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                 </div>
 
@@ -256,7 +290,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-semibold text-gray-900 truncate">
-                      {room.partner.username || '알 수 없음'}
+                      {room.partner.displayName || room.partner.username || '알 수 없음'}
                     </h3>
                     <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
                       {room.lastMessageAt ? formatTime(room.lastMessageAt) : ''}
