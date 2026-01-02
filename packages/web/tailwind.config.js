@@ -38,7 +38,7 @@ export default {
         },
       },
       fontFamily: {
-        'sans': ['-apple-system', 'BlinkMacSystemFont', 'Pretendard', 'system-ui', 'sans-serif'],
+        'sans': ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(236, 72, 153, 0.1), 0 10px 20px -2px rgba(236, 72, 153, 0.04)',

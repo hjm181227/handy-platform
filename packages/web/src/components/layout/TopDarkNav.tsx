@@ -36,11 +36,11 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
     {label:"NEWS", to:"/news"},
   ];
   return (
-    <div className="hidden md:block bg-[#161616] text-white text-xs">
-      <div className="mx-auto max-w-7xl h-8 flex items-center justify-between px-4">
-        <button onClick={onOpenCategories} className="flex items-center gap-2 text-white">
+    <div className="hidden md:block bg-[#161616] text-white text-sm">
+      <div className="mx-auto max-w-7xl h-9 flex items-center justify-between px-4">
+        <button onClick={onOpenCategories} className="flex items-center gap-2 text-white font-medium tracking-wide">
           <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/></svg>
-          <span className="font-semibold tracking-wide">Categories</span>
+          <span>Categories</span>
         </button>
 
         <nav className="hidden lg:flex items-center gap-4">
@@ -48,7 +48,7 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
             <button
               key={x.label}
               onClick={() => onGo(x.to)}
-              className="text-white"
+              className="text-white font-medium tracking-wide"
             >
               {x.label}
             </button>
@@ -56,13 +56,13 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
         </nav>
 
         <div className="flex items-center gap-3">
-          <button onClick={() => onGo("/help")} className="text-white">Help</button>
-          <button onClick={() => onGo("/my")} className="text-white">My</button>
-          <button onClick={() => onGo("/likes")} className="text-white">Likes</button>
+          <button onClick={() => onGo("/help")} className="text-white font-medium tracking-wide">Help</button>
+          <button onClick={() => onGo("/my")} className="text-white font-medium tracking-wide">My</button>
+          <button onClick={() => onGo("/likes")} className="text-white font-medium tracking-wide">Likes</button>
           {!isLoggedIn && (
             <>
-              <button onClick={() => onGo("/login")} className="text-white">Login</button>
-              <button onClick={() => onGo("/signup")} className="text-white">Sign up</button>
+              <button onClick={() => onGo("/login")} className="text-white font-medium tracking-wide">Login</button>
+              <button onClick={() => onGo("/signup")} className="text-white font-medium tracking-wide">Sign up</button>
             </>
           )}
         </div>
