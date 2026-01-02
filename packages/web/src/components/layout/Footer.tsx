@@ -68,7 +68,7 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
           <div className="text-[#444] font-medium">© HANDY ALL RIGHTS RESERVED</div>
           <p className="mt-2">
             에르모세아르 | 대표자: 김동현 | 주소: 경기도 용인시 기흥구 공세로 150-29, B01-G160호 | 통신판매업 신고번호: 2024-용인기흥-2437 |
-            사업자등록번호: 106-16-34319(사업자정보확인)
+            사업자등록번호: 106-16-34319 | 유선전화번호: 010-9611-1711
           </p>
     
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
