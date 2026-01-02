@@ -148,6 +148,7 @@ function AppContent() {
 
   // Like state
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
+  const [likedBrands, setLikedBrands] = useState<string[]>([]);
 
   // Brands state
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -228,6 +229,20 @@ function AppContent() {
     }
   };
 
+  // 좋아요한 브랜드 목록 로딩 (로그인된 사용자만)
+  const loadLikedBrands = async () => {
+    try {
+      const response = await likesService.getUserLikes('brand');
+      if (response.success && response.data) {
+        const likedUuids = response.data.map(item => item.targetUuid);
+        setLikedBrands(likedUuids);
+      }
+    } catch (error: any) {
+      console.warn('Failed to load liked brands:', error);
+      setLikedBrands([]);
+    }
+  };
+
   // 브랜드별 상품 로딩
   const loadBrands = async () => {
     try {
@@ -271,10 +286,12 @@ function AppContent() {
       // 로그인된 경우 장바구니 카운트와 좋아요 목록 로드
       loadCartCount();
       loadLikedProducts();
+      loadLikedBrands();
     } else {
       // 로그아웃된 경우 초기화
       setCartCount(0);
       setLikedProducts([]);
+      setLikedBrands([]);
     }
   }, [currentUser]);
 
@@ -433,6 +450,48 @@ function AppContent() {
     }
   };
 
+  // 브랜드 좋아요 핸들러
+  const handleBrandLike = async (brandId: string) => {
+    if (!currentUser) {
+      showToast('로그인이 필요한 서비스입니다.', 'error');
+      nav('/login');
+      return;
+    }
+
+    const isCurrentlyLiked = likedBrands.includes(brandId);
+
+    // 낙관적 업데이트
+    setLikedBrands(prev => {
+      if (isCurrentlyLiked) {
+        return prev.filter(id => id !== brandId);
+      } else {
+        return [...prev, brandId];
+      }
+    });
+
+    try {
+      if (isCurrentlyLiked) {
+        await likesService.unlike('brand', brandId);
+      } else {
+        await likesService.like('brand', brandId);
+      }
+    } catch (error: any) {
+      console.error('Brand like operation failed:', error);
+
+      // 실패 시 롤백
+      setLikedBrands(prev => {
+        if (isCurrentlyLiked) {
+          return [...prev, brandId];
+        } else {
+          return prev.filter(id => id !== brandId);
+        }
+      });
+
+      const errorMessage = error.message || '좋아요 처리에 실패했습니다.';
+      showToast(errorMessage, 'error');
+    }
+  };
+
   let screen: React.ReactNode;
 
   // Chat room detail
@@ -471,6 +530,8 @@ function AppContent() {
         onAdd={addProduct}
         onLike={handleLike}
         likedProducts={likedProducts}
+        onBrandLike={handleBrandLike}
+        isBrandLiked={likedBrands.includes(sellerUuid)}
       />
     );
   } else if (pathname.startsWith("/brands")) {
@@ -653,7 +714,7 @@ function AppContent() {
       </RequireAuth>
     );
   } else if (pathname === "/chat") {
-    screen = <ChatPage nav={nav} />;
+    screen = <ChatPage nav={nav} currentUser={currentUser} />;
   } else if (pathname.startsWith("/chat/")) {
     const roomId = pathname.split("/")[2];
     screen = <ChatRoomPage nav={nav} roomId={roomId} />;

@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getChatSocket } from './ChatSocketService';
+import { config } from '../../config/environment';
 import type { Message, UseChatReturn, ChatRoom } from './types';
 
 // Dummy data as fallback (일반 텍스트 메시지만 - 커스텀 주문서는 API 연동)
@@ -46,9 +47,10 @@ function getUserIdFromToken(token: string): string | null {
  * useChat 훅
  * @param roomId 상대방 userId (예: 'hermosear98')
  * @param token JWT 토큰 (선택)
+ * @param partnerUsername 상대방 이름 (선택) - /rooms/ensure 호출 시 사용
  * @returns UseChatReturn
  */
-export function useChat(roomId: string, token?: string): UseChatReturn {
+export function useChat(roomId: string, token?: string, partnerUsername?: string): UseChatReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -85,7 +87,10 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ otherUserId: roomId }),
+            body: JSON.stringify({
+              partnerId: roomId,
+              ...(partnerUsername && { partnerUsername }),
+            }),
           });
 
           if (!ensureResponse.ok) {
@@ -148,7 +153,7 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
           await chatSocket.current.joinRoom(mongoRoomId);
           console.log('[useChat] Successfully joined room:', mongoRoomId);
 
-          setCurrentRoom({ id: roomId, name: roomId, avatar: '' });
+          setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
           useFallback.current = false;
 
         } catch (connectError) {
@@ -162,7 +167,7 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
             new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
           );
           setMessages(sortedDummy);
-          setCurrentRoom(CHAT_ROOM_INFO[roomId] || { id: roomId, name: roomId, avatar: '' });
+          setCurrentRoom(CHAT_ROOM_INFO[roomId] || { id: roomId, name: partnerUsername || roomId, avatar: '' });
         }
 
       } catch (err) {
@@ -176,7 +181,7 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
           new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
         );
         setMessages(sortedDummy);
-        setCurrentRoom(CHAT_ROOM_INFO[roomId] || { id: roomId, name: roomId, avatar: '' });
+        setCurrentRoom(CHAT_ROOM_INFO[roomId] || { id: roomId, name: partnerUsername || roomId, avatar: '' });
       } finally {
         setIsLoading(false);
       }
@@ -190,7 +195,7 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
         chatSocket.current.leaveRoom(actualRoomId);
       }
     };
-  }, [roomId, token]);
+  }, [roomId, token, partnerUsername]);
 
   /**
    * 메시지 수신 이벤트 구독
@@ -203,6 +208,11 @@ export function useChat(roomId: string, token?: string): UseChatReturn {
     const unsubscribeMessage = chatSocket.current.onMessage((message) => {
       // 실제 MongoDB roomId로 필터링
       if (message.roomId === actualRoomId) {
+        // 자신이 보낸 메시지는 이미 Optimistic Update로 추가했으므로 무시
+        if (message.senderId === currentUserId.current) {
+          return;
+        }
+
         // 백엔드 메시지 형식을 프론트엔드 형식으로 변환
         const now = new Date();
         const transformedMessage: Message = {

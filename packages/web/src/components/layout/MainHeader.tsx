@@ -201,7 +201,7 @@ export function MainHeader({
   };
 
   return (
-    <header className="bg-white/95 backdrop-blur border-b border-primary-100 shadow-soft">
+    <header className="bg-white/95 backdrop-blur border-b border-gray-200 shadow-soft">
       {/* 데스크톱 레이아웃 */}
       <div className="hidden md:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center h-16 px-4">
@@ -343,7 +343,7 @@ export function MainHeader({
                     }}
                     className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
                   >
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                    <div className="w-6 h-6 bg-[#FF073A] text-white rounded-full flex items-center justify-center text-xs font-medium">
                       {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                     <span className="hidden sm:inline">{user.name || user.email}</span>
@@ -511,7 +511,7 @@ export function MainHeader({
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium hover:bg-blue-600 transition-colors"
+                  className="w-10 h-10 bg-[#FF073A] text-white rounded-full flex items-center justify-center text-sm font-medium hover:bg-[#E0062F] transition-colors"
                 >
                   {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                 </button>

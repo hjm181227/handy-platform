@@ -294,15 +294,6 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                     />
                     <div className="text-sm text-gray-600 font-medium">개</div>
                   </div>
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-xs text-blue-700 font-medium mb-2">💡 설정 가이드</p>
-                    <ul className="text-xs text-blue-600 space-y-1">
-                      <li>• <strong>5-10개</strong>: 1인 작업실, 취미 수준</li>
-                      <li>• <strong>10-20개</strong>: 전문 작가, 소규모 스튜디오</li>
-                      <li>• <strong>20-30개</strong>: 중규모 스튜디오, 팀 작업</li>
-                      <li>• <strong>30개 이상</strong>: 대형 스튜디오, 여러 작가</li>
-                    </ul>
-                  </div>
                 </div>
 
                 {/* 작업량 경고 시스템 안내 */}
@@ -346,15 +337,6 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       placeholder="3"
                     />
                     <div className="text-sm text-gray-600 font-medium">일</div>
-                  </div>
-                  <div className="mt-3 p-3 bg-orange-50 rounded-lg">
-                    <p className="text-xs text-orange-700 font-medium mb-2">⏱️ 설정 가이드</p>
-                    <ul className="text-xs text-orange-600 space-y-1">
-                      <li>• <strong>1-3일</strong>: 단순 디자인, 재고 있음</li>
-                      <li>• <strong>3-7일</strong>: 일반 맞춤 제작</li>
-                      <li>• <strong>7-14일</strong>: 복잡한 디자인</li>
-                      <li>• <strong>14일 이상</strong>: 특수 재료, 고난도</li>
-                    </ul>
                   </div>
                 </div>
               </div>
