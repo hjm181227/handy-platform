@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Product, NAIL_SHAPES, NAIL_SHAPE_NAME, NAIL_LENGTHS, NAIL_LENGTH_NAME, NailShape, NailLength, CreateCustomOrderResponse } from '@handy-platform/shared';
-import { productService, orderService } from '../../services/apiService';
+import { productService, orderService, imageService } from '../../services/apiService';
 import { FaArrowLeft, FaPlus, FaTimes, FaCheckCircle, FaComments, FaShoppingBag } from 'react-icons/fa';
 import { sendCustomOrderToChat, getChatRoomPath } from '../../lib/chat/orderChatService';
 
@@ -126,15 +126,29 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
         }
 
         // 1-1. Presigned URL 요청
-        const presignedRes = await orderService.getPresignedUrl({
+        const presignedResponse = await imageService.getPresignedUrl({
           filename: file.name,
           contentType: file.type,
-          uploadType: 'general'
+          uploadType: 'custom-order-reference'
         });
 
-        // 1-2. S3에 직접 업로드 (Content-Type 헤더 필수)
-        await orderService.uploadToS3(presignedRes.data.presignedUrl, file);
-        imageUrls.push(presignedRes.data.imageUrl);
+        // 1-2. S3에 직접 업로드
+        const uploadHeaders: Record<string, string> = {
+          'Content-Type': file.type,
+          ...(presignedResponse.uploadHeaders || {})
+        };
+        const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: uploadHeaders,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`S3 upload failed: ${uploadResponse.status}`);
+        }
+
+        // 1-3. imageUrl 저장
+        imageUrls.push(presignedResponse.imageUrl);
       }
 
       // 2. 커스텀 주문서 생성

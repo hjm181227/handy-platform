@@ -3073,6 +3073,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
     sellerUuid: string;
     brandName: string;
     brandProfile: string | null;
+    brandBanner: string | null;
     acceptsCustomOrders: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -3087,6 +3088,11 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 배너 업로드 상태
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // 커스텀 주문 설정 상태
   const [savingCustomOrder, setSavingCustomOrder] = useState(false);
@@ -3112,10 +3118,21 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
 
       if (sellerInfo && sellerInfo.success && sellerInfo.data) {
         const seller = sellerInfo.data;
+
+        // 브랜드 상세 정보 조회 (brandBanner 포함)
+        let brandBanner: string | null = null;
+        try {
+          const brandDetail = await brandService.getBrandDetail(seller.userUuid);
+          brandBanner = brandDetail.data?.brandBanner || null;
+        } catch (err) {
+          console.log('Brand detail fetch failed, using default banner');
+        }
+
         setBrandInfo({
-          sellerUuid: seller.sellerInfoId,
+          sellerUuid: seller.userUuid,
           brandName: seller.brandName || '',
           brandProfile: seller.brandProfile || null,
+          brandBanner,
           acceptsCustomOrders: customOrderSetting?.data?.acceptsCustomOrders ?? false
         });
         setNewBrandName(seller.brandName || '');
@@ -3222,6 +3239,87 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       setUploadingLogo(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 배너 파일 선택
+  const handleBannerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    // 파일 크기 검증 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('파일 크기는 10MB 이하여야 합니다.');
+      return;
+    }
+
+    // 미리보기 생성
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setBannerPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // 업로드 실행
+    handleBannerUpload(file);
+  };
+
+  // 배너 업로드
+  const handleBannerUpload = async (file: File) => {
+    if (!brandInfo) return;
+
+    try {
+      setUploadingBanner(true);
+      setError(null);
+
+      // 1. presigned URL 획득
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'brand-banner'
+      });
+
+      // 2. S3에 직접 업로드
+      const uploadHeaders: Record<string, string> = {
+        'Content-Type': file.type,
+        ...(presignedResponse.uploadHeaders || {})
+      };
+      const uploadResponse = await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: uploadHeaders,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`S3 upload failed: ${uploadResponse.status}`);
+      }
+
+      // 3. 브랜드 배너 업데이트
+      await brandService.updateBrandBanner(brandInfo.sellerUuid, {
+        brandBanner: presignedResponse.imageUrl
+      });
+
+      // 4. 브랜드 정보 새로고침
+      const updatedBrand = await brandService.getBrandDetail(brandInfo.sellerUuid);
+      setBrandInfo(prev => prev ? { ...prev, brandBanner: updatedBrand.data?.brandBanner || null } : null);
+
+      setBannerPreview(null);
+      showSuccess('배너 이미지가 변경되었습니다!');
+    } catch (err: any) {1
+      console.error('배너 업로드 실패:', err);
+      setError(err.message || '배너 업로드에 실패했습니다.');
+      setBannerPreview(null);
+    } finally {
+      setUploadingBanner(false);
+      if (bannerInputRef.current) {
+        bannerInputRef.current.value = '';
       }
     }
   };
@@ -3362,6 +3460,71 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
             </div>
           </div>
 
+          {/* 배너 섹션 */}
+          <div className="p-6 border-b border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 배너</label>
+            <div className="space-y-4">
+              {/* 현재 배너 또는 기본 이미지 */}
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+                {(bannerPreview || brandInfo?.brandBanner) ? (
+                  <img
+                    src={bannerPreview || brandInfo?.brandBanner || ''}
+                    alt="브랜드 배너"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="w-16 h-16 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-gray-500">배너 이미지가 없습니다</p>
+                    </div>
+                  </div>
+                )}
+
+                {uploadingBanner && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                      <p className="text-white text-sm">업로드 중...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 업로드 버튼 및 안내 */}
+              <div className="flex items-start gap-4">
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleBannerFileSelect}
+                  className="hidden"
+                  id="banner-upload"
+                />
+                <label
+                  htmlFor="banner-upload"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    uploadingBanner
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {uploadingBanner ? '업로드 중...' : '배너 변경'}
+                </label>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-600">
+                    <span className="font-medium">권장 사이즈:</span> 1920x600px
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPG, PNG, WebP 형식 / 최대 10MB
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* 브랜드명 섹션 */}
           <div className="p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">브랜드명</label>
@@ -3458,21 +3621,77 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
           </div>
         </div>
 
-        {/* 브랜드 페이지 미리보기 링크 */}
-        {brandInfo?.sellerUuid && (
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">브랜드 페이지</h3>
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">고객에게 보이는 브랜드 상세 페이지를 확인하세요.</p>
-              <button
-                onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                페이지 보기
-              </button>
+        {/* 브랜드 페이지 미리보기 카드 */}
+        {brandInfo && (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h3 className="text-lg font-semibold text-gray-900">브랜드 페이지 미리보기</h3>
+              <p className="text-sm text-gray-500 mt-1">고객에게 보여질 브랜드 페이지 모습입니다</p>
+            </div>
+
+            <div className="p-6">
+              {/* 미니 프리뷰 */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                {/* 배너 미리보기 */}
+                <div className="relative h-32 bg-gradient-to-r from-blue-100 to-purple-100">
+                  {brandInfo.brandBanner ? (
+                    <img
+                      src={brandInfo.brandBanner}
+                      alt="배너 미리보기"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-sm text-gray-400">배너 이미지가 없습니다</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 프로필 + 브랜드명 미리보기 */}
+                <div className="px-6 py-4 bg-white">
+                  <div className="flex items-center gap-4">
+                    {/* 프로필 이미지 */}
+                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex-shrink-0 overflow-hidden border-2 border-white shadow-lg -mt-10 relative z-10">
+                      {brandInfo.brandProfile ? (
+                        <img
+                          src={brandInfo.brandProfile}
+                          alt="프로필 미리보기"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-2xl font-bold text-gray-400">
+                            {brandInfo.brandName?.charAt(0) || 'B'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 브랜드명 */}
+                    <div className="flex-1">
+                      <h4 className="text-lg font-bold text-gray-900">
+                        {brandInfo.brandName || '브랜드명 없음'}
+                      </h4>
+                      <p className="text-sm text-gray-500">브랜드 페이지</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 페이지 보기 버튼 */}
+              {brandInfo.sellerUuid && (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    전체 페이지 보기
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -3486,9 +3705,10 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">브랜드 정보 안내</p>
               <ul className="list-disc list-inside space-y-1 text-blue-700">
-                <li>브랜드 로고는 정사각형 이미지를 권장합니다.</li>
+                <li>브랜드 로고는 정사각형 이미지(512x512px)를 권장합니다.</li>
+                <li>브랜드 배너는 가로형 이미지(1920x600px)를 권장합니다.</li>
                 <li>브랜드명은 고객에게 노출되는 중요한 정보입니다.</li>
-                <li>배너 이미지 및 브랜드 설명 기능은 추후 업데이트 예정입니다.</li>
+                <li>변경사항은 즉시 브랜드 페이지에 반영됩니다.</li>
               </ul>
             </div>
           </div>

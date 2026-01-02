@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Star, FileText, Pencil } from 'lucide-react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
 import { ShippingAddressForm } from '../common/ShippingAddressForm';
+import { TossPaymentWidget, TossPaymentWidgetRef } from '../payment/TossPaymentWidget';
 import type {
   Cart,
   Order,
@@ -43,8 +44,26 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
 
-  // 결제 방법
-  const [paymentMethod, setPaymentMethod] = useState<string>('card');
+  // 토스페이먼츠 결제위젯 상태
+  const [tossWidgetReady, setTossWidgetReady] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<{ code: string; type?: string } | null>(null);
+  const tossWidgetRef = useRef<TossPaymentWidgetRef>(null);
+
+  // 현재 사용자의 customerKey 생성 (UUID 기반 또는 비회원)
+  const customerKey = useMemo(() => {
+    // 로그인된 사용자면 userId 사용, 아니면 null (비회원)
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        // JWT에서 userId 추출 (간단한 디코딩)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId || payload.sub || null;
+      }
+    } catch (e) {
+      console.warn('[CheckoutPage] Failed to extract customerKey from token');
+    }
+    return null;
+  }, []);
 
   // ✅ 배송지 목록 로드 헬퍼 함수
   const loadAddresses = async () => {
@@ -300,10 +319,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           setShippingAddress(restoreData.shippingAddress);
           setSelectedAddressId(restoreData.shippingAddress.id);
 
-          // 결제수단 복원 (있는 경우)
-          if (restoreData.paymentMethod) {
-            setPaymentMethod(restoreData.paymentMethod);
-          }
+          // 결제수단은 토스페이먼츠 위젯에서 선택 (복원 불필요)
 
           // 사용 후 즉시 삭제
           sessionStorage.removeItem('restored-checkout');
@@ -478,8 +494,8 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const validateCheckout = () => {
     // 배송지가 선택되거나 유효하게 입력되었는지 확인
     const hasValidAddress = selectedAddressId || validateShipping();
-    // 결제 방법이 선택되었는지 확인
-    const hasPaymentMethod = !!paymentMethod;
+    // 토스 결제위젯이 준비되었는지 확인
+    const hasPaymentMethod = tossWidgetReady;
     return hasValidAddress && hasPaymentMethod;
   };
 
@@ -545,9 +561,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     }
   };
 
-  // ✅ 결제 준비 (POST /api/payment/prepare) - 백엔드 스펙 준수
+  // ✅ 결제 준비 및 토스페이먼츠 결제 요청
   const handlePayment = async () => {
-    if (!cart) {
+    if (!cart || !order) {
       setError('체크아웃 정보가 없습니다.');
       return;
     }
@@ -565,55 +581,58 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       return;
     }
 
+    // ✅ 토스 위젯 준비 확인
+    if (!tossWidgetReady) {
+      setError('결제 수단을 선택해주세요.');
+      await alert('결제 수단을 선택해주세요.', { variant: 'error' });
+      return;
+    }
+
     try {
       setProcessing(true);
       setError(null);
 
-      // ✅ paymentMethod를 PayMethod로 변환 (백엔드 스펙: 대문자)
-      let payMethod: 'KAKAO_PAY' | 'NAVER_PAY' | 'CREDIT_CARD';
-      if (paymentMethod === 'kakaopay') {
-        payMethod = 'KAKAO_PAY';
-      } else if (paymentMethod === 'naverpay') {
-        payMethod = 'NAVER_PAY';
-      } else if (paymentMethod === 'card') {
-        payMethod = 'CREDIT_CARD';
-      } else {
-        payMethod = 'KAKAO_PAY'; // 기본값
-      }
-
-      // ✅ OrderService를 통한 결제 준비 (백엔드 스펙 준수)
-      console.log('💳 [CheckoutPage] Preparing payment:', {
+      // 1. 백엔드에 결제 준비 요청 (주문 생성)
+      console.log('💳 [CheckoutPage] Preparing payment with Toss:', {
         sessionId: (cart as any).sessionId,
-        amount: cart.totals.finalTotal,
-        payMethod
+        amount: order.finalPrice,
       });
 
-      const response = await webApiService.order.preparePayment(
+      const prepareResponse = await webApiService.order.preparePayment(
         (cart as any).sessionId,
-        cart.totals.finalTotal,  // 세션의 finalTotal 전달
-        payMethod
+        order.finalPrice,
+        'TOSS_PAYMENTS' as any // 토스페이먼츠 결제
       );
 
-      console.log('💳 [CheckoutPage] Payment prepare response:', response);
-
-      if (response.success && response.data?.paymentUrl) {
-        // 모바일 여부 확인
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-
-        const paymentUrl = isMobile && response.data.mobilePaymentUrl
-          ? response.data.mobilePaymentUrl
-          : response.data.paymentUrl;
-
-        console.log('🔗 [CheckoutPage] Redirecting to payment URL:', paymentUrl);
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error(response.error || response.message || '결제 준비에 실패했습니다.');
+      if (!prepareResponse.success || !prepareResponse.data?.orderId) {
+        throw new Error(prepareResponse.error || '주문 생성에 실패했습니다.');
       }
 
+      const orderId = prepareResponse.data.orderId;
+
+      // 2. 주문명 생성
+      const orderName = cart.items.length > 1
+        ? `${cart.items[0].product?.name || '상품'} 외 ${cart.items.length - 1}건`
+        : cart.items[0].product?.name || '상품';
+
+      console.log('💳 [CheckoutPage] Requesting Toss payment:', { orderId, orderName });
+
+      // 3. 토스페이먼츠 결제 요청
+      if (!tossWidgetRef.current) {
+        throw new Error('결제 위젯이 준비되지 않았습니다.');
+      }
+
+      await tossWidgetRef.current.requestPayment({
+        orderId: orderId,
+        orderName: orderName,
+        successUrl: `${window.location.origin}/payment/success`,
+        failUrl: `${window.location.origin}/payment/fail`,
+        customerName: shippingAddress.recipientName,
+        customerMobilePhone: shippingAddress.recipientPhone?.replace(/-/g, ''),
+      });
+
     } catch (err: any) {
-      console.error('❌ [CheckoutPage] Payment prepare failed:', err);
+      console.error('❌ [CheckoutPage] Payment failed:', err);
       setError(err.message || '결제 처리 중 오류가 발생했습니다.');
     } finally {
       setProcessing(false);
@@ -964,30 +983,16 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               )}
             </div>
 
-            {/* 결제 방법 */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-lg font-semibold mb-4">결제 방법</h2>
-              <div className="space-y-3">
-                {[
-                  { value: 'card', label: '신용카드', icon: '💳' },
-                  { value: 'kakaopay', label: '카카오페이', icon: '🟨' },
-                  { value: 'naverpay', label: '네이버페이', icon: '🟢' },
-                  { value: 'bank', label: '계좌이체', icon: '🏦' }
-                ].map((method) => (
-                  <label key={method.value} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={method.value}
-                      checked={paymentMethod === method.value}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-xl">{method.icon}</span>
-                    <span className="font-medium">{method.label}</span>
-                  </label>
-                ))}
-              </div>
+            {/* 결제 방법 - 토스페이먼츠 결제위젯 */}
+            <div className="bg-white rounded-lg border overflow-hidden">
+              <TossPaymentWidget
+                ref={tossWidgetRef}
+                amount={order?.finalPrice || 0}
+                customerKey={customerKey}
+                onReady={() => setTossWidgetReady(true)}
+                onError={(err) => setError(err)}
+                onPaymentMethodSelect={(method) => setSelectedPaymentMethod(method)}
+              />
             </div>
           </div>
 

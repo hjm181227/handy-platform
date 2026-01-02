@@ -9,20 +9,63 @@ export function PaymentFail({ onGo }: PaymentFailProps) {
     orderId?: string;
     payMethod?: string;
     error?: string;
+    code?: string;
+    message?: string;
   }>({});
 
   useEffect(() => {
-    // URL 파라미터에서 오류 정보 추출
+    // URL 파라미터에서 오류 정보 추출 (토스페이먼츠 및 기존 방식 호환)
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId');
     const payMethod = urlParams.get('payMethod');
     const error = urlParams.get('error');
-    
-    setErrorInfo({ orderId, payMethod, error });
-    console.log('Payment failed:', { orderId, payMethod, error });
+    // 토스페이먼츠 오류 파라미터
+    const code = urlParams.get('code');
+    const message = urlParams.get('message');
+
+    setErrorInfo({
+      orderId: orderId || undefined,
+      payMethod: payMethod || undefined,
+      error: error || undefined,
+      code: code || undefined,
+      message: message || undefined,
+    });
+    console.log('Payment failed:', { orderId, payMethod, error, code, message });
   }, []);
 
   const getErrorMessage = () => {
+    // 토스페이먼츠 에러 메시지 우선
+    if (errorInfo.message) {
+      return errorInfo.message;
+    }
+
+    // 토스페이먼츠 에러 코드에 따른 메시지
+    if (errorInfo.code) {
+      switch (errorInfo.code) {
+        case 'PAY_PROCESS_CANCELED':
+          return '사용자가 결제를 취소했습니다.';
+        case 'PAY_PROCESS_ABORTED':
+          return '결제가 중단되었습니다.';
+        case 'REJECT_CARD_COMPANY':
+          return '카드사에서 결제를 거부했습니다.';
+        case 'EXCEED_MAX_DAILY_PAYMENT_COUNT':
+          return '일일 결제 한도를 초과했습니다.';
+        case 'EXCEED_MAX_PAYMENT_AMOUNT':
+          return '결제 금액 한도를 초과했습니다.';
+        case 'INVALID_CARD_EXPIRATION':
+          return '카드 유효기간이 올바르지 않습니다.';
+        case 'INVALID_STOPPED_CARD':
+          return '정지된 카드입니다.';
+        case 'INVALID_CARD_LOST_OR_STOLEN':
+          return '분실/도난 신고된 카드입니다.';
+        case 'NOT_SUPPORTED_INSTALLMENT_PLAN_CARD_OR_MERCHANT':
+          return '할부가 지원되지 않는 카드입니다.';
+        default:
+          return `결제 오류가 발생했습니다. (${errorInfo.code})`;
+      }
+    }
+
+    // 기존 에러 처리
     if (errorInfo.error) {
       switch (errorInfo.error) {
         case 'TIMEOUT':
@@ -49,10 +92,11 @@ export function PaymentFail({ onGo }: PaymentFailProps) {
           {getErrorMessage()}
         </p>
         
-        {errorInfo.orderId && (
-          <p className="text-sm text-gray-500 mb-6">
-            주문번호: {errorInfo.orderId}
-          </p>
+        {(errorInfo.orderId || errorInfo.code) && (
+          <div className="text-sm text-gray-500 mb-6 space-y-1">
+            {errorInfo.orderId && <p>주문번호: {errorInfo.orderId}</p>}
+            {errorInfo.code && <p>오류 코드: {errorInfo.code}</p>}
+          </div>
         )}
         
         <div className="space-y-3">
