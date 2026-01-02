@@ -49,11 +49,6 @@ export abstract class BaseApiService {
         ...headers,
       };
 
-      // Generate cURL command for debugging
-      const curlCommand = this.generateCurlCommand(url, method, allHeaders, body);
-      console.log('🔵 API Request cURL:');
-      console.log(curlCommand);
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 

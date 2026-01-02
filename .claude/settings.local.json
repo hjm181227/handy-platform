@@ -4,7 +4,8 @@
       "Read(//Users/heojeongmin/WebstormProjects/handy-server1/docs/api/**)",
       "Read(//Users/heojeongmin/WebstormProjects/handy-server1/docs/**)",
       "Read(//Users/heojeongmin/WebstormProjects/handy-server1/types/**)",
-      "Read(//Users/heojeongmin/WebstormProjects/handy-server1/**)"
+      "Read(//Users/heojeongmin/WebstormProjects/handy-server1/**)",
+      "mcp__tosspayments-integration-guide__get-v2-documents"
     ],
     "deny": [],
     "ask": []

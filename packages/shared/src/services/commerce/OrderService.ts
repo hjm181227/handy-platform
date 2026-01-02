@@ -145,31 +145,45 @@ export abstract class BaseOrderService extends BaseApiService {
     );
   }
 
-  // 결제 승인 - 결제 완료 후 최종 승인 (백엔드 스펙 준수)
+  // 결제 승인 - 결제 완료 후 최종 승인 (unified-payments-api.md 스펙 준수)
+  // 토스페이먼츠: { orderId, payMethod: 'TOSS_PAYMENTS', approvalData: { paymentKey, amount } }
+  // 카카오페이/네이버페이: { orderId, payMethod, approvalData: { pgToken } }
   async approvePayment(
-    orderId: string,
-    pgToken: string
+    params: {
+      orderId: string;
+      payMethod?: 'TOSS_PAYMENTS' | 'KAKAO_PAY' | 'NAVER_PAY';
+      approvalData?: {
+        paymentKey?: string;
+        amount?: number;
+        pgToken?: string;
+      };
+      // 레거시 호환 (deprecated)
+      paymentKey?: string;
+      amount?: number;
+      pgToken?: string;
+    }
   ): Promise<ApiResponse<{
+    success: boolean;
     orderId: string;
-    status: string;
-    amount: number;
-    approvedAt: string;
-    redirectUrl: string;
+    status?: string;
+    amount?: number;
+    approvedAt?: string;
+    redirectUrl?: string;
+    error?: string;
   }>> {
     return this.request<ApiResponse<{
+      success: boolean;
       orderId: string;
-      status: string;
-      amount: number;
-      approvedAt: string;
-      redirectUrl: string;
+      status?: string;
+      amount?: number;
+      approvedAt?: string;
+      redirectUrl?: string;
+      error?: string;
     }>>(
       API_ENDPOINTS.PAYMENT.APPROVE,
       {
         method: 'POST',
-        body: JSON.stringify({
-          orderId,
-          pgToken
-        }),
+        body: JSON.stringify(params),
       }
     );
   }

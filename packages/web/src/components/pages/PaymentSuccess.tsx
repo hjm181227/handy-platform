@@ -18,19 +18,40 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
   useEffect(() => {
     const fetchOrderResult = async () => {
       try {
-        // URL 파라미터에서 orderId와 status 추출
+        // URL 파라미터 추출 (토스페이먼츠 결제 콜백 또는 기존 방식)
         const urlParams = new URLSearchParams(window.location.search);
+        const paymentKey = urlParams.get('paymentKey');
         const orderId = urlParams.get('orderId');
-        const status = urlParams.get('status');
+        const amount = urlParams.get('amount');
+        const status = urlParams.get('status'); // 기존 방식 호환
 
-        console.log('🔵 [PaymentSuccess] Payment callback received:', { orderId, status });
+        console.log('🔵 [PaymentSuccess] Payment callback received:', { paymentKey, orderId, amount, status });
 
         if (!orderId || orderId === 'undefined') {
           throw new Error('주문 정보가 올바르지 않습니다.');
         }
 
-        // 결제 상태 확인 (백엔드는 성공 시 'completed' 전달)
-        if (status !== 'completed') {
+        // 토스페이먼츠 결제 승인 처리
+        if (paymentKey && amount) {
+          console.log('💳 [PaymentSuccess] Approving Toss payment...');
+
+          // 백엔드 결제 승인 API 호출 (unified-payments-api.md 형식)
+          const approveResponse = await orderService.approvePayment({
+            orderId,
+            payMethod: 'TOSS_PAYMENTS',
+            approvalData: {
+              paymentKey,
+              amount: parseInt(amount, 10),
+            },
+          });
+
+          console.log('✅ [PaymentSuccess] Toss payment approved:', approveResponse);
+
+          if (!approveResponse.success) {
+            throw new Error(approveResponse.error || '결제 승인에 실패했습니다.');
+          }
+        } else if (status && status !== 'completed') {
+          // 기존 방식: status 파라미터 확인
           const errorMsg = status === 'fail'
             ? '결제 처리 중 오류가 발생했습니다.'
             : status === 'cancel'
@@ -39,7 +60,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           throw new Error(errorMsg);
         }
 
-        // 주문 정보 조회 (백엔드에서 이미 승인 완료)
+        // 주문 정보 조회
         console.log('📦 [PaymentSuccess] Fetching order details...');
         const response = await orderService.getOrder(orderId);
 
@@ -177,10 +198,18 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                 <div className="flex justify-between">
                   <span className="text-gray-600">결제수단</span>
                   <span className="font-medium">
-                    {order.paymentMethod === 'KAKAO_PAY' && '카카오페이'}
-                    {order.paymentMethod === 'NAVER_PAY' && '네이버페이'}
-                    {order.paymentMethod === 'CREDIT_CARD' && '신용카드'}
-                    {!['KAKAO_PAY', 'NAVER_PAY', 'CREDIT_CARD'].includes(order.paymentMethod || '') && order.paymentMethod}
+                    {(() => {
+                      const method = order.paymentMethod as string;
+                      const methodMap: Record<string, string> = {
+                        'KAKAO_PAY': '카카오페이',
+                        'NAVER_PAY': '네이버페이',
+                        'CREDIT_CARD': '신용카드',
+                        'TOSS_PAYMENTS': '토스페이먼츠',
+                        'TOSS_PAY': '토스페이',
+                        'CARD': '카드결제',
+                      };
+                      return methodMap[method] || method || '-';
+                    })()}
                   </span>
                 </div>
                 <div className="flex justify-between">
