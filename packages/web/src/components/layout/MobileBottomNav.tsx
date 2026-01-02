@@ -82,7 +82,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
         {tabs.map((tab) => {
           const active = isActive(tab.path);
           const Icon = active ? tab.activeIcon : tab.icon;
-          const textColor = active ? 'text-[#FF6B9D]' : 'text-gray-400';
+          const textColor = active ? 'text-gray-900' : 'text-gray-400';
 
           return (
             <button

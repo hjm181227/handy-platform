@@ -66,7 +66,9 @@ export function BrandDetailPage({
   onOpen,
   onAdd,
   onLike,
-  likedProducts = []
+  likedProducts = [],
+  onBrandLike,
+  isBrandLiked = false
 }: {
   sellerUuid: string;
   onGo: (to: string) => void;
@@ -74,6 +76,8 @@ export function BrandDetailPage({
   onAdd: (id: string) => void;
   onLike?: (id: string) => void;
   likedProducts?: string[];
+  onBrandLike?: (brandId: string) => void;
+  isBrandLiked?: boolean;
 }) {
   // 정렬 및 필터 상태
   const [sortBy, setSortBy] = useState<'popular' | 'price' | 'latest'>('popular');
@@ -633,12 +637,16 @@ export function BrandDetailPage({
                       </svg>
                       <span className="text-white/90 font-medium text-sm sm:text-base">{brandStats.avgRating.toFixed(1)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <button
+                      onClick={() => onBrandLike?.(sellerUuid)}
+                      className="flex items-center gap-1 hover:scale-110 transition-transform"
+                      aria-label={isBrandLiked ? '브랜드 좋아요 취소' : '브랜드 좋아요'}
+                    >
+                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${isBrandLiked ? 'text-red-500' : 'text-red-400'}`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
                       </svg>
-                      <span className="text-white/90 font-medium text-sm sm:text-base">{brandStats.totalLikes}</span>
-                    </div>
+                      <span className="text-white/90 font-medium text-sm sm:text-base">{brandStats.totalLikes + (isBrandLiked ? 1 : 0)}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -706,15 +714,21 @@ export function BrandDetailPage({
               <div className="text-sm text-gray-600">평균 평점</div>
             </div>
 
-            <div className="text-center group cursor-pointer">
-              <div className="w-12 h-12 mx-auto mb-3 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+            <button
+              onClick={() => onBrandLike?.(sellerUuid)}
+              className="text-center group cursor-pointer hover:scale-105 transition-transform"
+              aria-label={isBrandLiked ? '브랜드 좋아요 취소' : '브랜드 좋아요'}
+            >
+              <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-colors ${
+                isBrandLiked ? 'bg-red-200' : 'bg-red-100 group-hover:bg-red-200'
+              }`}>
+                <svg className={`w-6 h-6 ${isBrandLiked ? 'text-red-600' : 'text-red-500'}`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
                 </svg>
               </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">{brandStats.totalLikes}</div>
-              <div className="text-sm text-gray-600">총 좋아요</div>
-            </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{brandStats.totalLikes + (isBrandLiked ? 1 : 0)}</div>
+              <div className="text-sm text-gray-600">{isBrandLiked ? '좋아요 완료' : '총 좋아요'}</div>
+            </button>
 
             <div className="text-center group cursor-pointer">
               <div className="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
