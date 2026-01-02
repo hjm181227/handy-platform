@@ -4,6 +4,7 @@ import {
   BrandListParams,
   UpdateBrandNameRequest,
   UpdateBrandProfileRequest,
+  UpdateBrandBannerRequest,
   BrandUpdateResponse,
   BrandDetailResponse
 } from '../../types';
@@ -75,6 +76,23 @@ export abstract class BaseBrandService extends BaseApiService {
    */
   async updateBrandProfile(sellerUuid: string, data: UpdateBrandProfileRequest): Promise<BrandUpdateResponse> {
     const endpoint = API_ENDPOINTS.BRANDS.UPDATE_PROFILE(sellerUuid);
+
+    const response = await this.request<BrandUpdateResponse>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+
+    return response;
+  }
+
+  /**
+   * 브랜드 배너 이미지를 변경합니다 (인증 필요)
+   * @param sellerUuid 판매자 UUID
+   * @param data 새로운 브랜드 배너 이미지 URL
+   * @returns 업데이트된 브랜드 정보
+   */
+  async updateBrandBanner(sellerUuid: string, data: UpdateBrandBannerRequest): Promise<BrandUpdateResponse> {
+    const endpoint = API_ENDPOINTS.BRANDS.UPDATE_BANNER(sellerUuid);
 
     const response = await this.request<BrandUpdateResponse>(endpoint, {
       method: 'PUT',

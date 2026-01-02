@@ -374,6 +374,7 @@ export const API_ENDPOINTS = {
     PRODUCTS: (sellerUuid: string) => `/api/brands/${sellerUuid}/products`,      // GET /:sellerUuid/products - 브랜드 상품 목록
     UPDATE_NAME: (sellerUuid: string) => `/api/brands/${sellerUuid}/name`,       // PUT /:sellerUuid/name - 브랜드명 변경
     UPDATE_PROFILE: (sellerUuid: string) => `/api/brands/${sellerUuid}/profile`, // PUT /:sellerUuid/profile - 브랜드 프로필 변경
+    UPDATE_BANNER: (sellerUuid: string) => `/api/brands/${sellerUuid}/banner`,   // PUT /:sellerUuid/banner - 브랜드 배너 변경
   },
 
   // 배송지 관리 (한국 주소 시스템)
