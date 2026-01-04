@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { products } from '../../data';
 import { RankedProductCard } from '../product/RankedProductCard';
-import { FaTrophy } from 'react-icons/fa';
 
 type FilterType = 'all' | 'weekly' | 'monthly';
 
@@ -152,8 +151,8 @@ export function RankingPage({
             {/* TOP 5 특별 섹션 */}
             {filteredProducts.length >= 5 && (
               <div className="mb-8">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <FaTrophy className="text-yellow-500" />
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-yellow-500">emoji_events</span>
                   TOP 5
                 </h2>
 

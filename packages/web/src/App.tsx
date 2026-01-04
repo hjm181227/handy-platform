@@ -567,7 +567,7 @@ function AppContent() {
       />
     );
   } else if (pathname.startsWith("/sale")) {
-    screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
+    screen = (<><TitleBar title="세일"/><ProductGrid title="할인 중" items={products.filter(p=>p.sale)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} onGo={nav} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/recommend")) {
     screen = (
       <RecommendPage
@@ -580,16 +580,16 @@ function AppContent() {
       />
     );
   } else if (pathname.startsWith("/new")) {
-    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNewProduct)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
+    screen = (<><TitleBar title="신상"/><ProductGrid title="방금 등록된 상품" items={products.filter(p=>p.isNewProduct)} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} onGo={nav} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/trend")) {
-    screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
+    screen = (<><TitleBar title="트렌드"/><ProductGrid title="지금 뜨는 상품" items={[...products].sort((a,b)=>(b.sale??0)-(a.sale??0))} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} onGo={nav} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/promo/")) {
     const slug = pathname.split("/").pop();
-    screen = (<><TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전"/><SectionRow title="기획전 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
+    screen = (<><TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전"/><SectionRow title="기획전 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} onGo={nav} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/cat/")) {
     const parts = pathname.split("/").slice(2).map(decodeURIComponent);
     const [group, name] = parts;
-    screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} /></>);
+    screen = (<><TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과"/><ProductGrid title="카테고리 상품" items={[...products]} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} onGo={nav} likedProducts={likedProducts} /></>);
   } else if (pathname.startsWith("/search")) {
     const keyword = q.get("q") ?? "";
     screen = <SearchResultsPage searchQuery={keyword} onOpen={openProduct} onAdd={addProduct} onLike={handleLike} likedProducts={likedProducts} />;
@@ -720,9 +720,9 @@ function AppContent() {
     screen = <ChatRoomPage nav={nav} roomId={roomId} />;
   } else if (pathname === "/seller/register") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerRegistrationPage onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/support/contact") {
     screen = <ContactPage onGo={nav} />;
@@ -767,70 +767,70 @@ function AppContent() {
   // 판매자 센터 라우팅
   } else if (pathname === "/seller") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerDashboard onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/brand") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <BrandManagement onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/products") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerProducts onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/products/new") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerProductForm onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname.match(/^\/seller\/products\/(.+)\/edit$/)) {
     const productId = pathname.split("/")[3];
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerProductForm onGo={nav} productId={productId} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/orders") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerOrders onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/reviews") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerReviews onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/analytics") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerAnalytics onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/settlement") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerSettlement onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/production") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <ProductionSettings onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname === "/seller/production/status") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <ProductionStatus onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
 
   // Admin routes
@@ -1068,9 +1068,9 @@ function AppContent() {
     );
   } else if (pathname === "/seller/apply") {
     screen = (
-      <RequireRole requiredRole="seller">
+      <RequireAuth>
         <SellerApplicationForm onGo={nav} />
-      </RequireRole>
+      </RequireAuth>
     );
   } else if (pathname.startsWith("/login")) {
     screen = <LoginPage onGo={nav} />;
@@ -1090,6 +1090,7 @@ function AppContent() {
           onOpen={openProduct}
           onAdd={addProduct}
           onLike={handleLike}
+          onGo={nav}
           likedProducts={likedProducts}
         />
 
@@ -1125,6 +1126,7 @@ function AppContent() {
                         onOpen={openProduct}
                         onAdd={addProduct}
                         onLike={handleLike}
+                        onGo={nav}
                         isLiked={likedProducts.includes(productId)}
                       />
                     </div>

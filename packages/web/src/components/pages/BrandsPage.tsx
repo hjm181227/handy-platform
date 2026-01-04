@@ -161,10 +161,11 @@ export function BrandsPage({
         {brand.products && brand.products.length > 0 && (
           <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto pb-2">
             {brand.products.filter(Boolean).map((p) => {
-              const productId = p.id || p.productUuid;
+              // 좋아요 API는 UUID를 사용하므로 productUuid 우선 사용
+              const productId = p.productUuid || p.id;
               return (
                 <div key={p.id || p.productId} className="md:snap-start">
-                  <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+                  <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
                 </div>
               );
             })}

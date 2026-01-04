@@ -194,6 +194,7 @@ export function LikesPage({
                 onOpen={onOpen}
                 onAdd={onAdd}
                 onLike={handleLikeInPage}
+                onGo={onGo}
                 isLiked={true}
               />
             );

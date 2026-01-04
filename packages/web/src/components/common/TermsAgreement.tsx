@@ -191,14 +191,16 @@ export function TermsAgreement({
         </label>
 
         {/* 필수 약관 안내 */}
-        <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
-          💡 필수 약관에 동의하지 않으시면 회원가입이 제한됩니다.
+        <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded flex items-center gap-1">
+          <span className="material-symbols-outlined text-sm">lightbulb</span>
+          필수 약관에 동의하지 않으시면 회원가입이 제한됩니다.
         </div>
 
         {/* 필수 약관 미동의시 경고 */}
         {!isRequiredTermsAgreed && (
-          <div className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200">
-            ⚠️ 필수 약관에 모두 동의해주세요.
+          <div className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200 flex items-center gap-1">
+            <span className="material-symbols-outlined text-sm">warning</span>
+            필수 약관에 모두 동의해주세요.
           </div>
         )}
       </div>

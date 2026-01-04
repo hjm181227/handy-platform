@@ -1007,6 +1007,7 @@ export function BrandDetailPage({
                     onOpen={onOpen}
                     onAdd={onAdd}
                     onLike={onLike}
+                    onGo={onGo}
                     isLiked={likedProducts.includes(productId)}
                   />
                 );
@@ -1040,7 +1041,7 @@ export function BrandDetailPage({
                 {categoryProducts.map((product) => {
                   const productId = product.id || product.productUuid;
                   return (
-                    <ProductCard key={`${category}-${product.id || product.productId}`} p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+                    <ProductCard key={`${category}-${product.id || product.productId}`} p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
                   );
                 })}
               </div>

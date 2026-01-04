@@ -683,10 +683,19 @@ export function ContactInquiryPage({ onGo }: { onGo: (to: string) => void }) {
         {/* 연락처 정보 */}
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
           <h3 className="font-medium mb-2">다른 연락 방법</h3>
-          <div className="text-sm text-gray-600 space-y-1">
-            <div>📞 고객센터: 1588-0000 (평일 09:00~18:00)</div>
-            <div>📧 이메일: support@handy-platform.com</div>
-            <div>💬 카카오톡: @handy_official</div>
+          <div className="text-sm text-gray-600 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">call</span>
+              <span>고객센터: 1588-0000 (평일 09:00~18:00)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">mail</span>
+              <span>이메일: support@handy-platform.com</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">chat</span>
+              <span>카카오톡: @handy_official</span>
+            </div>
           </div>
         </div>
       </div>

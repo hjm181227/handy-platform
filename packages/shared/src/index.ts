@@ -48,6 +48,9 @@ export * from './services/utils/AlertTypes';
 // Category Services
 export * from './services/category/CategoryService';
 
+// User Services
+export * from './services/user/UserService';
+
 // Banner Services
 export * from './services/banner/BannerService';
 
