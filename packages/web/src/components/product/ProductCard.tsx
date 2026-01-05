@@ -9,6 +9,7 @@ export function ProductCard({
   onOpen,
   onAdd,
   onLike,
+  onGo,
   isLiked = false,
   isLoading = false
 }: {
@@ -16,6 +17,7 @@ export function ProductCard({
   onOpen?: (id:string)=>void;
   onAdd?: (id:string)=>void;
   onLike?: (id:string)=>void;
+  onGo?: (path:string)=>void;
   isLiked?: boolean;
   isLoading?: boolean;
 }) {
@@ -47,7 +49,11 @@ export function ProductCard({
 
   // 좋아요 API는 UUID를 요구하므로 productUuid 사용
   const productId = p.productUuid;
-  const salePrice = p.discountedPrice ?? p.salePrice ?? p.price;
+  // 가격 fallback: discountedPrice > salePrice > price
+  const salePrice = p.discountedPrice ?? p.salePrice ?? p.price ?? 0;
+  // rating null 체크
+  const ratingAvg = p.rating?.average ?? 0;
+  const ratingCount = p.rating?.count ?? 0;
   return (
     <div className="w-full md:w-[200px] shrink-0">
       <div className="relative rounded-lg overflow-hidden bg-gray-100">
@@ -71,7 +77,24 @@ export function ProductCard({
         </div>
       </div>
       <div className="mt-2 space-y-0.5">
-        <div className="text-[11px] text-gray-500">{p.brand || ''}</div>
+        {p.brand && onGo ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const sellerId = (p as any).sellerUuid || p.seller?.userId;
+              if (sellerId) {
+                onGo(`/brand/${sellerId}`);
+              } else {
+                onGo(`/brands?search=${encodeURIComponent(p.brand!)}`);
+              }
+            }}
+            className="text-[11px] text-gray-500 hover:text-blue-600 hover:underline text-left"
+          >
+            {p.brand}
+          </button>
+        ) : (
+          <div className="text-[11px] text-gray-500">{p.brand || ''}</div>
+        )}
         <div className="text-[13px] leading-snug h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
         <div className="flex items-baseline gap-2">
           <div className="text-[15px] font-bold">{money(salePrice)}</div>
@@ -80,8 +103,8 @@ export function ProductCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <IoMdStar className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm">{(p.rating.average ?? 0).toFixed(1)}</span>
-            <span className="text-[11px] text-gray-500">({p.rating.count ?? 0})</span>
+            <span className="text-sm">{ratingAvg.toFixed(1)}</span>
+            <span className="text-[11px] text-gray-500">({ratingCount})</span>
           </div>
           {onLike && (
             <button

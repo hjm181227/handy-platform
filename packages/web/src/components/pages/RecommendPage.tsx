@@ -13,6 +13,7 @@ const RecommendationSection = ({
   onOpen,
   onAdd,
   onLike,
+  onGo,
   likedProducts = []
 }: {
   title: string;
@@ -21,6 +22,7 @@ const RecommendationSection = ({
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
   onLike?: (id: string) => void;
+  onGo?: (path: string) => void;
   likedProducts?: string[];
 }) => {
   if (sectionProducts.length === 0) return null;
@@ -39,7 +41,7 @@ const RecommendationSection = ({
           const productId = product.id || product.productUuid;
           return (
             <div key={product.id || product.productId || index} className="md:snap-start md:flex-shrink-0">
-              <ProductCard p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+              <ProductCard p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
             </div>
           );
         })}
@@ -187,6 +189,7 @@ export function RecommendPage({
                 onOpen={handleProductOpen}
                 onAdd={onAdd}
                 onLike={onLike}
+                onGo={onGo}
                 likedProducts={likedProducts}
               />
             ))}

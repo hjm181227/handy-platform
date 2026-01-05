@@ -16,6 +16,9 @@ import { ProductionStatus } from './seller/ProductionStatus';
 // 주문 관리 컴포넌트 임포트
 import { OrderManagement } from './seller/OrderManagement';
 
+// 쿠폰 관리 컴포넌트 임포트
+import { CouponManagement } from './seller/CouponManagement';
+
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
   const [ dashboardData, setDashboardData ] = useState({
@@ -3709,4 +3712,4 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
 }
 
 // 생산 관리 컴포넌트들 내보내기
-export { ProductionSettings, ProductionStatus };
+export { ProductionSettings, ProductionStatus, CouponManagement };

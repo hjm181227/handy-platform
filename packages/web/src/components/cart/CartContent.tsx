@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
 import { money } from '../../utils';
+import { ShoppingCart } from 'lucide-react';
 
 /**
  * API 응답 데이터를 프론트엔드 Cart 타입에 맞게 변환
@@ -552,7 +553,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   // 빈 장바구니
   const renderEmpty = () => (
     <div className="text-center py-20">
-      <div className="text-6xl mb-4">🛒</div>
+      <div className="text-gray-300 mb-4">
+        <ShoppingCart className="w-20 h-20 mx-auto" strokeWidth={1.5} />
+      </div>
       <div className={`font-semibold mb-2 ${mode === 'drawer' ? 'text-lg' : 'text-xl'}`}>
         장바구니가 비어있습니다
       </div>

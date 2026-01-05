@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MdDashboard, MdInventory, MdFactory, MdInsertChart, MdStorefront } from 'react-icons/md';
 import { FaClipboardList, FaMoneyBillWave, FaHome, FaSignOutAlt } from 'react-icons/fa';
 import { IoMdStar } from 'react-icons/io';
+import { RiCoupon2Line } from 'react-icons/ri';
 import { useAuth } from '../../hooks/useAuth';
 
 interface SellerLayoutProps {
@@ -32,6 +33,12 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
       icon: MdInventory,
       path: "/seller/products",
       description: "상품 등록 및 수정"
+    },
+    {
+      label: "쿠폰 관리",
+      icon: RiCoupon2Line,
+      path: "/seller/coupons",
+      description: "쿠폰 발행 및 관리"
     },
     {
       label: "주문 관리",

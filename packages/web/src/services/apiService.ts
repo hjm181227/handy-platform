@@ -137,6 +137,7 @@ class WebApiService {
   get likes() { return this.apiService.likes; }
   get category() { return this.apiService.category; }
   get banner() { return this.apiService.banner; }
+  get user() { return this.apiService.user; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -286,6 +287,7 @@ export const {
   likes: likesService,
   category: categoryService,
   banner: bannerService,
+  user: userService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들
