@@ -56,13 +56,13 @@ export function getIdFormat(id: string): 'uuid' | 'objectid' | 'unknown' {
 }
 
 /**
- * Normalizes user ID handling during migration period
- * Always returns the 'id' field regardless of format
- * @param user - User object with id field
+ * Normalizes user ID handling
+ * Returns the 'userUuid' field (primary identifier)
+ * @param user - User object with userUuid field
  * @returns string - normalized user ID
  */
-export function normalizeUserId(user: { id: string }): string {
-  return user.id;
+export function normalizeUserId(user: { userUuid: string }): string {
+  return user.userUuid;
 }
 
 /**
@@ -117,16 +117,16 @@ export function isUUIDMigrated(response: { id?: string }): boolean {
 /**
  * Validation helper for API responses
  * Ensures ID field exists and is in valid format
- * Supports both 'id' and 'productUuid' fields for compatibility
- * @param obj - Object with id or productUuid field
+ * Supports 'userUuid', 'productUuid', and legacy 'id' fields for compatibility
+ * @param obj - Object with userUuid, productUuid, or id field
  * @param fieldName - Name of the field being validated (for error messages)
  * @throws Error if ID is invalid
  */
-export function validateResponseId(obj: { id?: string; productUuid?: string }, fieldName: string = 'object'): void {
-  const id = obj.productUuid || obj.id;
+export function validateResponseId(obj: { id?: string; userUuid?: string; productUuid?: string }, fieldName: string = 'object'): void {
+  const id = obj.userUuid || obj.productUuid || obj.id;
 
   if (!id) {
-    throw new Error(`${fieldName} response missing required 'id' or 'productUuid' field`);
+    throw new Error(`${fieldName} response missing required 'userUuid', 'productUuid', or 'id' field`);
   }
 
   if (!isValidId(id)) {

@@ -18,7 +18,7 @@ export interface PaginationInfo {
 
 // User Related Types
 export interface User {
-  id: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) after migration
+  userUuid: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) - primary identifier
   email: string;
   name: string;
   nickname?: string;
