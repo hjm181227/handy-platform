@@ -84,10 +84,7 @@ export function Detail({
     try {
       setReviewsLoading(true);
 
-      console.log('🔍 [Detail] Loading reviews for product:', product.id);
-      console.log('🔍 [Detail] Product info:', { id: product.id, productUuid: (product as any).productUuid, name: product.name });
-
-      const response = await reviewService.getProductReviews(product.id, {
+      const response = await reviewService.getProductReviews(product.productUuid, {
         page,
         rating: ratingFilter || undefined,
         sortBy: reviewSort === 'newest' ? 'createdAt' : reviewSort === 'rating' ? 'rating' : 'createdAt',
@@ -154,12 +151,12 @@ export function Detail({
       if (length) options.nailLength = length;
 
       console.log('Adding to cart:', {
-        productId: product.id,
+        productId: product.productUuid,
         quantity: qty,
         options
       });
 
-      await cartService.addToCart(product.id, qty, options);
+      await cartService.addToCart(product.productUuid, qty, options);
 
       setCartMessage('장바구니에 추가되었습니다!');
       // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거
@@ -227,7 +224,7 @@ export function Detail({
 
       // 바로구매는 단일 상품만 지원 (서버 스펙: directItem 객체)
       const directItem = {
-        productUuid: product.id,
+        productUuid: product.productUuid,
         quantity: qty,
         options: options
       };
@@ -805,7 +802,7 @@ export function Detail({
           {p.productType === 'custom' ? (
             <div className="pt-2">
               <button
-                onClick={() => onGo(`/product/${p.id}/custom-order`)}
+                onClick={() => onGo(`/product/${p.productUuid}/custom-order`)}
                 className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
               >
                 커스텀 주문하기
@@ -904,7 +901,7 @@ export function Detail({
           <div className="text-base font-semibold">{money(salePrice)}</div>
           {p.productType === 'custom' ? (
             <button
-              onClick={() => onGo?.(`/product/${p.id}/custom-order`)}
+              onClick={() => onGo?.(`/product/${p.productUuid}/custom-order`)}
               className="rounded-lg px-6 py-2 text-sm text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
             >
               커스텀 주문하기

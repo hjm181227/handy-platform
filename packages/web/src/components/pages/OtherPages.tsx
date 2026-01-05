@@ -109,7 +109,6 @@ export function LikesPage({
 
     return {
       productUuid: item.targetUuid,
-      id: item.targetId,
       name: item.target?.name || '',
       mainImageUrl: item.target?.mainImageUrl || '',
       price: price,
@@ -344,9 +343,6 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     </section>
   );
 
-  // 최근 본 상품(샘플 데이터 사용)
-  const recent = products.slice(0, 6);
-
   // WebView 환경인지 확인
   const isWebViewEnvironment = () => {
     return !!(window as any).ReactNativeWebView;
@@ -457,11 +453,10 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           </div>
         </div>
 
-        {/* 요약 통계 4분할 */}
+        {/* 요약 통계 3분할 */}
         <div className="mt-3 flex gap-2">
           <Stat label="주문/배송" value={`${stats.ordersWaiting}건`} to="/my/orders" />
           <Stat label="배송중" value={`${stats.shipping}건`} to="/my/shipping" />
-          <Stat label="포인트" value={`${stats.points.toLocaleString()}P`} to="/my/points" />
           <Stat label="쿠폰" value={`${stats.coupons}장`} to="/my/coupons" />
         </div>
 
@@ -480,30 +475,6 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           </div>
         </a>
       </div>
-
-      {/* 최근 본 / 위시리스트 요약 */}
-      <Section title="최근 본">
-        {recent.length === 0 ? (
-          <div className="py-6 text-sm text-gray-500">최근 본 상품이 없습니다.</div>
-        ) : (
-          <div className="flex gap-4 overflow-x-auto py-3">
-            {recent.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => onOpen(p.id)}
-                className="w-[140px] shrink-0 text-left"
-                title={p.name}
-              >
-                <img
-                  src={p.image}
-                  className="aspect-[3/4] w-full rounded object-cover"
-                />
-                <div className="mt-1 line-clamp-2 text-xs">{p.name}</div>
-              </button>
-            ))}
-          </div>
-        )}
-      </Section>
 
       {/* 주문/반품/리뷰 등 주요 메뉴 */}
       <Section title="주문·배송 / 반품·교환">

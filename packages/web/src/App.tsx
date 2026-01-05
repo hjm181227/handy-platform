@@ -794,7 +794,7 @@ function AppContent() {
     const productId = pathname.split("/")[3];
     screen = (
       <RequireAuth>
-        <SellerProductForm onGo={nav} productId={productId} />
+        <SellerProductForm onGo={nav} productUuid={productUuid} />
       </RequireAuth>
     );
   } else if (pathname === "/seller/coupons") {
@@ -1109,7 +1109,7 @@ function AppContent() {
             </div>
           </div>
         ) : (
-          brands.map(brand => (
+          brands.filter(brand => brand.stats.totalProducts > 0).map(brand => (
             <section key={brand.sellerUuid} className="mx-auto max-w-7xl px-4 mt-6">
               <div className="mb-3 flex items-baseline justify-between">
                 <div className="flex items-center gap-2">
@@ -1125,9 +1125,9 @@ function AppContent() {
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
                 {brand.products?.filter(Boolean).slice(0, 6).map(p => {
-                  const productId = p.id;
+                  const productId = p.productUuid;
                   return (
-                    <div key={p.id} className="md:snap-start md:flex-shrink-0">
+                    <div key={p.productUuid} className="md:snap-start md:flex-shrink-0">
                       <ProductCard
                         p={p}
                         onOpen={openProduct}

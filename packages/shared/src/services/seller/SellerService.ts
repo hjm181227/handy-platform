@@ -84,9 +84,9 @@ export abstract class BaseSellerService extends BaseApiService {
     if (response.data) {
       response.data.forEach((product, index) => {
         try {
-          // Validate product UUID format during migration period
-          if (product.id) {
-            console.debug(`[Seller Products] Product[${index}] ID: ${product.id}`);
+          // Validate product UUID format
+          if (product.productUuid) {
+            console.debug(`[Seller Products] Product[${index}] ID: ${product.productUuid}`);
           }
         } catch (error) {
           console.warn(`UUID Migration Warning - Seller Product validation:`, error);

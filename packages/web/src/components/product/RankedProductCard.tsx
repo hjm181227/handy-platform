@@ -19,7 +19,7 @@ export function RankedProductCard({
   onLike?:(id:string)=>void;
   isLiked?: boolean;
 }) {
-  const productId = p.id || p.productUuid;
+  const productId = p.productUuid;
   const salePrice = p.discountedPrice;
 
   return (

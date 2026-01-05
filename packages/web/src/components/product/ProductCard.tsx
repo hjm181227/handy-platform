@@ -47,8 +47,8 @@ export function ProductCard({
     return null;
   }
 
-  // 좋아요 API는 UUID를 요구하므로 productUuid 우선 사용
-  const productId = p.productUuid || p.id;
+  // 좋아요 API는 UUID를 요구하므로 productUuid 사용
+  const productId = p.productUuid;
   // 가격 fallback: discountedPrice > salePrice > price
   const salePrice = p.discountedPrice ?? p.salePrice ?? p.price ?? 0;
   // rating null 체크
@@ -98,7 +98,7 @@ export function ProductCard({
         <div className="text-[13px] leading-snug h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
         <div className="flex items-baseline gap-2">
           <div className="text-[15px] font-bold">{money(salePrice)}</div>
-          {salePrice < (p.price ?? 0) ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}</div> : null}
+          {salePrice < p.price ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}</div> : null}
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
