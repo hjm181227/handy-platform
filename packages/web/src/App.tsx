@@ -793,7 +793,7 @@ function AppContent() {
     const productId = pathname.split("/")[3];
     screen = (
       <RequireRole requiredRole="seller">
-        <SellerProductForm onGo={nav} productId={productId} />
+        <SellerProductForm onGo={nav} productUuid={productId} />
       </RequireRole>
     );
   } else if (pathname === "/seller/orders") {
@@ -1117,9 +1117,9 @@ function AppContent() {
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
                 {brand.products?.filter(Boolean).slice(0, 6).map(p => {
-                  const productId = p.id;
+                  const productId = p.productUuid;
                   return (
-                    <div key={p.id} className="md:snap-start md:flex-shrink-0">
+                    <div key={p.productUuid} className="md:snap-start md:flex-shrink-0">
                       <ProductCard
                         p={p}
                         onOpen={openProduct}

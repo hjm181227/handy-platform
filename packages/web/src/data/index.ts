@@ -1,8 +1,9 @@
 import { Product, NewsPost, NewsCategory, Faq, Snap } from '@handy-platform/shared';
 
 export const products: Product[] = [
-  { 
-    productId: "1", 
+  {
+    productUuid: "550e8400-e29b-41d4-a716-446655440001",
+    productId: "1",
     name: "Glossy Almond Tip – Milk Beige",
     description: "우유빛 베이지 컬러의 글로시 아몬드 네일팁입니다. 자연스럽고 세련된 느낌을 연출할 수 있어 데일리룩에 완벽하게 어울립니다.",
     shortDescription: "우유빛 베이지 글로시 아몬드 팁",
@@ -57,11 +58,13 @@ export const products: Product[] = [
       averageRating: 4.7,
       trendingScore: 85
     },
+    status: 'active',
     tags: ["HOT", "NEW"],
     createdAt: "2024-01-15T00:00:00Z",
     updatedAt: "2024-08-20T00:00:00Z"
   },
   {
+    productUuid: "550e8400-e29b-41d4-a716-446655440002",
     productId: "2",
     name: "Square Short – Cocoa",
     description: "따뜻한 코코아 컬러의 스퀘어 쇼트 네일팁입니다. 단정하고 깔끔한 느낌으로 오피스룩에 적합합니다.",
@@ -72,6 +75,9 @@ export const products: Product[] = [
     stockQuantity: 75,
     processingDays: 1,
     mainImageUrl: "https://picsum.photos/id/1059/800/800",
+    detailImages: [
+      { url: "https://picsum.photos/id/1059/800/800", description: "상세 이미지 1", order: 1 }
+    ],
     nailCategories: {
       style: ["심플", "모던"],
       color: ["브라운 계열", "뉴트럴"],
@@ -112,11 +118,13 @@ export const products: Product[] = [
       averageRating: 4.5,
       trendingScore: 72
     },
+    status: 'active',
     tags: ["BEST"],
     createdAt: "2024-01-20T00:00:00Z",
     updatedAt: "2024-08-18T00:00:00Z"
   },
-  { 
+  {
+    productUuid: "550e8400-e29b-41d4-a716-446655440003",
     productId: "3",
     name: "Coffin Long – Black",
     description: "시크하고 강렬한 블랙 컬러의 코핀 롱 네일팁입니다. 특별한 날이나 파티에 완벽한 선택입니다.",
@@ -127,6 +135,9 @@ export const products: Product[] = [
     stockQuantity: 30,
     processingDays: 2,
     mainImageUrl: "https://picsum.photos/id/1058/800/800",
+    detailImages: [
+      { url: "https://picsum.photos/id/1058/800/800", description: "상세 이미지 1", order: 1 }
+    ],
     nailCategories: {
       style: ["드라마틱", "시크"],
       color: ["블랙", "다크"],
@@ -167,11 +178,13 @@ export const products: Product[] = [
       averageRating: 4.8,
       trendingScore: 88
     },
+    status: 'active',
     tags: ["SALE"],
     createdAt: "2024-02-01T00:00:00Z",
     updatedAt: "2024-08-19T00:00:00Z"
   },
-  { 
+  {
+    productUuid: "550e8400-e29b-41d4-a716-446655440004",
     productId: "4",
     name: "Round Medium – Pink Pearl",
     description: "은은한 핑크 펄 컬러의 라운드 미디움 네일팁입니다. 로맨틱하고 우아한 느낌을 연출합니다.",
@@ -182,6 +195,9 @@ export const products: Product[] = [
     stockQuantity: 40,
     processingDays: 1,
     mainImageUrl: "https://picsum.photos/id/1057/800/800",
+    detailImages: [
+      { url: "https://picsum.photos/id/1057/800/800", description: "상세 이미지 1", order: 1 }
+    ],
     nailCategories: {
       style: ["로맨틱", "우아"],
       color: ["핑크 계열", "펄"],
@@ -222,11 +238,13 @@ export const products: Product[] = [
       averageRating: 4.6,
       trendingScore: 75
     },
+    status: 'active',
     tags: [],
     createdAt: "2024-02-10T00:00:00Z",
     updatedAt: "2024-08-17T00:00:00Z"
   },
-  { 
+  {
+    productUuid: "550e8400-e29b-41d4-a716-446655440005",
     productId: "5",
     name: "Oval Short – French White",
     description: "클래식한 프렌치 화이트 컬러의 오벌 쇼트 네일팁입니다. 언제나 우아하고 깔끔한 스타일링이 가능합니다.",
@@ -237,6 +255,9 @@ export const products: Product[] = [
     stockQuantity: 60,
     processingDays: 1,
     mainImageUrl: "https://picsum.photos/id/1056/800/800",
+    detailImages: [
+      { url: "https://picsum.photos/id/1056/800/800", description: "상세 이미지 1", order: 1 }
+    ],
     nailCategories: {
       style: ["클래식", "프렌치"],
       color: ["화이트", "뉴트럴"],
@@ -277,6 +298,7 @@ export const products: Product[] = [
       averageRating: 4.9,
       trendingScore: 92
     },
+    status: 'active',
     tags: ["BEST"],
     createdAt: "2024-02-15T00:00:00Z",
     updatedAt: "2024-08-16T00:00:00Z"

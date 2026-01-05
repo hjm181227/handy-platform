@@ -365,17 +365,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             return;
           }
 
-          console.log('Seller products API response:', response);
-          console.log('Products data:', response.data);
-          // 첫 번째 상품의 구조 확인
-          if (response.data && response.data.length > 0) {
-            console.log('First product structure:', response.data[0]);
-            console.log('Product ID fields:', {
-              _id: response.data[0]._id,
-              id: response.data[0].id,
-              productId: response.data[0].productId
-            });
-          }
           setProducts(response.data || []);
         } catch (apiError) {
           // 요청이 취소된 경우는 에러로 처리하지 않음
@@ -467,6 +456,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
   // 삭제 관련 함수들
   const handleDeleteClick = (product: any) => {
+    console.log(product);
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
@@ -476,14 +466,14 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
     try {
       setIsDeleting(true);
-      console.log('Deleting product:', productToDelete.productId);
+      console.log('Deleting product:', productToDelete.productUuid);
 
       // API 호출
-      await sellerService.deleteProduct(productToDelete.productId);
+      await sellerService.deleteProduct(productToDelete.productUuid);
 
       // 성공 시 목록에서 제거
       setProducts(prevProducts =>
-        prevProducts.filter(p => p.productId !== productToDelete.productId)
+        prevProducts.filter(p => p.productUuid !== productToDelete.productUuid)
       );
 
       // 모달 닫기
@@ -621,7 +611,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                   {filteredProducts.map((product) => (
-                    <tr key={product.id || product.productId} className="hover:bg-gray-50">
+                    <tr key={product.productUuid} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
@@ -654,13 +644,13 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => onGo(`/seller/products/${product.id || product.productId}/edit`)}
+                            onClick={() => onGo(`/seller/products/${product.productUuid}/edit`)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             수정
                           </button>
                           <button
-                            onClick={() => onGo(`/seller/products/${product.id || product.productId}/analytics`)}
+                            onClick={() => onGo(`/seller/products/${product.productUuid}/analytics`)}
                             className="text-green-600 hover:text-green-900"
                           >
                             분석
@@ -775,8 +765,8 @@ interface DetailImage {
 }
 
 // 네일팁 전용 상품 등록/수정 페이지 (서버 API 스펙 완전 일치)
-export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => void; productId?: string }) {
-  const isEdit = !!productId;
+export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) => void; productUuid?: string }) {
+  const isEdit = !!productUuid;
   const [ formData, setFormData ] = useState({
     // 상품 유형
     productType: 'original' as ProductType,
@@ -838,14 +828,14 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
   // 상품 수정 모드일 때 기존 상품 정보 불러오기
   useEffect(() => {
-    if (productId && isEdit) {
+    if (productUuid && isEdit) {
       const loadProductData = async () => {
         try {
           setIsLoading(true);
           setError(null);
 
-          console.log('Loading product data for ID:', productId);
-          const response = await sellerService.getSellerProduct(productId);
+          console.log('Loading product data for ID:', productUuid);
+          const response = await sellerService.getSellerProduct(productUuid);
 
           console.log('Full API response:', response);
 
@@ -918,7 +908,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       loadProductData();
     }
-  }, [productId, isEdit]);
+  }, [productUuid, isEdit]);
 
   // 커스텀 주문서 목록 불러오기
   const handleLoadOrderRequest = async () => {
@@ -1049,15 +1039,15 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       // 3. API 호출 (등록 vs 수정)
       let response;
-      if (isEdit && productId) {
+      if (isEdit && productUuid) {
         // 수정: customOrderRequestUuid만 제외, productType은 포함 (서버는 소문자 요구)
         const updateData: UpdateProductRequest = {
           ...commonData,
-          productId,
+          productUuid: productUuid,
           productType: formData.productType.toLowerCase() as any
         };
         console.log('수정할 상품 데이터:', updateData);
-        response = await productService.updateProduct(productId, updateData);
+        response = await productService.updateProduct(productUuid, updateData);
       } else {
         // 등록: 모든 필드 포함 (서버는 소문자 productType 요구)
         const productData: CreateProductRequest = {
@@ -2746,7 +2736,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
   const reviews = [
     {
       id: "1",
-      productId: "1",
+      productUuid: "1",
       productName: "Glossy Almond Tip – Milk Beige",
       customerName: "김**",
       rating: 5,
@@ -2758,7 +2748,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: "2",
-      productId: "2",
+      productUuid: "2",
       productName: "Square Short – Cocoa",
       customerName: "이**",
       rating: 4,
@@ -2771,7 +2761,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: "3",
-      productId: "1",
+      productUuid: "1",
       productName: "Glossy Almond Tip – Milk Beige",
       customerName: "박**",
       rating: 3,
@@ -2782,7 +2772,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: "4",
-      productId: "4",
+      productUuid: "4",
       productName: "Oval Short – Mauve",
       customerName: "최**",
       rating: 5,

@@ -160,7 +160,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
 
         // items 배열 업데이트
         const updatedItems = prev.items.map(item => {
-          const itemProductId = item.productUuid || item.product?.id;
+          const itemProductId = item.productUuid;
           const matchesProduct = itemProductId === productId;
           const matchesOptions = !options || JSON.stringify(item.options) === JSON.stringify(options);
 
@@ -173,7 +173,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
         // itemsBySeller 배열 업데이트
         const updatedItemsBySeller = (prev.itemsBySeller || []).map(seller => {
           const updatedSellerItems = seller.items.map(item => {
-            const itemProductId = item.productUuid || item.product?.id;
+            const itemProductId = item.productUuid;
             const matchesProduct = itemProductId === productId;
             const matchesOptions = !options || JSON.stringify(item.options) === JSON.stringify(options);
 
@@ -267,7 +267,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
 
       // ✅ 1. items 배열 필터링 (stale closure 방지)
       const updatedItems = prev.items.filter(item => {
-        const itemProductId = item.productUuid || item.product?.id;
+        const itemProductId = item.productUuid;
         if (itemProductId !== productId) return true;
         if (options && JSON.stringify(item.options) !== JSON.stringify(options)) return true;
         return false;
@@ -278,7 +278,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
         .map(seller => {
           // 판매자의 아이템 필터링
           const filteredItems = seller.items.filter(item => {
-            const itemProductId = item.productUuid || item.product?.id;
+            const itemProductId = item.productUuid;
             if (itemProductId !== productId) return true;
             if (options && JSON.stringify(item.options) !== JSON.stringify(options)) return true;
             return false;
@@ -579,7 +579,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       <div className="p-3 space-y-2">
         {seller.items.map((item: CartItem) => {
           // 새 API 구조: 플랫하게 productUuid 사용, 기존 구조 호환성 유지
-          const productId = item.productUuid || item.product?.id;
+          const productId = item.productUuid;
           const productName = item.name || item.product?.name;
           const productMainImageUrl = item.mainImageUrl || item.product?.mainImageUrl;
           const productBrand = item.brand || item.product?.brand;

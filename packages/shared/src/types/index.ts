@@ -175,7 +175,7 @@ export type ProductType = 'original' | 'custom';
 
 // 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
-  id: string;                     // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
+  productUuid: string;            // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
   productId?: string;             // Sequential ID ("1", "2", "3"...) - legacy compatibility
   name: string;
   description: string;

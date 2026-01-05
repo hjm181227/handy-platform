@@ -66,23 +66,23 @@ export function normalizeUserId(user: { id: string }): string {
 }
 
 /**
- * Normalizes product ID handling during migration period
- * Prefers UUID 'id' field over legacy 'productId' when available
- * @param product - Product object with id and/or productId fields
+ * Normalizes product ID handling
+ * Prefers 'productUuid' field over legacy 'productId' when available
+ * @param product - Product object with productUuid and/or productId fields
  * @returns string - normalized product ID
  */
-export function normalizeProductId(product: { id?: string; productId?: string }): string {
-  // Prefer UUID-based 'id' field if available and valid
-  if (product.id && isValidId(product.id)) {
-    return product.id;
+export function normalizeProductId(product: { productUuid?: string; productId?: string }): string {
+  // Prefer 'productUuid' field if available and valid
+  if (product.productUuid && isValidId(product.productUuid)) {
+    return product.productUuid;
   }
-  
+
   // Fall back to legacy 'productId' field
   if (product.productId) {
     return product.productId;
   }
-  
-  throw new Error('Product object must have either id or productId field');
+
+  throw new Error('Product object must have either productUuid or productId field');
 }
 
 /**
@@ -115,19 +115,22 @@ export function isUUIDMigrated(response: { id?: string }): boolean {
 }
 
 /**
- * Validation helper for API responses during migration
+ * Validation helper for API responses
  * Ensures ID field exists and is in valid format
- * @param obj - Object with id field
+ * Supports both 'id' and 'productUuid' fields for compatibility
+ * @param obj - Object with id or productUuid field
  * @param fieldName - Name of the field being validated (for error messages)
  * @throws Error if ID is invalid
  */
-export function validateResponseId(obj: { id?: string }, fieldName: string = 'object'): void {
-  if (!obj.id) {
-    throw new Error(`${fieldName} response missing required 'id' field`);
+export function validateResponseId(obj: { id?: string; productUuid?: string }, fieldName: string = 'object'): void {
+  const id = obj.productUuid || obj.id;
+
+  if (!id) {
+    throw new Error(`${fieldName} response missing required 'id' or 'productUuid' field`);
   }
-  
-  if (!isValidId(obj.id)) {
-    throw new Error(`${fieldName} has invalid ID format: ${obj.id}`);
+
+  if (!isValidId(id)) {
+    throw new Error(`${fieldName} has invalid ID format: ${id}`);
   }
 }
 

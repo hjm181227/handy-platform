@@ -109,7 +109,6 @@ export function LikesPage({
 
     return {
       productUuid: item.targetUuid,
-      id: item.targetId,
       name: item.target?.name || '',
       mainImageUrl: item.target?.mainImageUrl || '',
       price: price,
