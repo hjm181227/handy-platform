@@ -428,7 +428,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           <div>
             <div className="text-sm text-gray-600">내 정보</div>
             <div className="mt-1 text-lg font-semibold">
-              {user?.name || '사용자'} <span className="text-gray-400">/</span>{" "}
+              {user?.nickname || user?.name || '사용자'} <span className="text-gray-400">/</span>{" "}
               {getRoleLabel(user?.role || 'user') && (
                 <span className="text-blue-600">{getRoleLabel(user?.role || 'user')}</span>
               )}

@@ -21,6 +21,7 @@ export interface User {
   id: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) after migration
   email: string;
   name: string;
+  nickname?: string;
   phone?: string;
   avatar?: string;
   role: 'user' | 'seller' | 'admin';
@@ -748,6 +749,7 @@ export interface RegisterForm {
   email: string;
   password: string;
   name: string;
+  nickname: string;
   phone?: string;
 }
 
@@ -852,6 +854,78 @@ export interface UserCoupon {
   usedAt?: string;
   expiresAt: string;
   isUsable: boolean;
+}
+
+// 판매자 쿠폰 관련 타입
+export interface CreateSellerCouponRequest {
+  name: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minimumOrderAmount?: number;
+  appliesTo: 'product' | 'quote' | 'both';
+  validity: {
+    startDate: string;
+    endDate: string;
+  };
+  limits?: {
+    totalCount?: number;
+    perUserLimit?: number;
+  };
+  isPublic?: boolean;
+}
+
+export interface SellerCoupon {
+  couponUuid: string;
+  code: string;
+  name: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minimumOrderAmount?: number;
+  scope: {
+    type: 'seller';
+    sellerUuid: string;
+  };
+  appliesTo: 'product' | 'quote' | 'both';
+  validity: {
+    startDate: string;
+    endDate: string;
+  };
+  limits: {
+    totalCount: number;
+    issuedCount: number;
+    perUserLimit: number;
+  };
+  isActive: boolean;
+  isPublic: boolean;
+  stats?: {
+    usedCount: number;
+    totalDiscount: number;
+  };
+  createdAt: string;
+}
+
+export interface SellerCouponUsageStats {
+  summary: {
+    totalDownloads: number;
+    totalUsed: number;
+    totalDiscount: number;
+    conversionRate: number;
+  };
+  dailyStats: Array<{
+    date: string;
+    downloads: number;
+    used: number;
+    discount: number;
+  }>;
+  recentUsage: Array<{
+    usedAt: string;
+    discountAmount: number;
+    orderAmount: number;
+  }>;
 }
 
 // 포인트 관련 타입

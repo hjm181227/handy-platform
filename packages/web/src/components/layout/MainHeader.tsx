@@ -344,9 +344,9 @@ export function MainHeader({
                     className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-6 h-6 bg-[#FF073A] text-white rounded-full flex items-center justify-center text-xs font-medium">
-                      {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      {user.nickname?.charAt(0) || user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
-                    <span className="hidden sm:inline">{user.name || user.email}</span>
+                    <span className="hidden sm:inline">{user.nickname || user.name || user.email}</span>
                     <svg
                       className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
                       fill="none"
@@ -513,7 +513,7 @@ export function MainHeader({
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="w-10 h-10 bg-[#FF073A] text-white rounded-full flex items-center justify-center text-sm font-medium hover:bg-[#E0062F] transition-colors"
                 >
-                  {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  {user.nickname?.charAt(0) || user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                 </button>
 
                 {showUserMenu && (
@@ -522,7 +522,7 @@ export function MainHeader({
                     onMouseDown={(e) => e.stopPropagation()}
                   >
                     <div className="px-4 py-2 text-sm text-gray-500 border-b">
-                      {user.name || user.email}
+                      {user.nickname || user.name || user.email}
                     </div>
                     <button
                       onClick={(e) => {

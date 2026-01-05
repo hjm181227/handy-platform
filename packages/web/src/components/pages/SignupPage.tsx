@@ -10,6 +10,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
     password: "",
     confirmPassword: "",
     name: "",
+    nickname: "",
     phone: ""
   });
   const [showPw, setShowPw] = useState(false);
@@ -18,6 +19,12 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
   const [error, setError] = useState("");
   const [errorAction, setErrorAction] = useState("");
   const [agree, setAgree] = useState<TermsState>(getDefaultTermsState());
+
+  // 닉네임 중복 체크 상태
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [nicknameAvailable, setNicknameAvailable] = useState(false);
+  const [nicknameCheckLoading, setNicknameCheckLoading] = useState(false);
+  const [nicknameError, setNicknameError] = useState("");
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트
   useEffect(() => {
@@ -34,16 +41,76 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(""); // 입력 시 에러 메시지 초기화
     setErrorAction("");
+
+    // 닉네임 변경 시 중복 체크 상태 초기화
+    if (field === 'nickname') {
+      setNicknameChecked(false);
+      setNicknameAvailable(false);
+      setNicknameError("");
+    }
+  };
+
+  // 닉네임 중복 체크
+  const checkNickname = async () => {
+    const nickname = formData.nickname.trim();
+
+    if (!nickname) {
+      setNicknameError("닉네임을 입력해주세요.");
+      return;
+    }
+
+    if (nickname.length < 2 || nickname.length > 10) {
+      setNicknameError("닉네임은 2~10자여야 합니다.");
+      return;
+    }
+
+    setNicknameCheckLoading(true);
+    setNicknameError("");
+
+    try {
+      const response = await fetch(
+        `/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+      );
+      const data = await response.json();
+
+      if (data.success && data.available) {
+        setNicknameChecked(true);
+        setNicknameAvailable(true);
+        setNicknameError("");
+      } else if (data.success && !data.available) {
+        setNicknameChecked(true);
+        setNicknameAvailable(false);
+        setNicknameError("이미 사용 중인 닉네임입니다.");
+      } else {
+        setNicknameError(data.error?.message || "닉네임 확인에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error('닉네임 체크 실패:', err);
+      setNicknameError("닉네임 확인 중 오류가 발생했습니다.");
+    } finally {
+      setNicknameCheckLoading(false);
+    }
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.name) {
-      setError("이메일, 비밀번호, 이름은 필수 입력사항입니다.");
+    if (!formData.email || !formData.password || !formData.name || !formData.nickname) {
+      setError("이메일, 비밀번호, 이름, 닉네임은 필수 입력사항입니다.");
       return false;
     }
 
     if (!formData.email.includes('@')) {
       setError("올바른 이메일 주소를 입력해주세요.");
+      return false;
+    }
+
+    // 닉네임 검증
+    if (formData.nickname.length < 2 || formData.nickname.length > 10) {
+      setError("닉네임은 2~10자여야 합니다.");
+      return false;
+    }
+
+    if (!nicknameChecked || !nicknameAvailable) {
+      setError("닉네임 중복 확인을 해주세요.");
       return false;
     }
 
@@ -79,6 +146,7 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
         email: formData.email,
         password: formData.password,
         name: formData.name,
+        nickname: formData.nickname,
         phone: formData.phone || undefined
       });
       
@@ -156,6 +224,38 @@ export function SignupPage({ onGo }: { onGo: (to: string) => void }) {
           disabled={loading}
           required
         />
+
+        {/* 닉네임 입력 + 중복확인 */}
+        <div className="space-y-1">
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.nickname}
+              onChange={(e) => handleInputChange('nickname', e.target.value)}
+              placeholder="닉네임 (2~10자) *"
+              className={`w-full rounded-lg border px-4 py-3 pr-20 text-sm outline-none focus:border-blue-500 ${
+                nicknameChecked && nicknameAvailable ? 'border-green-500' : ''
+              } ${nicknameError ? 'border-red-500' : ''}`}
+              disabled={loading}
+              required
+              maxLength={10}
+            />
+            <button
+              type="button"
+              onClick={checkNickname}
+              disabled={loading || nicknameCheckLoading || !formData.nickname.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-md bg-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              {nicknameCheckLoading ? "확인중" : "중복확인"}
+            </button>
+          </div>
+          {nicknameError && (
+            <p className="text-xs text-red-500 px-1">{nicknameError}</p>
+          )}
+          {nicknameChecked && nicknameAvailable && (
+            <p className="text-xs text-green-600 px-1">사용 가능한 닉네임입니다.</p>
+          )}
+        </div>
 
         <input
           type="tel"

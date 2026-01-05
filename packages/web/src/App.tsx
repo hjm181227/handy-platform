@@ -111,7 +111,8 @@ import {
   SellerReviews,
   BrandManagement,
   ProductionSettings,
-  ProductionStatus
+  ProductionStatus,
+  CouponManagement
 } from './components/pages/SellerPages';
 
 // Admin Components
@@ -794,6 +795,12 @@ function AppContent() {
     screen = (
       <RequireAuth>
         <SellerProductForm onGo={nav} productId={productId} />
+      </RequireAuth>
+    );
+  } else if (pathname === "/seller/coupons") {
+    screen = (
+      <RequireAuth>
+        <CouponManagement onGo={nav} />
       </RequireAuth>
     );
   } else if (pathname === "/seller/orders") {
