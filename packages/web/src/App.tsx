@@ -1101,7 +1101,7 @@ function AppContent() {
             </div>
           </div>
         ) : (
-          brands.map(brand => (
+          brands.filter(brand => brand.stats.totalProducts > 0).map(brand => (
             <section key={brand.sellerUuid} className="mx-auto max-w-7xl px-4 mt-6">
               <div className="mb-3 flex items-baseline justify-between">
                 <div className="flex items-center gap-2">
