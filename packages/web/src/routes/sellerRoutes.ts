@@ -82,6 +82,13 @@ export const sellerRoutes: RouteConfig[] = [
     requireAuth: true,
     requireRole: 'seller',
   },
+  // Q&A 관리
+  {
+    path: '/seller/qa',
+    layout: 'seller',
+    requireAuth: true,
+    requireRole: 'seller',
+  },
   // 판매자 대시보드 (마지막에 매칭)
   {
     path: '/seller',

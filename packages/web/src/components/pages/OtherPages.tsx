@@ -4,6 +4,8 @@ import { products } from '../../data';
 import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
 import { ProductCard } from '../product/ProductCard';
+import { getMembershipStyle } from '../../utils/membershipUtils';
+import { MembershipInfoModal } from '../common/MembershipInfoModal';
 
 // 좋아요 페이지
 export function LikesPage({
@@ -207,6 +209,7 @@ export function LikesPage({
 export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -424,9 +427,23 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           <div>
             <div className="text-sm text-gray-600">내 정보</div>
             <div className="mt-1 text-lg font-semibold">
-              {user?.nickname || user?.name || '사용자'} <span className="text-gray-400">/</span>{" "}
+              {user?.nickname || user?.name || '사용자'}
+              {user?.membershipLevel && (
+                <>
+                  <span className="text-gray-400"> / </span>
+                  <button
+                    onClick={() => setShowMembershipModal(true)}
+                    className={`${getMembershipStyle(user.membershipLevel).textColor} hover:underline cursor-pointer`}
+                  >
+                    {user.membershipLevel}
+                  </button>
+                </>
+              )}
               {getRoleLabel(user?.role || 'user') && (
-                <span className="text-blue-600">{getRoleLabel(user?.role || 'user')}</span>
+                <>
+                  <span className="text-gray-400"> / </span>
+                  <span className="text-blue-600">{getRoleLabel(user?.role || 'user')}</span>
+                </>
               )}
             </div>
           </div>
@@ -525,6 +542,13 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           <LinkRow title="회원정보 수정" to="/my/settings" />
         </div>
       </Section>
+
+      {/* 회원등급 안내 모달 */}
+      <MembershipInfoModal
+        isOpen={showMembershipModal}
+        onClose={() => setShowMembershipModal(false)}
+        currentLevel={user?.membershipLevel}
+      />
     </div>
   );
 }

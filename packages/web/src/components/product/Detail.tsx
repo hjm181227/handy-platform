@@ -6,6 +6,7 @@ import { CategoryDisplay } from './CategoryDisplay';
 import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import ProductQA from './ProductQA';
 
 export function Detail({
   id,
@@ -557,44 +558,10 @@ export function Detail({
 
       case "Q&A":
         return (
-          <div className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-sm mb-2">상품 문의하기</h3>
-              <p className="text-xs text-gray-600 mb-3">궁금한 점이 있으시면 언제든 문의해주세요.</p>
-              <button className="px-4 py-2 bg-black text-white text-sm rounded-lg">문의하기</button>
-            </div>
-            <div className="space-y-4">
-              {[
-                {
-                  q: "사이즈가 맞지 않으면 교환 가능한가요?",
-                  a: "네, 구매 후 7일 이내에 미사용 제품에 한해 교환이 가능합니다. 고객센터로 연락 주시면 안내해드리겠습니다.",
-                  date: "2024.01.14"
-                },
-                {
-                  q: "얼마나 오래 착용할 수 있나요?",
-                  a: "개인차가 있지만 일반적으로 2-3주 정도 착용 가능합니다. 관리 상태에 따라 더 오래 사용하실 수도 있어요.",
-                  date: "2024.01.12"
-                },
-                {
-                  q: "제거할 때 손톱이 상하지 않나요?",
-                  a: "전용 리무버를 사용하시면 손톱에 무리 없이 안전하게 제거하실 수 있습니다.",
-                  date: "2024.01.10"
-                }
-              ].map((qa, index) => (
-                <div key={index} className="border-b pb-4 last:border-b-0">
-                  <div className="mb-2">
-                    <span className="inline-block bg-black text-white text-xs font-bold px-2 py-1 rounded mr-2">Q</span>
-                    <span className="text-sm font-medium">{qa.q}</span>
-                    <span className="text-xs text-gray-500 ml-2">{qa.date}</span>
-                  </div>
-                  <div className="ml-6">
-                    <span className="inline-block bg-white text-black border text-xs font-bold px-2 py-1 rounded mr-2">A</span>
-                    <span className="text-sm text-gray-700">{qa.a}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ProductQA
+            productUuid={product.productUuid}
+            sellerUserId={product.seller?.userId}
+          />
         );
 
       case "배송/반품":

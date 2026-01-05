@@ -106,6 +106,7 @@ import {
   ProductionStatus,
   CouponManagement
 } from './components/pages/SellerPages';
+import { QAManagement } from './components/pages/seller/QAManagement';
 
 // Admin Components
 import AdminLayout from './components/admin/AdminLayout';
@@ -738,6 +739,13 @@ export function Router() {
     screen = (
       <RequireAuth>
         <ProductionStatus onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/seller/qa') {
+    screen = (
+      <RequireAuth>
+        <QAManagement onGo={nav} />
       </RequireAuth>
     );
   }

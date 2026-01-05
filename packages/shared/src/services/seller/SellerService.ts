@@ -951,6 +951,105 @@ export abstract class BaseSellerService extends BaseApiService {
       method: 'DELETE',
     });
   }
+
+  // ==================== Q&A 관리 API ====================
+
+  // GET /seller/product-questions - Q&A 목록 조회
+  async getProductQuestions(filters?: {
+    page?: number;
+    limit?: number;
+    status?: 'pending' | 'answered';
+    productUuid?: string;
+  }): Promise<ApiResponse<{
+    questions: Array<{
+      questionUuid: string;
+      productUuid: string;
+      productName?: string;
+      sellerUuid: string;
+      userUuid: string;
+      userName: string;
+      content: string;
+      isSecret: boolean;
+      status: 'pending' | 'answered' | 'deleted';
+      answer?: {
+        content: string;
+        answeredAt: string;
+        updatedAt: string;
+      };
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    pagination: PaginationInfo;
+  }>> {
+    const queryString = filters ? this.buildQueryString(filters) : '';
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.SELLER.PRODUCT_QUESTIONS}?${queryString}`
+      : API_ENDPOINTS.SELLER.PRODUCT_QUESTIONS;
+
+    return this.request(endpoint);
+  }
+
+  // GET /seller/product-questions/stats - Q&A 통계 조회
+  async getProductQuestionsStats(): Promise<ApiResponse<{
+    stats: {
+      pending: number;
+      answered: number;
+      total: number;
+    };
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCT_QUESTIONS_STATS);
+  }
+
+  // POST /seller/product-questions/:questionUuid/answer - 답변 등록
+  async createQuestionAnswer(
+    questionUuid: string,
+    content: string
+  ): Promise<ApiResponse<{
+    question: {
+      questionUuid: string;
+      status: string;
+      answer: {
+        content: string;
+        answeredAt: string;
+        updatedAt: string;
+      };
+    };
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCT_QUESTION_ANSWER(questionUuid), {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  // PUT /seller/product-questions/:questionUuid/answer - 답변 수정
+  async updateQuestionAnswer(
+    questionUuid: string,
+    content: string
+  ): Promise<ApiResponse<{
+    question: {
+      questionUuid: string;
+      status: string;
+      answer: {
+        content: string;
+        answeredAt: string;
+        updatedAt: string;
+      };
+    };
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCT_QUESTION_ANSWER(questionUuid), {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  // DELETE /seller/product-questions/:questionUuid/answer - 답변 삭제
+  async deleteQuestionAnswer(questionUuid: string): Promise<ApiResponse<{
+    message: string;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCT_QUESTION_ANSWER(questionUuid), {
+      method: 'DELETE',
+    });
+  }
 }
 
 export class SellerServiceFactory {

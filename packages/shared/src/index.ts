@@ -22,6 +22,7 @@ export * from './services/auth/AuthService';
 // Product Services
 export * from './services/product/ProductService';
 export * from './services/product/ReviewService';
+export * from './services/product/QuestionService';
 
 // Commerce Services
 export * from './services/commerce/CartService';

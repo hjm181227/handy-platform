@@ -16,6 +16,9 @@ export interface PaginationInfo {
   hasPrev: boolean;
 }
 
+// Membership Level Type
+export type MembershipLevel = 'Stylish' | 'Gorgeous' | 'Stunning' | 'Iconic' | 'Breathtaking';
+
 // User Related Types
 export interface User {
   userUuid: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) - primary identifier
@@ -28,6 +31,7 @@ export interface User {
   isActive: boolean;
   address?: Address;
   wishlist?: string[];
+  membershipLevel?: MembershipLevel; // 회원등급
   // Added from server API spec (UUID migration v1.1.0+)
   points?: {
     balance: number;
@@ -2043,4 +2047,43 @@ export interface CreateCustomOrderResponse {
   specifications: CreateCustomOrderRequest['specifications'];
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   createdAt: string;
+}
+
+// ==================== Q&A 관련 타입 ====================
+
+export interface ProductQuestion {
+  questionUuid: string;
+  productUuid: string;
+  productName?: string;
+  sellerUuid: string;
+  userUuid: string;
+  userName: string;
+  content: string;
+  isSecret: boolean;
+  status: 'pending' | 'answered' | 'deleted';
+  answer?: {
+    content: string;
+    answeredAt: string;
+    updatedAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuestionsResponse {
+  success: boolean;
+  data: {
+    questions: ProductQuestion[];
+    pagination: PaginationInfo;
+  };
+}
+
+export interface CreateQuestionRequest {
+  content: string;
+  isSecret?: boolean;
+}
+
+export interface UpdateQuestionRequest {
+  content?: string;
+  isSecret?: boolean;
 }

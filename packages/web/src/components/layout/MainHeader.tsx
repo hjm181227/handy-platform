@@ -7,6 +7,7 @@ import { IoPersonCircleOutline } from 'react-icons/io5';
 import { FiShoppingBag } from 'react-icons/fi';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
+import { getMembershipStyle } from '../../utils/membershipUtils';
 
 export function MainHeader({
   cartCount,
@@ -343,8 +344,8 @@ export function MainHeader({
                     }}
                     className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
                   >
-                    <div className="w-6 h-6 bg-[#FF073A] text-white rounded-full flex items-center justify-center text-xs font-medium">
-                      {user.nickname?.charAt(0) || user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    <div className={`w-6 h-6 ${getMembershipStyle(user.membershipLevel).bg} text-white rounded-full flex items-center justify-center text-xs font-medium`}>
+                      {getMembershipStyle(user.membershipLevel).label || user.nickname?.charAt(0) || user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                     <span className="hidden sm:inline">{user.nickname || user.name || user.email}</span>
                     <svg
@@ -511,9 +512,9 @@ export function MainHeader({
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="w-10 h-10 bg-[#FF073A] text-white rounded-full flex items-center justify-center text-sm font-medium hover:bg-[#E0062F] transition-colors"
+                  className={`w-10 h-10 ${getMembershipStyle(user.membershipLevel).bg} text-white rounded-full flex items-center justify-center text-sm font-medium ${getMembershipStyle(user.membershipLevel).hoverBg} transition-colors`}
                 >
-                  {user.nickname?.charAt(0) || user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  {getMembershipStyle(user.membershipLevel).label || user.nickname?.charAt(0) || user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                 </button>
 
                 {showUserMenu && (

@@ -15,7 +15,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
     representativeName: '',
     businessNumber: '',
     businessType: '개인사업자',
-    businessCategory: '네일아트',
+    businessCategory: '',
     businessSector: '',
     contactEmail: '',
     contactPhone: '',
@@ -321,7 +321,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors['brandName'] ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="홍길동 네일"
+                    placeholder="핸디 네일"
                   />
                   {errors['brandName'] && (
                     <p className="text-red-500 text-sm mt-1">{errors['brandName']}</p>
@@ -338,7 +338,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     value={formData.representativeName}
                     onChange={(e) => handleInputChange('representativeName', '', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="홍길동"
+                    placeholder="핸디"
                   />
                 </div>
               </div>
