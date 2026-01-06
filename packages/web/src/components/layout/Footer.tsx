@@ -8,7 +8,7 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
   ];
   const policy = [
     {label:"개인정보처리방침", to:"/policy/privacy"},
-    {label:"이용약관", to:"/policy/terms"},
+    {label:"서비스 이용약관", to:"/policy/terms"},
     {label:"결제대행 위탁사", to:"/policy/pg"},
     {label:"분쟁해결기준", to:"/policy/dispute"},
   ];
