@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, NailSizeData } from '@handy-platform/shared';
-import { productService, cartService, reviewService, userService } from '../../services/apiService';
+import { useState, useEffect } from 'react';
+import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService } from '@handy-platform/shared';
+import { productService, cartService, reviewService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
 import { Stars } from '../ui';
@@ -33,11 +33,6 @@ export function Detail({
   const [qty, setQty] = useState<number>(1);
   const [liked, setLiked] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("상세정보");
-
-  // 사이징 모달 상태
-  const [showSizingModal, setShowSizingModal] = useState(false);
-  const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
-  const [sizingLoading, setSizingLoading] = useState(false);
 
   // 리뷰 관련 상태
   const [reviews, setReviews] = useState<DetailedReview[]>([]);
@@ -267,38 +262,17 @@ export function Detail({
   };
 
   // 사이징 버튼 클릭 핸들러
-  const handleSizingClick = async () => {
+  const handleSizingClick = () => {
     const isWebView = typeof window !== 'undefined' && !!(window as any).ReactNativeWebView;
 
     if (!isWebView) {
       // 웹 브라우저: 앱 안내 메시지
-      alert("HANDY 앱에서 사이즈를 편리하게 측정하고 저장할 수 있습니다!!");
+      alert('HANDY 앱에서 사이즈를 편리하게 측정하고 저장할 수 있습니다!');
       return;
     }
 
-    // 앱 (WebView): 사이즈 데이터 조회 후 모달 표시
-    try {
-      setSizingLoading(true);
-      const response = await userService.getNailSize();
-      setNailSizeData(response.data || null);
-      setShowSizingModal(true);
-    } catch (error) {
-      console.error('Failed to fetch nail size:', error);
-      setNailSizeData(null);
-      setShowSizingModal(true);
-    } finally {
-      setSizingLoading(false);
-    }
-  };
-
-  // 사이즈 측정하기 (네이티브 화면 열기)
-  const handleOpenMeasurement = () => {
-    setShowSizingModal(false);
-    try {
-      (window as any).ReactNativeWebView?.postMessage(
-        JSON.stringify({ type: "NAVIGATE_TO_MEASUREMENT" })
-      );
-    } catch {}
+    // 앱 (WebView): 기존 사이징 화면으로 이동
+    navigateService.goToNailSizes();
   };
 
   // 로딩 상태
@@ -847,10 +821,9 @@ export function Detail({
             <button onClick={share} className="hover:text-gray-600">공유</button>
             <button
               onClick={handleSizingClick}
-              disabled={sizingLoading}
-              className="hover:text-gray-600 disabled:opacity-50"
+              className="hover:text-gray-600"
             >
-              {sizingLoading ? "로딩..." : "사이징"}
+              사이징
             </button>
           </div>
 
@@ -934,89 +907,6 @@ export function Detail({
           )}
         </div>
       </div>
-
-      {/* 사이징 모달 */}
-      {showSizingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSizingModal(false)}>
-          <div className="bg-white rounded-lg w-[90%] max-w-md max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-semibold">내 손톱 사이즈</h3>
-              <button onClick={() => setShowSizingModal(false)} className="text-gray-500 hover:text-gray-700">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-
-            <div className="p-4">
-              {nailSizeData ? (
-                <>
-                  {/* 측정된 사이즈가 있는 경우 */}
-                  <div className="space-y-4">
-                    {/* 왼손 */}
-                    <div>
-                      <h4 className="font-medium mb-2 text-sm text-gray-600">왼손</h4>
-                      <div className="grid grid-cols-5 gap-2 text-center text-sm">
-                        {['엄지', '검지', '중지', '약지', '소지'].map((finger, i) => {
-                          const keys = ['thumb', 'index', 'middle', 'ring', 'little'] as const;
-                          const value = nailSizeData.leftHand[keys[i]];
-                          return (
-                            <div key={finger} className="bg-gray-50 rounded p-2">
-                              <div className="text-xs text-gray-500">{finger}</div>
-                              <div className="font-medium">{value > 0 ? `${value}mm` : '-'}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* 오른손 */}
-                    <div>
-                      <h4 className="font-medium mb-2 text-sm text-gray-600">오른손</h4>
-                      <div className="grid grid-cols-5 gap-2 text-center text-sm">
-                        {['엄지', '검지', '중지', '약지', '소지'].map((finger, i) => {
-                          const keys = ['thumb', 'index', 'middle', 'ring', 'little'] as const;
-                          const value = nailSizeData.rightHand[keys[i]];
-                          return (
-                            <div key={finger} className="bg-gray-50 rounded p-2">
-                              <div className="text-xs text-gray-500">{finger}</div>
-                              <div className="font-medium">{value > 0 ? `${value}mm` : '-'}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-gray-500 text-center">
-                      측정일: {new Date(nailSizeData.measuredAt).toLocaleDateString('ko-KR')}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleOpenMeasurement}
-                    className="w-full mt-4 py-3 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
-                  >
-                    다시 측정하기
-                  </button>
-                </>
-              ) : (
-                <>
-                  {/* 측정된 사이즈가 없는 경우 */}
-                  <div className="text-center py-8">
-                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-3">straighten</span>
-                    <p className="text-gray-600 mb-1">측정된 사이즈가 없습니다</p>
-                    <p className="text-sm text-gray-400 mb-6">손톱 사이즈를 측정하여 맞춤 추천을 받아보세요</p>
-                    <button
-                      onClick={handleOpenMeasurement}
-                      className="w-full py-3 bg-black text-white rounded-lg text-sm hover:bg-gray-800"
-                    >
-                      사이즈 측정하기
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

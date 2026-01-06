@@ -906,39 +906,41 @@ function HomeContent({
           </div>
         </div>
       ) : (
-        brands.filter(brand => brand.stats.totalProducts > 0).map(brand => (
-          <section key={brand.sellerUuid} className="mx-auto max-w-7xl px-4 mt-6">
-            <div className="mb-3 flex items-baseline justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-semibold">{brand.brandName}</h2>
-                <span className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</span>
+        <div>
+          {brands.filter(brand => brand.stats.totalProducts > 0).map((brand, brandIdx) => (
+            <section key={brand.sellerUuid || `brand-section-${brandIdx}`} className="mx-auto max-w-7xl px-4 mt-6">
+              <div className="mb-3 flex items-baseline justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base md:text-lg font-semibold">{brand.brandName}</h2>
+                  <span className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</span>
+                </div>
+                <button
+                  onClick={() => nav(`/brand/${encodeURIComponent(brand.sellerUuid)}`)}
+                  className="text-xs text-gray-500 hover:text-blue-600"
+                >
+                  더보기
+                </button>
               </div>
-              <button
-                onClick={() => nav(`/brand/${encodeURIComponent(brand.sellerUuid)}`)}
-                className="text-xs text-gray-500 hover:text-blue-600"
-              >
-                더보기
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
-              {brand.products?.filter(Boolean).slice(0, 6).map(p => {
-                const productId = p.productUuid;
-                return (
-                  <div key={p.productUuid} className="md:snap-start md:flex-shrink-0">
-                    <ProductCard
-                      p={p}
-                      onOpen={openProduct}
-                      onAdd={addProduct}
-                      onLike={handleLike}
-                      onGo={nav}
-                      isLiked={likedProducts.includes(productId)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ))
+              <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
+                {brand.products?.filter(Boolean).slice(0, 6).map((p, idx) => {
+                  const productId = p.productUuid;
+                  return (
+                    <div key={`brand-${brandIdx}-product-${idx}`} className="md:snap-start md:flex-shrink-0">
+                      <ProductCard
+                        p={p}
+                        onOpen={openProduct}
+                        onAdd={addProduct}
+                        onLike={handleLike}
+                        onGo={nav}
+                        isLiked={likedProducts.includes(productId)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
       )}
     </>
   );
