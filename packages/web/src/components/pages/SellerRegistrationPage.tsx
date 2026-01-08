@@ -223,6 +223,33 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
     );
   }
 
+  // 이미 판매자인 경우 판매자 센터로 이동할 수 있는 UI 표시
+  if (user?.role === 'seller') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PageHeader title="판매자 센터" onBack={() => onGo('/my/settings')} />
+        <div className="max-w-md mx-auto px-4 py-12">
+          <div className="bg-white rounded-lg border p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-green-600 text-3xl">verified</span>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">이미 판매자입니다</h2>
+            <p className="text-gray-600 mb-6">
+              이미 판매자 권한이 있습니다.<br />
+              판매자 센터에서 상품을 관리하세요.
+            </p>
+            <button
+              onClick={() => onGo('/seller')}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700"
+            >
+              판매자 센터로 이동
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="판매자 전환 신청" onBack={() => onGo('/my/settings')} />

@@ -378,6 +378,7 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
 export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   const [userInfo, setUserInfo] = useState({
     name: "",
+    nickname: "",
     email: "",
     phone: "",
     birthYear: "",
@@ -397,6 +398,13 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 닉네임 중복 체크 상태
+  const [originalNickname, setOriginalNickname] = useState("");
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [nicknameAvailable, setNicknameAvailable] = useState(false);
+  const [nicknameCheckLoading, setNicknameCheckLoading] = useState(false);
+  const [nicknameError, setNicknameError] = useState("");
+
   // 페이지 로드 시 사용자 정보 불러오기
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -411,6 +419,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
           const user = response.user;
           setUserInfo({
             name: user.name || "",
+            nickname: user.nickname || "",
             email: user.email || "",
             phone: user.phone || "",
             birthYear: "", // API에서 제공하지 않는 필드
@@ -424,6 +433,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             joinedDate: user.stats?.joinedDate || user.createdAt || "",
             role: user.role || "",
           });
+          setOriginalNickname(user.nickname || "");
         }
       } catch (error: any) {
         console.error('🚨 사용자 정보 로드 실패:', error);
@@ -454,11 +464,90 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
     loadUserProfile();
   }, []);
 
+  // 닉네임 변경 핸들러
+  const handleNicknameChange = (value: string) => {
+    setUserInfo(prev => ({ ...prev, nickname: value }));
+    // 원래 닉네임과 다르면 중복 체크 필요
+    if (value !== originalNickname) {
+      setNicknameChecked(false);
+      setNicknameAvailable(false);
+      setNicknameError("");
+    } else {
+      // 원래 닉네임과 같으면 체크 불필요
+      setNicknameChecked(true);
+      setNicknameAvailable(true);
+      setNicknameError("");
+    }
+  };
+
+  // 닉네임 중복 체크
+  const checkNickname = async () => {
+    const nickname = userInfo.nickname.trim();
+
+    if (!nickname) {
+      setNicknameError("닉네임을 입력해주세요.");
+      return;
+    }
+
+    if (nickname.length < 2 || nickname.length > 10) {
+      setNicknameError("닉네임은 2~10자여야 합니다.");
+      return;
+    }
+
+    // 원래 닉네임과 같으면 체크 불필요
+    if (nickname === originalNickname) {
+      setNicknameChecked(true);
+      setNicknameAvailable(true);
+      setNicknameError("");
+      return;
+    }
+
+    setNicknameCheckLoading(true);
+    setNicknameError("");
+
+    try {
+      const response = await fetch(
+        `/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+      );
+      const data = await response.json();
+
+      if (data.success && data.available) {
+        setNicknameChecked(true);
+        setNicknameAvailable(true);
+        setNicknameError("");
+      } else if (data.success && !data.available) {
+        setNicknameChecked(true);
+        setNicknameAvailable(false);
+        setNicknameError("이미 사용 중인 닉네임입니다.");
+      } else {
+        setNicknameError(data.error?.message || "닉네임 확인에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error('닉네임 체크 실패:', err);
+      setNicknameError("닉네임 확인 중 오류가 발생했습니다.");
+    } finally {
+      setNicknameCheckLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     // 입력 검증
     if (!userInfo.name.trim()) {
       alert("이름을 입력해주세요.");
       return;
+    }
+
+    // 닉네임 검증
+    if (userInfo.nickname.trim()) {
+      if (userInfo.nickname.length < 2 || userInfo.nickname.length > 10) {
+        alert("닉네임은 2~10자여야 합니다.");
+        return;
+      }
+      // 닉네임이 변경되었는데 중복 체크를 안 했으면
+      if (userInfo.nickname !== originalNickname && (!nicknameChecked || !nicknameAvailable)) {
+        alert("닉네임 중복 확인을 해주세요.");
+        return;
+      }
     }
 
     if (!userInfo.phone.trim()) {
@@ -478,6 +567,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
       // 실제 API 호출로 회원정보 수정
       const updateData: Partial<User> = {
         name: userInfo.name.trim(),
+        nickname: userInfo.nickname.trim() || undefined,
         phone: userInfo.phone.trim(),
         address: userInfo.address ? {
           street: userInfo.address.trim(),
@@ -497,6 +587,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         setUserInfo(prev => ({
           ...prev,
           name: user.name || prev.name,
+          nickname: user.nickname || prev.nickname,
           phone: user.phone || prev.phone,
           address: user.address?.street || prev.address,
           avatar: user.avatar || prev.avatar,
@@ -507,6 +598,8 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
       }
 
       setIsEditing(false);
+      setOriginalNickname(userInfo.nickname.trim());
+      setNicknameChecked(false);
       alert("회원정보가 성공적으로 수정되었습니다.");
     } catch (error: any) {
       console.error('🚨 회원정보 수정 실패:', error);
@@ -624,6 +717,45 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               loading={loading}
               onChange={handleInputChange}
             />
+            {/* 닉네임 필드 - 중복확인 버튼 포함 */}
+            <div className="flex items-center justify-between py-3 border-b">
+              <div className="text-sm text-gray-600 min-w-[80px]">닉네임</div>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={userInfo.nickname}
+                      onChange={(e) => handleNicknameChange(e.target.value)}
+                      disabled={loading}
+                      maxLength={10}
+                      placeholder="2~10자"
+                      className={`text-sm border rounded px-2 py-1 disabled:bg-gray-100 ${
+                        nicknameChecked && nicknameAvailable ? 'border-green-500' : ''
+                      } ${nicknameError ? 'border-red-500' : ''}`}
+                    />
+                  </div>
+                  {userInfo.nickname !== originalNickname && (
+                    <button
+                      type="button"
+                      onClick={checkNickname}
+                      disabled={loading || nicknameCheckLoading || !userInfo.nickname.trim()}
+                      className="px-2 py-1 rounded bg-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {nicknameCheckLoading ? "확인중" : "중복확인"}
+                    </button>
+                  )}
+                  {nicknameChecked && nicknameAvailable && userInfo.nickname !== originalNickname && (
+                    <span className="text-xs text-green-600 whitespace-nowrap">✓</span>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm font-medium">{userInfo.nickname || "-"}</div>
+              )}
+            </div>
+            {isEditing && nicknameError && (
+              <div className="text-xs text-red-500 text-right -mt-2 mb-2">{nicknameError}</div>
+            )}
             <InfoItem
               label="이메일"
               value={userInfo.email}

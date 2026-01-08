@@ -359,6 +359,12 @@ export const API_ENDPOINTS = {
     CUSTOM_ORDER_SETTING: '/api/seller/custom-order',                 // GET, PATCH - 커스텀 주문 설정 조회/변경
 
     SHIPPING_PREVIEW: '/api/seller/shipping/preview',                   // POST
+
+    // 쿠폰 관리
+    COUPONS: '/api/seller/coupons',                                     // GET, POST - 쿠폰 목록/생성
+    COUPON_DETAIL: (couponUuid: string) => `/api/seller/coupons/${couponUuid}`,     // GET, PUT, DELETE - 쿠폰 상세/수정/삭제
+    COUPON_STATUS: (couponUuid: string) => `/api/seller/coupons/${couponUuid}/status`, // PATCH - 활성화/비활성화
+    COUPON_USAGE: (couponUuid: string) => `/api/seller/coupons/${couponUuid}/usage`,   // GET - 사용 통계
   },
 
   // QR 코드

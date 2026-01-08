@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
-import { getErrorMessageFromApiError } from '@handy-platform/shared';
 import { initKakaoSdk, executeKakaoLogin, getKakaoUserInfo } from '../../utils/kakaoSdk';
 import { setSocialAuthState, normalizeKakaoUser, getSocialSignupUrl } from '../../utils/socialAuthState';
 import { VscEye, VscEyeClosed } from 'react-icons/vsc';
@@ -12,7 +11,6 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [errorAction, setErrorAction] = useState("");
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트 & 카카오 SDK 초기화
   useEffect(() => {
@@ -61,15 +59,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       onGo("/");
     } catch (error: any) {
       console.error('로그인 실패:', error);
-      
-      const errorMessage = getErrorMessageFromApiError(error);
-      setError(errorMessage.message);
-      setErrorAction(errorMessage.action || "");
-      
-      // USER_NOT_FOUND 에러인 경우 회원가입 페이지로 이동 버튼 표시
-      if (error?.code === 'USER_NOT_FOUND' || error?.response?.data?.code === 'USER_NOT_FOUND') {
-        setErrorAction("회원가입하기");
-      }
+      setError("로그인 정보가 올바르지 않습니다.");
     } finally {
       setLoading(false);
     }
@@ -234,24 +224,8 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
       <form onSubmit={submit} className="mt-4 space-y-3">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm">
-            <div className="text-red-600 mb-2">{error}</div>
-            {errorAction && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (errorAction === "회원가입하기") {
-                    onGo("/signup");
-                  } else {
-                    setError("");
-                    setErrorAction("");
-                  }
-                }}
-                className="text-blue-600 hover:text-blue-800 underline text-sm"
-              >
-                {errorAction}
-              </button>
-            )}
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+            {error}
           </div>
         )}
         
@@ -261,7 +235,6 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           onChange={(e) => {
             setEmail(e.target.value);
             setError("");
-            setErrorAction("");
           }}
           placeholder="이메일 주소"
           className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-500"
@@ -275,7 +248,6 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             onChange={(e) => {
               setPassword(e.target.value);
               setError("");
-              setErrorAction("");
             }}
             placeholder="비밀번호"
             className="w-full rounded-lg border px-4 py-3 pr-10 text-sm outline-none focus:border-blue-500"

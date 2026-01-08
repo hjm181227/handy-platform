@@ -176,7 +176,7 @@ body.webview-mode [data-apphide="true"] {
 
   /* Sticky 헤더 (PC/모바일 공통) */
   .handy-sticky-header {
-    @apply sticky top-0 z-40 bg-white;
+    @apply sticky top-0 z-50 bg-white;
   }
 
   /* 페이지 콘텐츠 (하단 탭바 공간 확보) */

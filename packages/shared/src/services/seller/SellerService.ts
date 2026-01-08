@@ -24,7 +24,11 @@ import {
   SellerOrderPagination,
   CustomOrderRequest,
   CustomOrderDetail,
-  PrefillProductResponse
+  PrefillProductResponse,
+  PaginationInfo,
+  SellerCoupon,
+  CreateSellerCouponRequest,
+  SellerCouponUsageStats
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -80,9 +84,9 @@ export abstract class BaseSellerService extends BaseApiService {
     if (response.data) {
       response.data.forEach((product, index) => {
         try {
-          // Validate product UUID format during migration period
-          if (product.id) {
-            console.debug(`[Seller Products] Product[${index}] ID: ${product.id}`);
+          // Validate product UUID format
+          if (product.productUuid) {
+            console.debug(`[Seller Products] Product[${index}] ID: ${product.productUuid}`);
           }
         } catch (error) {
           console.warn(`UUID Migration Warning - Seller Product validation:`, error);
@@ -862,6 +866,89 @@ export abstract class BaseSellerService extends BaseApiService {
     }>(API_ENDPOINTS.SELLER.UPDATE_PROFILE, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  }
+
+  // ==================== 쿠폰 관리 API ====================
+
+  // GET /seller/coupons - 판매자 쿠폰 목록 조회
+  async getSellerCoupons(filters?: {
+    status?: 'active' | 'inactive' | 'expired';
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse<{ coupons: SellerCoupon[]; pagination: PaginationInfo }>> {
+    const queryString = filters ? this.buildQueryString(filters) : '';
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.SELLER.COUPONS}?${queryString}`
+      : API_ENDPOINTS.SELLER.COUPONS;
+
+    return this.request<ApiResponse<{ coupons: SellerCoupon[]; pagination: PaginationInfo }>>(endpoint);
+  }
+
+  // POST /seller/coupons - 쿠폰 생성
+  async createCoupon(data: CreateSellerCouponRequest): Promise<ApiResponse<{ coupon: SellerCoupon }>> {
+    return this.request<ApiResponse<{ coupon: SellerCoupon }>>(API_ENDPOINTS.SELLER.COUPONS, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // GET /seller/coupons/:couponUuid - 쿠폰 상세 조회
+  async getCouponDetail(couponUuid: string): Promise<ApiResponse<{
+    coupon: SellerCoupon;
+    stats: { usedCount: number; totalDiscount: number }
+  }>> {
+    return this.request<ApiResponse<{
+      coupon: SellerCoupon;
+      stats: { usedCount: number; totalDiscount: number }
+    }>>(API_ENDPOINTS.SELLER.COUPON_DETAIL(couponUuid));
+  }
+
+  // PUT /seller/coupons/:couponUuid - 쿠폰 수정
+  async updateCoupon(
+    couponUuid: string,
+    data: Partial<CreateSellerCouponRequest>
+  ): Promise<ApiResponse<{ coupon: SellerCoupon }>> {
+    return this.request<ApiResponse<{ coupon: SellerCoupon }>>(
+      API_ENDPOINTS.SELLER.COUPON_DETAIL(couponUuid),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  // PATCH /seller/coupons/:couponUuid/status - 쿠폰 활성화/비활성화
+  async updateCouponStatus(
+    couponUuid: string,
+    isActive: boolean
+  ): Promise<ApiResponse<{ coupon: { couponUuid: string; isActive: boolean } }>> {
+    return this.request<ApiResponse<{ coupon: { couponUuid: string; isActive: boolean } }>>(
+      API_ENDPOINTS.SELLER.COUPON_STATUS(couponUuid),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive }),
+      }
+    );
+  }
+
+  // GET /seller/coupons/:couponUuid/usage - 쿠폰 사용 통계
+  async getCouponUsage(
+    couponUuid: string,
+    filters?: { startDate?: string; endDate?: string }
+  ): Promise<ApiResponse<SellerCouponUsageStats>> {
+    const queryString = filters ? this.buildQueryString(filters) : '';
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.SELLER.COUPON_USAGE(couponUuid)}?${queryString}`
+      : API_ENDPOINTS.SELLER.COUPON_USAGE(couponUuid);
+
+    return this.request<ApiResponse<SellerCouponUsageStats>>(endpoint);
+  }
+
+  // DELETE /seller/coupons/:couponUuid - 쿠폰 삭제
+  async deleteCoupon(couponUuid: string): Promise<ApiResponse<void>> {
+    return this.request<ApiResponse<void>>(API_ENDPOINTS.SELLER.COUPON_DETAIL(couponUuid), {
+      method: 'DELETE',
     });
   }
 }

@@ -1,8 +1,8 @@
 import { Product } from '@handy-platform/shared';
 import { ProductCard } from './ProductCard';
 
-export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLike, likedProducts = [] }:{
-  title:string; items:Product[]; loading?: boolean; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; likedProducts?: string[];
+export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLike, onGo, likedProducts = [] }:{
+  title:string; items:Product[]; loading?: boolean; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; onGo?:(path:string)=>void; likedProducts?: string[];
 }) {
   // 로딩 스켈레톤 카드 렌더링
   const renderLoadingSkeleton = () => (
@@ -33,7 +33,7 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
             const productId = p.productUuid || p.id;
             return (
               <div key={p.productUuid || p.id || `product-${index}`} className="md:snap-start md:flex-shrink-0">
-                <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+                <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
               </div>
             );
           })}
@@ -43,8 +43,8 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
   );
 }
 
-export function ProductGrid({ title, items, onOpen, onAdd, onLike, likedProducts = [] }:{
-  title:string; items:Product[]; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; likedProducts?: string[];
+export function ProductGrid({ title, items, onOpen, onAdd, onLike, onGo, likedProducts = [] }:{
+  title:string; items:Product[]; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; onGo?:(path:string)=>void; likedProducts?: string[];
 }) {
   return (
     <section className="mx-auto max-w-7xl px-4 mt-6">
@@ -55,7 +55,7 @@ export function ProductGrid({ title, items, onOpen, onAdd, onLike, likedProducts
           const productId = p.productUuid || p.id;
           return (
             <div key={p.productUuid || p.id || `grid-product-${index}`}>
-              <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+              <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
             </div>
           );
         })}

@@ -18,9 +18,10 @@ export interface PaginationInfo {
 
 // User Related Types
 export interface User {
-  id: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) after migration
+  userUuid: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) - primary identifier
   email: string;
   name: string;
+  nickname?: string;
   phone?: string;
   avatar?: string;
   role: 'user' | 'seller' | 'admin';
@@ -175,7 +176,7 @@ export type ProductType = 'original' | 'custom';
 
 // 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
-  id: string;                     // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
+  productUuid: string;            // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
   productId?: string;             // Sequential ID ("1", "2", "3"...) - legacy compatibility
   name: string;
   description: string;
@@ -748,6 +749,7 @@ export interface RegisterForm {
   email: string;
   password: string;
   name: string;
+  nickname: string;
   phone?: string;
 }
 
@@ -852,6 +854,78 @@ export interface UserCoupon {
   usedAt?: string;
   expiresAt: string;
   isUsable: boolean;
+}
+
+// 판매자 쿠폰 관련 타입
+export interface CreateSellerCouponRequest {
+  name: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minimumOrderAmount?: number;
+  appliesTo: 'product' | 'quote' | 'both';
+  validity: {
+    startDate: string;
+    endDate: string;
+  };
+  limits?: {
+    totalCount?: number;
+    perUserLimit?: number;
+  };
+  isPublic?: boolean;
+}
+
+export interface SellerCoupon {
+  couponUuid: string;
+  code: string;
+  name: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minimumOrderAmount?: number;
+  scope: {
+    type: 'seller';
+    sellerUuid: string;
+  };
+  appliesTo: 'product' | 'quote' | 'both';
+  validity: {
+    startDate: string;
+    endDate: string;
+  };
+  limits: {
+    totalCount: number;
+    issuedCount: number;
+    perUserLimit: number;
+  };
+  isActive: boolean;
+  isPublic: boolean;
+  stats?: {
+    usedCount: number;
+    totalDiscount: number;
+  };
+  createdAt: string;
+}
+
+export interface SellerCouponUsageStats {
+  summary: {
+    totalDownloads: number;
+    totalUsed: number;
+    totalDiscount: number;
+    conversionRate: number;
+  };
+  dailyStats: Array<{
+    date: string;
+    downloads: number;
+    used: number;
+    discount: number;
+  }>;
+  recentUsage: Array<{
+    usedAt: string;
+    discountAmount: number;
+    orderAmount: number;
+  }>;
 }
 
 // 포인트 관련 타입
@@ -1057,6 +1131,8 @@ export interface SellerOrderAnalytics {
   completedOrders: number;
   cancelledOrders: number;
   averageOrderValue: number;
+  todayRevenue: number;
+  monthlyRevenue: number;
   orderTrends: Array<{
     date: string;
     orders: number;
@@ -1089,6 +1165,8 @@ export interface SettlementSummary {
   availableAmount: number;
   pendingAmount: number;
   totalSettled: number;
+  currentMonthSales: number;
+  lastMonthSales: number;
   lastSettlement?: {
     amount: number;
     paidAt: string;

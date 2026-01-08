@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview } from '@handy-platform/shared';
+import { useState, useEffect } from 'react';
+import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService } from '@handy-platform/shared';
 import { productService, cartService, reviewService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
@@ -79,10 +79,7 @@ export function Detail({
     try {
       setReviewsLoading(true);
 
-      console.log('🔍 [Detail] Loading reviews for product:', product.id);
-      console.log('🔍 [Detail] Product info:', { id: product.id, productUuid: (product as any).productUuid, name: product.name });
-
-      const response = await reviewService.getProductReviews(product.id, {
+      const response = await reviewService.getProductReviews(product.productUuid, {
         page,
         rating: ratingFilter || undefined,
         sortBy: reviewSort === 'newest' ? 'createdAt' : reviewSort === 'rating' ? 'rating' : 'createdAt',
@@ -149,12 +146,12 @@ export function Detail({
       if (length) options.nailLength = length;
 
       console.log('Adding to cart:', {
-        productId: product.id,
+        productId: product.productUuid,
         quantity: qty,
         options
       });
 
-      await cartService.addToCart(product.id, qty, options);
+      await cartService.addToCart(product.productUuid, qty, options);
 
       setCartMessage('장바구니에 추가되었습니다!');
       // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거
@@ -222,7 +219,7 @@ export function Detail({
 
       // 바로구매는 단일 상품만 지원 (서버 스펙: directItem 객체)
       const directItem = {
-        productUuid: product.id,
+        productUuid: product.productUuid,
         quantity: qty,
         options: options
       };
@@ -262,6 +259,20 @@ export function Detail({
         alert("공유를 지원하지 않는 브라우저입니다.");
       }
     }
+  };
+
+  // 사이징 버튼 클릭 핸들러
+  const handleSizingClick = () => {
+    const isWebView = typeof window !== 'undefined' && !!(window as any).ReactNativeWebView;
+
+    if (!isWebView) {
+      // 웹 브라우저: 앱 안내 메시지
+      alert('HANDY 앱에서 사이즈를 편리하게 측정하고 저장할 수 있습니다!');
+      return;
+    }
+
+    // 앱 (WebView): 기존 사이징 화면으로 이동
+    navigateService.goToNailSizes();
   };
 
   // 로딩 상태
@@ -765,7 +776,7 @@ export function Detail({
           {p.productType === 'custom' ? (
             <div className="pt-2">
               <button
-                onClick={() => onGo(`/product/${p.id}/custom-order`)}
+                onClick={() => onGo(`/product/${p.productUuid}/custom-order`)}
                 className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
               >
                 커스텀 주문하기
@@ -809,10 +820,10 @@ export function Detail({
             </button>
             <button onClick={share} className="hover:text-gray-600">공유</button>
             <button
-              onClick={() => { try { (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: "open-sizing", productId: product.id })); } catch {} }}
+              onClick={handleSizingClick}
               className="hover:text-gray-600"
             >
-              사이징(앱)
+              사이징
             </button>
           </div>
 
@@ -863,7 +874,7 @@ export function Detail({
           <div className="text-base font-semibold">{money(salePrice)}</div>
           {p.productType === 'custom' ? (
             <button
-              onClick={() => onGo?.(`/product/${p.id}/custom-order`)}
+              onClick={() => onGo?.(`/product/${p.productUuid}/custom-order`)}
               className="rounded-lg px-6 py-2 text-sm text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
             >
               커스텀 주문하기

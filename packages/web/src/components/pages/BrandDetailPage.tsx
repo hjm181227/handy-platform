@@ -356,8 +356,8 @@ export function BrandDetailPage({
         if (isLoadMore) {
           // 기존 상품에 추가 (중복 제거)
           setProducts(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const newProducts = response.data.filter(p => !existingIds.has(p.id));
+            const existingIds = new Set(prev.map(p => p.productUuid));
+            const newProducts = response.data.filter(p => !existingIds.has(p.productUuid));
             return [...prev, ...newProducts];
           });
         } else {
@@ -999,14 +999,15 @@ export function BrandDetailPage({
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {sortedProducts.map((product) => {
-                const productId = product.id || product.productUuid;
+                const productId = product.productUuid;
                 return (
                   <ProductCard
-                    key={product.id || product.productId}
+                    key={product.productUuid}
                     p={product}
                     onOpen={onOpen}
                     onAdd={onAdd}
                     onLike={onLike}
+                    onGo={onGo}
                     isLiked={likedProducts.includes(productId)}
                   />
                 );
@@ -1040,7 +1041,7 @@ export function BrandDetailPage({
                 {categoryProducts.map((product) => {
                   const productId = product.id || product.productUuid;
                   return (
-                    <ProductCard key={`${category}-${product.id || product.productId}`} p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} isLiked={likedProducts.includes(productId)} />
+                    <ProductCard key={`${category}-${product.id || product.productId}`} p={product} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
                   );
                 })}
               </div>

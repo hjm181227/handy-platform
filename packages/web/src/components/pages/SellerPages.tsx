@@ -16,6 +16,9 @@ import { ProductionStatus } from './seller/ProductionStatus';
 // 주문 관리 컴포넌트 임포트
 import { OrderManagement } from './seller/OrderManagement';
 
+// 쿠폰 관리 컴포넌트 임포트
+import { CouponManagement } from './seller/CouponManagement';
+
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
   const [ dashboardData, setDashboardData ] = useState({
@@ -35,8 +38,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
     products: {
       total: 0,
       active: 0,
-      inactive: 0,
-      outOfStock: 0
+      inactive: 0
     },
     reviews: {
       total: 0,
@@ -55,53 +57,51 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         setIsLoading(true);
         setError(null);
 
-        // API 호출 시도 (구현되지 않은 경우 샘플 데이터 사용)
-        try {
-          const response = await fetch('/api/seller/dashboard', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        // 3개 API 병렬 호출
+        const [orderResponse, productResponse, settlementResponse] = await Promise.all([
+          sellerService.getOrderAnalyticsOverview(),
+          sellerService.getProductAnalyticsOverview(),
+          sellerService.getSettlementSummary()
+        ]);
 
-          if (response.ok) {
-            const data = await response.json();
-            setDashboardData(data.dashboard);
-          } else {
-            throw new Error('API not implemented');
+        // API 응답: { success: boolean, data: T }
+        const orderStats = (orderResponse as any)?.data;
+        const productStats = (productResponse as any)?.data;
+        const settlementStats = (settlementResponse as any)?.data;
+
+        // 전월 대비 성장률 계산
+        const lastMonthSales = settlementStats?.lastMonthSales || 0;
+        const currentMonthSales = settlementStats?.currentMonthSales || orderStats?.monthlyRevenue || 0;
+        const growth = lastMonthSales > 0
+          ? ((currentMonthSales - lastMonthSales) / lastMonthSales * 100)
+          : 0;
+
+        setDashboardData({
+          sales: {
+            today: orderStats?.todayRevenue || 0,
+            month: orderStats?.monthlyRevenue || 0,
+            lastMonth: lastMonthSales,
+            growth: Math.round(growth * 10) / 10
+          },
+          orders: {
+            pending: orderStats?.pendingOrders || 0,
+            processing: orderStats?.statusDistribution?.processing || 0,
+            shipped: orderStats?.shippedOrders || 0,
+            delivered: orderStats?.completedOrders || 0,
+            cancelled: orderStats?.cancelledOrders || 0
+          },
+          products: {
+            total: productStats?.totalProducts ?? 0,
+            active: productStats?.activeProducts ?? 0,
+            inactive: (productStats?.totalProducts ?? 0) - (productStats?.activeProducts ?? 0)
+          },
+          reviews: {
+            total: productStats?.totalReviews ?? 0,
+            unread: 0,
+            averageRating: productStats?.averageRating ?? 0,
+            pending: 0
           }
-        } catch (apiError) {
-          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
-          console.warn('Seller dashboard API not implemented, using sample data');
-          setDashboardData({
-            sales: {
-              today: 1250000,
-              month: 45800000,
-              lastMonth: 38200000,
-              growth: 19.9
-            },
-            orders: {
-              pending: 12,
-              processing: 8,
-              shipped: 45,
-              delivered: 128,
-              cancelled: 3
-            },
-            products: {
-              total: 67,
-              active: 58,
-              inactive: 9,
-              outOfStock: 5
-            },
-            reviews: {
-              total: 234,
-              unread: 3,
-              averageRating: 4.7,
-              pending: 12
-            }
-          });
-        }
+        });
       } catch (error) {
         console.error('Failed to load dashboard:', error);
         setError('대시보드 데이터를 불러오는데 실패했습니다.');
@@ -114,7 +114,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
   }, []);
 
   const salesGrowth = dashboardData.sales.growth ||
-    ((dashboardData.sales.month - dashboardData.sales.lastMonth) / dashboardData.sales.lastMonth * 100);
+    ((dashboardData.sales.month - dashboardData.sales.lastMonth) / (dashboardData.sales.lastMonth || 1) * 100);
 
   if (isLoading) {
     return (
@@ -286,7 +286,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               전체 보기
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">{dashboardData.products.total}</p>
               <p className="text-sm text-gray-600">전체 상품</p>
@@ -298,10 +298,6 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-2xl font-bold text-gray-600">{dashboardData.products.inactive}</p>
               <p className="text-sm text-gray-600">비활성</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-2xl font-bold text-red-600">{dashboardData.products.outOfStock}</p>
-              <p className="text-sm text-gray-600">품절</p>
             </div>
           </div>
         </div>
@@ -365,17 +361,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             return;
           }
 
-          console.log('Seller products API response:', response);
-          console.log('Products data:', response.data);
-          // 첫 번째 상품의 구조 확인
-          if (response.data && response.data.length > 0) {
-            console.log('First product structure:', response.data[0]);
-            console.log('Product ID fields:', {
-              _id: response.data[0]._id,
-              id: response.data[0].id,
-              productId: response.data[0].productId
-            });
-          }
           setProducts(response.data || []);
         } catch (apiError) {
           // 요청이 취소된 경우는 에러로 처리하지 않음
@@ -407,8 +392,8 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               name: 'Square Short – Cocoa',
               category: '네일 팁',
               price: 16500,
-              stock: 0,
-              status: 'outOfStock',
+              stock: 50,
+              status: 'active',
               sales: 987,
               views: 3456,
               image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=100&h=100&fit=crop',
@@ -458,8 +443,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
         return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">판매중</span>;
       case 'inactive':
         return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">비활성</span>;
-      case 'outOfStock':
-        return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">주문 중단</span>;
       default:
         return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">알 수 없음</span>;
     }
@@ -467,6 +450,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
   // 삭제 관련 함수들
   const handleDeleteClick = (product: any) => {
+    console.log(product);
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
@@ -476,14 +460,14 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
     try {
       setIsDeleting(true);
-      console.log('Deleting product:', productToDelete.productId);
+      console.log('Deleting product:', productToDelete.productUuid);
 
       // API 호출
-      await sellerService.deleteProduct(productToDelete.productId);
+      await sellerService.deleteProduct(productToDelete.productUuid);
 
       // 성공 시 목록에서 제거
       setProducts(prevProducts =>
-        prevProducts.filter(p => p.productId !== productToDelete.productId)
+        prevProducts.filter(p => p.productUuid !== productToDelete.productUuid)
       );
 
       // 모달 닫기
@@ -536,7 +520,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               <option value="all">전체 상품</option>
               <option value="active">판매중</option>
               <option value="inactive">비활성</option>
-              <option value="outOfStock">품절</option>
             </select>
           </div>
 
@@ -621,7 +604,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                   {filteredProducts.map((product) => (
-                    <tr key={product.id || product.productId} className="hover:bg-gray-50">
+                    <tr key={product.productUuid} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
@@ -654,13 +637,13 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => onGo(`/seller/products/${product.id || product.productId}/edit`)}
+                            onClick={() => onGo(`/seller/products/${product.productUuid}/edit`)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             수정
                           </button>
                           <button
-                            onClick={() => onGo(`/seller/products/${product.id || product.productId}/analytics`)}
+                            onClick={() => onGo(`/seller/products/${product.productUuid}/analytics`)}
                             className="text-green-600 hover:text-green-900"
                           >
                             분석
@@ -775,8 +758,8 @@ interface DetailImage {
 }
 
 // 네일팁 전용 상품 등록/수정 페이지 (서버 API 스펙 완전 일치)
-export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => void; productId?: string }) {
-  const isEdit = !!productId;
+export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) => void; productUuid?: string }) {
+  const isEdit = !!productUuid;
   const [ formData, setFormData ] = useState({
     // 상품 유형
     productType: 'original' as ProductType,
@@ -838,14 +821,14 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
   // 상품 수정 모드일 때 기존 상품 정보 불러오기
   useEffect(() => {
-    if (productId && isEdit) {
+    if (productUuid && isEdit) {
       const loadProductData = async () => {
         try {
           setIsLoading(true);
           setError(null);
 
-          console.log('Loading product data for ID:', productId);
-          const response = await sellerService.getSellerProduct(productId);
+          console.log('Loading product data for ID:', productUuid);
+          const response = await sellerService.getSellerProduct(productUuid);
 
           console.log('Full API response:', response);
 
@@ -918,7 +901,7 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       loadProductData();
     }
-  }, [productId, isEdit]);
+  }, [productUuid, isEdit]);
 
   // 커스텀 주문서 목록 불러오기
   const handleLoadOrderRequest = async () => {
@@ -1049,15 +1032,15 @@ export function SellerProductForm({ onGo, productId }: { onGo: (to: string) => v
 
       // 3. API 호출 (등록 vs 수정)
       let response;
-      if (isEdit && productId) {
+      if (isEdit && productUuid) {
         // 수정: customOrderRequestUuid만 제외, productType은 포함 (서버는 소문자 요구)
         const updateData: UpdateProductRequest = {
           ...commonData,
-          productId,
+          productUuid: productUuid,
           productType: formData.productType.toLowerCase() as any
         };
         console.log('수정할 상품 데이터:', updateData);
-        response = await productService.updateProduct(productId, updateData);
+        response = await productService.updateProduct(productUuid, updateData);
       } else {
         // 등록: 모든 필드 포함 (서버는 소문자 productType 요구)
         const productData: CreateProductRequest = {
@@ -2746,7 +2729,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
   const reviews = [
     {
       id: "1",
-      productId: "1",
+      productUuid: "1",
       productName: "Glossy Almond Tip – Milk Beige",
       customerName: "김**",
       rating: 5,
@@ -2758,7 +2741,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: "2",
-      productId: "2",
+      productUuid: "2",
       productName: "Square Short – Cocoa",
       customerName: "이**",
       rating: 4,
@@ -2771,7 +2754,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: "3",
-      productId: "1",
+      productUuid: "1",
       productName: "Glossy Almond Tip – Milk Beige",
       customerName: "박**",
       rating: 3,
@@ -2782,7 +2765,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: "4",
-      productId: "4",
+      productUuid: "4",
       productName: "Oval Short – Mauve",
       customerName: "최**",
       rating: 5,
@@ -3719,4 +3702,4 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
 }
 
 // 생산 관리 컴포넌트들 내보내기
-export { ProductionSettings, ProductionStatus };
+export { ProductionSettings, ProductionStatus, CouponManagement };
