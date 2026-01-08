@@ -38,8 +38,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
     products: {
       total: 0,
       active: 0,
-      inactive: 0,
-      outOfStock: 0
+      inactive: 0
     },
     reviews: {
       total: 0,
@@ -58,53 +57,51 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         setIsLoading(true);
         setError(null);
 
-        // API 호출 시도 (구현되지 않은 경우 샘플 데이터 사용)
-        try {
-          const response = await fetch('/api/seller/dashboard', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        // 3개 API 병렬 호출
+        const [orderResponse, productResponse, settlementResponse] = await Promise.all([
+          sellerService.getOrderAnalyticsOverview(),
+          sellerService.getProductAnalyticsOverview(),
+          sellerService.getSettlementSummary()
+        ]);
 
-          if (response.ok) {
-            const data = await response.json();
-            setDashboardData(data.dashboard);
-          } else {
-            throw new Error('API not implemented');
+        // API 응답: { success: boolean, data: T }
+        const orderStats = (orderResponse as any)?.data;
+        const productStats = (productResponse as any)?.data;
+        const settlementStats = (settlementResponse as any)?.data;
+
+        // 전월 대비 성장률 계산
+        const lastMonthSales = settlementStats?.lastMonthSales || 0;
+        const currentMonthSales = settlementStats?.currentMonthSales || orderStats?.monthlyRevenue || 0;
+        const growth = lastMonthSales > 0
+          ? ((currentMonthSales - lastMonthSales) / lastMonthSales * 100)
+          : 0;
+
+        setDashboardData({
+          sales: {
+            today: orderStats?.todayRevenue || 0,
+            month: orderStats?.monthlyRevenue || 0,
+            lastMonth: lastMonthSales,
+            growth: Math.round(growth * 10) / 10
+          },
+          orders: {
+            pending: orderStats?.pendingOrders || 0,
+            processing: orderStats?.statusDistribution?.processing || 0,
+            shipped: orderStats?.shippedOrders || 0,
+            delivered: orderStats?.completedOrders || 0,
+            cancelled: orderStats?.cancelledOrders || 0
+          },
+          products: {
+            total: productStats?.totalProducts ?? 0,
+            active: productStats?.activeProducts ?? 0,
+            inactive: (productStats?.totalProducts ?? 0) - (productStats?.activeProducts ?? 0)
+          },
+          reviews: {
+            total: productStats?.totalReviews ?? 0,
+            unread: 0,
+            averageRating: productStats?.averageRating ?? 0,
+            pending: 0
           }
-        } catch (apiError) {
-          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
-          console.warn('Seller dashboard API not implemented, using sample data');
-          setDashboardData({
-            sales: {
-              today: 1250000,
-              month: 45800000,
-              lastMonth: 38200000,
-              growth: 19.9
-            },
-            orders: {
-              pending: 12,
-              processing: 8,
-              shipped: 45,
-              delivered: 128,
-              cancelled: 3
-            },
-            products: {
-              total: 67,
-              active: 58,
-              inactive: 9,
-              outOfStock: 5
-            },
-            reviews: {
-              total: 234,
-              unread: 3,
-              averageRating: 4.7,
-              pending: 12
-            }
-          });
-        }
+        });
       } catch (error) {
         console.error('Failed to load dashboard:', error);
         setError('대시보드 데이터를 불러오는데 실패했습니다.');
@@ -117,7 +114,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
   }, []);
 
   const salesGrowth = dashboardData.sales.growth ||
-    ((dashboardData.sales.month - dashboardData.sales.lastMonth) / dashboardData.sales.lastMonth * 100);
+    ((dashboardData.sales.month - dashboardData.sales.lastMonth) / (dashboardData.sales.lastMonth || 1) * 100);
 
   if (isLoading) {
     return (
@@ -289,7 +286,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               전체 보기
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">{dashboardData.products.total}</p>
               <p className="text-sm text-gray-600">전체 상품</p>
@@ -301,10 +298,6 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-2xl font-bold text-gray-600">{dashboardData.products.inactive}</p>
               <p className="text-sm text-gray-600">비활성</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-2xl font-bold text-red-600">{dashboardData.products.outOfStock}</p>
-              <p className="text-sm text-gray-600">품절</p>
             </div>
           </div>
         </div>
@@ -399,8 +392,8 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               name: 'Square Short – Cocoa',
               category: '네일 팁',
               price: 16500,
-              stock: 0,
-              status: 'outOfStock',
+              stock: 50,
+              status: 'active',
               sales: 987,
               views: 3456,
               image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=100&h=100&fit=crop',
@@ -450,8 +443,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
         return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">판매중</span>;
       case 'inactive':
         return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">비활성</span>;
-      case 'outOfStock':
-        return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">주문 중단</span>;
       default:
         return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">알 수 없음</span>;
     }
@@ -529,7 +520,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               <option value="all">전체 상품</option>
               <option value="active">판매중</option>
               <option value="inactive">비활성</option>
-              <option value="outOfStock">품절</option>
             </select>
           </div>
 

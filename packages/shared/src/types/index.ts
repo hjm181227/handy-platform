@@ -1131,6 +1131,8 @@ export interface SellerOrderAnalytics {
   completedOrders: number;
   cancelledOrders: number;
   averageOrderValue: number;
+  todayRevenue: number;
+  monthlyRevenue: number;
   orderTrends: Array<{
     date: string;
     orders: number;
@@ -1163,6 +1165,8 @@ export interface SettlementSummary {
   availableAmount: number;
   pendingAmount: number;
   totalSettled: number;
+  currentMonthSales: number;
+  lastMonthSales: number;
   lastSettlement?: {
     amount: number;
     paidAt: string;
