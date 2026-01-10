@@ -33,6 +33,7 @@ import { ChatPage } from './pages/ChatPage';
 import { ChatRoomPage } from './pages/ChatRoomPage';
 import { CartContent } from './components/cart/CartContent';
 import { CategoryModal } from './components/common/CategoryModal';
+import { CategoryPage } from './components/pages/CategoryPage';
 
 // MyPage Components
 import {
@@ -394,20 +395,24 @@ export function Router() {
   }
   else if (pathname.startsWith('/cat/')) {
     const parts = pathname.split('/').slice(2).map(decodeURIComponent);
-    const [group, name] = parts;
+    const [categoryType = '', categoryValue = ''] = parts;
+
+    // 'all' 값은 지원하지 않음 - 카테고리 페이지로 리다이렉트
+    if (categoryValue === 'all' || !categoryValue) {
+      nav('/category');
+      return null;
+    }
+
     screen = (
-      <>
-        <TitleBar title={`${group?.toUpperCase()} / ${name}`} desc="카테고리 결과" />
-        <ProductGrid
-          title="카테고리 상품"
-          items={[...products]}
-          onOpen={openProduct}
-          onAdd={addProduct}
-          onLike={handleLike}
-          onGo={nav}
-          likedProducts={likedProducts}
-        />
-      </>
+      <CategoryPage
+        categoryType={categoryType}
+        categoryValue={categoryValue}
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
+      />
     );
   }
   else if (pathname.startsWith('/search')) {

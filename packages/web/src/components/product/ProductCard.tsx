@@ -28,7 +28,7 @@ export function ProductCard({
         <div className="relative rounded-lg overflow-hidden bg-gray-100 animate-pulse">
           <div className="aspect-[3/4] w-full bg-gray-200"></div>
         </div>
-        <div className="mt-2 space-y-0.5 animate-pulse">
+        <div className="mt-1 space-y-0.5 animate-pulse">
           <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
           <div className="h-4 bg-gray-200 rounded mb-1"></div>
           <div className="h-4 bg-gray-200 rounded w-5/6 mb-1"></div>
@@ -76,7 +76,7 @@ export function ProductCard({
           {p.discountRate && p.discountRate > 0 && <Badge tone="red">할인</Badge>}
         </div>
       </div>
-      <div className="mt-2 space-y-0.5">
+      <div className="mt-1 space-y-0.5">
         {p.brand && onGo ? (
           <button
             onClick={(e) => {
@@ -95,7 +95,7 @@ export function ProductCard({
         ) : (
           <div className="text-[11px] text-gray-500">{p.brand || ''}</div>
         )}
-        <div className="text-[13px] leading-snug h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
+        <div className="text-[13px] leading-snug max-h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
         <div className="flex items-baseline gap-2">
           <div className="text-[15px] font-bold">{money(salePrice)}</div>
           {salePrice < p.price ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}</div> : null}
