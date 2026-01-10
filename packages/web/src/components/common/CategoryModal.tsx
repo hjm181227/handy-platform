@@ -334,19 +334,11 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     return (
                       <div>
                         {/* 타입 헤더 */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <span className="w-1 h-5 bg-blue-600 rounded"></span>
-                            <h3 className="text-lg font-bold text-gray-900">
-                              {typeLabels[selectedType] || selectedType}
-                            </h3>
-                          </div>
-                          <button
-                            onClick={() => handleCategoryClick(selectedType, 'all')}
-                            className="text-sm text-gray-600 hover:text-blue-600 transition-colors underline"
-                          >
-                            전체 보기
-                          </button>
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="w-1 h-5 bg-blue-600 rounded"></span>
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {typeLabels[selectedType] || selectedType}
+                          </h3>
                         </div>
 
                         {/* 카테고리 그리드 - 3컬럼 */}
@@ -598,19 +590,11 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     return (
                       <div>
                         {/* 타입 헤더 */}
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center gap-2">
-                            <span className="w-1 h-5 bg-blue-600 rounded"></span>
-                            <h3 className="text-lg font-bold text-gray-900">
-                              {typeLabels[selectedType] || selectedType}
-                            </h3>
-                          </div>
-                          <button
-                            onClick={() => handleCategoryClick(selectedType, 'all')}
-                            className="text-sm text-gray-600 hover:text-blue-600 transition-colors underline"
-                          >
-                            전체 보기
-                          </button>
+                        <div className="flex items-center gap-2 mb-6">
+                          <span className="w-1 h-5 bg-blue-600 rounded"></span>
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {typeLabels[selectedType] || selectedType}
+                          </h3>
                         </div>
 
                         {/* 카테고리 그리드 - 3컬럼 */}

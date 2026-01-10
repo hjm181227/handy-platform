@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
+import { categoryOptions } from '../../utils/categoryUtils';
 import { CategorySelector } from '../product/CategorySelector';
 import { imageService, productService, sellerService, brandService } from '../../services/apiService';
 import { Stars } from '../ui';
@@ -784,13 +785,13 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
     shapeCustomizable: false,
     designCustomizable: false,
 
-    // 네일 카테고리
+    // 네일 카테고리 (value 값 사용)
     nailCategories: {
       style: [] as string[],
       color: [] as string[],
       texture: [] as string[],
       tpo: [] as string[],
-      nation: 'K네일' as string
+      nation: 'kr' as string
     } as NailCategories,
 
     // 이미지
@@ -878,7 +879,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               color: [],
               texture: [],
               tpo: [],
-              nation: 'K네일'
+              nation: 'kr'
             },
 
             // 이미지
@@ -1674,16 +1675,16 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 스타일 <span className="text-xs text-gray-500">(최대 3개)</span>
               </label>
               <div className="space-y-2">
-                {['신상', '심플', '화려', '클래식', '키치', '내추럴'].map(style => (
-                  <label key={style} className="flex items-center">
+                {categoryOptions.style.map(style => (
+                  <label key={style.value} className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={formData.nailCategories.style.includes(style)}
+                      checked={formData.nailCategories.style.includes(style.value)}
                       onChange={(e) => {
                         const styles = formData.nailCategories.style;
                         const newStyles = e.target.checked
-                          ? [...styles, style].slice(0, 3) // 최대 3개
-                          : styles.filter(s => s !== style);
+                          ? [...styles, style.value].slice(0, 3) // 최대 3개
+                          : styles.filter(s => s !== style.value);
                         setFormData({
                           ...formData,
                           nailCategories: {
@@ -1692,10 +1693,10 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           }
                         });
                       }}
-                      disabled={!formData.nailCategories.style.includes(style) && formData.nailCategories.style.length >= 3}
+                      disabled={!formData.nailCategories.style.includes(style.value) && formData.nailCategories.style.length >= 3}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{style}</span>
+                    <span className="ml-2 text-sm text-gray-700">{style.name}</span>
                   </label>
                 ))}
               </div>
@@ -1707,16 +1708,16 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 색상 <span className="text-xs text-gray-500">(최대 3개)</span>
               </label>
               <div className="space-y-2">
-                {['레드 계열', '핑크 계열', '뉴트럴', '블랙/화이트'].map(color => (
-                  <label key={color} className="flex items-center">
+                {categoryOptions.color.map(color => (
+                  <label key={color.value} className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={formData.nailCategories.color.includes(color)}
+                      checked={formData.nailCategories.color.includes(color.value)}
                       onChange={(e) => {
                         const colors = formData.nailCategories.color;
                         const newColors = e.target.checked
-                          ? [...colors, color].slice(0, 3) // 최대 3개
-                          : colors.filter(c => c !== color);
+                          ? [...colors, color.value].slice(0, 3) // 최대 3개
+                          : colors.filter(c => c !== color.value);
                         setFormData({
                           ...formData,
                           nailCategories: {
@@ -1725,10 +1726,10 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           }
                         });
                       }}
-                      disabled={!formData.nailCategories.color.includes(color) && formData.nailCategories.color.length >= 3}
+                      disabled={!formData.nailCategories.color.includes(color.value) && formData.nailCategories.color.length >= 3}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{color}</span>
+                    <span className="ml-2 text-sm text-gray-700">{color.name}</span>
                   </label>
                 ))}
               </div>
@@ -1740,16 +1741,16 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 텍스처 <span className="text-xs text-gray-500">(최대 3개)</span>
               </label>
               <div className="space-y-2">
-                {['젤', '매트', '글리터'].map(texture => (
-                  <label key={texture} className="flex items-center">
+                {categoryOptions.texture.map(texture => (
+                  <label key={texture.value} className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={formData.nailCategories.texture.includes(texture)}
+                      checked={formData.nailCategories.texture.includes(texture.value)}
                       onChange={(e) => {
                         const textures = formData.nailCategories.texture;
                         const newTextures = e.target.checked
-                          ? [...textures, texture].slice(0, 3) // 최대 3개
-                          : textures.filter(t => t !== texture);
+                          ? [...textures, texture.value].slice(0, 3) // 최대 3개
+                          : textures.filter(t => t !== texture.value);
                         setFormData({
                           ...formData,
                           nailCategories: {
@@ -1758,10 +1759,10 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           }
                         });
                       }}
-                      disabled={!formData.nailCategories.texture.includes(texture) && formData.nailCategories.texture.length >= 3}
+                      disabled={!formData.nailCategories.texture.includes(texture.value) && formData.nailCategories.texture.length >= 3}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{texture}</span>
+                    <span className="ml-2 text-sm text-gray-700">{texture.name}</span>
                   </label>
                 ))}
               </div>
@@ -1773,16 +1774,16 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 TPO (착용 상황) <span className="text-xs text-gray-500">(최대 3개)</span>
               </label>
               <div className="space-y-2">
-                {['데일리', '파티', '웨딩', '공연'].map(tpo => (
-                  <label key={tpo} className="flex items-center">
+                {categoryOptions.tpo.map(tpo => (
+                  <label key={tpo.value} className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={formData.nailCategories.tpo.includes(tpo)}
+                      checked={formData.nailCategories.tpo.includes(tpo.value)}
                       onChange={(e) => {
                         const tpos = formData.nailCategories.tpo;
                         const newTpos = e.target.checked
-                          ? [...tpos, tpo].slice(0, 3) // 최대 3개
-                          : tpos.filter(t => t !== tpo);
+                          ? [...tpos, tpo.value].slice(0, 3) // 최대 3개
+                          : tpos.filter(t => t !== tpo.value);
                         setFormData({
                           ...formData,
                           nailCategories: {
@@ -1791,10 +1792,10 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           }
                         });
                       }}
-                      disabled={!formData.nailCategories.tpo.includes(tpo) && formData.nailCategories.tpo.length >= 3}
+                      disabled={!formData.nailCategories.tpo.includes(tpo.value) && formData.nailCategories.tpo.length >= 3}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{tpo}</span>
+                    <span className="ml-2 text-sm text-gray-700">{tpo.name}</span>
                   </label>
                 ))}
               </div>
@@ -1806,26 +1807,26 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 국가별 스타일 <span className="text-xs text-gray-500">(1개만 선택)</span>
               </label>
               <div className="flex space-x-4">
-                {['K네일', 'J네일', '기타'].map(nation => (
-                  <label key={nation} className="flex items-center">
+                {categoryOptions.nation.map(nation => (
+                  <label key={nation.value} className="flex items-center">
                     <input
                       type="radio"
                       name="nation"
-                      checked={formData.nailCategories.nation === nation}
+                      checked={formData.nailCategories.nation === nation.value}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setFormData({
                             ...formData,
                             nailCategories: {
                               ...formData.nailCategories,
-                              nation: nation
+                              nation: nation.value
                             }
                           });
                         }
                       }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{nation}</span>
+                    <span className="ml-2 text-sm text-gray-700">{nation.name}</span>
                   </label>
                 ))}
               </div>
