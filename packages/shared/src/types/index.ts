@@ -751,6 +751,7 @@ export interface RegisterForm {
   name: string;
   nickname: string;
   phone?: string;
+  verificationId?: string; // 휴대폰 인증 완료 후 받은 ID (신규 필수)
 }
 
 export interface ReviewForm {

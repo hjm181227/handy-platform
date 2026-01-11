@@ -1,14 +1,46 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { 
-  ApiResponse, 
-  AuthResponse, 
-  User, 
-  LoginForm, 
+import {
+  ApiResponse,
+  AuthResponse,
+  User,
+  LoginForm,
   RegisterForm,
-  LinkedAccountsResponse 
+  LinkedAccountsResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeUserId } from '../../utils/uuidUtils';
+
+// 휴대폰 인증 관련 타입
+export interface PhoneSendResponse {
+  success: boolean;
+  data: {
+    verificationId: string;
+    expiresAt: string;
+    message: string;
+  };
+}
+
+export interface PhoneVerifyResponse {
+  success: boolean;
+  data: {
+    verificationId: string;
+    phone: string;
+    verifiedAt: string;
+    purpose: string;
+    message: string;
+  };
+}
+
+export interface PhoneStatusResponse {
+  success: boolean;
+  data: {
+    verificationId: string;
+    status: 'pending' | 'verified' | 'expired' | 'failed';
+    expiresAt: string;
+    verifiedAt?: string;
+    remainingAttempts: number;
+  };
+}
 
 export abstract class BaseAuthService extends BaseApiService {
   // 기본 인증 메서드
@@ -48,6 +80,30 @@ export abstract class BaseAuthService extends BaseApiService {
     }
 
     return response;
+  }
+
+  // 휴대폰 인증 메서드
+  async sendPhoneVerification(
+    phone: string,
+    purpose: 'registration' | 'update' | 'recovery' = 'registration'
+  ): Promise<PhoneSendResponse> {
+    return this.request<PhoneSendResponse>(API_ENDPOINTS.PHONE.SEND, {
+      method: 'POST',
+      body: JSON.stringify({ phone, purpose }),
+      enableRetry: false,
+    });
+  }
+
+  async verifyPhoneCode(verificationId: string, code: string): Promise<PhoneVerifyResponse> {
+    return this.request<PhoneVerifyResponse>(API_ENDPOINTS.PHONE.VERIFY, {
+      method: 'POST',
+      body: JSON.stringify({ verificationId, code }),
+      enableRetry: false,
+    });
+  }
+
+  async getPhoneVerificationStatus(verificationId: string): Promise<PhoneStatusResponse> {
+    return this.request<PhoneStatusResponse>(API_ENDPOINTS.PHONE.STATUS(verificationId));
   }
 
   async getUserProfile(): Promise<ApiResponse<{ user: User }>> {

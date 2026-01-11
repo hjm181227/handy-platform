@@ -1,27 +1,25 @@
 import { useState, useEffect } from 'react';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 import { webApiService } from '../../services/apiService';
 import { initKakaoSdk } from '../../utils/kakaoSdk';
 import { setSocialAuthState, getSocialSignupUrl } from '../../utils/socialAuthState';
 import { VscEye, VscEyeClosed } from 'react-icons/vsc';
+import { SignupFlow } from './signup/SignupFlow';
+import { Logo } from '../common/Logo';
 
-export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export function AuthModalContent() {
+  const { currentView, setView, close } = useAuthModal();
+
+  // 이메일 로그인 상태
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [auto, setAuto] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
-  // 이미 로그인된 사용자는 홈으로 리다이렉트 & 카카오 SDK 초기화
+  // 카카오 SDK 초기화
   useEffect(() => {
-    const checkAuthAndRedirect = async () => {
-      const isAuthenticated = await webApiService.isAuthenticated();
-      if (isAuthenticated) {
-        onGo("/");
-      }
-    };
-
     const initSdk = async () => {
       try {
         await initKakaoSdk();
@@ -29,57 +27,55 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         console.warn('카카오 SDK 초기화 실패:', error);
       }
     };
-
-    checkAuthAndRedirect();
     initSdk();
-  }, [onGo]);
+  }, []);
 
   const handleEmailLogin = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
     if (!email || !password) {
-      setError("이메일과 비밀번호를 입력하세요.");
+      setError('이메일과 비밀번호를 입력하세요.');
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      const response = await webApiService.loginAndStoreToken({ email, password });
+      await webApiService.loginAndStoreToken({ email, password });
 
       if (auto) {
         localStorage.setItem('autoLogin', 'true');
       }
 
       window.dispatchEvent(new CustomEvent('authStateChanged'));
-      onGo("/");
+      close();
     } catch (error: any) {
       console.error('로그인 실패:', error);
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      setError('이메일 또는 비밀번호가 올바르지 않습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialLogin = async (provider: "kakao" | "apple" | "google") => {
+  const handleSocialLogin = async (provider: 'kakao' | 'apple' | 'google') => {
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       // React Native WebView 환경인 경우
       if ((window as any).ReactNativeWebView) {
         (window as any).ReactNativeWebView.postMessage(
-          JSON.stringify({ type: "oauth", provider })
+          JSON.stringify({ type: 'oauth', provider })
         );
         return;
       }
 
-      if (provider === "kakao") {
+      if (provider === 'kakao') {
         await handleKakaoLogin();
-      } else if (provider === "google") {
-        setError("Google 로그인은 준비 중입니다.");
-      } else if (provider === "apple") {
-        setError("Apple 로그인은 iOS 앱에서만 사용 가능합니다.");
+      } else if (provider === 'google') {
+        setError('Google 로그인은 준비 중입니다.');
+      } else if (provider === 'apple') {
+        setError('Apple 로그인은 iOS 앱에서만 사용 가능합니다.');
       }
     } catch (error: any) {
       console.error(`${provider} 로그인 실패:`, error);
@@ -114,7 +110,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         },
         fail: () => {
           reject(new Error('카카오 로그인이 취소되었습니다.'));
-        }
+        },
       });
     });
 
@@ -128,17 +124,27 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           email: response.kakaoUserInfo.email,
           name: response.kakaoUserInfo.name,
           profileImage: response.kakaoUserInfo.profileImage,
-          provider: 'kakao' as const
+          provider: 'kakao' as const,
         },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       setSocialAuthState(socialStateData);
-      setTimeout(() => onGo(getSocialSignupUrl('kakao')), 100);
+      // 소셜 회원가입 처리 (추후 구현)
+      close();
+      setTimeout(() => {
+        window.location.href = getSocialSignupUrl('kakao');
+      }, 100);
     } else {
       window.dispatchEvent(new CustomEvent('authStateChanged'));
-      onGo("/");
+      close();
     }
+  };
+
+  // 회원가입 완료 핸들러
+  const handleSignupComplete = () => {
+    window.dispatchEvent(new CustomEvent('authStateChanged'));
+    close();
   };
 
   // 아이콘 컴포넌트
@@ -162,31 +168,64 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
   const GoogleIcon = () => (
     <svg viewBox="0 0 24 24" className="h-5 w-5">
-      <path fill="#EA4335" d="M5.27 9.76A6.97 6.97 0 0 1 12 5.03c1.66 0 3.16.56 4.35 1.5l3.25-3.25A11.94 11.94 0 0 0 12 0C7.39 0 3.4 2.6 1.39 6.41l3.88 3.35z"/>
-      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.76-3.09c-1.08.72-2.45 1.16-4.17 1.16-3.18 0-5.88-2.11-6.85-4.97l-3.91 3.02C3.34 21.35 7.3 24 12 24z"/>
-      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.76 3.09c2.2-2.03 3.46-5.02 3.46-8.91z"/>
-      <path fill="#FBBC05" d="M5.15 14.19A7.12 7.12 0 0 1 4.75 12c0-.76.14-1.5.37-2.19L1.24 6.46A11.93 11.93 0 0 0 0 12c0 1.92.45 3.74 1.24 5.35l3.91-3.16z"/>
+      <path
+        fill="#EA4335"
+        d="M5.27 9.76A6.97 6.97 0 0 1 12 5.03c1.66 0 3.16.56 4.35 1.5l3.25-3.25A11.94 11.94 0 0 0 12 0C7.39 0 3.4 2.6 1.39 6.41l3.88 3.35z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.76-3.09c-1.08.72-2.45 1.16-4.17 1.16-3.18 0-5.88-2.11-6.85-4.97l-3.91 3.02C3.34 21.35 7.3 24 12 24z"
+      />
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.76 3.09c2.2-2.03 3.46-5.02 3.46-8.91z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.15 14.19A7.12 7.12 0 0 1 4.75 12c0-.76.14-1.5.37-2.19L1.24 6.46A11.93 11.93 0 0 0 0 12c0 1.92.45 3.74 1.24 5.35l3.91-3.16z"
+      />
     </svg>
   );
 
-  // 이메일 로그인 폼
-  if (showEmailLogin) {
+  // 회원가입 뷰
+  if (currentView === 'signup') {
     return (
-      <div className="h-screen bg-white mx-auto max-w-md px-5 py-6 flex flex-col overflow-y-auto">
+      <SignupFlow
+        onComplete={handleSignupComplete}
+        onBack={() => setView('login')}
+        onGoToLogin={() => setView('email-login')}
+      />
+    );
+  }
+
+  // 이메일 로그인 뷰
+  if (currentView === 'email-login') {
+    return (
+      <div className="h-full bg-white flex flex-col mx-auto max-w-md px-5 py-6">
         {/* 뒤로가기 */}
         <button
-          onClick={() => setShowEmailLogin(false)}
+          onClick={() => setView('login')}
           className="flex items-center justify-center w-10 h-10 -ml-2 mb-4 rounded-full hover:bg-gray-100 transition-colors"
         >
-          <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-6 h-6 text-gray-800"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">로그인</h1>
         <p className="text-gray-500 mb-8">이메일로 로그인하세요</p>
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
+        <form onSubmit={handleEmailLogin} className="space-y-4 flex-1 flex flex-col">
           {error && (
             <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
               {error}
@@ -196,7 +235,10 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           <input
             type="email"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(""); }}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError('');
+            }}
             placeholder="이메일 주소"
             className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-blue-600 transition-colors"
             disabled={loading}
@@ -204,9 +246,12 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="relative">
             <input
-              type={showPw ? "text" : "password"}
+              type={showPw ? 'text' : 'password'}
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError('');
+              }}
               placeholder="비밀번호"
               className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-blue-600 transition-colors"
               disabled={loading}
@@ -217,7 +262,11 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               disabled={loading}
             >
-              {showPw ? <VscEye className="w-5 h-5" /> : <VscEyeClosed className="w-5 h-5" />}
+              {showPw ? (
+                <VscEye className="w-5 h-5" />
+              ) : (
+                <VscEyeClosed className="w-5 h-5" />
+              )}
             </button>
           </div>
 
@@ -233,26 +282,31 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             </label>
             <button
               type="button"
-              onClick={() => onGo("/find/pw")}
+              onClick={() => {
+                close();
+                setTimeout(() => (window.location.href = '/find/pw'), 100);
+              }}
               className="text-gray-500 hover:text-gray-700"
             >
               비밀번호 찾기
             </button>
           </div>
 
+          <div className="flex-1" />
+
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-xl bg-blue-600 py-4 text-base font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
           >
-            {loading ? "로그인 중..." : "로그인"}
+            {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center pb-6">
           <span className="text-gray-500 text-sm">계정이 없으신가요? </span>
           <button
-            onClick={() => onGo("/signup")}
+            onClick={() => setView('signup')}
             className="text-blue-600 text-sm font-medium hover:underline"
           >
             회원가입
@@ -262,15 +316,40 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
     );
   }
 
-  // 시작 화면 (소셜 로그인 우선)
+  // 메인 로그인 화면 (소셜 로그인 우선)
   return (
-    <div className="h-screen bg-white flex flex-col mx-auto max-w-md px-5 overflow-y-auto">
+    <div className="h-full bg-white flex flex-col mx-auto max-w-md px-5">
+      {/* 닫기 버튼 */}
+      <div className="flex items-center justify-end h-14">
+        <button
+          onClick={close}
+          className="flex items-center justify-center w-10 h-10 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
+          aria-label="닫기"
+        >
+          <svg
+            className="w-6 h-6 text-gray-800"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
       {/* 상단 여백 */}
       <div className="flex-1 min-h-[20px]" />
 
       {/* 로고 및 태그라인 */}
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">Handy</h1>
+        <div className="flex justify-center mb-3">
+          <Logo size="xl" />
+        </div>
         <p className="text-gray-500 text-lg">나를 위한 네일아트, 핸디</p>
       </div>
 
@@ -286,7 +365,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         {/* Apple 로그인 - iOS 앱에서만 표시 (WebView 감지) */}
         {(window as any).ReactNativeWebView && (
           <button
-            onClick={() => handleSocialLogin("apple")}
+            onClick={() => handleSocialLogin('apple')}
             disabled={loading}
             className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
           >
@@ -297,7 +376,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
         {/* 카카오 로그인 */}
         <button
-          onClick={() => handleSocialLogin("kakao")}
+          onClick={() => handleSocialLogin('kakao')}
           disabled={loading}
           className="w-full rounded-xl py-4 text-base font-medium text-gray-900 inline-flex items-center justify-center gap-3 disabled:bg-gray-200 transition-colors"
           style={{ backgroundColor: loading ? '#e5e7eb' : '#FEE500' }}
@@ -308,7 +387,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
         {/* Google 로그인 */}
         <button
-          onClick={() => handleSocialLogin("google")}
+          onClick={() => handleSocialLogin('google')}
           disabled={loading}
           className="w-full rounded-xl border-2 border-gray-200 bg-white py-4 text-base font-medium text-gray-700 inline-flex items-center justify-center gap-3 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
         >
@@ -326,7 +405,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
       {/* 이메일로 시작하기 */}
       <button
-        onClick={() => onGo("/signup")}
+        onClick={() => setView('signup')}
         disabled={loading}
         className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
       >
@@ -337,7 +416,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="mt-6 text-center">
         <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
         <button
-          onClick={() => setShowEmailLogin(true)}
+          onClick={() => setView('email-login')}
           className="text-blue-600 text-sm font-medium hover:underline"
         >
           로그인

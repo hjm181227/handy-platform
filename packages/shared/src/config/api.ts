@@ -134,6 +134,13 @@ export const API_ENDPOINTS = {
     WISHLIST_REMOVE: (productId: string) => `/api/auth/wishlist/${productId}`,
   },
 
+  // 휴대폰 인증
+  PHONE: {
+    SEND: '/api/auth/phone/send',                               // POST - 인증번호 발송
+    VERIFY: '/api/auth/phone/verify',                           // POST - 인증번호 확인
+    STATUS: (verificationId: string) => `/api/auth/phone/status/${verificationId}`, // GET - 인증 상태 조회
+  },
+
   // OAuth
   OAUTH: {
     KAKAO: '/api/auth/oauth/kakao',

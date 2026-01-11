@@ -2,9 +2,11 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { CartProvider } from './contexts/CartContext';
 import { LikesProvider } from './contexts/LikesContext';
+import { AuthModalProvider } from './contexts/AuthModalContext';
 import { AlertProvider } from './components/common';
 import { ToastNotification } from './components/common/ToastNotification';
 import { FloatingChatButton } from './components/common/FloatingChatButton';
+import { AuthModal } from './components/auth/AuthModal';
 import { Router } from './Router';
 import { useMiniRouter } from './utils';
 
@@ -41,11 +43,14 @@ export default function App() {
       <ToastProvider>
         <CartProvider>
           <LikesProvider>
-            <AlertProvider>
-              <Router />
-              <ToastNotification />
-              <FloatingButtonsContainer />
-            </AlertProvider>
+            <AuthModalProvider>
+              <AlertProvider>
+                <Router />
+                <ToastNotification />
+                <FloatingButtonsContainer />
+                <AuthModal />
+              </AlertProvider>
+            </AuthModalProvider>
           </LikesProvider>
         </CartProvider>
       </ToastProvider>

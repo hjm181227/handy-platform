@@ -186,3 +186,38 @@ body.webview-mode [data-apphide="true"] {
     /* PC: pb-6 (일반 패딩) */
   }
 }
+
+/* 회원가입 Step 전환 애니메이션 */
+.signup-flow {
+  overflow-x: hidden;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.3s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.3s ease-out forwards;
+}
