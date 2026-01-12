@@ -135,14 +135,72 @@ export const executeGoogleLogin = (): Promise<string> => {
       return;
     }
 
+    let isResolved = false;
+    let checkInterval: ReturnType<typeof setInterval> | null = null;
+    let visibilityHandler: (() => void) | null = null;
+
+    const cleanup = () => {
+      if (checkInterval) {
+        clearInterval(checkInterval);
+        checkInterval = null;
+      }
+      if (visibilityHandler) {
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        visibilityHandler = null;
+      }
+    };
+
+    const handleCancel = () => {
+      if (!isResolved) {
+        isResolved = true;
+        cleanup();
+        reject({ cancelled: true });
+      }
+    };
+
+    // visibility change 감지 (탭 전환 후 복귀)
+    let wasHidden = false;
+    visibilityHandler = () => {
+      if (document.hidden) {
+        wasHidden = true;
+      } else if (wasHidden && !isResolved) {
+        setTimeout(() => {
+          if (!isResolved) {
+            handleCancel();
+          }
+        }, 1000);
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    // 주기적으로 포커스 체크 (fallback)
+    let focusLostAt: number | null = null;
+    checkInterval = setInterval(() => {
+      if (isResolved) {
+        cleanup();
+        return;
+      }
+
+      if (!document.hasFocus()) {
+        if (!focusLostAt) focusLostAt = Date.now();
+      } else {
+        if (focusLostAt && Date.now() - focusLostAt > 300) {
+          handleCancel();
+        }
+        focusLostAt = null;
+      }
+    }, 200);
+
     try {
-      // Token Client 초기화 (매번 새로 생성하여 팝업이 정상 동작하도록 함)
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'email profile openid',
         callback: (response: any) => {
+          if (isResolved) return;
+
           if (response.error) {
-            console.error('Google 로그인 에러:', response.error);
+            isResolved = true;
+            cleanup();
             if (response.error === 'popup_closed_by_user') {
               reject({ cancelled: true });
             } else {
@@ -152,14 +210,19 @@ export const executeGoogleLogin = (): Promise<string> => {
           }
 
           if (response.access_token) {
-            console.log('Google 로그인 성공');
+            isResolved = true;
+            cleanup();
             resolve(response.access_token);
           } else {
+            isResolved = true;
+            cleanup();
             reject(new Error('Access Token을 받지 못했습니다.'));
           }
         },
         error_callback: (error: any) => {
-          console.error('Google 로그인 에러 콜백:', error);
+          if (isResolved) return;
+          isResolved = true;
+          cleanup();
           if (error.type === 'popup_closed') {
             reject({ cancelled: true });
           } else {
@@ -168,10 +231,10 @@ export const executeGoogleLogin = (): Promise<string> => {
         },
       });
 
-      // 로그인 팝업 요청
       tokenClient.requestAccessToken({ prompt: 'select_account' });
     } catch (error) {
-      console.error('Google 로그인 실행 중 오류:', error);
+      isResolved = true;
+      cleanup();
       reject(new Error('Google 로그인 실행에 실패했습니다.'));
     }
   });

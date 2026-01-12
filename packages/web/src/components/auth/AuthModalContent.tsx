@@ -20,6 +20,12 @@ export function AuthModalContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // View가 변경되면 loading 상태 리셋
+  useEffect(() => {
+    setLoading(false);
+    setError('');
+  }, [currentView]);
+
   // 소셜 로그인 SDK 초기화
   useEffect(() => {
     const initSdks = async () => {
@@ -124,42 +130,69 @@ export function AuthModalContent() {
       throw new Error('카카오 Auth 모듈을 사용할 수 없습니다.');
     }
 
-    // 팝업 열림 감지를 위한 타임아웃 설정
     let isResolved = false;
-    let focusCheckInterval: NodeJS.Timeout | null = null;
+    let checkInterval: ReturnType<typeof setInterval> | null = null;
+    let visibilityHandler: (() => void) | null = null;
 
     const accessToken = await new Promise<string>((resolve, reject) => {
-      // 팝업이 닫혔는지 확인하는 폴링 (fail 콜백이 호출되지 않는 경우 대비)
-      const startFocusCheck = () => {
-        let focusLostTime: number | null = null;
-
-        focusCheckInterval = setInterval(() => {
-          if (isResolved) {
-            if (focusCheckInterval) clearInterval(focusCheckInterval);
-            return;
-          }
-
-          // 포커스를 잃었다가 다시 얻으면 팝업이 닫힌 것으로 간주
-          if (!document.hasFocus()) {
-            focusLostTime = Date.now();
-          } else if (focusLostTime && Date.now() - focusLostTime > 500) {
-            // 포커스 복귀 후 500ms 지났으면 팝업이 닫힌 것으로 처리
-            if (!isResolved) {
-              isResolved = true;
-              if (focusCheckInterval) clearInterval(focusCheckInterval);
-              reject({ cancelled: true });
-            }
-          }
-        }, 200);
+      const cleanup = () => {
+        if (checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
+        }
+        if (visibilityHandler) {
+          document.removeEventListener('visibilitychange', visibilityHandler);
+          visibilityHandler = null;
+        }
       };
 
-      // 100ms 후에 포커스 체크 시작 (팝업 열리는 시간 대기)
-      setTimeout(startFocusCheck, 100);
+      const handleCancel = () => {
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          reject({ cancelled: true });
+        }
+      };
+
+      // visibility change 감지 (탭 전환 후 복귀)
+      let wasHidden = false;
+      visibilityHandler = () => {
+        if (document.hidden) {
+          wasHidden = true;
+        } else if (wasHidden && !isResolved) {
+          // 탭이 다시 보이게 됐고 아직 완료 안됐으면 1초 후 체크
+          setTimeout(() => {
+            if (!isResolved) {
+              handleCancel();
+            }
+          }, 1000);
+        }
+      };
+      document.addEventListener('visibilitychange', visibilityHandler);
+
+      // 주기적으로 포커스 체크 (fallback)
+      let focusLostAt: number | null = null;
+      checkInterval = setInterval(() => {
+        if (isResolved) {
+          cleanup();
+          return;
+        }
+
+        if (!document.hasFocus()) {
+          if (!focusLostAt) focusLostAt = Date.now();
+        } else {
+          // 포커스 복귀 - 팝업이 닫힌 것으로 간주
+          if (focusLostAt && Date.now() - focusLostAt > 300) {
+            handleCancel();
+          }
+          focusLostAt = null;
+        }
+      }, 200);
 
       window.Kakao.Auth.login({
         success: (authObj: any) => {
           isResolved = true;
-          if (focusCheckInterval) clearInterval(focusCheckInterval);
+          cleanup();
 
           if (authObj?.access_token) {
             resolve(authObj.access_token);
@@ -167,10 +200,9 @@ export function AuthModalContent() {
             reject(new Error('액세스 토큰을 받지 못했습니다.'));
           }
         },
-        fail: (err: any) => {
+        fail: () => {
           isResolved = true;
-          if (focusCheckInterval) clearInterval(focusCheckInterval);
-          // 사용자가 취소한 경우 - 에러 대신 조용히 처리
+          cleanup();
           reject({ cancelled: true });
         },
       });
@@ -258,6 +290,8 @@ export function AuthModalContent() {
   const handleNaverLogin = () => {
     // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     // 백엔드가 토큰 교환 후 /auth/naver/callback으로 리다이렉트함
+    // 리다이렉트 전에 loading 해제 (페이지를 떠나므로)
+    setLoading(false);
     executeNaverLogin();
   };
 
