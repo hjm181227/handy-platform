@@ -123,7 +123,7 @@ export function AuthModalContent() {
 
     // API 베이스 URL에서 백엔드 주소 가져오기
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
-    window.location.href = `${apiBaseUrl}/api/oauth/kakao/login`;
+    window.location.href = `${apiBaseUrl}/api/auth/oauth/kakao/login`;
   };
 
   const handleGoogleLogin = async () => {

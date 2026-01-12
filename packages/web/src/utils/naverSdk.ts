@@ -3,12 +3,12 @@
 
 /**
  * 네이버 로그인 실행 (백엔드 리다이렉트 방식)
- * 백엔드의 /api/oauth/naver/login 엔드포인트로 리다이렉트합니다.
+ * 백엔드의 /api/auth/oauth/naver/login 엔드포인트로 리다이렉트합니다.
  * 백엔드가 전체 OAuth 흐름을 처리하고, 완료 후 프론트엔드로 토큰과 함께 리다이렉트합니다.
  */
 export const executeNaverLogin = (): void => {
   const apiBaseUrl = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:11000';
-  const naverLoginUrl = `${apiBaseUrl}/api/oauth/naver/login`;
+  const naverLoginUrl = `${apiBaseUrl}/api/auth/oauth/naver/login`;
 
   console.log('Naver 로그인: 백엔드로 리다이렉트', naverLoginUrl);
 
