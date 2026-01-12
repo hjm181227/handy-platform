@@ -167,7 +167,7 @@ export abstract class BaseAuthService extends BaseApiService {
     const endpoint = API_ENDPOINTS.OAUTH[provider.toUpperCase() as keyof typeof API_ENDPOINTS.OAUTH] as string;
     return this.request<OAuthLoginResponse>(endpoint, {
       method: 'POST',
-      body: JSON.stringify({ accessToken, access_token: accessToken }),
+      body: JSON.stringify({ accessToken }),
       enableRetry: false,
     });
   }
