@@ -142,19 +142,19 @@ export const API_ENDPOINTS = {
     STATUS: (verificationId: string) => `/api/auth/phone/status/${verificationId}`, // GET - 인증 상태 조회
   },
 
-  // OAuth
+  // OAuth (경로: /api/auth/oauth/...)
   OAUTH: {
-    KAKAO: '/api/oauth/kakao',
-    KAKAO_AUTH_DATA: (stateId: string) => `/api/oauth/kakao/auth-data/${stateId}`,  // 카카오 OAuth 인증 데이터 조회 (일회용)
-    GOOGLE: '/api/oauth/google',
-    APPLE: '/api/oauth/apple',
-    NAVER: '/api/oauth/naver',
-    NAVER_AUTH_DATA: (stateId: string) => `/api/oauth/naver/auth-data/${stateId}`,  // 네이버 OAuth 인증 데이터 조회 (일회용)
-    COMPLETE_SIGNUP: '/api/oauth/social/complete-signup',  // 소셜 회원가입 완료 (약관 동의 후)
-    SIGNUP: (provider: string) => `/api/oauth/${provider}/signup`,
-    LINK: (provider: string) => `/api/oauth/link/${provider}`,
-    UNLINK: (provider: string) => `/api/oauth/unlink/${provider}`,
-    LINKED: '/api/oauth/linked',
+    KAKAO: '/api/auth/oauth/kakao',
+    KAKAO_AUTH_DATA: (stateId: string) => `/api/auth/oauth/kakao/auth-data/${stateId}`,  // 카카오 OAuth 인증 데이터 조회 (일회용)
+    GOOGLE: '/api/auth/oauth/google',
+    APPLE: '/api/auth/oauth/apple',
+    NAVER: '/api/auth/oauth/naver',
+    NAVER_AUTH_DATA: (stateId: string) => `/api/auth/oauth/naver/auth-data/${stateId}`,  // 네이버 OAuth 인증 데이터 조회 (일회용)
+    COMPLETE_SIGNUP: '/api/auth/oauth/social/complete-signup',  // 소셜 회원가입 완료 (약관 동의 후)
+    SIGNUP: (provider: string) => `/api/auth/oauth/${provider}/signup`,
+    LINK: (provider: string) => `/api/auth/oauth/link/${provider}`,
+    UNLINK: (provider: string) => `/api/auth/oauth/unlink/${provider}`,
+    LINKED: '/api/auth/oauth/linked',
   },
 
   // 상품 (서버 API 스펙에 완전 일치)
