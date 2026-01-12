@@ -1,5 +1,6 @@
-import { useSignupFlow, SignupStep } from '../../../hooks/useSignupFlow';
+import { useSignupFlow, SignupStep, AgreedTerms } from '../../../hooks/useSignupFlow';
 import {
+  TermsStep,
   EmailStep,
   PasswordStep,
   NameStep,
@@ -30,6 +31,12 @@ export function SignupFlow({ onComplete, onBack, onGoToLogin }: SignupFlowProps)
     submitSignup,
   } = useSignupFlow();
 
+  // 약관 동의 단계 완료
+  const handleTermsNext = (agreedTerms: AgreedTerms) => {
+    updateData('agreedTerms', agreedTerms);
+    nextStep();
+  };
+
   // 이메일 단계 완료
   const handleEmailNext = (email: string) => {
     updateData('email', email);
@@ -59,7 +66,7 @@ export function SignupFlow({ onComplete, onBack, onGoToLogin }: SignupFlowProps)
 
   // 뒤로가기 핸들러
   const handleBack = () => {
-    if (currentStep === 'email') {
+    if (currentStep === 'terms') {
       onBack(); // 회원가입 플로우 종료
     } else {
       prevStep();
@@ -74,6 +81,16 @@ export function SignupFlow({ onComplete, onBack, onGoToLogin }: SignupFlowProps)
   // 현재 단계에 맞는 컴포넌트 렌더링
   const renderStep = () => {
     switch (currentStep) {
+      case 'terms':
+        return (
+          <TermsStep
+            onNext={handleTermsNext}
+            onBack={handleBack}
+            stepIndex={stepIndex + 1}
+            totalSteps={totalSteps - 1}
+          />
+        );
+
       case 'email':
         return (
           <EmailStep

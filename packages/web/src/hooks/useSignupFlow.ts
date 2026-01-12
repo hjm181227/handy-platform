@@ -2,7 +2,15 @@ import { useState, useCallback } from 'react';
 import { webApiService } from '../services/apiService';
 
 // 회원가입 단계 정의
-export type SignupStep = 'email' | 'password' | 'name' | 'phone' | 'complete';
+export type SignupStep = 'terms' | 'email' | 'password' | 'name' | 'phone' | 'complete';
+
+// 약관 동의 데이터
+export interface AgreedTerms {
+  service: boolean;
+  privacy: boolean;
+  marketing: boolean;
+  age: boolean;
+}
 
 // 회원가입 데이터
 export interface SignupFormData {
@@ -11,6 +19,7 @@ export interface SignupFormData {
   name: string;
   phone: string;
   verificationId: string;
+  agreedTerms: AgreedTerms | null;
 }
 
 // Hook 상태
@@ -25,7 +34,7 @@ interface SignupFlowState {
 }
 
 // 단계 순서
-const STEP_ORDER: SignupStep[] = ['email', 'password', 'name', 'phone', 'complete'];
+const STEP_ORDER: SignupStep[] = ['terms', 'email', 'password', 'name', 'phone', 'complete'];
 
 // 초기 상태
 const initialData: SignupFormData = {
@@ -34,11 +43,12 @@ const initialData: SignupFormData = {
   name: '',
   phone: '',
   verificationId: '',
+  agreedTerms: null,
 };
 
 export function useSignupFlow() {
   const [state, setState] = useState<SignupFlowState>({
-    currentStep: 'email',
+    currentStep: 'terms',
     stepIndex: 0,
     totalSteps: STEP_ORDER.length,
     direction: 'forward',
@@ -205,7 +215,7 @@ export function useSignupFlow() {
   // 초기화
   const reset = useCallback(() => {
     setState({
-      currentStep: 'email',
+      currentStep: 'terms',
       stepIndex: 0,
       totalSteps: STEP_ORDER.length,
       direction: 'forward',

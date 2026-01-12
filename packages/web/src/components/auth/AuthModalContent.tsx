@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { webApiService } from '../../services/apiService';
 import { initKakaoSdk } from '../../utils/kakaoSdk';
 import { VscEye, VscEyeClosed } from 'react-icons/vsc';
 import { SignupFlow } from './signup/SignupFlow';
+import { SocialTermsStep } from './SocialTermsStep';
 import { Logo } from '../common/Logo';
 
 export function AuthModalContent() {
-  const { currentView, setView, close } = useAuthModal();
+  const { currentView, setView, close, socialNewUser, openSocialTerms } = useAuthModal();
 
   // 이메일 로그인 상태
   const [email, setEmail] = useState('');
@@ -66,6 +67,7 @@ export function AuthModalContent() {
         (window as any).ReactNativeWebView.postMessage(
           JSON.stringify({ type: 'oauth', provider })
         );
+        setLoading(false);
         return;
       }
 
@@ -73,13 +75,19 @@ export function AuthModalContent() {
         await handleKakaoLogin();
       } else if (provider === 'google') {
         setError('Google 로그인은 준비 중입니다.');
+        setLoading(false);
       } else if (provider === 'apple') {
         setError('Apple 로그인은 iOS 앱에서만 사용 가능합니다.');
+        setLoading(false);
       }
     } catch (error: any) {
+      // 사용자가 취소한 경우 - 에러 표시 없이 종료
+      if (error?.cancelled) {
+        setLoading(false);
+        return;
+      }
       console.error(`${provider} 로그인 실패:`, error);
       setError(error.message || `${provider} 로그인에 실패했습니다.`);
-    } finally {
       setLoading(false);
     }
   };
@@ -98,33 +106,100 @@ export function AuthModalContent() {
       throw new Error('카카오 Auth 모듈을 사용할 수 없습니다.');
     }
 
+    // 팝업 열림 감지를 위한 타임아웃 설정
+    let isResolved = false;
+    let focusCheckInterval: NodeJS.Timeout | null = null;
+
     const accessToken = await new Promise<string>((resolve, reject) => {
+      // 팝업이 닫혔는지 확인하는 폴링 (fail 콜백이 호출되지 않는 경우 대비)
+      const startFocusCheck = () => {
+        let focusLostTime: number | null = null;
+
+        focusCheckInterval = setInterval(() => {
+          if (isResolved) {
+            if (focusCheckInterval) clearInterval(focusCheckInterval);
+            return;
+          }
+
+          // 포커스를 잃었다가 다시 얻으면 팝업이 닫힌 것으로 간주
+          if (!document.hasFocus()) {
+            focusLostTime = Date.now();
+          } else if (focusLostTime && Date.now() - focusLostTime > 500) {
+            // 포커스 복귀 후 500ms 지났으면 팝업이 닫힌 것으로 처리
+            if (!isResolved) {
+              isResolved = true;
+              if (focusCheckInterval) clearInterval(focusCheckInterval);
+              reject({ cancelled: true });
+            }
+          }
+        }, 200);
+      };
+
+      // 100ms 후에 포커스 체크 시작 (팝업 열리는 시간 대기)
+      setTimeout(startFocusCheck, 100);
+
       window.Kakao.Auth.login({
         success: (authObj: any) => {
+          isResolved = true;
+          if (focusCheckInterval) clearInterval(focusCheckInterval);
+
           if (authObj?.access_token) {
             resolve(authObj.access_token);
           } else {
             reject(new Error('액세스 토큰을 받지 못했습니다.'));
           }
         },
-        fail: () => {
-          reject(new Error('카카오 로그인이 취소되었습니다.'));
+        fail: (err: any) => {
+          isResolved = true;
+          if (focusCheckInterval) clearInterval(focusCheckInterval);
+          // 사용자가 취소한 경우 - 에러 대신 조용히 처리
+          reject({ cancelled: true });
         },
       });
     });
 
     const response = await webApiService.oauthLogin('kakao', accessToken);
 
-    // 소셜 로그인 성공 (신규 사용자는 자동으로 계정 생성됨)
-    window.dispatchEvent(new CustomEvent('authStateChanged', {
-      detail: { isNewUser: response.isNewUser }
-    }));
-    close();
-
-    // 신규 가입자인 경우 환영 메시지 표시 (선택적)
+    // 신규 가입자인 경우 약관 동의 화면으로 이동
     if (response.isNewUser) {
-      console.log('🎉 새로운 회원님 환영합니다!');
+      // 카카오에서 사용자 정보 가져오기
+      let kakaoUserInfo = { id: '', name: '', email: '', profileImage: '' };
+
+      try {
+        if (window.Kakao.API?.request) {
+          const userInfo = await new Promise<any>((resolve, reject) => {
+            window.Kakao.API.request({
+              url: '/v2/user/me',
+              success: resolve,
+              fail: reject,
+            });
+          });
+          kakaoUserInfo = {
+            id: String(userInfo.id),
+            name: userInfo.kakao_account?.profile?.nickname || '',
+            email: userInfo.kakao_account?.email || '',
+            profileImage: userInfo.kakao_account?.profile?.profile_image_url || '',
+          };
+        }
+      } catch (e) {
+        console.warn('카카오 사용자 정보 가져오기 실패:', e);
+      }
+
+      setLoading(false);
+      openSocialTerms({
+        provider: 'kakao',
+        userId: kakaoUserInfo.id,
+        name: kakaoUserInfo.name,
+        email: kakaoUserInfo.email,
+        profileImage: kakaoUserInfo.profileImage,
+      });
+      return;
     }
+
+    // 기존 사용자 로그인 성공
+    window.dispatchEvent(new CustomEvent('authStateChanged'));
+    setLoading(false);
+    close();
   };
 
   // 회원가입 완료 핸들러
@@ -172,6 +247,18 @@ export function AuthModalContent() {
       />
     </svg>
   );
+
+  // 소셜 로그인 약관 동의 뷰
+  if (currentView === 'social-terms' && socialNewUser) {
+    return (
+      <SocialTermsStep
+        userInfo={socialNewUser}
+        onComplete={() => {
+          close();
+        }}
+      />
+    );
+  }
 
   // 회원가입 뷰
   if (currentView === 'signup') {

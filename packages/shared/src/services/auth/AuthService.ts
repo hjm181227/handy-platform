@@ -231,6 +231,19 @@ export abstract class BaseAuthService extends BaseApiService {
     });
   }
 
+  // 약관 동의 업데이트
+  async updateTermsAgreement(terms: {
+    serviceTerms: boolean;
+    privacyPolicy: boolean;
+    marketingConsent: boolean;
+    ageVerification: boolean;
+  }): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.UPDATE_TERMS, {
+      method: 'PUT',
+      body: JSON.stringify(terms),
+    });
+  }
+
   // 추상 메서드 - 각 플랫폼에서 구현해야 함
   abstract setAuthToken(token: string, user?: User): Promise<void>;
   abstract clearAuthToken(): Promise<void>;
