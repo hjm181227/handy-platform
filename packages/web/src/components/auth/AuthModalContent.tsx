@@ -3,6 +3,7 @@ import { useAuthModal } from '../../contexts/AuthModalContext';
 import { webApiService } from '../../services/apiService';
 import { initKakaoSdk } from '../../utils/kakaoSdk';
 import { initGoogleSdk, executeGoogleLogin } from '../../utils/googleSdk';
+import { initNaverSdk, executeNaverLogin } from '../../utils/naverSdk';
 import { VscEye, VscEyeClosed } from 'react-icons/vsc';
 import { SignupFlow } from './signup/SignupFlow';
 import { SocialTermsStep } from './SocialTermsStep';
@@ -35,6 +36,13 @@ export function AuthModalContent() {
       } catch (error) {
         console.warn('Google SDK 초기화 실패:', error);
       }
+
+      // Naver SDK 초기화
+      try {
+        await initNaverSdk();
+      } catch (error) {
+        console.warn('Naver SDK 초기화 실패:', error);
+      }
     };
     initSdks();
   }, []);
@@ -66,7 +74,7 @@ export function AuthModalContent() {
     }
   };
 
-  const handleSocialLogin = async (provider: 'kakao' | 'apple' | 'google') => {
+  const handleSocialLogin = async (provider: 'kakao' | 'apple' | 'google' | 'naver') => {
     setLoading(true);
     setError('');
 
@@ -84,6 +92,8 @@ export function AuthModalContent() {
         await handleKakaoLogin();
       } else if (provider === 'google') {
         await handleGoogleLogin();
+      } else if (provider === 'naver') {
+        await handleNaverLogin();
       } else if (provider === 'apple') {
         setError('Apple 로그인은 iOS 앱에서만 사용 가능합니다.');
         setLoading(false);
@@ -245,6 +255,41 @@ export function AuthModalContent() {
     }
   };
 
+  const handleNaverLogin = async () => {
+    try {
+      // Naver 로그인 실행 (팝업)
+      const accessToken = await executeNaverLogin();
+
+      // 백엔드로 토큰 전송하여 로그인/회원가입 처리
+      const response = await webApiService.oauthLogin('naver', accessToken);
+
+      // 신규 가입자인 경우 약관 동의 화면으로 이동
+      if (response.isNewUser) {
+        setLoading(false);
+        openSocialTerms({
+          provider: 'naver',
+          userId: response.user?.id || '',
+          name: response.user?.name || '',
+          email: response.user?.email || '',
+          profileImage: response.user?.avatar || '',
+        });
+        return;
+      }
+
+      // 기존 사용자 로그인 성공
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+      setLoading(false);
+      close();
+    } catch (error: any) {
+      // 사용자가 취소한 경우 - 에러 표시 없이 종료
+      if (error?.cancelled) {
+        setLoading(false);
+        return;
+      }
+      throw error;
+    }
+  };
+
   // 회원가입 완료 핸들러
   const handleSignupComplete = () => {
     window.dispatchEvent(new CustomEvent('authStateChanged'));
@@ -287,6 +332,15 @@ export function AuthModalContent() {
       <path
         fill="#FBBC05"
         d="M5.15 14.19A7.12 7.12 0 0 1 4.75 12c0-.76.14-1.5.37-2.19L1.24 6.46A11.93 11.93 0 0 0 0 12c0 1.92.45 3.74 1.24 5.35l3.91-3.16z"
+      />
+    </svg>
+  );
+
+  const NaverIcon = () => (
+    <svg viewBox="0 0 24 24" className="h-5 w-5">
+      <path
+        fill="#FFFFFF"
+        d="M16.27 12.99L7.47 3H3v18h4.73V11.01L16.53 21H21V3h-4.73v9.99z"
       />
     </svg>
   );
@@ -509,6 +563,17 @@ export function AuthModalContent() {
         >
           <GoogleIcon />
           Google로 계속하기
+        </button>
+
+        {/* 네이버 로그인 */}
+        <button
+          onClick={() => handleSocialLogin('naver')}
+          disabled={loading}
+          className="w-full rounded-xl py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 disabled:bg-gray-300 transition-colors"
+          style={{ backgroundColor: loading ? '#d1d5db' : '#03C75A' }}
+        >
+          <NaverIcon />
+          네이버로 계속하기
         </button>
       </div>
 

@@ -70,6 +70,9 @@ import { PaymentCancel } from './components/pages/PaymentCancel';
 import { PaymentFail } from './components/pages/PaymentFail';
 import { PaymentTest } from './components/pages/PaymentTest';
 
+// OAuth Callback Components
+import { NaverCallbackPage } from './components/pages/NaverCallbackPage';
+
 // Footer Components
 import {
   AboutCompanyPage,
@@ -824,6 +827,9 @@ export function Router() {
   // /login과 /signup은 모달로 처리 - 홈으로 리다이렉트하고 모달 열기
   else if (pathname.startsWith('/login')) {
     screen = <AuthRedirect nav={nav} openModal={openLogin} />;
+  }
+  else if (pathname === '/auth/naver/callback') {
+    screen = <NaverCallbackPage />;
   }
   else if (pathname.startsWith('/auth/social/signup')) {
     screen = <SocialSignupPage onGo={nav} />;
