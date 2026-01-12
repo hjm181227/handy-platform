@@ -1,0 +1,205 @@
+// Google Sign-In SDK 초기화 및 관리 유틸리티
+
+// Google Identity Services 전역 타입 정의
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: (callback?: (notification: any) => void) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          disableAutoSelect: () => void;
+          revoke: (hint: string, callback?: () => void) => void;
+        };
+        oauth2: {
+          initTokenClient: (config: any) => any;
+          initCodeClient: (config: any) => any;
+          hasGrantedAllScopes: (tokenResponse: any, ...scopes: string[]) => boolean;
+        };
+      };
+    };
+  }
+}
+
+// Google Client ID (환경 변수에서 가져옴)
+const GOOGLE_CLIENT_ID = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || '';
+
+// 디버깅용: Client ID가 제대로 로드되었는지 확인
+console.log('Google Client ID 로드됨:', GOOGLE_CLIENT_ID ? '✅ 설정됨' : '❌ 설정되지 않음');
+
+let isGoogleScriptLoaded = false;
+let tokenClient: any = null;
+
+/**
+ * Google Identity Services 스크립트를 동적으로 로드합니다
+ */
+const loadGoogleScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    // 이미 로드된 경우
+    if (window.google?.accounts?.oauth2) {
+      console.log('Google SDK는 이미 로드되어 있습니다.');
+      isGoogleScriptLoaded = true;
+      resolve();
+      return;
+    }
+
+    // 이미 스크립트 태그가 있는지 확인
+    const existingScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (existingScript) {
+      // 스크립트가 있지만 아직 로드되지 않은 경우 대기
+      let attempts = 0;
+      const maxAttempts = 50;
+
+      const checkLoaded = () => {
+        attempts++;
+        if (window.google?.accounts?.oauth2) {
+          isGoogleScriptLoaded = true;
+          resolve();
+          return;
+        }
+        if (attempts >= maxAttempts) {
+          reject(new Error('Google SDK 로딩 시간 초과'));
+          return;
+        }
+        setTimeout(checkLoaded, 100);
+      };
+
+      checkLoaded();
+      return;
+    }
+
+    // 스크립트 동적 로드
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => {
+      console.log('Google SDK 스크립트 로드 완료');
+      // 로드 후 초기화 대기
+      let attempts = 0;
+      const maxAttempts = 50;
+
+      const checkReady = () => {
+        attempts++;
+        if (window.google?.accounts?.oauth2) {
+          isGoogleScriptLoaded = true;
+          resolve();
+          return;
+        }
+        if (attempts >= maxAttempts) {
+          reject(new Error('Google SDK 초기화 시간 초과'));
+          return;
+        }
+        setTimeout(checkReady, 100);
+      };
+
+      checkReady();
+    };
+
+    script.onerror = () => {
+      reject(new Error('Google SDK 스크립트 로드 실패'));
+    };
+
+    document.head.appendChild(script);
+  });
+};
+
+/**
+ * Google SDK를 초기화합니다
+ */
+export const initGoogleSdk = async (): Promise<void> => {
+  try {
+    if (!GOOGLE_CLIENT_ID) {
+      throw new Error('Google Client ID가 설정되지 않았습니다.');
+    }
+
+    await loadGoogleScript();
+    console.log('Google SDK 준비 완료');
+  } catch (error) {
+    console.error('Google SDK 초기화 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * Google 로그인을 실행합니다 (팝업 방식으로 Access Token 획득)
+ */
+export const executeGoogleLogin = (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2) {
+      reject(new Error('Google SDK가 초기화되지 않았습니다.'));
+      return;
+    }
+
+    if (!GOOGLE_CLIENT_ID) {
+      reject(new Error('Google Client ID가 설정되지 않았습니다.'));
+      return;
+    }
+
+    try {
+      // Token Client 초기화 (매번 새로 생성하여 팝업이 정상 동작하도록 함)
+      tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'email profile openid',
+        callback: (response: any) => {
+          if (response.error) {
+            console.error('Google 로그인 에러:', response.error);
+            if (response.error === 'popup_closed_by_user') {
+              reject({ cancelled: true });
+            } else {
+              reject(new Error(response.error_description || 'Google 로그인에 실패했습니다.'));
+            }
+            return;
+          }
+
+          if (response.access_token) {
+            console.log('Google 로그인 성공');
+            resolve(response.access_token);
+          } else {
+            reject(new Error('Access Token을 받지 못했습니다.'));
+          }
+        },
+        error_callback: (error: any) => {
+          console.error('Google 로그인 에러 콜백:', error);
+          if (error.type === 'popup_closed') {
+            reject({ cancelled: true });
+          } else {
+            reject(new Error('Google 로그인 중 오류가 발생했습니다.'));
+          }
+        },
+      });
+
+      // 로그인 팝업 요청
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    } catch (error) {
+      console.error('Google 로그인 실행 중 오류:', error);
+      reject(new Error('Google 로그인 실행에 실패했습니다.'));
+    }
+  });
+};
+
+/**
+ * Google 로그아웃 (토큰 무효화)
+ */
+export const executeGoogleLogout = (accessToken?: string): Promise<void> => {
+  return new Promise((resolve) => {
+    if (accessToken && window.google?.accounts?.oauth2) {
+      // 토큰 revoke
+      window.google.accounts.id.revoke(accessToken, () => {
+        console.log('Google 토큰 무효화 완료');
+        resolve();
+      });
+    } else {
+      resolve();
+    }
+  });
+};
+
+/**
+ * Google SDK가 초기화되었는지 확인합니다
+ */
+export const isGoogleSdkReady = (): boolean => {
+  return isGoogleScriptLoaded && !!window.google?.accounts?.oauth2;
+};

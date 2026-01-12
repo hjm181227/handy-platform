@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { webApiService } from '../../services/apiService';
 import { initKakaoSdk } from '../../utils/kakaoSdk';
+import { initGoogleSdk, executeGoogleLogin } from '../../utils/googleSdk';
 import { VscEye, VscEyeClosed } from 'react-icons/vsc';
 import { SignupFlow } from './signup/SignupFlow';
 import { SocialTermsStep } from './SocialTermsStep';
@@ -18,16 +19,24 @@ export function AuthModalContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 카카오 SDK 초기화
+  // 소셜 로그인 SDK 초기화
   useEffect(() => {
-    const initSdk = async () => {
+    const initSdks = async () => {
+      // 카카오 SDK 초기화
       try {
         await initKakaoSdk();
       } catch (error) {
         console.warn('카카오 SDK 초기화 실패:', error);
       }
+
+      // Google SDK 초기화
+      try {
+        await initGoogleSdk();
+      } catch (error) {
+        console.warn('Google SDK 초기화 실패:', error);
+      }
     };
-    initSdk();
+    initSdks();
   }, []);
 
   const handleEmailLogin = async (e?: React.FormEvent<HTMLFormElement>) => {
@@ -74,8 +83,7 @@ export function AuthModalContent() {
       if (provider === 'kakao') {
         await handleKakaoLogin();
       } else if (provider === 'google') {
-        setError('Google 로그인은 준비 중입니다.');
-        setLoading(false);
+        await handleGoogleLogin();
       } else if (provider === 'apple') {
         setError('Apple 로그인은 iOS 앱에서만 사용 가능합니다.');
         setLoading(false);
@@ -200,6 +208,41 @@ export function AuthModalContent() {
     window.dispatchEvent(new CustomEvent('authStateChanged'));
     setLoading(false);
     close();
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Google 로그인 실행 (팝업)
+      const accessToken = await executeGoogleLogin();
+
+      // 백엔드로 토큰 전송하여 로그인/회원가입 처리
+      const response = await webApiService.oauthLogin('google', accessToken);
+
+      // 신규 가입자인 경우 약관 동의 화면으로 이동
+      if (response.isNewUser) {
+        setLoading(false);
+        openSocialTerms({
+          provider: 'google',
+          userId: response.user?.id || '',
+          name: response.user?.name || '',
+          email: response.user?.email || '',
+          profileImage: response.user?.avatar || '',
+        });
+        return;
+      }
+
+      // 기존 사용자 로그인 성공
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+      setLoading(false);
+      close();
+    } catch (error: any) {
+      // 사용자가 취소한 경우 - 에러 표시 없이 종료
+      if (error?.cancelled) {
+        setLoading(false);
+        return;
+      }
+      throw error;
+    }
   };
 
   // 회원가입 완료 핸들러
