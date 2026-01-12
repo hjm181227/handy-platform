@@ -5,7 +5,7 @@ export type AuthModalView = 'login' | 'signup' | 'email-login' | 'social-terms' 
 
 // 소셜 로그인 신규 가입자 정보
 export interface SocialNewUserInfo {
-  provider: 'kakao' | 'google' | 'apple';
+  provider: 'kakao' | 'google' | 'apple' | 'naver';
   userId: string;
   email?: string;
   name?: string;

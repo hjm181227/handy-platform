@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { webApiService } from '../../services/apiService';
+import { SocialTermsStep } from '../auth/SocialTermsStep';
+import { SocialNewUserInfo } from '../../contexts/AuthModalContext';
 
 interface NaverCallbackPageProps {
   onGo?: (path: string) => void;
@@ -12,8 +14,9 @@ interface NaverCallbackPageProps {
  * URL 쿼리 파라미터에서 JWT 토큰을 추출하여 저장하고 로그인을 완료합니다.
  */
 export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'terms'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [newUserInfo, setNewUserInfo] = useState<SocialNewUserInfo | null>(null);
 
   useEffect(() => {
     const processCallback = async () => {
@@ -57,18 +60,43 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
           // 프로필 로드 실패해도 토큰은 저장됨 - 다음 페이지에서 재시도 가능
         }
 
-        // 인증 상태 변경 이벤트 발생
-        window.dispatchEvent(new CustomEvent('authStateChanged'));
+        // 신규 사용자인 경우 약관 동의 화면 표시
+        if (isNewUser) {
+          console.log('신규 사용자 - 약관 동의 필요');
 
+          // 사용자 정보 가져오기
+          let userInfo: SocialNewUserInfo = {
+            provider: 'naver',
+            userId: '',
+            name: '',
+            email: '',
+          };
+
+          try {
+            const profileResponse = await webApiService.auth.getUserProfile();
+            if (profileResponse.data?.user) {
+              userInfo = {
+                provider: 'naver',
+                userId: String(profileResponse.data.user.id || ''),
+                name: profileResponse.data.user.name || '',
+                email: profileResponse.data.user.email || '',
+                profileImage: profileResponse.data.user.avatar || '',
+              };
+            }
+          } catch (e) {
+            console.warn('사용자 정보 로드 실패:', e);
+          }
+
+          setNewUserInfo(userInfo);
+          setStatus('terms');
+          return;
+        }
+
+        // 기존 사용자 - 인증 상태 변경 이벤트 발생 후 홈으로 이동
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
         setStatus('success');
 
-        // 신규 사용자인 경우 환영 메시지와 함께 홈으로 이동
-        // 기존 사용자인 경우 바로 홈으로 이동
         setTimeout(() => {
-          if (isNewUser) {
-            console.log('신규 사용자 - 환영합니다!');
-          }
-          // 홈으로 이동
           if (onGo) {
             onGo('/');
           } else {
@@ -85,6 +113,40 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
 
     processCallback();
   }, [onGo]);
+
+  // 약관 동의 완료 핸들러
+  const handleTermsComplete = () => {
+    window.dispatchEvent(new CustomEvent('authStateChanged'));
+    if (onGo) {
+      onGo('/');
+    } else {
+      window.location.href = '/';
+    }
+  };
+
+  // 약관 동의 취소 시 로그인 페이지로 이동
+  const handleTermsClose = () => {
+    // 토큰 삭제 (가입 취소)
+    webApiService.auth.clearAuthToken();
+    if (onGo) {
+      onGo('/login');
+    } else {
+      window.location.href = '/login';
+    }
+  };
+
+  // 약관 동의 화면 (신규 사용자)
+  if (status === 'terms' && newUserInfo) {
+    return (
+      <div className="min-h-screen bg-white">
+        <SocialTermsStep
+          userInfo={newUserInfo}
+          onComplete={handleTermsComplete}
+          onClose={handleTermsClose}
+        />
+      </div>
+    );
+  }
 
   // 에러 상태
   if (status === 'error') {

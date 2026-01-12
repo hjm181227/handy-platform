@@ -27,10 +27,12 @@ const TERMS: TermItem[] = [
 interface SocialTermsStepProps {
   userInfo: SocialNewUserInfo;
   onComplete: () => void;
+  onClose?: () => void; // 모달 외부에서 사용 시 (예: NaverCallbackPage)
 }
 
-export function SocialTermsStep({ userInfo, onComplete }: SocialTermsStepProps) {
-  const { close } = useAuthModal();
+export function SocialTermsStep({ userInfo, onComplete, onClose }: SocialTermsStepProps) {
+  const authModal = useAuthModal();
+  const handleClose = onClose || authModal?.close || (() => window.history.back());
   const [agreed, setAgreed] = useState<AgreedTerms>({
     service: false,
     privacy: false,
@@ -98,6 +100,7 @@ export function SocialTermsStep({ userInfo, onComplete }: SocialTermsStepProps) 
       case 'kakao': return '카카오';
       case 'google': return 'Google';
       case 'apple': return 'Apple';
+      case 'naver': return '네이버';
       default: return provider;
     }
   };
@@ -107,7 +110,7 @@ export function SocialTermsStep({ userInfo, onComplete }: SocialTermsStepProps) 
       {/* 헤더 */}
       <div className="flex items-center justify-between h-10 mb-4">
         <button
-          onClick={close}
+          onClick={handleClose}
           className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
         >
           <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
