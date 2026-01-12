@@ -104,6 +104,11 @@ class WebApiService {
       }
     };
 
+    // 토큰만 저장 (사용자 정보는 별도로 가져와야 함)
+    (originalAuth as any).setAuthTokenOnly = async (token: string): Promise<void> => {
+      WebTokenManager.setToken(token);
+    };
+
     (originalAuth as any).clearAuthToken = async (): Promise<void> => {
       WebTokenManager.clearToken();
     };

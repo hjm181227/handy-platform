@@ -829,7 +829,7 @@ export function Router() {
     screen = <AuthRedirect nav={nav} openModal={openLogin} />;
   }
   else if (pathname === '/auth/naver/callback') {
-    screen = <NaverCallbackPage />;
+    screen = <NaverCallbackPage onGo={nav} />;
   }
   else if (pathname.startsWith('/auth/social/signup')) {
     screen = <SocialSignupPage onGo={nav} />;

@@ -1,43 +1,138 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { webApiService } from '../../services/apiService';
+
+interface NaverCallbackPageProps {
+  onGo?: (path: string) => void;
+}
 
 /**
- * 네이버 OAuth 콜백 페이지
+ * 네이버 OAuth 콜백 페이지 (백엔드 주도 방식)
  *
- * 네이버 로그인 후 리다이렉트되는 페이지입니다.
- * URL 해시에서 access_token을 추출하여 sessionStorage에 저장하고 창을 닫습니다.
+ * 백엔드에서 OAuth 처리 후 리다이렉트되는 페이지입니다.
+ * URL 쿼리 파라미터에서 JWT 토큰을 추출하여 저장하고 로그인을 완료합니다.
  */
-export function NaverCallbackPage() {
+export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
-    // URL 해시에서 토큰 정보 추출
-    // 형식: #access_token=xxx&state=xxx&token_type=bearer&expires_in=3600
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
+    const processCallback = async () => {
+      try {
+        // URL 쿼리 파라미터에서 토큰 정보 추출
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        const isNewUser = params.get('isNewUser') === 'true';
+        const error = params.get('error');
+        const message = params.get('message');
 
-    const accessToken = params.get('access_token');
-    const state = params.get('state');
-    const error = params.get('error');
-    const errorDescription = params.get('error_description');
+        // 에러 처리
+        if (error) {
+          console.error('Naver OAuth 에러:', error, message);
+          setErrorMessage(message || '네이버 로그인에 실패했습니다.');
+          setStatus('error');
+          return;
+        }
 
-    if (error) {
-      console.error('Naver OAuth 에러:', error, errorDescription);
-      // 에러 발생 시 창 닫기
-      window.close();
-      return;
-    }
+        if (!token) {
+          console.error('Naver OAuth: 토큰이 없습니다');
+          setErrorMessage('인증 토큰을 받지 못했습니다.');
+          setStatus('error');
+          return;
+        }
 
-    if (accessToken) {
-      // 토큰을 sessionStorage에 저장 (부모 창에서 읽을 수 있도록)
-      sessionStorage.setItem('naver_access_token', accessToken);
-      if (state) {
-        sessionStorage.setItem('naver_oauth_state_response', state);
+        // 토큰 저장 및 사용자 정보 로드
+        console.log('Naver 로그인 성공, 토큰 저장 중...');
+
+        // 먼저 토큰만 저장 (API 호출에 필요)
+        (webApiService.auth as any).setAuthTokenOnly(token);
+
+        // 사용자 프로필 정보 가져오기
+        try {
+          const profileResponse = await webApiService.auth.getUserProfile();
+          if (profileResponse.data?.user) {
+            await webApiService.auth.setAuthToken(token, profileResponse.data.user);
+          }
+        } catch (profileError) {
+          console.warn('사용자 프로필 로드 실패, 토큰만 저장:', profileError);
+          // 프로필 로드 실패해도 토큰은 저장됨 - 다음 페이지에서 재시도 가능
+        }
+
+        // 인증 상태 변경 이벤트 발생
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
+
+        setStatus('success');
+
+        // 신규 사용자인 경우 환영 메시지와 함께 홈으로 이동
+        // 기존 사용자인 경우 바로 홈으로 이동
+        setTimeout(() => {
+          if (isNewUser) {
+            console.log('신규 사용자 - 환영합니다!');
+          }
+          // 홈으로 이동
+          if (onGo) {
+            onGo('/');
+          } else {
+            window.location.href = '/';
+          }
+        }, 1500);
+
+      } catch (error: any) {
+        console.error('Naver 콜백 처리 중 오류:', error);
+        setErrorMessage(error.message || '로그인 처리 중 오류가 발생했습니다.');
+        setStatus('error');
       }
-      console.log('Naver 로그인 성공, 토큰 저장됨');
-    }
+    };
 
-    // 팝업 창 닫기
-    window.close();
-  }, []);
+    processCallback();
+  }, [onGo]);
 
+  // 에러 상태
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인 실패</h2>
+          <p className="text-gray-600 mb-6">{errorMessage}</p>
+          <button
+            onClick={() => {
+              if (onGo) {
+                onGo('/login');
+              } else {
+                window.location.href = '/login';
+              }
+            }}
+            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            다시 로그인하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 성공 상태
+  if (status === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인 성공!</h2>
+          <p className="text-gray-600">잠시 후 이동합니다...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 로딩 상태
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">

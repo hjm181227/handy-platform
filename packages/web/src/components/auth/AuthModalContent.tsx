@@ -255,39 +255,10 @@ export function AuthModalContent() {
     }
   };
 
-  const handleNaverLogin = async () => {
-    try {
-      // Naver 로그인 실행 (팝업)
-      const accessToken = await executeNaverLogin();
-
-      // 백엔드로 토큰 전송하여 로그인/회원가입 처리
-      const response = await webApiService.oauthLogin('naver', accessToken);
-
-      // 신규 가입자인 경우 약관 동의 화면으로 이동
-      if (response.isNewUser) {
-        setLoading(false);
-        openSocialTerms({
-          provider: 'naver',
-          userId: response.user?.id || '',
-          name: response.user?.name || '',
-          email: response.user?.email || '',
-          profileImage: response.user?.avatar || '',
-        });
-        return;
-      }
-
-      // 기존 사용자 로그인 성공
-      window.dispatchEvent(new CustomEvent('authStateChanged'));
-      setLoading(false);
-      close();
-    } catch (error: any) {
-      // 사용자가 취소한 경우 - 에러 표시 없이 종료
-      if (error?.cancelled) {
-        setLoading(false);
-        return;
-      }
-      throw error;
-    }
+  const handleNaverLogin = () => {
+    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    // 백엔드가 토큰 교환 후 /auth/naver/callback으로 리다이렉트함
+    executeNaverLogin();
   };
 
   // 회원가입 완료 핸들러
