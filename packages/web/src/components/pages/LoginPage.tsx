@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
 import { initKakaoSdk } from '../../utils/kakaoSdk';
-import { setSocialAuthState, getSocialSignupUrl } from '../../utils/socialAuthState';
 import { VscEye, VscEyeClosed } from 'react-icons/vsc';
 
 export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
@@ -120,24 +119,15 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
     const response = await webApiService.oauthLogin('kakao', accessToken);
 
-    if (response.needsSignup && response.kakaoUserInfo) {
-      const socialStateData = {
-        accessToken,
-        userInfo: {
-          id: response.kakaoUserInfo.id,
-          email: response.kakaoUserInfo.email,
-          name: response.kakaoUserInfo.name,
-          profileImage: response.kakaoUserInfo.profileImage,
-          provider: 'kakao' as const
-        },
-        timestamp: Date.now()
-      };
+    // 소셜 로그인 성공 (신규 사용자는 자동으로 계정 생성됨)
+    window.dispatchEvent(new CustomEvent('authStateChanged', {
+      detail: { isNewUser: response.isNewUser }
+    }));
+    onGo("/");
 
-      setSocialAuthState(socialStateData);
-      setTimeout(() => onGo(getSocialSignupUrl('kakao')), 100);
-    } else {
-      window.dispatchEvent(new CustomEvent('authStateChanged'));
-      onGo("/");
+    // 신규 가입자인 경우 환영 메시지 표시 (선택적)
+    if (response.isNewUser) {
+      console.log('🎉 새로운 회원님 환영합니다!');
     }
   };
 

@@ -100,9 +100,19 @@ export interface KoreanAddressValidationResponse {
 }
 
 export interface AuthResponse {
-  message: string;
+  success: boolean;
+  message?: string;
   token: string;
   user: User;
+  isNewUser?: boolean;  // 소셜 로그인 시 신규 가입자 여부
+  // @deprecated needsSignup은 더 이상 사용되지 않습니다. 소셜 로그인 시 자동 가입됩니다.
+  needsSignup?: boolean;
+  kakaoUserInfo?: {
+    id: string;
+    email: string;
+    name: string;
+    profileImage?: string;
+  };
 }
 
 // Product Related Types (네일팁 전용 API 스펙에 맞게 완전 재정의)

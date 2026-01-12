@@ -1,3 +1,8 @@
+/**
+ * @deprecated 이 페이지는 더 이상 사용되지 않습니다.
+ * 소셜 로그인 시 신규 사용자는 자동으로 계정이 생성됩니다.
+ * 이 페이지로 직접 접근한 사용자는 로그인 페이지로 리다이렉트됩니다.
+ */
 import { useState, useEffect } from 'react';
 import { webApiService } from '../../services/apiService';
 import { getSocialAuthState, clearSocialAuthState } from '../../utils/socialAuthState';
