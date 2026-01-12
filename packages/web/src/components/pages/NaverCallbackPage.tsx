@@ -21,12 +21,14 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        // URL 쿼리 파라미터에서 토큰 정보 추출
+        // URL 쿼리 파라미터에서 정보 추출
         const params = new URLSearchParams(window.location.search);
-        const token = params.get('token');
-        const isNewUser = params.get('isNewUser') === 'true';
+        const stateId = params.get('stateId');
         const error = params.get('error');
         const message = params.get('message');
+
+        // URL 정리 (민감한 정보 제거)
+        window.history.replaceState({}, document.title, '/auth/naver/callback');
 
         // 에러 처리
         if (error) {
@@ -36,77 +38,57 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
           return;
         }
 
-        if (!token) {
-          console.error('Naver OAuth: 토큰이 없습니다');
-          setErrorMessage('인증 토큰을 받지 못했습니다.');
+        // stateId 없으면 에러
+        if (!stateId) {
+          console.error('Naver OAuth: stateId가 없습니다');
+          setErrorMessage('인증 정보가 없습니다. 다시 로그인해주세요.');
           setStatus('error');
           return;
         }
 
-        // 토큰 저장 및 사용자 정보 로드
-        console.log('Naver 로그인 성공, 토큰 저장 중...');
+        // stateId로 인증 데이터 조회 (일회용)
+        console.log('Naver OAuth: stateId로 인증 데이터 조회 중...');
+        const response = await webApiService.auth.getNaverAuthData(stateId);
 
-        // 먼저 토큰만 저장 (API 호출에 필요)
-        (webApiService.auth as any).setAuthTokenOnly(token);
-
-        // 사용자 프로필 정보 가져오기
-        try {
-          const profileResponse = await webApiService.auth.getUserProfile();
-          if (profileResponse.data?.user) {
-            await webApiService.auth.setAuthToken(token, profileResponse.data.user);
-          }
-        } catch (profileError) {
-          console.warn('사용자 프로필 로드 실패, 토큰만 저장:', profileError);
-          // 프로필 로드 실패해도 토큰은 저장됨 - 다음 페이지에서 재시도 가능
-        }
-
-        // 신규 사용자인 경우 약관 동의 화면 표시
-        if (isNewUser) {
+        if (response.needsSignup && response.socialUserInfo) {
+          // 신규 사용자 - 약관 동의 화면
           console.log('신규 사용자 - 약관 동의 필요');
-
-          // 사용자 정보 가져오기
-          let userInfo: SocialNewUserInfo = {
+          setNewUserInfo({
             provider: 'naver',
-            userId: '',
-            name: '',
-            email: '',
-          };
-
-          try {
-            const profileResponse = await webApiService.auth.getUserProfile();
-            if (profileResponse.data?.user) {
-              userInfo = {
-                provider: 'naver',
-                userId: String(profileResponse.data.user.id || ''),
-                name: profileResponse.data.user.name || '',
-                email: profileResponse.data.user.email || '',
-                profileImage: profileResponse.data.user.avatar || '',
-              };
-            }
-          } catch (e) {
-            console.warn('사용자 정보 로드 실패:', e);
-          }
-
-          setNewUserInfo(userInfo);
+            userId: response.socialUserInfo.providerId,
+            name: response.socialUserInfo.name || '',
+            email: response.socialUserInfo.email || '',
+            profileImage: response.socialUserInfo.profileImage || '',
+          });
           setStatus('terms');
           return;
         }
 
-        // 기존 사용자 - 인증 상태 변경 이벤트 발생 후 홈으로 이동
-        window.dispatchEvent(new CustomEvent('authStateChanged'));
-        setStatus('success');
+        // 기존 사용자 - 토큰 저장 및 로그인 완료
+        if (response.token && response.user) {
+          console.log('Naver 로그인 성공, 토큰 저장 중...');
+          await webApiService.auth.setAuthToken(response.token, response.user);
+          window.dispatchEvent(new CustomEvent('authStateChanged'));
+          setStatus('success');
 
-        setTimeout(() => {
-          if (onGo) {
-            onGo('/');
-          } else {
-            window.location.href = '/';
-          }
-        }, 1500);
+          setTimeout(() => {
+            if (onGo) {
+              onGo('/');
+            } else {
+              window.location.href = '/';
+            }
+          }, 1500);
+        }
 
       } catch (error: any) {
         console.error('Naver 콜백 처리 중 오류:', error);
-        setErrorMessage(error.message || '로그인 처리 중 오류가 발생했습니다.');
+
+        // 410 상태 코드: 인증 정보 만료/사용됨
+        if (error.status === 410) {
+          setErrorMessage('인증 정보가 만료되었습니다. 다시 로그인해주세요.');
+        } else {
+          setErrorMessage(error.message || '로그인 처리 중 오류가 발생했습니다.');
+        }
         setStatus('error');
       }
     };
@@ -126,8 +108,7 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
 
   // 약관 동의 취소 시 로그인 페이지로 이동
   const handleTermsClose = () => {
-    // 토큰 삭제 (가입 취소)
-    webApiService.auth.clearAuthToken();
+    // 신규 사용자 플로우에서는 아직 계정/토큰이 없으므로 바로 이동
     if (onGo) {
       onGo('/login');
     } else {

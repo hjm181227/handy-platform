@@ -211,42 +211,19 @@ export function AuthModalContent() {
     const response = await webApiService.oauthLogin('kakao', accessToken);
 
     // 신규 가입자인 경우 약관 동의 화면으로 이동
-    if (response.isNewUser) {
-      // 카카오에서 사용자 정보 가져오기
-      let kakaoUserInfo = { id: '', name: '', email: '', profileImage: '' };
-
-      try {
-        if (window.Kakao.API?.request) {
-          const userInfo = await new Promise<any>((resolve, reject) => {
-            window.Kakao.API.request({
-              url: '/v2/user/me',
-              success: resolve,
-              fail: reject,
-            });
-          });
-          kakaoUserInfo = {
-            id: String(userInfo.id),
-            name: userInfo.kakao_account?.profile?.nickname || '',
-            email: userInfo.kakao_account?.email || '',
-            profileImage: userInfo.kakao_account?.profile?.profile_image_url || '',
-          };
-        }
-      } catch (e) {
-        console.warn('카카오 사용자 정보 가져오기 실패:', e);
-      }
-
+    if (response.needsSignup && response.socialUserInfo) {
       setLoading(false);
       openSocialTerms({
         provider: 'kakao',
-        userId: kakaoUserInfo.id,
-        name: kakaoUserInfo.name,
-        email: kakaoUserInfo.email,
-        profileImage: kakaoUserInfo.profileImage,
+        userId: response.socialUserInfo.providerId,
+        name: response.socialUserInfo.name,
+        email: response.socialUserInfo.email,
+        profileImage: response.socialUserInfo.profileImage || '',
       });
       return;
     }
 
-    // 기존 사용자 로그인 성공
+    // 기존 사용자 로그인 성공 (webApiService.oauthLogin에서 이미 토큰 저장됨)
     window.dispatchEvent(new CustomEvent('authStateChanged'));
     setLoading(false);
     close();
@@ -261,19 +238,19 @@ export function AuthModalContent() {
       const response = await webApiService.oauthLogin('google', accessToken);
 
       // 신규 가입자인 경우 약관 동의 화면으로 이동
-      if (response.isNewUser) {
+      if (response.needsSignup && response.socialUserInfo) {
         setLoading(false);
         openSocialTerms({
           provider: 'google',
-          userId: response.user?.id || '',
-          name: response.user?.name || '',
-          email: response.user?.email || '',
-          profileImage: response.user?.avatar || '',
+          userId: response.socialUserInfo.providerId,
+          name: response.socialUserInfo.name,
+          email: response.socialUserInfo.email,
+          profileImage: response.socialUserInfo.profileImage || '',
         });
         return;
       }
 
-      // 기존 사용자 로그인 성공
+      // 기존 사용자 로그인 성공 (webApiService.oauthLogin에서 이미 토큰 저장됨)
       window.dispatchEvent(new CustomEvent('authStateChanged'));
       setLoading(false);
       close();

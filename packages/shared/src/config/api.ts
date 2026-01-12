@@ -144,14 +144,16 @@ export const API_ENDPOINTS = {
 
   // OAuth
   OAUTH: {
-    KAKAO: '/api/auth/oauth/kakao',
-    GOOGLE: '/api/auth/oauth/google',
-    APPLE: '/api/auth/oauth/apple',
-    NAVER: '/api/auth/oauth/naver',
-    SIGNUP: (provider: string) => `/api/auth/oauth/${provider}/signup`,
-    LINK: (provider: string) => `/api/auth/oauth/link/${provider}`,
-    UNLINK: (provider: string) => `/api/auth/oauth/unlink/${provider}`,
-    LINKED: '/api/auth/oauth/linked',
+    KAKAO: '/api/oauth/kakao',
+    GOOGLE: '/api/oauth/google',
+    APPLE: '/api/oauth/apple',
+    NAVER: '/api/oauth/naver',
+    NAVER_AUTH_DATA: (stateId: string) => `/api/oauth/naver/auth-data/${stateId}`,  // 네이버 OAuth 인증 데이터 조회 (일회용)
+    COMPLETE_SIGNUP: '/api/oauth/social/complete-signup',  // 소셜 회원가입 완료 (약관 동의 후)
+    SIGNUP: (provider: string) => `/api/oauth/${provider}/signup`,
+    LINK: (provider: string) => `/api/oauth/link/${provider}`,
+    UNLINK: (provider: string) => `/api/oauth/unlink/${provider}`,
+    LINKED: '/api/oauth/linked',
   },
 
   // 상품 (서버 API 스펙에 완전 일치)

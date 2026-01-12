@@ -10,6 +10,27 @@ import {
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeUserId } from '../../utils/uuidUtils';
 
+// 소셜 사용자 정보 타입
+export interface SocialUserInfo {
+  provider: 'kakao' | 'google' | 'apple' | 'naver';
+  providerId: string;
+  email: string;
+  name: string;
+  profileImage?: string;
+}
+
+// OAuth 로그인 응답 타입 (기존 사용자 vs 신규 가입 필요)
+export interface OAuthLoginResponse {
+  success: boolean;
+  // 기존 사용자 로그인 성공 시
+  token?: string;
+  user?: User;
+  isNewUser?: false;
+  // 신규 사용자 - 약관 동의 후 회원가입 필요
+  needsSignup?: boolean;
+  socialUserInfo?: SocialUserInfo;
+}
+
 // 휴대폰 인증 관련 타입
 export interface PhoneSendResponse {
   success: boolean;
@@ -142,11 +163,48 @@ export abstract class BaseAuthService extends BaseApiService {
   }
 
   // OAuth 메서드
-  async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string): Promise<AuthResponse> {
+  async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string): Promise<OAuthLoginResponse> {
     const endpoint = API_ENDPOINTS.OAUTH[provider.toUpperCase() as keyof typeof API_ENDPOINTS.OAUTH] as string;
-    return this.request<AuthResponse>(endpoint, {
+    return this.request<OAuthLoginResponse>(endpoint, {
       method: 'POST',
-      body: JSON.stringify({ accessToken }),
+      body: JSON.stringify({ accessToken, access_token: accessToken }),
+      enableRetry: false,
+    });
+  }
+
+  /**
+   * 네이버 OAuth 인증 데이터 조회 (일회용)
+   * stateId로 저장된 인증 데이터를 조회합니다.
+   * 데이터는 일회용으로, 조회 후 즉시 삭제됩니다.
+   */
+  async getNaverAuthData(stateId: string): Promise<{
+    success: boolean;
+    needsSignup: boolean;
+    token?: string;
+    user?: User;
+    socialUserInfo?: SocialUserInfo;
+  }> {
+    return this.request(API_ENDPOINTS.OAUTH.NAVER_AUTH_DATA(stateId), {
+      enableRetry: false,
+    });
+  }
+
+  /**
+   * 소셜 회원가입 완료 (약관 동의 후 계정 생성)
+   */
+  async completeSocialSignup(data: {
+    socialUserInfo: {
+      provider: 'kakao' | 'google' | 'apple' | 'naver';
+      providerId: string;
+      email: string;
+      name: string;
+      profileImage?: string;
+    };
+    marketingConsent: boolean;
+  }): Promise<AuthResponse> {
+    return this.request<AuthResponse>(API_ENDPOINTS.OAUTH.COMPLETE_SIGNUP, {
+      method: 'POST',
+      body: JSON.stringify(data),
       enableRetry: false,
     });
   }

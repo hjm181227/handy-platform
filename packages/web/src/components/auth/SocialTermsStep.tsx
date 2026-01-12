@@ -67,13 +67,22 @@ export function SocialTermsStep({ userInfo, onComplete, onClose }: SocialTermsSt
     setError('');
 
     try {
-      // 약관 동의 정보 업데이트 API 호출
-      await webApiService.auth.updateTermsAgreement({
-        serviceTerms: agreed.service,
-        privacyPolicy: agreed.privacy,
+      // 소셜 회원가입 완료 API 호출 (계정 생성)
+      const response = await webApiService.auth.completeSocialSignup({
+        socialUserInfo: {
+          provider: userInfo.provider as 'kakao' | 'google' | 'apple' | 'naver',
+          providerId: userInfo.userId || '',
+          email: userInfo.email || '',
+          name: userInfo.name || '',
+          profileImage: userInfo.profileImage,
+        },
         marketingConsent: agreed.marketing,
-        ageVerification: agreed.age,
       });
+
+      // 토큰 저장
+      if (response.token && response.user) {
+        await webApiService.auth.setAuthToken(response.token, response.user);
+      }
 
       // 인증 상태 변경 이벤트 발생
       window.dispatchEvent(new CustomEvent('authStateChanged', {
@@ -82,8 +91,8 @@ export function SocialTermsStep({ userInfo, onComplete, onClose }: SocialTermsSt
 
       onComplete();
     } catch (err: any) {
-      console.error('약관 동의 저장 실패:', err);
-      setError(err.message || '약관 동의 저장에 실패했습니다.');
+      console.error('회원가입 실패:', err);
+      setError(err.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
