@@ -116,140 +116,14 @@ export function AuthModalContent() {
     }
   };
 
-  const handleKakaoLogin = async () => {
-    if (!window.Kakao) {
-      throw new Error('카카오 SDK가 로드되지 않았습니다.');
-    }
-
-    if (!window.Kakao.isInitialized()) {
-      const appKey = import.meta.env.VITE_KAKAO_APP_KEY;
-      window.Kakao.init(appKey);
-    }
-
-    if (!window.Kakao.Auth || !window.Kakao.Auth.login) {
-      throw new Error('카카오 Auth 모듈을 사용할 수 없습니다.');
-    }
-
-    let isResolved = false;
-    let checkInterval: ReturnType<typeof setInterval> | null = null;
-    let visibilityHandler: (() => void) | null = null;
-
-    const accessToken = await new Promise<string>((resolve, reject) => {
-      const cleanup = () => {
-        if (checkInterval) {
-          clearInterval(checkInterval);
-          checkInterval = null;
-        }
-        if (visibilityHandler) {
-          document.removeEventListener('visibilitychange', visibilityHandler);
-          visibilityHandler = null;
-        }
-      };
-
-      const handleCancel = () => {
-        if (!isResolved) {
-          isResolved = true;
-          cleanup();
-          reject({ cancelled: true });
-        }
-      };
-
-      // visibility change 감지 (탭 전환 후 복귀)
-      let wasHidden = false;
-      visibilityHandler = () => {
-        if (document.hidden) {
-          wasHidden = true;
-        } else if (wasHidden && !isResolved) {
-          // 탭이 다시 보이게 됐고 아직 완료 안됐으면 1초 후 체크
-          setTimeout(() => {
-            if (!isResolved) {
-              handleCancel();
-            }
-          }, 1000);
-        }
-      };
-      document.addEventListener('visibilitychange', visibilityHandler);
-
-      // 주기적으로 포커스 체크 (fallback)
-      let focusLostAt: number | null = null;
-      checkInterval = setInterval(() => {
-        if (isResolved) {
-          cleanup();
-          return;
-        }
-
-        if (!document.hasFocus()) {
-          if (!focusLostAt) focusLostAt = Date.now();
-        } else {
-          // 포커스 복귀 - 팝업이 닫힌 것으로 간주
-          if (focusLostAt && Date.now() - focusLostAt > 300) {
-            handleCancel();
-          }
-          focusLostAt = null;
-        }
-      }, 200);
-
-      window.Kakao.Auth.login({
-        success: (authObj: any) => {
-          isResolved = true;
-          cleanup();
-
-          if (authObj?.access_token) {
-            resolve(authObj.access_token);
-          } else {
-            reject(new Error('액세스 토큰을 받지 못했습니다.'));
-          }
-        },
-        fail: () => {
-          isResolved = true;
-          cleanup();
-          reject({ cancelled: true });
-        },
-      });
-    });
-
-    const response = await webApiService.oauthLogin('kakao', accessToken);
-
-    // 신규 가입자인 경우 약관 동의 화면으로 이동
-    if (response.isNewUser) {
-      // 카카오에서 사용자 정보 가져오기
-      let kakaoUserInfo = { id: '', name: '', email: '', profileImage: '' };
-
-      try {
-        if (window.Kakao.API?.request) {
-          const userInfo = await new Promise<any>((resolve, reject) => {
-            window.Kakao.API.request({
-              url: '/v2/user/me',
-              success: resolve,
-              fail: reject,
-            });
-          });
-          kakaoUserInfo = {
-            id: String(userInfo.id),
-            name: userInfo.kakao_account?.profile?.nickname || '',
-            email: userInfo.kakao_account?.email || '',
-            profileImage: userInfo.kakao_account?.profile?.profile_image_url || '',
-          };
-        }
-      } catch (e) {
-        console.warn('카카오 사용자 정보 가져오기 실패:', e);
-      }
-
-      setLoading(false);
-      openSocialTerms({
-        provider: 'kakao',
-        userId: kakaoUserInfo.id,
-        name: kakaoUserInfo.name,
-        email: kakaoUserInfo.email,
-        profileImage: kakaoUserInfo.profileImage,
-      });
-      return;
-    }
-
-    // 기존 사용자 로그인 성공
-    window.dispatchEvent(new CustomEvent('authStateChanged'));
+  const handleKakaoLogin = () => {
+    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    // 백엔드가 토큰 교환 후 /auth/kakao/callback으로 리다이렉트함
     setLoading(false);
-    close();
+
+    // API 베이스 URL에서 백엔드 주소 가져오기
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
+    window.location.href = `${apiBaseUrl}/api/auth/oauth/kakao/login`;
   };
 
   const handleGoogleLogin = async () => {
@@ -261,19 +135,19 @@ export function AuthModalContent() {
       const response = await webApiService.oauthLogin('google', accessToken);
 
       // 신규 가입자인 경우 약관 동의 화면으로 이동
-      if (response.isNewUser) {
+      if (response.needsSignup && response.socialUserInfo) {
         setLoading(false);
         openSocialTerms({
           provider: 'google',
-          userId: response.user?.id || '',
-          name: response.user?.name || '',
-          email: response.user?.email || '',
-          profileImage: response.user?.avatar || '',
+          userId: response.socialUserInfo.providerId,
+          name: response.socialUserInfo.name,
+          email: response.socialUserInfo.email,
+          profileImage: response.socialUserInfo.profileImage || '',
         });
         return;
       }
 
-      // 기존 사용자 로그인 성공
+      // 기존 사용자 로그인 성공 (webApiService.oauthLogin에서 이미 토큰 저장됨)
       window.dispatchEvent(new CustomEvent('authStateChanged'));
       setLoading(false);
       close();
@@ -582,24 +456,28 @@ export function AuthModalContent() {
         </button>
       </div>
 
+      {/*
+        TODO: 휴대폰 번호인증 발신번호 심사 통과 후 활성화
+        이메일 로그인/회원가입은 휴대폰 인증이 필요하므로 심사 완료 전까지 숨김 처리
+      */}
       {/* 구분선 */}
-      <div className="flex items-center my-8">
+      {/* <div className="flex items-center my-8">
         <div className="flex-grow border-t border-gray-200"></div>
         <span className="mx-4 text-sm text-gray-400">또는</span>
         <div className="flex-grow border-t border-gray-200"></div>
-      </div>
+      </div> */}
 
       {/* 이메일로 시작하기 */}
-      <button
+      {/* <button
         onClick={() => setView('signup')}
         disabled={loading}
         className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
       >
         이메일로 시작하기
-      </button>
+      </button> */}
 
       {/* 기존 계정 로그인 링크 */}
-      <div className="mt-6 text-center">
+      {/* <div className="mt-6 text-center">
         <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
         <button
           onClick={() => setView('email-login')}
@@ -607,7 +485,7 @@ export function AuthModalContent() {
         >
           로그인
         </button>
-      </div>
+      </div> */}
 
       {/* 하단 여백 */}
       <div className="flex-1 min-h-[40px]" />

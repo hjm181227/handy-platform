@@ -3,17 +3,17 @@ import { webApiService } from '../../services/apiService';
 import { SocialTermsStep } from '../auth/SocialTermsStep';
 import { SocialNewUserInfo } from '../../contexts/AuthModalContext';
 
-interface NaverCallbackPageProps {
+interface KakaoCallbackPageProps {
   onGo?: (path: string) => void;
 }
 
 /**
- * 네이버 OAuth 콜백 페이지 (백엔드 주도 방식)
+ * 카카오 OAuth 콜백 페이지 (백엔드 주도 방식)
  *
  * 백엔드에서 OAuth 처리 후 리다이렉트되는 페이지입니다.
- * URL 쿼리 파라미터에서 JWT 토큰을 추출하여 저장하고 로그인을 완료합니다.
+ * URL 쿼리 파라미터에서 stateId를 추출하여 인증 데이터를 조회합니다.
  */
-export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
+export function KakaoCallbackPage({ onGo }: KakaoCallbackPageProps) {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'terms'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [newUserInfo, setNewUserInfo] = useState<SocialNewUserInfo | null>(null);
@@ -28,33 +28,33 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
         const message = params.get('message');
 
         // URL 정리 (민감한 정보 제거)
-        window.history.replaceState({}, document.title, '/auth/naver/callback');
+        window.history.replaceState({}, document.title, '/auth/kakao/callback');
 
         // 에러 처리
         if (error) {
-          console.error('Naver OAuth 에러:', error, message);
-          setErrorMessage(message || '네이버 로그인에 실패했습니다.');
+          console.error('Kakao OAuth 에러:', error, message);
+          setErrorMessage(message || '카카오 로그인에 실패했습니다.');
           setStatus('error');
           return;
         }
 
         // stateId 없으면 에러
         if (!stateId) {
-          console.error('Naver OAuth: stateId가 없습니다');
+          console.error('Kakao OAuth: stateId가 없습니다');
           setErrorMessage('인증 정보가 없습니다. 다시 로그인해주세요.');
           setStatus('error');
           return;
         }
 
         // stateId로 인증 데이터 조회 (일회용)
-        console.log('Naver OAuth: stateId로 인증 데이터 조회 중...');
-        const response = await webApiService.auth.getNaverAuthData(stateId);
+        console.log('Kakao OAuth: stateId로 인증 데이터 조회 중...');
+        const response = await webApiService.auth.getKakaoAuthData(stateId);
 
         if (response.needsSignup && response.socialUserInfo) {
           // 신규 사용자 - 약관 동의 화면
           console.log('신규 사용자 - 약관 동의 필요');
           setNewUserInfo({
-            provider: 'naver',
+            provider: 'kakao',
             userId: response.socialUserInfo.providerId,
             name: response.socialUserInfo.name || '',
             email: response.socialUserInfo.email || '',
@@ -66,7 +66,7 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
 
         // 기존 사용자 - 토큰 저장 및 로그인 완료
         if (response.token && response.user) {
-          console.log('Naver 로그인 성공, 토큰 저장 중...');
+          console.log('Kakao 로그인 성공, 토큰 저장 중...');
           await webApiService.auth.setAuthToken(response.token, response.user);
           window.dispatchEvent(new CustomEvent('authStateChanged'));
           setStatus('success');
@@ -81,7 +81,7 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
         }
 
       } catch (error: any) {
-        console.error('Naver 콜백 처리 중 오류:', error);
+        console.error('Kakao 콜백 처리 중 오류:', error);
 
         // 410 상태 코드: 인증 정보 만료/사용됨
         if (error.status === 410) {
@@ -108,7 +108,6 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
 
   // 약관 동의 취소 시 로그인 페이지로 이동
   const handleTermsClose = () => {
-    // 신규 사용자 플로우에서는 아직 계정/토큰이 없으므로 바로 이동
     if (onGo) {
       onGo('/login');
     } else {
@@ -149,7 +148,7 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
                 window.location.href = '/login';
               }
             }}
-            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            className="px-6 py-3 bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-500 transition-colors font-medium"
           >
             다시 로그인하기
           </button>
@@ -163,8 +162,8 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -179,11 +178,11 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">네이버 로그인 처리 중...</p>
+        <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">카카오 로그인 처리 중...</p>
       </div>
     </div>
   );
 }
 
-export default NaverCallbackPage;
+export default KakaoCallbackPage;
