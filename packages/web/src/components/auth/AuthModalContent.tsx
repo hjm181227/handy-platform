@@ -116,117 +116,14 @@ export function AuthModalContent() {
     }
   };
 
-  const handleKakaoLogin = async () => {
-    if (!window.Kakao) {
-      throw new Error('카카오 SDK가 로드되지 않았습니다.');
-    }
-
-    if (!window.Kakao.isInitialized()) {
-      const appKey = import.meta.env.VITE_KAKAO_APP_KEY;
-      window.Kakao.init(appKey);
-    }
-
-    if (!window.Kakao.Auth || !window.Kakao.Auth.login) {
-      throw new Error('카카오 Auth 모듈을 사용할 수 없습니다.');
-    }
-
-    let isResolved = false;
-    let checkInterval: ReturnType<typeof setInterval> | null = null;
-    let visibilityHandler: (() => void) | null = null;
-
-    const accessToken = await new Promise<string>((resolve, reject) => {
-      const cleanup = () => {
-        if (checkInterval) {
-          clearInterval(checkInterval);
-          checkInterval = null;
-        }
-        if (visibilityHandler) {
-          document.removeEventListener('visibilitychange', visibilityHandler);
-          visibilityHandler = null;
-        }
-      };
-
-      const handleCancel = () => {
-        if (!isResolved) {
-          isResolved = true;
-          cleanup();
-          reject({ cancelled: true });
-        }
-      };
-
-      // visibility change 감지 (탭 전환 후 복귀)
-      let wasHidden = false;
-      visibilityHandler = () => {
-        if (document.hidden) {
-          wasHidden = true;
-        } else if (wasHidden && !isResolved) {
-          // 탭이 다시 보이게 됐고 아직 완료 안됐으면 1초 후 체크
-          setTimeout(() => {
-            if (!isResolved) {
-              handleCancel();
-            }
-          }, 1000);
-        }
-      };
-      document.addEventListener('visibilitychange', visibilityHandler);
-
-      // 주기적으로 포커스 체크 (fallback)
-      let focusLostAt: number | null = null;
-      checkInterval = setInterval(() => {
-        if (isResolved) {
-          cleanup();
-          return;
-        }
-
-        if (!document.hasFocus()) {
-          if (!focusLostAt) focusLostAt = Date.now();
-        } else {
-          // 포커스 복귀 - 팝업이 닫힌 것으로 간주
-          if (focusLostAt && Date.now() - focusLostAt > 300) {
-            handleCancel();
-          }
-          focusLostAt = null;
-        }
-      }, 200);
-
-      window.Kakao.Auth.login({
-        success: (authObj: any) => {
-          isResolved = true;
-          cleanup();
-
-          if (authObj?.access_token) {
-            resolve(authObj.access_token);
-          } else {
-            reject(new Error('액세스 토큰을 받지 못했습니다.'));
-          }
-        },
-        fail: () => {
-          isResolved = true;
-          cleanup();
-          reject({ cancelled: true });
-        },
-      });
-    });
-
-    const response = await webApiService.oauthLogin('kakao', accessToken);
-
-    // 신규 가입자인 경우 약관 동의 화면으로 이동
-    if (response.needsSignup && response.socialUserInfo) {
-      setLoading(false);
-      openSocialTerms({
-        provider: 'kakao',
-        userId: response.socialUserInfo.providerId,
-        name: response.socialUserInfo.name,
-        email: response.socialUserInfo.email,
-        profileImage: response.socialUserInfo.profileImage || '',
-      });
-      return;
-    }
-
-    // 기존 사용자 로그인 성공 (webApiService.oauthLogin에서 이미 토큰 저장됨)
-    window.dispatchEvent(new CustomEvent('authStateChanged'));
+  const handleKakaoLogin = () => {
+    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    // 백엔드가 토큰 교환 후 /auth/kakao/callback으로 리다이렉트함
     setLoading(false);
-    close();
+
+    // API 베이스 URL에서 백엔드 주소 가져오기
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
+    window.location.href = `${apiBaseUrl}/api/oauth/kakao/login`;
   };
 
   const handleGoogleLogin = async () => {

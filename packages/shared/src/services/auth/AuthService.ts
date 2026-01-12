@@ -190,6 +190,23 @@ export abstract class BaseAuthService extends BaseApiService {
   }
 
   /**
+   * 카카오 OAuth 인증 데이터 조회 (일회용)
+   * stateId로 저장된 인증 데이터를 조회합니다.
+   * 데이터는 일회용으로, 조회 후 즉시 삭제됩니다.
+   */
+  async getKakaoAuthData(stateId: string): Promise<{
+    success: boolean;
+    needsSignup: boolean;
+    token?: string;
+    user?: User;
+    socialUserInfo?: SocialUserInfo;
+  }> {
+    return this.request(API_ENDPOINTS.OAUTH.KAKAO_AUTH_DATA(stateId), {
+      enableRetry: false,
+    });
+  }
+
+  /**
    * 소셜 회원가입 완료 (약관 동의 후 계정 생성)
    */
   async completeSocialSignup(data: {
