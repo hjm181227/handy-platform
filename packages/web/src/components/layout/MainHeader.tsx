@@ -7,6 +7,7 @@ import { IoPersonCircleOutline } from 'react-icons/io5';
 import { FiShoppingBag } from 'react-icons/fi';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 
 export function MainHeader({
   cartCount,
@@ -34,6 +35,9 @@ export function MainHeader({
 
   // AuthContext에서 인증 상태 가져오기
   const { currentUser: user, authLoading, logout } = useAuth();
+
+  // Auth Modal
+  const { openLogin } = useAuthModal();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -182,7 +186,7 @@ export function MainHeader({
   };
 
   const handleLogin = () => {
-    onGo('/login');
+    openLogin();
   };
 
   const handleMyPage = () => {

@@ -8,6 +8,7 @@ import { useAuth } from './hooks/useAuth';
 import { useToast } from './hooks/useToast';
 import { useCart } from './hooks/useCart';
 import { useLikes } from './hooks/useLikes';
+import { useAuthModal } from './contexts/AuthModalContext';
 import { MainLayout } from './layouts/MainLayout';
 
 // Product Components
@@ -24,8 +25,6 @@ import { BrandDetailPage } from './components/pages/BrandDetailPage';
 import { RankingPage } from './components/pages/RankingPage';
 import { RecommendPage } from './components/pages/RecommendPage';
 import { SearchResultsPage } from './components/pages/SearchResultsPage';
-import { LoginPage } from './components/pages/LoginPage';
-import { SignupPage } from './components/pages/SignupPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
 import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
@@ -34,6 +33,7 @@ import { ChatRoomPage } from './pages/ChatRoomPage';
 import { CartContent } from './components/cart/CartContent';
 import { CategoryModal } from './components/common/CategoryModal';
 import { CategoryPage } from './components/pages/CategoryPage';
+import { NewProductsPage } from './components/pages/NewProductsPage';
 
 // MyPage Components
 import {
@@ -69,6 +69,9 @@ import { PaymentSuccess } from './components/pages/PaymentSuccess';
 import { PaymentCancel } from './components/pages/PaymentCancel';
 import { PaymentFail } from './components/pages/PaymentFail';
 import { PaymentTest } from './components/pages/PaymentTest';
+
+// OAuth Callback Components
+import { NaverCallbackPage } from './components/pages/NaverCallbackPage';
 
 // Footer Components
 import {
@@ -132,6 +135,9 @@ export function Router() {
 
   // Auth state
   const { currentUser, authLoading, setUser } = useAuth();
+
+  // Auth modal
+  const { openLogin, openSignup } = useAuthModal();
 
   // Toast state
   const { showToast } = useToast();
@@ -346,18 +352,13 @@ export function Router() {
   }
   else if (pathname.startsWith('/new')) {
     screen = (
-      <>
-        <TitleBar title="신상" />
-        <ProductGrid
-          title="방금 등록된 상품"
-          items={products.filter(p => p.isNewProduct)}
-          onOpen={openProduct}
-          onAdd={addProduct}
-          onLike={handleLike}
-          onGo={nav}
-          likedProducts={likedProducts}
-        />
-      </>
+      <NewProductsPage
+        onGo={nav}
+        onOpen={openProduct}
+        onAdd={addProduct}
+        onLike={handleLike}
+        likedProducts={likedProducts}
+      />
     );
   }
   else if (pathname.startsWith('/trend')) {
@@ -823,14 +824,18 @@ export function Router() {
     );
   }
   // ==================== Auth Routes ====================
+  // /login과 /signup은 모달로 처리 - 홈으로 리다이렉트하고 모달 열기
   else if (pathname.startsWith('/login')) {
-    screen = <LoginPage onGo={nav} />;
+    screen = <AuthRedirect nav={nav} openModal={openLogin} />;
+  }
+  else if (pathname === '/auth/naver/callback') {
+    screen = <NaverCallbackPage onGo={nav} />;
   }
   else if (pathname.startsWith('/auth/social/signup')) {
     screen = <SocialSignupPage onGo={nav} />;
   }
   else if (pathname.startsWith('/signup')) {
-    screen = <SignupPage onGo={nav} />;
+    screen = <AuthRedirect nav={nav} openModal={openSignup} />;
   }
   // ==================== Home ====================
   else {
@@ -1126,4 +1131,21 @@ function ShoppingBagIcon({ size = 'md' }: { size?: 'sm' | 'md' }) {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
     </svg>
   );
+}
+
+/**
+ * Auth 리다이렉트 컴포넌트
+ * /login, /signup 경로 접근 시 홈으로 리다이렉트하고 모달 열기
+ */
+function AuthRedirect({ nav, openModal }: { nav: (to: string) => void; openModal: () => void }) {
+  useEffect(() => {
+    nav('/');
+    // 약간의 딜레이 후 모달 열기 (네비게이션 완료 후)
+    const timer = setTimeout(() => {
+      openModal();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [nav, openModal]);
+
+  return null;
 }

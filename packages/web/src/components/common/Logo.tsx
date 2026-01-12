@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 interface LogoProps {
   className?: string;
   onClick?: () => void;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 interface LogoData {
@@ -13,6 +14,7 @@ interface LogoData {
 
 // 임시 로고 데이터 (나중에 DB에서 가져올 예정)
 const TEMP_LOGO_DATA: LogoData = {
+  imageUrl: 'https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png',
   text: 'HANDY',
   altText: 'Handy 로고'
 };
@@ -27,9 +29,25 @@ const fetchLogoFromDB = async (): Promise<LogoData> => {
   return TEMP_LOGO_DATA;
 };
 
-export function Logo({ className = '', onClick }: LogoProps) {
+export function Logo({ className = '', onClick, size = 'md' }: LogoProps) {
   const [logoData, setLogoData] = useState<LogoData>(TEMP_LOGO_DATA);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 사이즈별 스타일 (텍스트 로고용)
+  const sizeStyles = {
+    sm: 'px-2 py-0.5 text-sm rounded',
+    md: 'px-3 py-1 text-lg rounded',
+    lg: 'px-4 py-2 text-2xl rounded-md',
+    xl: 'px-5 py-2.5 text-3xl rounded-lg',
+  };
+
+  // 사이즈별 이미지 높이
+  const imageSizeStyles = {
+    sm: 'h-5',
+    md: 'h-7',
+    lg: 'h-10',
+    xl: 'h-14',
+  };
 
   useEffect(() => {
     const loadLogo = async () => {
@@ -58,19 +76,19 @@ export function Logo({ className = '', onClick }: LogoProps) {
   }
 
   return (
-    <div 
+    <div
       className={`cursor-pointer select-none ${className}`}
       onClick={onClick}
     >
       {logoData.imageUrl ? (
-        <img 
-          src={logoData.imageUrl} 
+        <img
+          src={logoData.imageUrl}
           alt={logoData.altText}
-          className="h-full w-auto object-contain"
+          className={`${imageSizeStyles[size]} w-auto object-contain`}
         />
       ) : (
         /* 임시 텍스트 로고: 검은색 배경에 흰색 글씨 */
-        <div className="bg-black text-white px-3 py-1 rounded font-bold text-lg tracking-tight">
+        <div className={`bg-black text-white font-bold tracking-tight ${sizeStyles[size]}`}>
           {logoData.text}
         </div>
       )}

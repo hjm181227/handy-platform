@@ -104,6 +104,11 @@ class WebApiService {
       }
     };
 
+    // 토큰만 저장 (사용자 정보는 별도로 가져와야 함)
+    (originalAuth as any).setAuthTokenOnly = async (token: string): Promise<void> => {
+      WebTokenManager.setToken(token);
+    };
+
     (originalAuth as any).clearAuthToken = async (): Promise<void> => {
       WebTokenManager.clearToken();
     };
@@ -162,8 +167,8 @@ class WebApiService {
   async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string) {
     const response = await this.auth.oauthLogin(provider, accessToken);
 
-    // 신규 사용자가 아닌 경우에만 토큰 저장
-    if (!response.needsSignup) {
+    // 소셜 로그인 성공 시 토큰 저장 (신규 사용자도 자동 가입되어 토큰이 발급됨)
+    if (response.token) {
       await this.auth.setAuthToken(response.token, response.user);
     }
 
