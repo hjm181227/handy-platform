@@ -25,9 +25,6 @@ declare global {
 // Google Client ID (환경 변수에서 가져옴)
 const GOOGLE_CLIENT_ID = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || '';
 
-// 디버깅용: Client ID가 제대로 로드되었는지 확인
-console.log('Google Client ID 로드됨:', GOOGLE_CLIENT_ID ? '✅ 설정됨' : '❌ 설정되지 않음');
-
 let isGoogleScriptLoaded = false;
 let tokenClient: any = null;
 
