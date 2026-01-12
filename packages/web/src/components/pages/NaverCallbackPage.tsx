@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { webApiService } from '../../services/apiService';
 import { SocialTermsStep } from '../auth/SocialTermsStep';
 import { SocialNewUserInfo } from '../../contexts/AuthModalContext';
@@ -17,9 +17,16 @@ export function NaverCallbackPage({ onGo }: NaverCallbackPageProps) {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'terms'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [newUserInfo, setNewUserInfo] = useState<SocialNewUserInfo | null>(null);
+  const isProcessingRef = useRef(false);
 
   useEffect(() => {
     const processCallback = async () => {
+      // 이미 처리 중이면 중복 실행 방지
+      if (isProcessingRef.current) {
+        return;
+      }
+      isProcessingRef.current = true;
+
       try {
         // URL 쿼리 파라미터에서 정보 추출
         const params = new URLSearchParams(window.location.search);
