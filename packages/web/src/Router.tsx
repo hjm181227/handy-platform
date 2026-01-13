@@ -121,6 +121,7 @@ import AdminProductManagement from './components/admin/AdminProductManagement';
 import SellerApplicationManagement from './components/admin/SellerApplicationManagement';
 import CategoryManagement from './components/admin/CategoryManagement';
 import BannerManagement from './components/admin/BannerManagement';
+import AdminCouponManagement from './components/admin/AdminCouponManagement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 /**
@@ -796,6 +797,12 @@ export function Router() {
       screen = (
         <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <BannerManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === '/admin/coupons') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <AdminCouponManagement />
         </AdminLayout>
       );
     } else {
