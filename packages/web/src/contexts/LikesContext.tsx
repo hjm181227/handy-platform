@@ -2,7 +2,7 @@ import React, { createContext, useState, useCallback, useEffect, ReactNode } fro
 import { likesService } from '../services/apiService';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import { useMiniRouter } from '../utils';
+import { useAuthModal } from './AuthModalContext';
 
 export interface LikesContextType {
   /** 좋아요한 상품 UUID 목록 */
@@ -36,9 +36,9 @@ interface LikesProviderProps {
  * - 실패 시 자동 롤백
  */
 export const LikesProvider: React.FC<LikesProviderProps> = ({ children }) => {
-  const { nav } = useMiniRouter();
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const { openLogin } = useAuthModal();
 
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
   const [likedBrands, setLikedBrands] = useState<string[]>([]);
@@ -88,8 +88,7 @@ export const LikesProvider: React.FC<LikesProviderProps> = ({ children }) => {
   const handleLike = useCallback(async (productId: string) => {
     // 로그인 확인
     if (!currentUser) {
-      showToast('로그인이 필요한 서비스입니다.', 'error');
-      nav('/login');
+      openLogin();
       return;
     }
 
@@ -127,7 +126,7 @@ export const LikesProvider: React.FC<LikesProviderProps> = ({ children }) => {
       const errorMessage = error.message || '좋아요 처리에 실패했습니다.';
       showToast(errorMessage, 'error');
     }
-  }, [currentUser, likedProducts, showToast, nav]);
+  }, [currentUser, likedProducts, showToast, openLogin]);
 
   /**
    * 브랜드 좋아요 토글 (낙관적 업데이트)
@@ -135,8 +134,7 @@ export const LikesProvider: React.FC<LikesProviderProps> = ({ children }) => {
   const handleBrandLike = useCallback(async (brandId: string) => {
     // 로그인 확인
     if (!currentUser) {
-      showToast('로그인이 필요한 서비스입니다.', 'error');
-      nav('/login');
+      openLogin();
       return;
     }
 
@@ -174,7 +172,7 @@ export const LikesProvider: React.FC<LikesProviderProps> = ({ children }) => {
       const errorMessage = error.message || '좋아요 처리에 실패했습니다.';
       showToast(errorMessage, 'error');
     }
-  }, [currentUser, likedBrands, showToast, nav]);
+  }, [currentUser, likedBrands, showToast, openLogin]);
 
   /**
    * 상품 좋아요 여부 확인

@@ -11,6 +11,8 @@ import {
   IoPersonOutline,
   IoPerson
 } from 'react-icons/io5';
+import { useAuth } from '../../hooks/useAuth';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 
 interface MobileBottomNavProps {
   currentPath: string;
@@ -23,9 +25,13 @@ interface Tab {
   path: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   activeIcon: React.ComponentType<{ size?: number; className?: string }>;
+  requiresAuth?: boolean;
 }
 
 export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBottomNavProps) {
+  const { currentUser } = useAuth();
+  const { openLogin } = useAuthModal();
+
   const tabs: Tab[] = [
     {
       label: '카테고리',
@@ -49,13 +55,15 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
       label: '좋아요',
       path: '/likes',
       icon: IoHeartOutline,
-      activeIcon: IoHeart
+      activeIcon: IoHeart,
+      requiresAuth: true
     },
     {
       label: '마이',
       path: '/my',
       icon: IoPersonOutline,
-      activeIcon: IoPerson
+      activeIcon: IoPerson,
+      requiresAuth: true
     },
   ];
 
@@ -65,6 +73,11 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
   };
 
   const handleTabClick = (tab: Tab) => {
+    // 로그인 필요한 탭인데 비로그인 상태면 로그인 모달 표시
+    if (tab.requiresAuth && !currentUser) {
+      openLogin();
+      return;
+    }
     onGo(tab.path);
   };
 
