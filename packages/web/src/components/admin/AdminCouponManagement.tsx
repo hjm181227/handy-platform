@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { webApiService } from '../../services/apiService';
+import { useAlert } from '../common';
 
 // Types
 interface AdminCoupon {
@@ -86,6 +88,7 @@ const initialFormData: CreateCouponFormData = {
 };
 
 const AdminCouponManagement: React.FC = () => {
+  const { alert, confirm } = useAlert();
   const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -109,39 +112,19 @@ const AdminCouponManagement: React.FC = () => {
   const [stats, setStats] = useState<CouponOverviewStats | null>(null);
   const [showStats, setShowStats] = useState(true);
 
-  // API helpers
-  const apiRequest = async (url: string, options?: RequestInit) => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        ...options?.headers,
-      },
-    });
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || `Request failed: ${response.status}`);
-    }
-    return response.json();
-  };
-
   // Load coupons
   const loadCoupons = async () => {
     try {
       setLoading(true);
       setError('');
 
-      const params = new URLSearchParams({
-        page: pagination.currentPage.toString(),
-        limit: '20',
+      const response = await webApiService.admin.getCoupons({
+        page: pagination.currentPage,
+        limit: 20,
+        search: searchQuery || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        scope: scopeFilter !== 'all' ? scopeFilter : undefined,
       });
-
-      if (searchQuery) params.append('search', searchQuery);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-
-      const response = await apiRequest(`/api/admin/coupons?${params.toString()}`);
 
       if (response.data) {
         setCoupons(response.data.coupons || []);
@@ -164,7 +147,7 @@ const AdminCouponManagement: React.FC = () => {
   // Load stats
   const loadStats = async () => {
     try {
-      const response = await apiRequest('/api/admin/coupons/stats/overview');
+      const response = await webApiService.admin.getCouponStats();
       if (response.data?.overview) {
         setStats(response.data.overview);
       }
@@ -184,17 +167,17 @@ const AdminCouponManagement: React.FC = () => {
   // Create/Update coupon
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      alert('쿠폰명을 입력해주세요.');
+      await alert('쿠폰명을 입력해주세요.');
       return;
     }
 
     if (!formData.code?.trim()) {
-      alert('쿠폰 코드를 입력해주세요.');
+      await alert('쿠폰 코드를 입력해주세요.');
       return;
     }
 
     if (formData.discountType !== 'free_shipping' && formData.discountValue <= 0) {
-      alert('할인 값을 입력해주세요.');
+      await alert('할인 값을 입력해주세요.');
       return;
     }
 
@@ -207,17 +190,11 @@ const AdminCouponManagement: React.FC = () => {
       };
 
       if (editingCoupon) {
-        await apiRequest(`/api/admin/coupons/${editingCoupon.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        });
-        alert('쿠폰이 수정되었습니다.');
+        await webApiService.admin.updateCoupon(editingCoupon.id, payload);
+        await alert('쿠폰이 수정되었습니다.');
       } else {
-        await apiRequest('/api/admin/coupons', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        alert('쿠폰이 생성되었습니다.');
+        await webApiService.admin.createCoupon(payload);
+        await alert('쿠폰이 생성되었습니다.');
       }
 
       setShowModal(false);
@@ -227,7 +204,7 @@ const AdminCouponManagement: React.FC = () => {
       loadStats();
     } catch (err: any) {
       console.error('Failed to save coupon:', err);
-      alert('쿠폰 저장에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
+      await alert('쿠폰 저장에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
     } finally {
       setSaving(false);
     }
@@ -236,36 +213,33 @@ const AdminCouponManagement: React.FC = () => {
   // Toggle status
   const handleToggleStatus = async (coupon: AdminCoupon) => {
     const action = coupon.isActive ? '비활성화' : '활성화';
-    if (!confirm(`이 쿠폰을 ${action}하시겠습니까?`)) return;
+    const confirmed = await confirm(`이 쿠폰을 ${action}하시겠습니까?`);
+    if (!confirmed) return;
 
     try {
-      await apiRequest(`/api/admin/coupons/${coupon.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ isActive: !coupon.isActive }),
-      });
-      alert(`쿠폰이 ${action}되었습니다.`);
+      await webApiService.admin.updateCoupon(coupon.id, { isActive: !coupon.isActive });
+      await alert(`쿠폰이 ${action}되었습니다.`);
       loadCoupons();
       loadStats();
     } catch (err: any) {
       console.error('Failed to toggle status:', err);
-      alert('상태 변경에 실패했습니다.');
+      await alert('상태 변경에 실패했습니다.');
     }
   };
 
   // Delete coupon
   const handleDelete = async (coupon: AdminCoupon) => {
-    if (!confirm('이 쿠폰을 삭제(비활성화)하시겠습니까?')) return;
+    const confirmed = await confirm('이 쿠폰을 삭제(비활성화)하시겠습니까?');
+    if (!confirmed) return;
 
     try {
-      await apiRequest(`/api/admin/coupons/${coupon.id}`, {
-        method: 'DELETE',
-      });
-      alert('쿠폰이 삭제되었습니다.');
+      await webApiService.admin.deleteCoupon(coupon.id);
+      await alert('쿠폰이 삭제되었습니다.');
       loadCoupons();
       loadStats();
     } catch (err: any) {
       console.error('Failed to delete coupon:', err);
-      alert('쿠폰 삭제에 실패했습니다.');
+      await alert('쿠폰 삭제에 실패했습니다.');
     }
   };
 
