@@ -516,6 +516,107 @@ export abstract class BaseAdminService extends BaseApiService {
       method: 'DELETE',
     });
   }
+
+  // === 쿠폰 관리 ===
+
+  async getCoupons(params: {
+    page?: number;
+    limit?: number;
+    status?: 'active' | 'inactive';
+    scope?: 'platform' | 'seller';
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<ApiResponse<{
+    coupons: any[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+    };
+  }>> {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const url = `${API_ENDPOINTS.ADMIN.COUPONS}?${queryParams.toString()}`;
+    return this.request<ApiResponse<any>>(url);
+  }
+
+  async getCouponDetail(couponId: string): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.COUPON_DETAIL(couponId));
+  }
+
+  async createCoupon(data: {
+    name: string;
+    code: string;
+    description?: string;
+    discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+    discountValue: number;
+    maxDiscountAmount?: number;
+    minimumOrderAmount?: number;
+    scope: { type: 'platform' | 'seller'; sellerUuid?: string };
+    appliesTo: 'product' | 'quote' | 'both';
+    validity: { startDate: string; endDate: string };
+    limits: { totalCount: number; perUserLimit: number };
+    isPublic: boolean;
+    issueMethod?: 'auto' | 'claim' | 'code' | 'manual';
+    autoTrigger?: 'signup' | 'first_purchase' | 'birthday';
+  }): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.COUPON_CREATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCoupon(couponId: string, data: Partial<{
+    name: string;
+    code: string;
+    description?: string;
+    discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+    discountValue: number;
+    maxDiscountAmount?: number;
+    minimumOrderAmount?: number;
+    scope: { type: 'platform' | 'seller'; sellerUuid?: string };
+    appliesTo: 'product' | 'quote' | 'both';
+    validity: { startDate: string; endDate: string };
+    limits: { totalCount: number; perUserLimit: number };
+    isPublic: boolean;
+    isActive: boolean;
+    issueMethod?: 'auto' | 'claim' | 'code' | 'manual';
+    autoTrigger?: 'signup' | 'first_purchase' | 'birthday';
+  }>): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.COUPON_UPDATE(couponId), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCoupon(couponId: string): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.COUPON_DELETE(couponId), {
+      method: 'DELETE',
+    });
+  }
+
+  async getCouponStats(): Promise<ApiResponse<{
+    overview: {
+      totalCoupons: number;
+      activeCoupons: number;
+      publicCoupons: number;
+      inactiveCoupons: number;
+      totalUsages: number;
+      totalDiscountAmount: number;
+      uniqueUsers: number;
+      totalDownloads: number;
+      conversionRate: number;
+    };
+  }>> {
+    return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.COUPON_STATS);
+  }
 }
 
 export class AdminServiceFactory {
