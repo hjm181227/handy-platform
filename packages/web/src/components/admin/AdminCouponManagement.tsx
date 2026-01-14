@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+// API Base URL
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '';
+
 // Types
 interface AdminCoupon {
   id: string;
@@ -112,7 +115,7 @@ const AdminCouponManagement: React.FC = () => {
   // API helpers
   const apiRequest = async (url: string, options?: RequestInit) => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(url, {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
