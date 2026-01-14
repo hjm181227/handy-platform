@@ -458,34 +458,41 @@ export function AuthModalContent() {
 
       {/*
         TODO: 휴대폰 번호인증 발신번호 심사 통과 후 활성화
-        이메일 로그인/회원가입은 휴대폰 인증이 필요하므로 심사 완료 전까지 숨김 처리
+        이메일 로그인/회원가입은 휴대폰 인증이 필요하므로 심사 완료 전까지 프로덕션에서 숨김 처리
+        개발/스테이지 환경에서는 테스트를 위해 표시
       */}
-      {/* 구분선 */}
-      {/* <div className="flex items-center my-8">
-        <div className="flex-grow border-t border-gray-200"></div>
-        <span className="mx-4 text-sm text-gray-400">또는</span>
-        <div className="flex-grow border-t border-gray-200"></div>
-      </div> */}
+      {/* 구분선 - 개발/스테이지 환경에서만 표시 */}
+      {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
+        <div className="flex items-center my-8">
+          <div className="flex-grow border-t border-gray-200"></div>
+          <span className="mx-4 text-sm text-gray-400">또는</span>
+          <div className="flex-grow border-t border-gray-200"></div>
+        </div>
+      )}
 
-      {/* 이메일로 시작하기 */}
-      {/* <button
-        onClick={() => setView('signup')}
-        disabled={loading}
-        className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
-      >
-        이메일로 시작하기
-      </button> */}
-
-      {/* 기존 계정 로그인 링크 */}
-      {/* <div className="mt-6 text-center">
-        <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
+      {/* 이메일로 시작하기 - 개발/스테이지 환경에서만 표시 */}
+      {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
         <button
-          onClick={() => setView('email-login')}
-          className="text-blue-600 text-sm font-medium hover:underline"
+          onClick={() => setView('signup')}
+          disabled={loading}
+          className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
         >
-          로그인
+          이메일로 시작하기
         </button>
-      </div> */}
+      )}
+
+      {/* 기존 계정 로그인 링크 - 개발/스테이지 환경에서만 표시 */}
+      {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
+        <div className="mt-6 text-center">
+          <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
+          <button
+            onClick={() => setView('email-login')}
+            className="text-blue-600 text-sm font-medium hover:underline"
+          >
+            로그인
+          </button>
+        </div>
+      )}
 
       {/* 하단 여백 */}
       <div className="flex-1 min-h-[40px]" />
