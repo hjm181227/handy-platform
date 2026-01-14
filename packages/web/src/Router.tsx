@@ -15,7 +15,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
 import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
-import { CustomOrderForm } from './components/product/CustomOrderForm';
+import { CustomOrderFlow } from './components/product/custom-order';
 import { EventBanners } from './components/layout/EventBanner';
 
 // Page Components
@@ -254,7 +254,7 @@ export function Router() {
   else if (pathname.match(/^\/product\/(.+)\/custom-order$/)) {
     const mCustomOrder = pathname.match(/^\/product\/(.+)\/custom-order$/)!;
     screen = (
-      <CustomOrderForm
+      <CustomOrderFlow
         productId={decodeURIComponent(mCustomOrder[1])}
         onBack={() => nav(`/product/${decodeURIComponent(mCustomOrder[1])}`)}
         onGo={nav}
