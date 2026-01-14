@@ -23,7 +23,51 @@ interface AdminCoupon {
   autoTrigger?: 'signup' | 'first_purchase' | 'birthday';
   stats?: { issuedCount: number; usedCount: number; totalDiscountAmount: number };
   createdAt?: string;
+  // Alternative field names from API
+  usage?: { totalLimit?: number; perUserLimit?: number; usedCount?: number };
+  scopeType?: 'platform' | 'seller';
+  sellerUuid?: string;
 }
+
+// Normalize coupon data from API response
+const normalizeCoupon = (coupon: any): AdminCoupon => {
+  // Handle scope - could be nested object or flat fields
+  let scope = coupon.scope;
+  if (!scope && (coupon.scopeType || coupon.sellerUuid)) {
+    scope = {
+      type: coupon.scopeType || (coupon.sellerUuid ? 'seller' : 'platform'),
+      sellerUuid: coupon.sellerUuid,
+    };
+  }
+
+  // Handle limits - could be 'limits' or 'usage'
+  let limits = coupon.limits;
+  if (!limits && coupon.usage) {
+    limits = {
+      totalCount: coupon.usage.totalLimit || 0,
+      issuedCount: coupon.usage.usedCount || 0,
+      perUserLimit: coupon.usage.perUserLimit || 1,
+    };
+  }
+
+  // Handle stats - field name variations
+  let stats = coupon.stats;
+  if (stats) {
+    stats = {
+      issuedCount: stats.issuedCount || limits?.issuedCount || 0,
+      usedCount: stats.usedCount || 0,
+      totalDiscountAmount: stats.totalDiscountAmount || stats.totalDiscount || 0,
+    };
+  }
+
+  return {
+    ...coupon,
+    id: coupon.id || coupon.couponUuid || coupon._id,
+    scope,
+    limits,
+    stats,
+  };
+};
 
 interface CouponOverviewStats {
   totalCoupons: number;
@@ -127,7 +171,8 @@ const AdminCouponManagement: React.FC = () => {
       });
 
       if (response.data) {
-        setCoupons(response.data.coupons || []);
+        const normalizedCoupons = (response.data.coupons || []).map(normalizeCoupon);
+        setCoupons(normalizedCoupons);
         if (response.data.pagination) {
           setPagination({
             currentPage: response.data.pagination.currentPage,
@@ -528,15 +573,23 @@ const AdminCouponManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-900">{coupon.stats?.usedCount || 0}</span>
-                        <span className="text-gray-500"> / {coupon.limits?.totalCount || 0}</span>
+                      <div className="text-sm space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 w-8">발급</span>
+                          <span className="font-medium text-blue-600">{coupon.limits?.issuedCount || coupon.stats?.issuedCount || 0}</span>
+                          <span className="text-gray-400">/</span>
+                          <span className="text-gray-600">{coupon.limits?.totalCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 w-8">사용</span>
+                          <span className="font-medium text-green-600">{coupon.stats?.usedCount || 0}</span>
+                        </div>
                       </div>
-                      <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-1">
+                      <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-2">
                         <div
                           className="h-full bg-blue-500 rounded-full"
                           style={{
-                            width: `${coupon.limits?.totalCount ? Math.min(((coupon.stats?.usedCount || 0) / coupon.limits.totalCount) * 100, 100) : 0}%`,
+                            width: `${coupon.limits?.totalCount ? Math.min(((coupon.limits?.issuedCount || 0) / coupon.limits.totalCount) * 100, 100) : 0}%`,
                           }}
                         />
                       </div>
