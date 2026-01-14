@@ -5,24 +5,24 @@ import { useAlert } from '../common';
 // Types
 interface AdminCoupon {
   id: string;
-  couponUuid: string;
+  couponUuid?: string;
   code: string;
   name: string;
   description?: string;
-  discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
-  discountValue: number;
+  discountType?: 'percentage' | 'fixed_amount' | 'free_shipping';
+  discountValue?: number;
   maxDiscountAmount?: number;
-  minimumOrderAmount: number;
-  scope: { type: 'platform' | 'seller'; sellerUuid?: string };
-  appliesTo: 'product' | 'quote' | 'both';
-  validity: { startDate: string; endDate: string };
-  limits: { totalCount: number; issuedCount: number; perUserLimit: number };
+  minimumOrderAmount?: number;
+  scope?: { type: 'platform' | 'seller'; sellerUuid?: string };
+  appliesTo?: 'product' | 'quote' | 'both';
+  validity?: { startDate: string; endDate: string };
+  limits?: { totalCount: number; issuedCount: number; perUserLimit: number };
   isActive: boolean;
-  isPublic: boolean;
+  isPublic?: boolean;
   issueMethod?: 'auto' | 'claim' | 'code' | 'manual';
   autoTrigger?: 'signup' | 'first_purchase' | 'birthday';
   stats?: { issuedCount: number; usedCount: number; totalDiscountAmount: number };
-  createdAt: string;
+  createdAt?: string;
 }
 
 interface CouponOverviewStats {
@@ -246,25 +246,29 @@ const AdminCouponManagement: React.FC = () => {
   // Edit modal
   const handleEdit = (coupon: AdminCoupon) => {
     setEditingCoupon(coupon);
+    const defaultValidity = {
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    };
     setFormData({
       name: coupon.name,
       description: coupon.description || '',
       code: coupon.code,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
+      discountType: coupon.discountType || 'percentage',
+      discountValue: coupon.discountValue || 0,
       maxDiscountAmount: coupon.maxDiscountAmount,
       minimumOrderAmount: coupon.minimumOrderAmount || 0,
-      scope: coupon.scope,
-      appliesTo: coupon.appliesTo,
-      validity: {
+      scope: coupon.scope || { type: 'platform' },
+      appliesTo: coupon.appliesTo || 'both',
+      validity: coupon.validity ? {
         startDate: coupon.validity.startDate.split('T')[0],
         endDate: coupon.validity.endDate.split('T')[0],
-      },
+      } : defaultValidity,
       limits: {
-        totalCount: coupon.limits.totalCount,
-        perUserLimit: coupon.limits.perUserLimit,
+        totalCount: coupon.limits?.totalCount || 100,
+        perUserLimit: coupon.limits?.perUserLimit || 1,
       },
-      isPublic: coupon.isPublic,
+      isPublic: coupon.isPublic ?? true,
       issueMethod: coupon.issueMethod || 'code',
       autoTrigger: coupon.autoTrigger,
     });
@@ -282,9 +286,9 @@ const AdminCouponManagement: React.FC = () => {
   const formatDiscount = (coupon: AdminCoupon) => {
     switch (coupon.discountType) {
       case 'percentage':
-        return `${coupon.discountValue}%`;
+        return `${coupon.discountValue || 0}%`;
       case 'fixed_amount':
-        return `${coupon.discountValue.toLocaleString()}원`;
+        return `${(coupon.discountValue || 0).toLocaleString()}원`;
       case 'free_shipping':
         return '무료배송';
       default:
@@ -293,11 +297,12 @@ const AdminCouponManagement: React.FC = () => {
   };
 
   const getStatusBadge = (coupon: AdminCoupon) => {
-    const now = new Date();
-    const endDate = new Date(coupon.validity.endDate);
-
-    if (endDate < now) {
-      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">만료됨</span>;
+    if (coupon.validity) {
+      const now = new Date();
+      const endDate = new Date(coupon.validity.endDate);
+      if (endDate < now) {
+        return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">만료됨</span>;
+      }
     }
     if (!coupon.isActive) {
       return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">비활성</span>;
@@ -305,7 +310,10 @@ const AdminCouponManagement: React.FC = () => {
     return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">활성</span>;
   };
 
-  const getScopeBadge = (scope: { type: string }) => {
+  const getScopeBadge = (scope?: { type: string }) => {
+    if (!scope) {
+      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">-</span>;
+    }
     if (scope.type === 'platform') {
       return <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">플랫폼</span>;
     }
@@ -506,23 +514,29 @@ const AdminCouponManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">{getScopeBadge(coupon.scope)}</td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {new Date(coupon.validity.startDate).toLocaleDateString()}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        ~ {new Date(coupon.validity.endDate).toLocaleDateString()}
-                      </div>
+                      {coupon.validity ? (
+                        <>
+                          <div className="text-sm text-gray-900">
+                            {new Date(coupon.validity.startDate).toLocaleDateString()}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ~ {new Date(coupon.validity.endDate).toLocaleDateString()}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm">
                         <span className="font-medium text-gray-900">{coupon.stats?.usedCount || 0}</span>
-                        <span className="text-gray-500"> / {coupon.limits.totalCount}</span>
+                        <span className="text-gray-500"> / {coupon.limits?.totalCount || 0}</span>
                       </div>
                       <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-1">
                         <div
                           className="h-full bg-blue-500 rounded-full"
                           style={{
-                            width: `${Math.min(((coupon.stats?.usedCount || 0) / coupon.limits.totalCount) * 100, 100)}%`,
+                            width: `${coupon.limits?.totalCount ? Math.min(((coupon.stats?.usedCount || 0) / coupon.limits.totalCount) * 100, 100) : 0}%`,
                           }}
                         />
                       </div>
