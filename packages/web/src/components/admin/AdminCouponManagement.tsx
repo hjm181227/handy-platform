@@ -98,7 +98,6 @@ interface CouponOverviewStats {
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type ScopeFilter = 'all' | 'platform' | 'seller';
-type IssueMethodFilter = 'all' | 'auto' | 'claim' | 'code' | 'manual';
 
 // Generate random coupon code
 const generateCouponCode = () => {
@@ -154,7 +153,6 @@ const AdminCouponManagement: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('all');
-  const [issueMethodFilter, setIssueMethodFilter] = useState<IssueMethodFilter>('all');
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -182,7 +180,7 @@ const AdminCouponManagement: React.FC = () => {
         limit: 20,
         search: searchQuery || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
-        scope: scopeFilter !== 'all' ? scopeFilter : undefined,
+        scopeType: scopeFilter !== 'all' ? scopeFilter : undefined,
       });
 
       if (response.data) {
@@ -218,7 +216,7 @@ const AdminCouponManagement: React.FC = () => {
 
   useEffect(() => {
     loadCoupons();
-  }, [pagination.currentPage, statusFilter]);
+  }, [pagination.currentPage, statusFilter, scopeFilter]);
 
   useEffect(() => {
     loadStats();
@@ -481,7 +479,10 @@ const AdminCouponManagement: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">상태</label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as StatusFilter);
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
             >
               <option value="all">전체</option>
@@ -493,7 +494,10 @@ const AdminCouponManagement: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">발급주체</label>
             <select
               value={scopeFilter}
-              onChange={(e) => setScopeFilter(e.target.value as ScopeFilter)}
+              onChange={(e) => {
+                setScopeFilter(e.target.value as ScopeFilter);
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
             >
               <option value="all">전체</option>
@@ -503,7 +507,10 @@ const AdminCouponManagement: React.FC = () => {
           </div>
           <div className="flex items-end">
             <button
-              onClick={loadCoupons}
+              onClick={() => {
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                loadCoupons();
+              }}
               disabled={loading}
               className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
             >
