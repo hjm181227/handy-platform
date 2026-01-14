@@ -23,6 +23,9 @@ interface AdminCoupon {
   autoTrigger?: 'signup' | 'first_purchase' | 'birthday';
   stats?: { issuedCount: number; usedCount: number; totalDiscountAmount: number };
   createdAt?: string;
+  // Creator info - 발급주체
+  createdBy?: 'admin' | 'seller';
+  creatorId?: string;
   // Alternative field names from API
   usage?: { totalLimit?: number; perUserLimit?: number; usedCount?: number };
   scopeType?: 'platform' | 'seller';
@@ -31,13 +34,24 @@ interface AdminCoupon {
 
 // Normalize coupon data from API response
 const normalizeCoupon = (coupon: any): AdminCoupon => {
-  // Handle scope - could be nested object or flat fields
+  // Handle createdBy - determines the issuer (platform admin or seller)
+  const createdBy = coupon.createdBy || (coupon.scope?.type === 'seller' ? 'seller' : 'admin');
+
+  // Handle scope - could be nested object or flat fields or derived from createdBy
   let scope = coupon.scope;
-  if (!scope && (coupon.scopeType || coupon.sellerUuid)) {
-    scope = {
-      type: coupon.scopeType || (coupon.sellerUuid ? 'seller' : 'platform'),
-      sellerUuid: coupon.sellerUuid,
-    };
+  if (!scope) {
+    if (coupon.scopeType || coupon.sellerUuid) {
+      scope = {
+        type: coupon.scopeType || (coupon.sellerUuid ? 'seller' : 'platform'),
+        sellerUuid: coupon.sellerUuid,
+      };
+    } else if (createdBy) {
+      // Derive scope from createdBy
+      scope = {
+        type: createdBy === 'seller' ? 'seller' : 'platform',
+        sellerUuid: coupon.creatorId,
+      };
+    }
   }
 
   // Handle limits - could be 'limits' or 'usage'
@@ -63,6 +77,7 @@ const normalizeCoupon = (coupon: any): AdminCoupon => {
   return {
     ...coupon,
     id: coupon.id || coupon.couponUuid || coupon._id,
+    createdBy,
     scope,
     limits,
     stats,
@@ -355,11 +370,13 @@ const AdminCouponManagement: React.FC = () => {
     return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">활성</span>;
   };
 
-  const getScopeBadge = (scope?: { type: string }) => {
-    if (!scope) {
+  const getCreatorBadge = (createdBy?: 'admin' | 'seller', scope?: { type: string }) => {
+    // Use createdBy first, fallback to scope.type
+    const issuerType = createdBy || scope?.type;
+    if (!issuerType) {
       return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">-</span>;
     }
-    if (scope.type === 'platform') {
+    if (issuerType === 'admin' || issuerType === 'platform') {
       return <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">플랫폼</span>;
     }
     return <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700">판매자</span>;
@@ -557,7 +574,7 @@ const AdminCouponManagement: React.FC = () => {
                         <div className="text-xs text-gray-500">최대 {coupon.maxDiscountAmount.toLocaleString()}원</div>
                       )}
                     </td>
-                    <td className="px-6 py-4">{getScopeBadge(coupon.scope)}</td>
+                    <td className="px-6 py-4">{getCreatorBadge(coupon.createdBy, coupon.scope)}</td>
                     <td className="px-6 py-4">
                       {coupon.validity ? (
                         <>
