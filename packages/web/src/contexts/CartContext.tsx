@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { useMiniRouter } from '../utils';
 import { useResponsiveCart } from '../hooks/useResponsiveCart';
+import { useAuthModal } from './AuthModalContext';
 
 export interface CartContextType {
   /** 장바구니 아이템 수 */
@@ -50,6 +51,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const { isMobile } = useResponsiveCart();
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const { openLogin } = useAuthModal();
 
   const [cartCount, setCartCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -84,8 +86,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const addToCart = useCallback(async (productId: string, options?: Record<string, string>) => {
     // 로그인 확인
     if (!currentUser) {
-      showToast('로그인이 필요한 서비스입니다.', 'error');
-      nav('/login');
+      openLogin();
       return;
     }
 
@@ -113,8 +114,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const handleCheckout = useCallback(async () => {
     // 로그인 확인
     if (!currentUser) {
-      showToast('로그인이 필요한 서비스입니다.', 'error');
-      nav('/login');
+      openLogin();
       return;
     }
 
@@ -162,8 +162,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const handleCartClick = useCallback(() => {
     // 로그인 확인
     if (!currentUser) {
-      showToast('로그인이 필요한 서비스입니다.', 'error');
-      nav('/login');
+      openLogin();
       return;
     }
 
@@ -172,7 +171,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     } else {
       setDrawerOpen(true); // PC: Drawer 열기
     }
-  }, [currentUser, isMobile, showToast, nav]);
+  }, [currentUser, isMobile, openLogin, nav]);
 
   /**
    * 로그인 상태 변경 시 장바구니 로딩

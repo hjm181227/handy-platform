@@ -15,7 +15,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
 import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
-import { CustomOrderForm } from './components/product/CustomOrderForm';
+import { CustomOrderFlow } from './components/product/custom-order';
 import { EventBanners } from './components/layout/EventBanner';
 
 // Page Components
@@ -121,6 +121,7 @@ import AdminProductManagement from './components/admin/AdminProductManagement';
 import SellerApplicationManagement from './components/admin/SellerApplicationManagement';
 import CategoryManagement from './components/admin/CategoryManagement';
 import BannerManagement from './components/admin/BannerManagement';
+import AdminCouponManagement from './components/admin/AdminCouponManagement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 /**
@@ -253,7 +254,7 @@ export function Router() {
   else if (pathname.match(/^\/product\/(.+)\/custom-order$/)) {
     const mCustomOrder = pathname.match(/^\/product\/(.+)\/custom-order$/)!;
     screen = (
-      <CustomOrderForm
+      <CustomOrderFlow
         productId={decodeURIComponent(mCustomOrder[1])}
         onBack={() => nav(`/product/${decodeURIComponent(mCustomOrder[1])}`)}
         onGo={nav}
@@ -796,6 +797,12 @@ export function Router() {
       screen = (
         <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <BannerManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === '/admin/coupons') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <AdminCouponManagement />
         </AdminLayout>
       );
     } else {

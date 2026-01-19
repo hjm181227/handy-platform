@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { webApiService } from '../../../services/apiService';
 import { SellerLayout } from '../../layout/SellerLayout';
 import { useAlert } from '../../common';
-import {
+import type {
   SellerCoupon,
-  CreateSellerCouponRequest,
 } from '@handy-platform/shared';
 
 interface CouponManagementProps {
@@ -14,9 +13,41 @@ interface CouponManagementProps {
 type StatusFilter = 'all' | 'active' | 'inactive' | 'expired';
 type DiscountType = 'percentage' | 'fixed_amount' | 'free_shipping';
 
-const initialFormData: CreateSellerCouponRequest = {
+// Extended form data type with code field
+interface CouponFormData {
+  name: string;
+  description?: string;
+  code?: string;
+  discountType: 'percentage' | 'fixed_amount' | 'free_shipping';
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minimumOrderAmount?: number;
+  appliesTo: 'product' | 'quote' | 'both';
+  validity: {
+    startDate: string;
+    endDate: string;
+  };
+  limits?: {
+    totalCount?: number;
+    perUserLimit?: number;
+  };
+  isPublic?: boolean;
+}
+
+// Generate random coupon code
+const generateCouponCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+const initialFormData: CouponFormData = {
   name: '',
   description: '',
+  code: generateCouponCode(),
   discountType: 'percentage',
   discountValue: 10,
   maxDiscountAmount: undefined,
@@ -40,7 +71,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<SellerCoupon | null>(null);
-  const [formData, setFormData] = useState<CreateSellerCouponRequest>(initialFormData);
+  const [formData, setFormData] = useState<CouponFormData>(initialFormData);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -74,6 +105,17 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       await alert('쿠폰명을 입력해주세요.', { variant: 'error' });
+      return;
+    }
+
+    if (!formData.code?.trim()) {
+      await alert('쿠폰 코드를 입력해주세요.', { variant: 'error' });
+      return;
+    }
+
+    // Validate coupon code format (alphanumeric only)
+    if (!/^[A-Z0-9]+$/.test(formData.code)) {
+      await alert('쿠폰 코드는 영문 대문자와 숫자만 사용할 수 있습니다.', { variant: 'error' });
       return;
     }
 
@@ -151,6 +193,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
     setFormData({
       name: coupon.name,
       description: coupon.description || '',
+      code: coupon.code,
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
       maxDiscountAmount: coupon.maxDiscountAmount,
@@ -169,7 +212,10 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
   // 새 쿠폰 모달 열기
   const handleCreate = () => {
     setEditingCoupon(null);
-    setFormData(initialFormData);
+    setFormData({
+      ...initialFormData,
+      code: generateCouponCode(),
+    });
     setShowModal(true);
   };
 
@@ -407,6 +453,29 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     placeholder="예: 신규 회원 10% 할인"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    쿠폰 코드 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.code || ''}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono uppercase"
+                      placeholder="SUMMER2024"
+                      maxLength={20}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
+                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                    >
+                      자동 생성
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">고객이 입력할 쿠폰 코드입니다. 영문 대문자와 숫자만 사용 가능합니다.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">설명</label>

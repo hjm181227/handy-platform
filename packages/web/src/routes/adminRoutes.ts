@@ -53,6 +53,13 @@ export const adminRoutes: RouteConfig[] = [
     requireAuth: true,
     requireRole: 'admin',
   },
+  // 쿠폰 관리
+  {
+    path: '/admin/coupons',
+    layout: 'admin',
+    requireAuth: true,
+    requireRole: 'admin',
+  },
   // 관리자 대시보드 (마지막에 매칭)
   {
     path: '/admin',

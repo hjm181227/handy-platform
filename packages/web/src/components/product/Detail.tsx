@@ -6,6 +6,7 @@ import { CategoryDisplay } from './CategoryDisplay';
 import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 
 export function Detail({
   id,
@@ -22,6 +23,9 @@ export function Detail({
   currentUser?: User | null;
   onGo?: (path: string) => void;  // ✅ sessionStorage 사용으로 1개 인자만
 }) {
+  // 로그인 모달
+  const { openLogin } = useAuthModal();
+
   // 모든 상태를 컴포넌트 최상단에 선언 (Hook 순서 보장)
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,8 +136,7 @@ export function Detail({
 
     // 로그인 체크
     if (!currentUser) {
-      setCartMessage('로그인이 필요한 서비스입니다.');
-      setTimeout(() => setCartMessage(null), 3000);
+      openLogin();
       return;
     }
 
@@ -198,8 +201,7 @@ export function Detail({
 
     // 로그인 체크
     if (!currentUser) {
-      setCartMessage('로그인이 필요한 서비스입니다.');
-      setTimeout(() => setCartMessage(null), 3000);
+      openLogin();
       return;
     }
 
