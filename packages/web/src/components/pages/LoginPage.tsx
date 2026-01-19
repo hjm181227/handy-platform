@@ -239,15 +239,18 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <span className="text-gray-500 text-sm">계정이 없으신가요? </span>
-          <button
-            onClick={() => onGo("/signup")}
-            className="text-blue-600 text-sm font-medium hover:underline"
-          >
-            회원가입
-          </button>
-        </div>
+        {/* 회원가입 링크 - 개발/스테이지 환경에서만 표시 */}
+        {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
+          <div className="mt-6 text-center">
+            <span className="text-gray-500 text-sm">계정이 없으신가요? </span>
+            <button
+              onClick={() => onGo("/signup")}
+              className="text-blue-600 text-sm font-medium hover:underline"
+            >
+              회원가입
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -314,16 +317,18 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         <div className="flex-grow border-t border-gray-200"></div>
       </div>
 
-      {/* 이메일로 시작하기 */}
-      <button
-        onClick={() => onGo("/signup")}
-        disabled={loading}
-        className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
-      >
-        이메일로 시작하기
-      </button>
+      {/* 이메일로 시작하기 (회원가입) - 개발/스테이지 환경에서만 표시 */}
+      {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
+        <button
+          onClick={() => onGo("/signup")}
+          disabled={loading}
+          className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
+        >
+          이메일로 시작하기
+        </button>
+      )}
 
-      {/* 기존 계정 로그인 링크 */}
+      {/* 기존 계정 로그인 링크 - 모든 환경에서 표시 */}
       <div className="mt-6 text-center">
         <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
         <button
