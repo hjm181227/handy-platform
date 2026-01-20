@@ -43,7 +43,11 @@
     "deploy:stage:quick": "npm run deploy:stage --workspace=packages/web",
     "workspace:install": "npm install --workspaces",
     "workspace:clean": "npm run clean --workspaces --if-present",
-    "bundle:build": "cd packages/mobile/android && ./gradlew bundleRelease"
+    "bundle:build": "cd packages/mobile/android && ./gradlew bundleRelease",
+    "ml:train": "cd packages/ml && python training/scripts/train.py",
+    "ml:evaluate": "cd packages/ml && python training/scripts/evaluate.py",
+    "ml:export": "cd packages/ml && python training/scripts/export.py",
+    "ml:validate": "cd packages/ml && python training/scripts/validate_dataset.py"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",

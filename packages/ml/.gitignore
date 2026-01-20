@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# DVC - track .dvc files but not data
+*.dvc
+!datasets/.dvc/
+
+# Dataset images and annotations (tracked by DVC)
+datasets/*/images/
+datasets/*/annotations/
+datasets/*/labels/
+!datasets/*/.gitkeep
+!datasets/*/metadata.json
+
+# Model weights (tracked by DVC or model registry)
+models/nail_detector/*/model.pt
+models/nail_detector/*/model.onnx
+models/nail_detector/*/model.tflite
+models/nail_detector/*/*.mlpackage/
+
+# Training runs
+runs/
+mlruns/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Environment
+.env
+.env.local

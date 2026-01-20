@@ -1,0 +1,80 @@
+{
+  "version": "1.0.0",
+  "name": "nail_detection_v1",
+  "description": "Initial nail detection dataset for width measurement. Contains images of thumbs and four-finger captures on credit cards.",
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z",
+  "statistics": {
+    "total_images": 0,
+    "total_annotations": 0,
+    "images_with_card": 0,
+    "images_thumb_only": 0,
+    "images_four_fingers": 0
+  },
+  "splits": {
+    "train": {
+      "images": 0,
+      "annotations": 0
+    },
+    "val": {
+      "images": 0,
+      "annotations": 0
+    },
+    "test": {
+      "images": 0,
+      "annotations": 0
+    }
+  },
+  "classes": [
+    {
+      "id": 0,
+      "name": "credit_card",
+      "description": "Credit card used as size reference (85.6mm x 53.98mm)"
+    },
+    {
+      "id": 1,
+      "name": "nail_thumb",
+      "description": "Thumbnail (captured separately due to angle)"
+    },
+    {
+      "id": 2,
+      "name": "nail_index",
+      "description": "Index finger nail"
+    },
+    {
+      "id": 3,
+      "name": "nail_middle",
+      "description": "Middle finger nail"
+    },
+    {
+      "id": 4,
+      "name": "nail_ring",
+      "description": "Ring finger nail"
+    },
+    {
+      "id": 5,
+      "name": "nail_little",
+      "description": "Little finger nail"
+    }
+  ],
+  "collection_info": {
+    "sources": ["manual_collection"],
+    "lighting_conditions": ["natural", "indoor_warm", "indoor_cool"],
+    "skin_tone_distribution": {
+      "light": 0,
+      "medium": 0,
+      "dark": 0
+    },
+    "device_types": ["smartphone"],
+    "capture_scenarios": {
+      "thumb_on_card": "Single thumb placed on credit card, nail facing camera",
+      "four_fingers_on_card": "Index, middle, ring, little fingers aligned on credit card"
+    }
+  },
+  "annotation_format": "yolo",
+  "annotation_guidelines": {
+    "bounding_box": "Tight box around nail area only, excluding cuticle and skin",
+    "width_priority": "Ensure left and right edges are precisely marked for width measurement"
+  },
+  "license": "proprietary"
+}
