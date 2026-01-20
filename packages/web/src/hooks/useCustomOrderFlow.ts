@@ -6,13 +6,19 @@ import { NailSizeData } from '@handy-platform/shared/src/services/user/UserServi
 // 커스텀 주문 단계 정의
 export type CustomOrderStep = 'shape' | 'length' | 'size' | 'details' | 'date' | 'confirm' | 'complete';
 
-// 손가락별 사이즈 타입 (주문서용 - 문자열)
-export interface FingerSizes {
+// 한 손의 손가락별 사이즈 타입
+export interface HandSizes {
   thumb: string;
   index: string;
   middle: string;
   ring: string;
-  pinky: string;
+  little: string;
+}
+
+// 양손 사이즈 타입 (주문서용)
+export interface FingerSizes {
+  leftHand: HandSizes;
+  rightHand: HandSizes;
 }
 
 // 커스텀 주문 폼 데이터
@@ -46,16 +52,22 @@ interface CustomOrderFlowState {
 const STEP_ORDER: CustomOrderStep[] = ['shape', 'length', 'size', 'details', 'date', 'confirm', 'complete'];
 const VISIBLE_STEPS = STEP_ORDER.length - 1; // complete 단계는 프로그레스에서 제외
 
+// 빈 손 사이즈
+const emptyHandSizes: HandSizes = {
+  thumb: '',
+  index: '',
+  middle: '',
+  ring: '',
+  little: '',
+};
+
 // 초기 데이터
 const initialData: CustomOrderFormData = {
   shape: 'ROUND',
   length: 'MEDIUM',
   sizes: {
-    thumb: '',
-    index: '',
-    middle: '',
-    ring: '',
-    pinky: '',
+    leftHand: { ...emptyHandSizes },
+    rightHand: { ...emptyHandSizes },
   },
   desiredColor: '',
   request: '',
@@ -93,15 +105,24 @@ export function useCustomOrderFlow(productId: string) {
 
         let initialSizes = initialData.sizes;
 
-        // 사용자 네일 사이즈가 있으면 초기값으로 설정 (왼손 기준)
+        // 사용자 네일 사이즈가 있으면 초기값으로 설정 (양손 모두)
         if (nailSizeResponse.success && nailSizeResponse.data) {
           const nailSize = nailSizeResponse.data;
           initialSizes = {
-            thumb: nailSize.leftHand.thumb?.toString() || '',
-            index: nailSize.leftHand.index?.toString() || '',
-            middle: nailSize.leftHand.middle?.toString() || '',
-            ring: nailSize.leftHand.ring?.toString() || '',
-            pinky: nailSize.leftHand.little?.toString() || '', // little → pinky 매핑
+            leftHand: {
+              thumb: nailSize.leftHand.thumb?.toString() || '',
+              index: nailSize.leftHand.index?.toString() || '',
+              middle: nailSize.leftHand.middle?.toString() || '',
+              ring: nailSize.leftHand.ring?.toString() || '',
+              little: nailSize.leftHand.little?.toString() || '',
+            },
+            rightHand: {
+              thumb: nailSize.rightHand.thumb?.toString() || '',
+              index: nailSize.rightHand.index?.toString() || '',
+              middle: nailSize.rightHand.middle?.toString() || '',
+              ring: nailSize.rightHand.ring?.toString() || '',
+              little: nailSize.rightHand.little?.toString() || '',
+            },
           };
         }
 
@@ -195,15 +216,18 @@ export function useCustomOrderFlow(productId: string) {
     }));
   }, []);
 
-  // 사이즈 업데이트
-  const updateSize = useCallback((finger: keyof FingerSizes, value: string) => {
+  // 사이즈 업데이트 (양손 지원)
+  const updateSize = useCallback((hand: 'leftHand' | 'rightHand', finger: keyof HandSizes, value: string) => {
     setState(prev => ({
       ...prev,
       data: {
         ...prev.data,
         sizes: {
           ...prev.data.sizes,
-          [finger]: value,
+          [hand]: {
+            ...prev.data.sizes[hand],
+            [finger]: value,
+          },
         },
       },
     }));
@@ -222,10 +246,11 @@ export function useCustomOrderFlow(productId: string) {
       return { success: false, error: '판매자 정보를 찾을 수 없습니다.' };
     }
 
-    // 사이즈 필수 검증
-    const allSizesFilled = Object.values(data.sizes).every(s => s.trim() !== '');
-    if (!allSizesFilled) {
-      return { success: false, error: '모든 손가락 사이즈를 입력해주세요.' };
+    // 사이즈 필수 검증 (양손 모든 손가락)
+    const leftHandFilled = Object.values(data.sizes.leftHand).every(s => s.trim() !== '');
+    const rightHandFilled = Object.values(data.sizes.rightHand).every(s => s.trim() !== '');
+    if (!leftHandFilled || !rightHandFilled) {
+      return { success: false, error: '양손의 모든 손가락 사이즈를 입력해주세요.' };
     }
 
     setState(prev => ({ ...prev, submitting: true, error: null }));
@@ -341,9 +366,11 @@ export function useCustomOrderFlow(productId: string) {
     return state.userNailSize !== null;
   }, [state.userNailSize]);
 
-  // 사이즈가 모두 입력되었는지 확인
+  // 사이즈가 모두 입력되었는지 확인 (양손)
   const isSizesComplete = useCallback(() => {
-    return Object.values(state.data.sizes).every(s => s.trim() !== '');
+    const leftComplete = Object.values(state.data.sizes.leftHand).every(s => s.trim() !== '');
+    const rightComplete = Object.values(state.data.sizes.rightHand).every(s => s.trim() !== '');
+    return leftComplete && rightComplete;
   }, [state.data.sizes]);
 
   return {

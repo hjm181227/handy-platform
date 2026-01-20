@@ -1,16 +1,19 @@
 import { FaEdit } from 'react-icons/fa';
 import { Product, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NailShape, NailLength } from '@handy-platform/shared';
 import { OrderStepLayout, OrderStepButton } from '../common';
-import { CustomOrderFormData, FingerSizes } from '../../../../hooks/useCustomOrderFlow';
+import { CustomOrderFormData, HandSizes } from '../../../../hooks/useCustomOrderFlow';
 
 // 손가락 한글명
-const FINGER_NAMES: Record<keyof FingerSizes, string> = {
+const FINGER_NAMES: Record<keyof HandSizes, string> = {
   thumb: '엄지',
   index: '검지',
   middle: '중지',
   ring: '약지',
-  pinky: '소지',
+  little: '소지',
 };
+
+// 손가락 순서
+const FINGER_ORDER: (keyof HandSizes)[] = ['thumb', 'index', 'middle', 'ring', 'little'];
 
 interface ConfirmStepProps {
   data: CustomOrderFormData;
@@ -40,6 +43,29 @@ export function ConfirmStep({
     if (!dateStr) return '판매자와 상의 예정';
     const date = new Date(dateStr);
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+
+  // 한 손 사이즈 렌더링
+  const renderHandSizes = (hand: 'leftHand' | 'rightHand', label: string, icon: string) => {
+    const handSizes = data.sizes[hand];
+    return (
+      <div className="bg-gray-50 rounded-lg p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">{icon}</span>
+          <span className="text-sm font-medium text-gray-700">{label}</span>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {FINGER_ORDER.map((finger) => (
+            <span
+              key={`${hand}-${finger}`}
+              className="bg-white border px-2 py-1 rounded text-xs"
+            >
+              {FINGER_NAMES[finger]}: {handSizes[finger]}mm
+            </span>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -94,7 +120,7 @@ export function ConfirmStep({
           </div>
         </div>
 
-        {/* 사이즈 */}
+        {/* 사이즈 (양손) */}
         <div className="bg-white border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">사이즈</h3>
@@ -105,15 +131,9 @@ export function ConfirmStep({
               <FaEdit className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(data.sizes).map(([finger, size]) => (
-              <span
-                key={finger}
-                className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm"
-              >
-                {FINGER_NAMES[finger as keyof FingerSizes]}: {size}mm
-              </span>
-            ))}
+          <div className="space-y-3">
+            {renderHandSizes('leftHand', '왼손', '🤚')}
+            {renderHandSizes('rightHand', '오른손', '✋')}
           </div>
         </div>
 
