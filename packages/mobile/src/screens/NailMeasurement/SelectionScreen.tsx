@@ -6,44 +6,55 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ScrollView,
 } from 'react-native';
+
+type FingerSelection = 'thumb' | 'four_fingers';
 
 interface SelectionScreenProps {
   selectedHand: 'left' | 'right';
-  selectedFinger: string;
+  selectedFingerType: FingerSelection;
   onHandSelect: (hand: 'left' | 'right') => void;
-  onFingerSelect: (finger: string) => void;
+  onFingerTypeSelect: (fingerType: FingerSelection) => void;
   onStartCamera: () => void;
   onClose: () => void;
 }
 
 const SelectionScreen: React.FC<SelectionScreenProps> = ({
   selectedHand,
-  selectedFinger,
+  selectedFingerType,
   onHandSelect,
-  onFingerSelect,
+  onFingerTypeSelect,
   onStartCamera,
   onClose,
 }) => {
-  const fingers = ['엄지', '검지', '중지', '약지', '새끼'];
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onClose}>
-          <Text style={styles.backButtonText}>✕</Text>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Text style={styles.closeButtonText}>×</Text>
         </TouchableOpacity>
         <Text style={styles.title}>네일 사이즈 측정</Text>
+        <View style={styles.placeholder} />
       </View>
 
       {/* 메인 컨텐츠 */}
-      <View style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {/* 안내 텍스트 */}
+        <View style={styles.guideSection}>
+          <Text style={styles.guideTitle}>AI 자동 측정</Text>
+          <Text style={styles.guideText}>
+            신용카드와 함께 손톱을 촬영하면{'\n'}
+            AI가 자동으로 사이즈를 측정해드려요
+          </Text>
+        </View>
+
         {/* 손 선택 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>측정할 손을 선택하세요</Text>
+          <Text style={styles.sectionTitle}>측정할 손</Text>
           <View style={styles.handButtons}>
             <TouchableOpacity
               style={[
@@ -52,13 +63,14 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
               ]}
               onPress={() => onHandSelect('left')}
             >
+              <Text style={styles.handEmoji}>🤚</Text>
               <Text
                 style={[
                   styles.handButtonText,
                   selectedHand === 'left' && styles.handButtonTextActive,
                 ]}
               >
-                🤚 왼손
+                왼손
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -68,13 +80,14 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
               ]}
               onPress={() => onHandSelect('right')}
             >
+              <Text style={styles.handEmoji}>✋</Text>
               <Text
                 style={[
                   styles.handButtonText,
                   selectedHand === 'right' && styles.handButtonTextActive,
                 ]}
               >
-                ✋ 오른손
+                오른손
               </Text>
             </TouchableOpacity>
           </View>
@@ -82,35 +95,72 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
 
         {/* 손가락 선택 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>측정할 손가락을 선택하세요</Text>
-          <View style={styles.fingerButtons}>
-            {fingers.map((finger) => (
-              <TouchableOpacity
-                key={finger}
-                style={[
-                  styles.fingerButton,
-                  selectedFinger === finger && styles.fingerButtonActive,
-                ]}
-                onPress={() => onFingerSelect(finger)}
-              >
-                <Text
-                  style={[
-                    styles.fingerButtonText,
-                    selectedFinger === finger && styles.fingerButtonTextActive,
-                  ]}
-                >
-                  {finger}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.sectionTitle}>측정할 손가락</Text>
+          <View style={styles.fingerTypeButtons}>
+            <TouchableOpacity
+              style={[
+                styles.fingerTypeButton,
+                selectedFingerType === 'thumb' && styles.fingerTypeButtonActive,
+              ]}
+              onPress={() => onFingerTypeSelect('thumb')}
+            >
+              <View style={styles.fingerTypeContent}>
+                <Text style={styles.fingerTypeEmoji}>👍</Text>
+                <View style={styles.fingerTypeTextContainer}>
+                  <Text
+                    style={[
+                      styles.fingerTypeTitle,
+                      selectedFingerType === 'thumb' && styles.fingerTypeTextActive,
+                    ]}
+                  >
+                    엄지
+                  </Text>
+                  <Text style={styles.fingerTypeDesc}>엄지손가락 1개 측정</Text>
+                </View>
+              </View>
+              {selectedFingerType === 'thumb' && (
+                <View style={styles.checkMark}>
+                  <Text style={styles.checkMarkText}>✓</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.fingerTypeButton,
+                selectedFingerType === 'four_fingers' && styles.fingerTypeButtonActive,
+              ]}
+              onPress={() => onFingerTypeSelect('four_fingers')}
+            >
+              <View style={styles.fingerTypeContent}>
+                <Text style={styles.fingerTypeEmoji}>🖐️</Text>
+                <View style={styles.fingerTypeTextContainer}>
+                  <Text
+                    style={[
+                      styles.fingerTypeTitle,
+                      selectedFingerType === 'four_fingers' && styles.fingerTypeTextActive,
+                    ]}
+                  >
+                    나머지 4개 손가락
+                  </Text>
+                  <Text style={styles.fingerTypeDesc}>검지, 중지, 약지, 새끼 한번에 측정</Text>
+                </View>
+              </View>
+              {selectedFingerType === 'four_fingers' && (
+                <View style={styles.checkMark}>
+                  <Text style={styles.checkMarkText}>✓</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+
+      </ScrollView>
 
       {/* 하단 버튼 */}
       <View style={styles.bottomButton}>
         <TouchableOpacity style={styles.startButton} onPress={onStartCamera}>
-          <Text style={styles.startButtonText}>📷 촬영 시작</Text>
+          <Text style={styles.startButtonText}>촬영하기</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -120,121 +170,176 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
   },
-  backButton: {
+  closeButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+  closeButtonText: {
+    color: '#333',
+    fontSize: 28,
+    fontWeight: '300',
   },
   title: {
-    flex: 1,
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginRight: 40,
+    color: '#212529',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  placeholder: {
+    width: 40,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 30,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
+  },
+  guideSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  guideTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 8,
+  },
+  guideText: {
+    fontSize: 15,
+    color: '#6C757D',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   section: {
-    marginBottom: 50,
+    marginBottom: 24,
   },
   sectionTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 30,
+    fontSize: 14,
     fontWeight: '600',
+    color: '#495057',
+    marginBottom: 12,
+    marginLeft: 4,
   },
   handButtons: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
+    gap: 12,
   },
   handButton: {
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFF',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    minWidth: 120,
+    borderColor: '#E9ECEF',
+    gap: 8,
   },
   handButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#E8F4FD',
     borderColor: '#007AFF',
+  },
+  handEmoji: {
+    fontSize: 24,
   },
   handButtonText: {
-    color: '#FFF',
     fontSize: 16,
-    textAlign: 'center',
     fontWeight: '500',
+    color: '#495057',
   },
   handButtonTextActive: {
-    fontWeight: 'bold',
+    color: '#007AFF',
+    fontWeight: '600',
   },
-  fingerButtons: {
+  fingerTypeButtons: {
+    gap: 12,
+  },
+  fingerTypeButton: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 15,
-  },
-  fingerButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFF',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    minWidth: 80,
+    borderColor: '#E9ECEF',
   },
-  fingerButtonActive: {
-    backgroundColor: '#007AFF',
+  fingerTypeButtonActive: {
+    backgroundColor: '#E8F4FD',
     borderColor: '#007AFF',
   },
-  fingerButtonText: {
+  fingerTypeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  fingerTypeEmoji: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  fingerTypeTextContainer: {
+    flex: 1,
+  },
+  fingerTypeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 2,
+  },
+  fingerTypeTextActive: {
+    color: '#007AFF',
+  },
+  fingerTypeDesc: {
+    fontSize: 13,
+    color: '#6C757D',
+  },
+  checkMark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkMarkText: {
     color: '#FFF',
     fontSize: 14,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  fingerButtonTextActive: {
     fontWeight: 'bold',
   },
   bottomButton: {
-    paddingHorizontal: 30,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 34,
+    paddingTop: 12,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E9ECEF',
   },
   startButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 30,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
   },
   startButtonText: {
     color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
   },
 });
 

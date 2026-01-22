@@ -5,27 +5,35 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import {
+  CARD_GUIDE_WIDTH_MOBILE,
+  CARD_GUIDE_WIDTH_TABLET,
+  TABLET_BREAKPOINT,
+  CARD_ASPECT_RATIO,
+} from '../services/nailMeasurement/types';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface CameraGuideOverlayProps {
   visible: boolean;
+  isThumbOnly?: boolean;
+  selectedHand?: 'left' | 'right';
 }
 
-const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({ visible }) => {
+const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({
+  visible,
+  isThumbOnly = true,
+  selectedHand = 'right',
+}) => {
   if (!visible) return null;
 
-  // 신용카드 표준 규격 (ISO/IEC 7810 ID-1)
-  // 크기: 85.60mm × 53.98mm, 비율: 1.586:1
-  const CARD_ASPECT_RATIO = 85.60 / 53.98; // 약 1.586
-
-  // 화면 크기에 맞는 가이드 영역 계산
-  const guideAreaWidth = screenWidth * 0.8; // 화면 폭의 80%
-  const cardGuideWidth = guideAreaWidth * 0.6; // 가이드 영역의 60%
+  // 고정 픽셀 크기로 카드 가이드 설정
+  const isTablet = screenWidth >= TABLET_BREAKPOINT;
+  const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
   const cardGuideHeight = cardGuideWidth / CARD_ASPECT_RATIO;
-  
+
   // 전체 촬영 영역 (카드 + 손가락 공간)
-  const totalGuideWidth = guideAreaWidth;
+  const totalGuideWidth = screenWidth * 0.9;  // 화면 폭의 90%
   const totalGuideHeight = Math.max(cardGuideHeight * 1.8, screenHeight * 0.4);
 
   // 가이드 영역 중앙 위치 계산
@@ -35,6 +43,10 @@ const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({ visible }) => {
   // 카드 가이드 중앙 위치 계산
   const cardLeft = (screenWidth - cardGuideWidth) / 2;
   const cardTop = guideTop + (totalGuideHeight - cardGuideHeight) / 2 - 20; // 약간 위로
+
+  // 손/손가락 텍스트
+  const handText = selectedHand === 'left' ? '왼손' : '오른손';
+  const fingerText = isThumbOnly ? '엄지' : '검지~새끼';
 
   return (
     <View style={styles.overlay}>
@@ -52,21 +64,33 @@ const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({ visible }) => {
             height: cardGuideHeight,
           },
         ]}
-      />
+      >
+        <Text style={styles.cardGuideText}>신용카드</Text>
+      </View>
 
-      {/* 상단 안내 텍스트 */}
+      {/* 상단 안내 */}
       <View style={styles.instructionContainer}>
-        <Text style={styles.instructionTitle}>📷 촬영 가이드</Text>
+        <Text style={styles.instructionTitle}>
+          {handText} {fingerText} 촬영
+        </Text>
         <Text style={styles.instructionText}>
-          신용카드를 황금색 영역에 위치시키고, 손가락을 카드 옆에 함께 촬영하세요
+          {isThumbOnly
+            ? '엄지손톱이 카드 위에 오도록 펴서 촬영해주세요'
+            : '4개 손톱이 카드 위에 오도록 가지런히 펴서 촬영해주세요'
+          }
         </Text>
       </View>
 
-      {/* 하단 팁 */}
+      {/* 촬영 팁 (하단) */}
       <View style={styles.tipContainer}>
-        <Text style={styles.tipText}>
-          💡 카드와 손가락이 모두 잘 보이게 촬영해주세요
-        </Text>
+        <View style={styles.tipItem}>
+          <Text style={styles.tipBullet}>•</Text>
+          <Text style={styles.tipText}>신용카드를 황금색 영역에 맞춰주세요</Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Text style={styles.tipBullet}>•</Text>
+          <Text style={styles.tipText}>밝은 곳에서 손톱이 잘 보이게 촬영해주세요</Text>
+        </View>
       </View>
     </View>
   );
@@ -79,7 +103,7 @@ const styles = StyleSheet.create({
   },
   darkBackground: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   cardGuide: {
     position: 'absolute',
@@ -88,48 +112,60 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     backgroundColor: 'rgba(255, 215, 0, 0.1)',
     borderRadius: 8,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 5,
-    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardGuideText: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '600',
   },
   instructionContainer: {
     position: 'absolute',
-    top: 120,
+    top: 100,
     left: 20,
     right: 20,
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: 15,
-    padding: 15,
+    borderRadius: 12,
+    padding: 16,
   },
   instructionTitle: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   instructionText: {
-    color: '#FFF',
+    color: '#CCC',
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
   },
   tipContainer: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 130,
     left: 20,
     right: 20,
-    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: 15,
-    padding: 12,
+    borderRadius: 12,
+    padding: 14,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  tipBullet: {
+    color: '#FFD700',
+    fontSize: 14,
+    marginRight: 8,
+    fontWeight: 'bold',
   },
   tipText: {
+    flex: 1,
     color: '#FFF',
     fontSize: 13,
-    textAlign: 'center',
     lineHeight: 18,
   },
 });

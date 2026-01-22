@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,19 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+} from 'react-native-vision-camera';
 import CameraGuideOverlay from '../../components/CameraGuideOverlay';
-import { cameraService } from '../../services/cameraService';
 
 interface CameraScreenProps {
   selectedHand: 'left' | 'right';
   selectedFinger: string;
+  isThumbOnly: boolean;
   onPhotoTaken: (imageUri: string) => void;
   onBack: () => void;
 }
@@ -21,45 +27,111 @@ interface CameraScreenProps {
 const CameraScreen: React.FC<CameraScreenProps> = ({
   selectedHand,
   selectedFinger,
+  isThumbOnly,
   onPhotoTaken,
   onBack,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const cameraRef = useRef<Camera>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const device = useCameraDevice('back');
+
+  useEffect(() => {
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission, requestPermission]);
 
   const handleTakePhoto = async () => {
-    setIsLoading(true);
-    
+    if (!cameraRef.current || isCapturing) return;
+
+    setIsCapturing(true);
+
     try {
-      const result = await cameraService.takePhoto();
-      if (result?.uri) {
-        onPhotoTaken(result.uri);
-      }
+      // 사진 촬영
+      const photo = await cameraRef.current.takePhoto({
+        qualityPrioritization: 'balanced',
+      });
+
+      const photoUri = `file://${photo.path}`;
+      console.log('[CameraScreen] Photo taken:', photoUri);
+
+      // 이미지만 전달 (AI 분석은 AIMeasurementScreen에서 수행)
+      onPhotoTaken(photoUri);
     } catch (error) {
-      console.error('Camera capture failed:', error);
+      console.error('Photo capture failed:', error);
       Alert.alert(
         '촬영 실패',
         '사진 촬영에 실패했습니다. 다시 시도해주세요.',
         [{ text: '확인' }]
       );
     } finally {
-      setIsLoading(false);
+      setIsCapturing(false);
     }
   };
+
+  // 권한 없음
+  if (!hasPermission) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.permissionContainer}>
+          <Text style={styles.permissionText}>
+            카메라 권한이 필요합니다
+          </Text>
+          <TouchableOpacity
+            style={styles.permissionButton}
+            onPress={requestPermission}
+          >
+            <Text style={styles.permissionButtonText}>권한 허용</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.backLink} onPress={onBack}>
+            <Text style={styles.backLinkText}>뒤로 가기</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // 카메라 장치 없음
+  if (!device) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.permissionContainer}>
+          <Text style={styles.permissionText}>
+            카메라를 찾을 수 없습니다
+          </Text>
+          <TouchableOpacity style={styles.backLink} onPress={onBack}>
+            <Text style={styles.backLinkText}>뒤로 가기</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
-      {/* 카메라 미리보기 대체 화면 */}
-      <View style={styles.cameraPreview}>
-        <Text style={styles.previewText}>📷</Text>
-        <Text style={styles.instructionText}>
-          {selectedHand === 'left' ? '왼손' : '오른손'} {selectedFinger}을 신용카드와 함께 촬영해주세요
-        </Text>
-      </View>
+
+      {/* 실시간 카메라 미리보기 */}
+      <Camera
+        ref={cameraRef}
+        style={StyleSheet.absoluteFill}
+        device={device}
+        isActive={true}
+        photo={true}
+        onInitialized={() => setIsCameraReady(true)}
+      />
 
       {/* 카메라 가이드 오버레이 */}
-      <CameraGuideOverlay visible={true} />
+      <CameraGuideOverlay
+        visible={true}
+        isThumbOnly={isThumbOnly}
+        selectedHand={selectedHand}
+      />
 
       {/* 헤더 */}
       <View style={styles.header}>
@@ -67,6 +139,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>네일 사이즈 측정</Text>
+        <View style={styles.headerPlaceholder} />
       </View>
 
       {/* 하단 버튼 */}
@@ -74,18 +147,24 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
         <TouchableOpacity
           style={[styles.button, styles.backActionButton]}
           onPress={onBack}
-          disabled={isLoading}
+          disabled={isCapturing}
         >
           <Text style={styles.buttonText}>뒤로</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, styles.captureButton, isLoading && styles.buttonDisabled]}
+          style={[
+            styles.button,
+            styles.captureButton,
+            (!isCameraReady || isCapturing) && styles.buttonDisabled,
+          ]}
           onPress={handleTakePhoto}
-          disabled={isLoading}
+          disabled={!isCameraReady || isCapturing}
         >
-          <Text style={styles.buttonText}>
-            {isLoading ? '📷 촬영 중...' : '📸 촬영'}
-          </Text>
+          {isCapturing ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <Text style={styles.buttonText}>📸 촬영</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -104,6 +183,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 10,
@@ -123,12 +203,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   title: {
-    flex: 1,
     color: '#FFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginRight: 40,
+  },
+  headerPlaceholder: {
+    width: 40,
   },
   bottomButtons: {
     position: 'absolute',
@@ -147,6 +227,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
   },
   backActionButton: {
     backgroundColor: 'rgba(255,255,255,0.3)',
@@ -162,22 +244,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  cameraPreview: {
+  permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    padding: 20,
   },
-  previewText: {
-    fontSize: 80,
+  permissionText: {
+    color: '#FFF',
+    fontSize: 18,
+    textAlign: 'center',
     marginBottom: 20,
   },
-  instructionText: {
+  permissionButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginBottom: 20,
+  },
+  permissionButtonText: {
     color: '#FFF',
     fontSize: 16,
-    textAlign: 'center',
-    paddingHorizontal: 40,
-    lineHeight: 24,
+    fontWeight: '600',
+  },
+  backLink: {
+    padding: 10,
+  },
+  backLinkText: {
+    color: '#888',
+    fontSize: 14,
   },
 });
 
