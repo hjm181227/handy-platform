@@ -4,9 +4,10 @@
  */
 
 import type { CreateCustomOrderResponse } from '@handy-platform/shared';
+import { config } from '../../config/environment';
 
 // 백엔드 채팅 서버 URL
-const CHAT_API_URL = 'http://16.176.147.141';
+const CHAT_API_URL = config.chatApiUrl;
 
 export interface SendOrderToChatResult {
   success: boolean;

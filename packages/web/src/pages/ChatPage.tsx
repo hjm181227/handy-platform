@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { config } from '../config/environment';
+import { useAuthModal } from '../contexts/AuthModalContext';
 
-const CHAT_API_URL = 'http://16.176.147.141';
+const CHAT_API_URL = config.chatApiUrl;
 
 /**
  * 채팅 페이지에서 사용하는 사용자 인터페이스
@@ -68,6 +69,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
   const [rooms, setRooms] = useState<ChatRoomResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { openLogin } = useAuthModal();
 
   const handleChatClick = (partnerId: string, partnerUsername?: string) => {
     const queryParam = partnerUsername ? `?name=${encodeURIComponent(partnerUsername)}` : '';
@@ -192,7 +194,22 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
 
         {/* 로그인 유도 UI */}
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="text-6xl mb-6">💬</div>
+          <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-10 h-10 text-gray-400"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+              />
+            </svg>
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">
             로그인이 필요합니다
           </h2>
@@ -202,7 +219,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
             <button
-              onClick={() => nav('/login')}
+              onClick={openLogin}
               className="flex-1 px-6 py-3 bg-[#FF073A] text-white font-semibold rounded-lg hover:bg-[#E0062F] transition-colors"
             >
               로그인

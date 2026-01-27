@@ -92,7 +92,7 @@ export interface AdminDashboardData {
 
 // SellerApplication은 types/index.ts에서 import
 
-export interface SellerApplicationDetail extends SellerApplication {
+export interface SellerApplicationDetail extends Omit<SellerApplication, 'verificationDocuments'> {
   address: {
     street: string;
     city: string;

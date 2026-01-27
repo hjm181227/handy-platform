@@ -29,7 +29,7 @@ const CHAT_ROOM_INFO: Record<string, ChatRoom> = {
 };
 
 // 백엔드 채팅 서버 URL
-const CHAT_API_URL = 'http://16.176.147.141';
+const CHAT_API_URL = config.chatApiUrl;
 
 /**
  * JWT 토큰에서 userId 추출
