@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { config } from '../config/environment';
 
-const CHAT_API_URL = 'http://16.176.147.141';
+const CHAT_API_URL = config.chatApiUrl;
 
 /**
  * 채팅 페이지에서 사용하는 사용자 인터페이스
