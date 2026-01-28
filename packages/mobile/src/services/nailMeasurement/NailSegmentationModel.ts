@@ -112,48 +112,95 @@ class NailSegmentationModel {
   private isLoaded: boolean = false;
   private isLoading: boolean = false;
   private lastCroppedImageUri: string | null = null;  // 마지막 크롭된 이미지 URI
+  private loadCount: number = 0;  // 로드 횟수 추적
 
   /**
    * 모델 로드
+   * Stage 1: 모델 탑재 확인
    */
   async loadModel(): Promise<boolean> {
     if (this.isLoaded) {
-      console.log('[NailSegmentationModel] Model already loaded');
+      console.log('[Stage 1] Model already loaded (load count:', this.loadCount, ')');
       return true;
     }
 
     if (this.isLoading) {
-      console.log('[NailSegmentationModel] Model is already loading...');
+      console.log('[Stage 1] Model is already loading...');
       return false;
     }
 
     this.isLoading = true;
+    const loadStartTime = Date.now();
 
     try {
-      console.log('[NailSegmentationModel] Loading TFLite model...');
+      console.log('[Stage 1] ========================================');
+      console.log('[Stage 1] Loading TFLite model...');
+      console.log('[Stage 1] Model path:', MODEL_PATH);
 
       this.model = await getTflite().loadTensorflowModel(MODEL_PATH);
+      this.loadCount++;
+
+      // 모델 입출력 정보 로깅
+      if (this.model) {
+        const loadTimeMs = Date.now() - loadStartTime;
+        console.log('[Stage 1] Model loaded successfully');
+        console.log('[Stage 1] Load time:', loadTimeMs, 'ms');
+        console.log('[Stage 1] Load count:', this.loadCount);
+
+        // 입출력 shape 정보 (react-native-fast-tflite 구조에 맞게)
+        try {
+          const inputs = (this.model as any).inputs || [];
+          const outputs = (this.model as any).outputs || [];
+
+          if (inputs.length > 0) {
+            console.log('[Stage 1] Input shape:', JSON.stringify(inputs[0]?.shape || [1, 256, 256, 3]));
+            console.log('[Stage 1] Input dtype:', inputs[0]?.dataType || 'float32');
+          } else {
+            console.log('[Stage 1] Input shape: [1, 256, 256, 3] (default)');
+          }
+
+          if (outputs.length > 0) {
+            console.log('[Stage 1] Output shape:', JSON.stringify(outputs[0]?.shape || [1, 256, 256, 1]));
+            console.log('[Stage 1] Output dtype:', outputs[0]?.dataType || 'float32');
+          } else {
+            console.log('[Stage 1] Output shape: [1, 256, 256, 1] (default)');
+          }
+        } catch (infoError) {
+          console.log('[Stage 1] Could not read model info, using defaults');
+          console.log('[Stage 1] Input shape: [1, 256, 256, 3]');
+          console.log('[Stage 1] Output shape: [1, 256, 256, 1]');
+        }
+
+        console.log('[Stage 1] ========================================');
+      }
 
       this.isLoaded = true;
       this.isLoading = false;
-      console.log('[NailSegmentationModel] Model loaded successfully');
       return true;
     } catch (error) {
       this.isLoading = false;
-      console.error('[NailSegmentationModel] Failed to load model:', error);
+      console.error('[Stage 1] ========================================');
+      console.error('[Stage 1] Failed to load model:', error);
+      console.error('[Stage 1] ========================================');
       return false;
     }
   }
 
   /**
    * 이미지에서 손톱 영역 세그멘테이션
+   * Stage 2: 모델 추론 및 타이밍 측정
    * @param imageData - RGB 이미지 데이터 (base64 또는 pixel array)
    */
   async predict(imageData: string | number[][][]): Promise<NailSegmentationResult> {
-    const startTime = Date.now();
+    const totalStartTime = Date.now();
+
+    console.log('[Stage 2] ========================================');
+    console.log('[Stage 2] Starting prediction...');
 
     if (!this.isLoaded || !this.model) {
+      const loadStart = Date.now();
       await this.loadModel();
+      console.log('[Stage 2] Model load time (during predict):', Date.now() - loadStart, 'ms');
     }
 
     if (!this.model) {
@@ -163,6 +210,8 @@ class NailSegmentationModel {
     try {
       let inputTensor: Float32Array;
 
+      // 전처리 시간 측정
+      const preprocessStart = Date.now();
       if (typeof imageData === 'string') {
         // Base64 이미지 → 텐서 변환
         inputTensor = await this.preprocessBase64Image(imageData);
@@ -170,24 +219,88 @@ class NailSegmentationModel {
         // 픽셀 배열 → 텐서 변환
         inputTensor = this.preprocessPixelArray(imageData);
       }
+      const preprocessTime = Date.now() - preprocessStart;
+      console.log('[Stage 2] Preprocess:', preprocessTime, 'ms');
 
-      // 모델 추론 실행
+      // 모델 추론 시간 측정
+      const inferenceStart = Date.now();
       const output = this.model.runSync([inputTensor]);
+      const inferenceTime = Date.now() - inferenceStart;
+      console.log('[Stage 2] Inference:', inferenceTime, 'ms');
+
+      // 후처리 시간 측정
+      const postprocessStart = Date.now();
       const outputData = output[0] as Float32Array;
       const mask = this.postprocessOutput(outputData);
+      const postprocessTime = Date.now() - postprocessStart;
+      console.log('[Stage 2] Postprocess:', postprocessTime, 'ms');
 
-      const processingTimeMs = Date.now() - startTime;
+      const totalTime = Date.now() - totalStartTime;
+      console.log('[Stage 2] Total:', totalTime, 'ms');
+
+      // 마스크 통계 계산
+      const maskStats = this.calculateMaskStatistics(outputData);
+      console.log('[Stage 2] Mask stats: min=' + maskStats.min.toFixed(3) +
+                  ', max=' + maskStats.max.toFixed(3) +
+                  ', mean=' + maskStats.mean.toFixed(3) +
+                  ', positiveRatio=' + maskStats.positiveRatio.toFixed(1) + '%');
+
+      // 성능 기준 확인
+      if (totalTime > 5000) {
+        console.warn('[Stage 2] WARNING: Total time exceeds 5s target!');
+      } else if (totalTime > 3000) {
+        console.log('[Stage 2] Note: Total time exceeds 3s optimal target');
+      } else {
+        console.log('[Stage 2] Performance: GOOD (under 3s)');
+      }
+
+      console.log('[Stage 2] ========================================');
 
       return {
         mask,
-        confidence: 0.9,
-        processingTimeMs,
+        confidence: maskStats.mean > 0.1 ? 0.9 : 0.5,  // 마스크가 너무 희미하면 confidence 낮춤
+        processingTimeMs: totalTime,
         croppedImageUri: this.lastCroppedImageUri || undefined,
       };
     } catch (error) {
-      console.error('[NailSegmentationModel] Prediction failed:', error);
+      console.error('[Stage 2] ========================================');
+      console.error('[Stage 2] Prediction failed:', error);
+      console.error('[Stage 2] ========================================');
       throw error;
     }
+  }
+
+  /**
+   * 마스크 통계 계산 (Stage 2 검증용)
+   */
+  private calculateMaskStatistics(outputData: Float32Array): {
+    min: number;
+    max: number;
+    mean: number;
+    positiveRatio: number;
+  } {
+    let min = Infinity;
+    let max = -Infinity;
+    let sum = 0;
+    let positiveCount = 0;
+    const threshold = 0.5;
+
+    for (let i = 0; i < outputData.length; i++) {
+      const value = outputData[i];
+      min = Math.min(min, value);
+      max = Math.max(max, value);
+      sum += value;
+      if (value >= threshold) {
+        positiveCount++;
+      }
+    }
+
+    return {
+      min,
+      max,
+      mean: sum / outputData.length,
+      positiveRatio: (positiveCount / outputData.length) * 100,
+    };
   }
 
   /**

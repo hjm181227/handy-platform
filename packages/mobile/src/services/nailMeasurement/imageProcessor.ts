@@ -13,6 +13,11 @@ import {
   CREDIT_CARD_WIDTH_MM,
   MODEL_INPUT_SIZE,
   SEGMENTATION_THRESHOLD,
+  RegionValidationResult,
+  ValidatedRegion,
+  RegionValidationConfig,
+  DEFAULT_VALIDATION_CONFIG,
+  CalibrationValidationResult,
 } from './types';
 
 /**
@@ -239,4 +244,196 @@ export function unscaleCoordinates(
   modelSize: number = MODEL_INPUT_SIZE
 ): number {
   return (value / modelSize) * originalSize;
+}
+
+// ============================================
+// Stage 3: 영역 검증 함수들
+// ============================================
+
+/**
+ * 감지된 손톱 영역 검증
+ * Stage 3: 영역 검증
+ *
+ * @param regions - 감지된 영역들
+ * @param isThumbOnly - 엄지만 촬영했는지 여부
+ * @param config - 검증 설정 (선택)
+ */
+export function validateNailRegions(
+  regions: NailRegion[],
+  isThumbOnly: boolean = true,
+  config: Partial<RegionValidationConfig> = {}
+): RegionValidationResult {
+  const fullConfig: RegionValidationConfig = {
+    ...DEFAULT_VALIDATION_CONFIG,
+    ...config,
+    expectedRegionCount: isThumbOnly ? 1 : 4,
+  };
+
+  console.log('[Stage 3] ========================================');
+  console.log('[Stage 3] Validating nail regions...');
+  console.log('[Stage 3] Expected count:', fullConfig.expectedRegionCount, isThumbOnly ? '(thumb only)' : '(4 fingers)');
+  console.log('[Stage 3] Detected count:', regions.length);
+
+  const invalidReasons: string[] = [];
+  const validRegions: ValidatedRegion[] = [];
+
+  // 영역 개수 검증
+  if (regions.length === 0) {
+    invalidReasons.push('No nail regions detected');
+  } else if (regions.length !== fullConfig.expectedRegionCount) {
+    invalidReasons.push(`Expected ${fullConfig.expectedRegionCount} regions, got ${regions.length}`);
+  }
+
+  // 각 영역 검증
+  regions.forEach((region, index) => {
+    const isValidSize = region.area >= fullConfig.minAreaPixels &&
+                        region.area <= fullConfig.maxAreaPixels;
+
+    // 중앙 오프셋 계산 (0 ~ 1 범위)
+    const centerOffsetX = Math.abs(region.centerX - MODEL_INPUT_SIZE / 2) / (MODEL_INPUT_SIZE / 2);
+    const centerOffsetY = Math.abs(region.centerY - MODEL_INPUT_SIZE / 2) / (MODEL_INPUT_SIZE / 2);
+    const maxOffset = Math.max(centerOffsetX, centerOffsetY);
+    const isValidPosition = maxOffset <= fullConfig.maxCenterOffsetRatio;
+
+    console.log(`[Stage 3] Region ${index}: area=${region.area}px, center=(${region.centerX.toFixed(1)}, ${region.centerY.toFixed(1)})`);
+    console.log(`[Stage 3] Region ${index}: bbox=(${region.boundingBox.x}, ${region.boundingBox.y}, ${region.boundingBox.width}x${region.boundingBox.height})`);
+    console.log(`[Stage 3] Region ${index}: validSize=${isValidSize}, validPosition=${isValidPosition}`);
+
+    if (!isValidSize) {
+      if (region.area < fullConfig.minAreaPixels) {
+        invalidReasons.push(`Region ${index}: Too small (${region.area}px < ${fullConfig.minAreaPixels}px)`);
+      } else {
+        invalidReasons.push(`Region ${index}: Too large (${region.area}px > ${fullConfig.maxAreaPixels}px)`);
+      }
+    }
+
+    if (!isValidPosition) {
+      invalidReasons.push(`Region ${index}: Too far from center (offset=${maxOffset.toFixed(2)})`);
+    }
+
+    validRegions.push({
+      regionId: region.id,
+      area: region.area,
+      centerX: region.centerX,
+      centerY: region.centerY,
+      boundingBox: region.boundingBox,
+      isValidSize,
+      isValidPosition,
+    });
+  });
+
+  const isValid = invalidReasons.length === 0 &&
+                  regions.length === fullConfig.expectedRegionCount;
+
+  console.log('[Stage 3] Validation:', isValid ? 'PASS' : 'FAIL');
+  if (!isValid) {
+    invalidReasons.forEach(reason => console.log('[Stage 3] Reason:', reason));
+  }
+  console.log('[Stage 3] ========================================');
+
+  return {
+    isValid,
+    expectedCount: fullConfig.expectedRegionCount,
+    actualCount: regions.length,
+    validRegions,
+    invalidReasons,
+  };
+}
+
+// ============================================
+// Stage 4: 캘리브레이션 검증 함수들
+// ============================================
+
+/**
+ * 신용카드 캘리브레이션 검증
+ * Stage 4: 픽셀-mm 변환 검증
+ *
+ * @param cardWidthPixels - 감지된 카드 폭 (픽셀)
+ * @param expectedCardWidthMm - 예상 카드 폭 (기본: 85.6mm)
+ */
+export function validateCalibration(
+  cardWidthPixels: number,
+  expectedCardWidthMm: number = CREDIT_CARD_WIDTH_MM
+): CalibrationValidationResult {
+  console.log('[Stage 4] ========================================');
+  console.log('[Stage 4] Validating calibration...');
+  console.log('[Stage 4] Card width (pixels):', cardWidthPixels);
+
+  // 픽셀-mm 비율 계산
+  const pixelToMmRatio = expectedCardWidthMm / cardWidthPixels;
+  console.log('[Stage 4] Pixel-to-mm ratio:', pixelToMmRatio.toFixed(4), 'mm/px');
+
+  // 예상 카드 폭 (역산)
+  const estimatedCardWidthMm = cardWidthPixels * pixelToMmRatio;
+  console.log('[Stage 4] Estimated card width:', estimatedCardWidthMm.toFixed(1), 'mm');
+
+  // 오차율 계산 (카드 폭 기준)
+  const errorPercentage = Math.abs(estimatedCardWidthMm - expectedCardWidthMm) / expectedCardWidthMm * 100;
+  console.log('[Stage 4] Error percentage:', errorPercentage.toFixed(2), '%');
+
+  // 유효성 검증 (오차 15% 미만)
+  const isValid = errorPercentage < 15 && cardWidthPixels > 0;
+  console.log('[Stage 4] Calibration:', isValid ? 'VALID' : 'INVALID');
+
+  // 합리적인 범위 확인 (카드가 모델 입력의 30-100% 차지)
+  const cardRatio = cardWidthPixels / MODEL_INPUT_SIZE;
+  if (cardRatio < 0.3) {
+    console.warn('[Stage 4] WARNING: Card appears too small in image (ratio:', cardRatio.toFixed(2), ')');
+  } else if (cardRatio > 1.0) {
+    console.warn('[Stage 4] WARNING: Card appears larger than image (ratio:', cardRatio.toFixed(2), ')');
+  } else {
+    console.log('[Stage 4] Card ratio:', cardRatio.toFixed(2), '(good)');
+  }
+
+  console.log('[Stage 4] ========================================');
+
+  return {
+    isValid,
+    cardWidthPixels,
+    pixelToMmRatio,
+    estimatedCardWidthMm,
+    errorPercentage,
+  };
+}
+
+/**
+ * 측정값 검증 및 로깅
+ * Stage 4: 측정 결과 정확도 확인
+ *
+ * @param widthPixels - 측정된 폭 (픽셀)
+ * @param pixelToMmRatio - 픽셀-mm 비율
+ * @param fingerType - 손가락 유형
+ * @param actualMeasurementMm - 실제 측정값 (선택, 검증용)
+ */
+export function validateMeasurement(
+  widthPixels: number,
+  pixelToMmRatio: number,
+  fingerType: FingerType,
+  actualMeasurementMm?: number
+): {
+  widthMm: number;
+  isValid: boolean;
+  errorPercentage?: number;
+} {
+  const widthMm = widthPixels * pixelToMmRatio;
+
+  console.log(`[Stage 4] ${fingerType}: ${widthPixels}px → ${widthMm.toFixed(1)}mm`);
+
+  // 손톱 크기 합리적 범위 확인 (6-22mm)
+  const isInRange = widthMm >= 6 && widthMm <= 22;
+  if (!isInRange) {
+    console.warn(`[Stage 4] WARNING: ${fingerType} measurement (${widthMm.toFixed(1)}mm) outside normal range (6-22mm)`);
+  }
+
+  let errorPercentage: number | undefined;
+  if (actualMeasurementMm !== undefined) {
+    errorPercentage = Math.abs(widthMm - actualMeasurementMm) / actualMeasurementMm * 100;
+    console.log(`[Stage 4] ${fingerType}: Actual=${actualMeasurementMm}mm, Error=${errorPercentage.toFixed(1)}%`);
+  }
+
+  return {
+    widthMm: Math.round(widthMm * 10) / 10,  // 소수점 1자리
+    isValid: isInRange,
+    errorPercentage,
+  };
 }

@@ -23,6 +23,8 @@ import {
   processNailMeasurement,
   findConnectedComponents,
   classifyFingersByPosition,
+  validateNailRegions,
+  validateCalibration,
 } from './imageProcessor';
 import {
   NailMeasurementResult,
@@ -30,6 +32,8 @@ import {
   FingerNailMeasurement,
   CREDIT_CARD_WIDTH_MM,
   MODEL_INPUT_SIZE,
+  RegionValidationResult,
+  CalibrationValidationResult,
 } from './types';
 
 class NailMeasurementService {
@@ -83,6 +87,7 @@ class NailMeasurementService {
 
   /**
    * 손톱 측정 메인 로직
+   * Stage 1-4: 모든 단계 포함
    */
   private async measureNails(
     imageBase64: string,
@@ -91,17 +96,34 @@ class NailMeasurementService {
   ): Promise<NailMeasurementResult> {
     const startTime = Date.now();
 
-    // 1. 모델 초기화 확인
+    // 1. 모델 초기화 확인 (Stage 1)
     if (!this.initialized) {
       await this.initialize();
     }
 
-    // 2. AI 세그멘테이션 실행
+    // 2. AI 세그멘테이션 실행 (Stage 2)
     console.log('[NailMeasurementService] Running segmentation...');
     const segmentationResult = await getSegmentationModel().predict(imageBase64);
 
-    // 3. 마스크에서 손톱 측정
+    // 3. 영역 감지 및 검증 (Stage 3)
     console.log('[NailMeasurementService] Processing measurements...');
+    const regions = findConnectedComponents(segmentationResult.mask);
+    const regionValidation = validateNailRegions(regions, isThumbOnly);
+
+    // Stage 3 결과 로깅
+    if (!regionValidation.isValid) {
+      console.warn('[NailMeasurementService] Region validation warnings:', regionValidation.invalidReasons);
+    }
+
+    // 4. 캘리브레이션 검증 (Stage 4)
+    const calibrationValidation = validateCalibration(cardWidthPixels);
+
+    // Stage 4 결과 로깅
+    if (!calibrationValidation.isValid) {
+      console.warn('[NailMeasurementService] Calibration validation failed');
+    }
+
+    // 5. 최종 측정값 계산
     const measurements = processNailMeasurement(
       segmentationResult.mask,
       cardWidthPixels,
@@ -113,6 +135,8 @@ class NailMeasurementService {
     console.log('[NailMeasurementService] Measurement complete:', {
       fingerCount: measurements.length,
       processingTimeMs,
+      regionValidation: regionValidation.isValid ? 'PASS' : 'FAIL',
+      calibrationValidation: calibrationValidation.isValid ? 'PASS' : 'FAIL',
     });
 
     // 손톱을 감지하지 못한 경우 에러 발생
@@ -123,7 +147,7 @@ class NailMeasurementService {
     return {
       measurements,
       referenceCardDetected: cardWidthPixels > 0,
-      pixelToMmRatio: CREDIT_CARD_WIDTH_MM / cardWidthPixels,
+      pixelToMmRatio: calibrationValidation.pixelToMmRatio,
       imageWidth: MODEL_INPUT_SIZE,
       imageHeight: MODEL_INPUT_SIZE,
       processingTimeMs,

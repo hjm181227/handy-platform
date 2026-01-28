@@ -1,7 +1,7 @@
 buildscript {
     ext {
         buildToolsVersion = "34.0.0"
-        minSdkVersion = 21
+        minSdkVersion = 23  // React Native 0.74+ requires minSdk 23
         compileSdkVersion = 35
         targetSdkVersion = 35
         ndkVersion = "26.1.10909125"  // NDK r26c - 16KB 페이지 크기 완전 지원

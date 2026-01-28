@@ -35,13 +35,30 @@ import {
   CARD_GUIDE_WIDTH_MOBILE,
   CARD_GUIDE_WIDTH_TABLET,
   TABLET_BREAKPOINT,
+  NailRegion,
 } from '../../services/nailMeasurement/types';
+import {
+  findConnectedComponents,
+  validateNailRegions,
+} from '../../services/nailMeasurement/imageProcessor';
 import { userService } from '../../services/apiService';
 
 // nailMeasurementService를 lazy하게 가져오는 함수
+// index.ts를 통하지 않고 직접 NailMeasurementService.ts를 require
+// (index.ts가 모듈 체인을 로드하면서 TFLite 에러 발생 방지)
+let cachedService: any = null;
 const getNailMeasurementService = () => {
-  const { nailMeasurementService } = require('../../services/nailMeasurement');
-  return nailMeasurementService;
+  if (!cachedService) {
+    try {
+      const module = require('../../services/nailMeasurement/NailMeasurementService');
+      cachedService = module.nailMeasurementService;
+      console.log('[AIMeasurementScreen] NailMeasurementService loaded successfully');
+    } catch (error) {
+      console.error('[AIMeasurementScreen] Failed to load NailMeasurementService:', error);
+      throw error;
+    }
+  }
+  return cachedService;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -90,6 +107,8 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [imageLayout, setImageLayout] = useState<{ width: number; height: number } | null>(null);
   const [showOverlay, setShowOverlay] = useState(true);  // 오버레이 표시 여부
+  const [showDebugInfo, setShowDebugInfo] = useState(__DEV__);  // 개발 모드에서만 디버그 정보 표시
+  const [detectedRegions, setDetectedRegions] = useState<NailRegion[]>([]);  // Stage 3: 감지된 영역
 
   // 이미지 분석 실행 (미리 계산된 결과가 없는 경우에만)
   useEffect(() => {
@@ -145,6 +164,14 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
       const validation = service.validateMeasurements(result.measurements);
       if (!validation.isValid) {
         console.warn('Measurement validation warnings:', validation.warnings);
+      }
+
+      // Stage 3: 감지된 영역 저장 (디버그용)
+      if (result.mask) {
+        const regions = findConnectedComponents(result.mask);
+        setDetectedRegions(regions);
+        const regionValidation = validateNailRegions(regions, isThumbOnly);
+        console.log('[AIMeasurementScreen] Region validation:', regionValidation);
       }
 
       setMeasurementResult(result);
@@ -342,6 +369,65 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     );
   };
 
+  // Stage 3: 디버그 정보 패널 렌더링
+  const renderDebugInfo = () => {
+    if (!showDebugInfo || !measurementResult) return null;
+
+    const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
+    const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
+    const cardToScreenRatio = cardGuideWidth / SCREEN_WIDTH;
+    const estimatedCardWidth = MODEL_INPUT_SIZE * cardToScreenRatio;
+
+    return (
+      <View style={styles.debugPanel}>
+        <View style={styles.debugHeader}>
+          <Text style={styles.debugTitle}>Debug Info (Stage 3 & 4)</Text>
+          <TouchableOpacity onPress={() => setShowDebugInfo(false)}>
+            <Text style={styles.debugCloseBtn}>×</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 캘리브레이션 정보 */}
+        <View style={styles.debugSection}>
+          <Text style={styles.debugSectionTitle}>Calibration (Stage 4)</Text>
+          <Text style={styles.debugText}>Screen Width: {SCREEN_WIDTH}px</Text>
+          <Text style={styles.debugText}>Card Guide: {cardGuideWidth}px ({isTablet ? 'tablet' : 'mobile'})</Text>
+          <Text style={styles.debugText}>Card-to-Screen Ratio: {cardToScreenRatio.toFixed(3)}</Text>
+          <Text style={styles.debugText}>Estimated Card (in model): {estimatedCardWidth.toFixed(1)}px</Text>
+          <Text style={styles.debugText}>Pixel-to-mm Ratio: {measurementResult.pixelToMmRatio.toFixed(4)} mm/px</Text>
+        </View>
+
+        {/* 감지된 영역 정보 */}
+        <View style={styles.debugSection}>
+          <Text style={styles.debugSectionTitle}>Detected Regions (Stage 3)</Text>
+          <Text style={styles.debugText}>Expected: {isThumbOnly ? 1 : 4} region(s)</Text>
+          <Text style={styles.debugText}>Detected: {detectedRegions.length} region(s)</Text>
+
+          {detectedRegions.map((region, idx) => (
+            <View key={region.id} style={styles.debugRegion}>
+              <Text style={styles.debugRegionTitle}>Region {idx}</Text>
+              <Text style={styles.debugText}>Area: {region.area}px</Text>
+              <Text style={styles.debugText}>Center: ({region.centerX.toFixed(1)}, {region.centerY.toFixed(1)})</Text>
+              <Text style={styles.debugText}>
+                BBox: ({region.boundingBox.x}, {region.boundingBox.y}) {region.boundingBox.width}×{region.boundingBox.height}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* 측정 결과 정보 */}
+        <View style={styles.debugSection}>
+          <Text style={styles.debugSectionTitle}>Measurements (Stage 4)</Text>
+          {measurementResult.measurements.map((m) => (
+            <Text key={m.finger} style={styles.debugText}>
+              {m.finger}: {m.widthPixels}px → {m.widthMm}mm
+            </Text>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
@@ -413,6 +499,19 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
 
         {/* 측정 결과 */}
         {!isAnalyzing && !error && measurementResult && renderMeasurementResults()}
+
+        {/* Stage 3 & 4: 디버그 정보 패널 */}
+        {renderDebugInfo()}
+
+        {/* 디버그 토글 버튼 (개발 모드) */}
+        {__DEV__ && !isAnalyzing && measurementResult && !showDebugInfo && (
+          <TouchableOpacity
+            style={styles.debugToggleBtn}
+            onPress={() => setShowDebugInfo(true)}
+          >
+            <Text style={styles.debugToggleBtnText}>Show Debug</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       {/* 하단 버튼 */}
@@ -672,6 +771,76 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFF',
+  },
+  // Stage 3 & 4: 디버그 패널 스타일
+  debugPanel: {
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+  },
+  debugHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  debugTitle: {
+    color: '#00FF00',
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+  },
+  debugCloseBtn: {
+    color: '#FF6B6B',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  debugSection: {
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  debugSectionTitle: {
+    color: '#FFD700',
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    marginBottom: 4,
+  },
+  debugText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    lineHeight: 16,
+  },
+  debugRegion: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 6,
+    padding: 8,
+    marginTop: 4,
+  },
+  debugRegionTitle: {
+    color: '#00BFFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    marginBottom: 2,
+  },
+  debugToggleBtn: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignSelf: 'flex-end',
+    marginTop: 12,
+  },
+  debugToggleBtnText: {
+    color: '#00FF00',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
   },
 });
 

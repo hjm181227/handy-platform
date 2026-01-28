@@ -77,3 +77,56 @@ export function calculatePixelToMmRatio(cardGuideWidth: number, screenWidth: num
   const cardPixelsInModel = MODEL_INPUT_SIZE * cardToScreenRatio;
   return CREDIT_CARD_WIDTH_MM / cardPixelsInModel;
 }
+
+// ============================================
+// Stage 3: 영역 검증 관련 타입
+// ============================================
+
+// 영역 검증 결과
+export interface RegionValidationResult {
+  isValid: boolean;
+  expectedCount: number;
+  actualCount: number;
+  validRegions: ValidatedRegion[];
+  invalidReasons: string[];
+}
+
+// 검증된 개별 영역
+export interface ValidatedRegion {
+  regionId: number;
+  finger?: FingerType;
+  area: number;
+  centerX: number;
+  centerY: number;
+  boundingBox: BoundingBox;
+  isValidSize: boolean;
+  isValidPosition: boolean;
+}
+
+// 영역 검증 설정
+export interface RegionValidationConfig {
+  // 최소/최대 영역 면적 (픽셀)
+  minAreaPixels: number;
+  maxAreaPixels: number;
+  // 영역이 이미지 중앙에서 허용되는 최대 거리 (비율)
+  maxCenterOffsetRatio: number;
+  // 예상 영역 개수
+  expectedRegionCount: number;
+}
+
+// 기본 검증 설정
+export const DEFAULT_VALIDATION_CONFIG: RegionValidationConfig = {
+  minAreaPixels: 100,        // 최소 100픽셀 (노이즈 제거)
+  maxAreaPixels: 20000,      // 최대 20000픽셀 (비정상적으로 큰 영역)
+  maxCenterOffsetRatio: 0.8, // 중앙에서 80% 이내
+  expectedRegionCount: 1,    // 기본: 엄지 1개
+};
+
+// Stage 4: 캘리브레이션 검증 관련 타입
+export interface CalibrationValidationResult {
+  isValid: boolean;
+  cardWidthPixels: number;
+  pixelToMmRatio: number;
+  estimatedCardWidthMm: number;
+  errorPercentage: number;
+}

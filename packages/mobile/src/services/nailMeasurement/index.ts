@@ -23,3 +23,10 @@ export { nailMeasurementService } from './NailMeasurementService';
 // export { nailSegmentationModel } from './NailSegmentationModel';
 export * from './types';
 export * from './imageProcessor';
+
+// Stage 3 & 4: 검증 함수 명시적 export
+export {
+  validateNailRegions,
+  validateCalibration,
+  validateMeasurement,
+} from './imageProcessor';

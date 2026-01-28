@@ -47,8 +47,15 @@ Thumbs.db
 datasets/*/images/
 datasets/*/annotations/
 datasets/*/labels/
+datasets/*/train/
+datasets/*/test/
+datasets/*/val/
 !datasets/*/.gitkeep
 !datasets/*/metadata.json
+!datasets/*/data.yaml
+
+# Label Studio import files (large, generated locally)
+datasets/*/ls_import_*.json
 
 # Model weights (tracked by DVC or model registry)
 models/nail_detector/*/model.pt
@@ -73,3 +80,12 @@ temp/
 # Environment
 .env
 .env.local
+
+# Label Studio data (local development only)
+label-studio-data/
+
+# Downloaded model files
+*.keras
+*.h5
+*.tflite
+!models/nail_detector/*/*.tflite
