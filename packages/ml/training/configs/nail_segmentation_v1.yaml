@@ -1,0 +1,94 @@
+# Nail Segmentation Model Configuration
+# DeepLabV3Plus based segmentation for nail region extraction
+# Based on original Kaggle training code
+
+# Model settings
+model:
+  architecture: "deeplabv3plus"
+  encoder: "mobilenetv3large"  # Lightweight encoder for mobile
+  input_size: 256
+  output_channels: 1  # Binary segmentation (nail vs background)
+  pretrained_encoder: true
+
+# Dataset settings
+dataset:
+  name: "nail_v1"
+  root: "datasets/nail_v1"
+  classes:
+    - "background"  # 0
+    - "nail"        # 1 (all nail types merged)
+
+  # Original classes mapping (merged into single "nail" class)
+  original_classes:
+    0: "credit_card"   # Excluded from segmentation
+    1: "nail_thumb"    # -> nail
+    2: "nail_index"    # -> nail
+    3: "nail_middle"   # -> nail
+    4: "nail_ring"     # -> nail
+    5: "nail_little"   # -> nail
+
+# Training settings
+training:
+  epochs: 50
+  batch_size: 16
+  learning_rate: 0.0001  # 1e-4, same as original
+  lr_scheduler: "reduce_on_plateau"
+  warmup_epochs: 0
+
+  optimizer: "adam"
+  weight_decay: 0.0
+
+  # Loss function (Focal Tversky Loss)
+  loss: "focal_tversky"
+  focal_tversky:
+    alpha: 0.7   # Penalizes false negatives more
+    beta: 0.3
+    gamma: 0.75
+
+  # Early stopping
+  early_stopping:
+    patience: 10
+    min_delta: 0.0
+    monitor: "val_iou_metric"
+
+# Data augmentation
+augmentation:
+  train:
+    horizontal_flip: true
+    vertical_flip: false
+    rotation_range: 15
+    brightness_range: [0.8, 1.2]
+    contrast_range: [0.8, 1.2]
+    zoom_range: [0.9, 1.1]
+    fill_mode: "reflect"
+  val:
+    # No augmentation for validation
+    horizontal_flip: false
+
+# Export settings
+export:
+  formats:
+    - "tflite"
+    - "coreml"
+
+  tflite:
+    quantization: "float16"  # Options: none, float16, int8
+    optimize_for: "latency"  # Options: latency, size
+
+  coreml:
+    minimum_ios: "14.0"
+
+# Evaluation metrics
+metrics:
+  - "dice"
+  - "iou"
+  - "precision"
+  - "recall"
+  - "pixel_accuracy"
+
+# Logging
+logging:
+  use_mlflow: true
+  experiment_name: "nail_segmentation"
+  log_images_every: 10  # epochs
+  save_best_only: true
