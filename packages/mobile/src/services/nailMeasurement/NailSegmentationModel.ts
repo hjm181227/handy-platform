@@ -1,14 +1,27 @@
 /**
  * TFLite 손톱 세그멘테이션 모델 서비스
  *
- * Kaggle DeepLabV3+ MobileNetV3 모델 사용
- * Input: 256x256x3 (RGB, 0-255 float)
- * Output: 256x256x1 (binary mask, 0-1)
+ * 모델 아키텍처: DeepLabV3+ (segmentation-models-pytorch)
+ * 기반 저장소: https://github.com/ademakdogan/nails_segmentation
+ *
+ * 지원 Encoder 옵션:
+ * - mobilenet_v3_large (기본, 모바일 최적화, ~5M params)
+ * - resnet101 (원본 저장소, 높은 정확도, ~44M params)
+ *
+ * Input: 256x256x3 (RGB, 0-255 float, NHWC format)
+ * Output: 256x256x1 (binary mask, 0-1, sigmoid activation)
  *
  * 크롭 방식:
  * - 카드 가이드 영역 기준으로 정사각형 크롭
  * - 카드 폭이 256px 전체를 차지하도록 크롭
  * - 이렇게 하면 pixel-to-mm 비율이 정확해짐
+ *
+ * 모델 교체 방법:
+ * 1. packages/ml/training/scripts/train_segmentation.py 로 학습
+ * 2. packages/ml/training/scripts/export_segmentation.py 로 TFLite 변환
+ * 3. 생성된 nail_segmentation.tflite 파일을 교체:
+ *    - Android: android/app/src/main/assets/nail_segmentation.tflite
+ *    - iOS/src: src/assets/models/nail_segmentation.tflite
  */
 
 import {

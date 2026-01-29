@@ -59,6 +59,20 @@ export const CREDIT_CARD_HEIGHT_MM = 53.98;
 export const MODEL_INPUT_SIZE = 256;
 export const SEGMENTATION_THRESHOLD = 0.5;
 
+// 모델 메타데이터 (ademakdogan/nails_segmentation 기반)
+export const MODEL_METADATA = {
+  name: 'nail_segmentation',
+  architecture: 'DeepLabV3Plus',
+  encoder: 'mobilenet_v3_large',  // 또는 'resnet101' (원본 저장소)
+  version: '2.0.0',
+  inputShape: [1, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, 3] as const,
+  outputShape: [1, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, 1] as const,
+  inputFormat: 'NHWC' as const,  // TFLite format
+  inputRange: [0, 255] as const,  // RGB 0-255
+  outputRange: [0, 1] as const,   // Sigmoid activation
+  source: 'https://github.com/ademakdogan/nails_segmentation',
+};
+
 // 카메라 가이드라인 설정 - 고정 픽셀 크기
 // 화면 비율 대신 고정 픽셀로 카드 가이드 설정
 export const CARD_GUIDE_WIDTH_MOBILE = 280;  // 모바일용 (< 600px 화면)

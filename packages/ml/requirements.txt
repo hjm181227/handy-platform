@@ -5,6 +5,9 @@
 torch>=2.0.0
 torchvision>=0.15.0
 
+# Segmentation (ademakdogan/nails_segmentation compatible)
+segmentation-models-pytorch>=0.3.0
+
 # Object Detection
 ultralytics>=8.0.0  # YOLOv8
 
@@ -20,8 +23,10 @@ albumentations>=1.3.0
 # Model Export
 onnx>=1.14.0
 onnxruntime>=1.15.0
+onnx-tf>=1.10.0  # ONNX to TensorFlow conversion
 coremltools>=7.0  # iOS CoreML export
 tensorflow>=2.13.0  # TFLite export
+tf2onnx>=1.14.0  # TensorFlow to ONNX (alternative path)
 
 # Dataset Management
 dvc>=3.0.0
