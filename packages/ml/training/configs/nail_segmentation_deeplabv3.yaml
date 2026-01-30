@@ -1,16 +1,17 @@
 # Nail Segmentation Training Configuration
 # DeepLabV3+ based on ademakdogan/nails_segmentation architecture
 #
-# Two encoder options:
+# Encoder options:
 # 1. resnet101 - Original architecture, higher accuracy but heavy (~44M params)
-# 2. mobilenet_v3_large - Mobile optimized, faster but slightly less accurate (~5M params)
+# 2. mobilenet_v2 - Mobile optimized, faster (~3.5M params)
+# 3. efficientnet-b0 - Balanced accuracy/speed (~5M params)
 
 # Model configuration
 model:
   architecture: DeepLabV3Plus
-  # Encoder options: resnet101, mobilenet_v3_large, efficientnet-b0, efficientnet-b2
-  encoder: mobilenet_v3_large  # Recommended for mobile
-  encoder_weights: imagenet
+  # Encoder options: resnet101, mobilenet_v2, efficientnet-b0, mobileone_s0
+  encoder: mobilenet_v2  # Recommended for mobile
+  encoder_weights: null  # Set to 'imagenet' if network allows downloading pretrained weights
   activation: sigmoid  # Binary segmentation
   num_classes: 1  # Nail vs background
 
@@ -24,7 +25,7 @@ input:
 dataset:
   name: nail_segmentation_v1
   # Kaggle dataset: https://www.kaggle.com/datasets/vpapenko/nails-segmentation
-  path: ../datasets/nail_segmentation
+  path: ../../datasets/nail_segmentation
   train_images: images/train
   train_masks: masks/train
   val_images: images/val
@@ -34,8 +35,8 @@ dataset:
 
 # Training configuration
 training:
-  epochs: 100
-  batch_size: 16  # Adjust based on GPU memory
+  epochs: 5  # Set to 100 for full training with GPU
+  batch_size: 4  # Reduced for CPU training, increase to 16 with GPU
   optimizer: AdamW
   learning_rate: 0.0001
   lr_scheduler: CosineAnnealingWarmRestarts

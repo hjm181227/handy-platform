@@ -20,8 +20,15 @@ from typing import Optional, Tuple
 
 import albumentations as A
 import cv2
-import mlflow
 import numpy as np
+
+# MLflow is optional
+try:
+    import mlflow
+    HAS_MLFLOW = True
+except ImportError:
+    HAS_MLFLOW = False
+    print("MLflow not installed. Training without experiment tracking.")
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -155,8 +162,11 @@ def load_config(config_path: str) -> dict:
     return config
 
 
-def setup_mlflow(config: dict) -> str:
+def setup_mlflow(config: dict) -> Optional[str]:
     """Setup MLflow experiment tracking."""
+    if not HAS_MLFLOW:
+        return None
+
     mlflow_config = config.get('mlflow', {})
     tracking_uri = mlflow_config.get('tracking_uri', './mlruns')
     experiment_name = mlflow_config.get('experiment_name', 'nail_segmentation')
@@ -171,12 +181,16 @@ def create_model(config: dict, encoder_override: Optional[str] = None) -> Tuple[
     """Create segmentation model."""
     model_config = config['model']
 
-    encoder = encoder_override or model_config.get('encoder', 'mobilenet_v3_large')
+    encoder = encoder_override or model_config.get('encoder', 'mobilenet_v2')
     encoder_weights = model_config.get('encoder_weights', 'imagenet')
+    # Handle null/None from YAML
+    if encoder_weights in [None, 'null', 'None', '']:
+        encoder_weights = None
     num_classes = model_config.get('num_classes', 1)
     activation = model_config.get('activation', 'sigmoid')
 
     print(f"Creating DeepLabV3+ with encoder: {encoder}")
+    print(f"Encoder weights: {encoder_weights or 'random initialization'}")
 
     model = smp.DeepLabV3Plus(
         encoder_name=encoder,
@@ -186,7 +200,13 @@ def create_model(config: dict, encoder_override: Optional[str] = None) -> Tuple[
     )
 
     # Get preprocessing function for the encoder
-    preprocessing_fn = smp.encoders.get_preprocessing_fn(encoder, encoder_weights)
+    if encoder_weights:
+        preprocessing_fn = smp.encoders.get_preprocessing_fn(encoder, encoder_weights)
+    else:
+        # Default preprocessing: normalize to 0-1 range
+        def preprocessing_fn(x, **kwargs):
+            return x.astype(np.float32) / 255.0
+        print("Using default preprocessing (normalize to 0-1)")
 
     return model, preprocessing_fn
 
@@ -300,7 +320,10 @@ def train(
 
     # Create datasets
     dataset_config = config['dataset']
-    dataset_path = Path(config_path).parent.parent.parent / dataset_config['path']
+    # Resolve dataset path relative to config file location
+    config_dir = Path(config_path).parent.resolve()
+    dataset_path = (config_dir / dataset_config['path']).resolve()
+    print(f"Dataset path: {dataset_path}")
 
     train_dataset = NailSegmentationDataset(
         images_dir=str(dataset_path / dataset_config['train_images']),
@@ -370,15 +393,19 @@ def train(
     best_iou = 0
     patience_counter = 0
 
-    with mlflow.start_run(run_name=f"{encoder_name}_{timestamp}"):
+    # MLflow context manager (optional)
+    mlflow_run = mlflow.start_run(run_name=f"{encoder_name}_{timestamp}") if HAS_MLFLOW else None
+
+    try:
         # Log parameters
-        mlflow.log_params({
-            'encoder': encoder_name,
-            'input_size': input_size,
-            'batch_size': batch_size,
-            'learning_rate': lr,
-            'epochs': epochs,
-        })
+        if HAS_MLFLOW:
+            mlflow.log_params({
+                'encoder': encoder_name,
+                'input_size': input_size,
+                'batch_size': batch_size,
+                'learning_rate': lr,
+                'epochs': epochs,
+            })
 
         for epoch in range(epochs):
             print(f"\nEpoch {epoch + 1}/{epochs}")
@@ -400,13 +427,14 @@ def train(
             print(f"Train Loss: {train_loss:.4f}, Train IoU: {train_iou:.4f}")
             print(f"Val Loss: {val_loss:.4f}, Val IoU: {val_iou:.4f}")
 
-            mlflow.log_metrics({
-                'train_loss': train_loss,
-                'train_iou': train_iou,
-                'val_loss': val_loss,
-                'val_iou': val_iou,
-                'lr': optimizer.param_groups[0]['lr'],
-            }, step=epoch)
+            if HAS_MLFLOW:
+                mlflow.log_metrics({
+                    'train_loss': train_loss,
+                    'train_iou': train_iou,
+                    'val_loss': val_loss,
+                    'val_iou': val_iou,
+                    'lr': optimizer.param_groups[0]['lr'],
+                }, step=epoch)
 
             # Save best model
             if val_iou > best_iou:
@@ -415,7 +443,8 @@ def train(
                 best_model_path = os.path.join(output_dir, 'best_model.pth')
                 torch.save(model.state_dict(), best_model_path)
                 print(f"Saved best model with IoU: {best_iou:.4f}")
-                mlflow.log_artifact(best_model_path)
+                if HAS_MLFLOW:
+                    mlflow.log_artifact(best_model_path)
             else:
                 patience_counter += 1
 
@@ -433,6 +462,10 @@ def train(
         print(f"Results saved to: {output_dir}")
 
         return output_dir, best_iou
+
+    finally:
+        if mlflow_run:
+            mlflow.end_run()
 
 
 def main():
