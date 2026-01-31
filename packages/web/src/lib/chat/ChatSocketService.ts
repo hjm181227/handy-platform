@@ -5,6 +5,7 @@
 
 import { io, Socket } from 'socket.io-client';
 import type { Message, ChatRoom, TypingIndicator, ChatServiceConfig } from './types';
+import { config } from '../../config/environment';
 
 type MessageCallback = (message: Message) => void;
 type TypingCallback = (data: TypingIndicator) => void;
@@ -48,7 +49,7 @@ export class ChatSocketService {
           return;
         }
 
-        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || 'http://16.176.147.141';
+        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || config.chatApiUrl;
 
         console.log('[ChatSocket] 🔍 VITE_SOCKET_URL:', import.meta.env.VITE_SOCKET_URL);
         console.log('[ChatSocket] 🎯 Final serverUrl:', serverUrl);
