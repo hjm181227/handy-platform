@@ -6,6 +6,7 @@ import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
 import { ShippingAddressForm } from '../common/ShippingAddressForm';
 import { TossPaymentWidget, TossPaymentWidgetRef } from '../payment/TossPaymentWidget';
+import { CouponSelector } from '../checkout/CouponSelector';
 import type {
   Cart,
   Order,
@@ -48,6 +49,19 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const [tossWidgetReady, setTossWidgetReady] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<{ code: string; type?: string } | null>(null);
   const tossWidgetRef = useRef<TossPaymentWidgetRef>(null);
+
+  // 쿠폰 상태
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    userCouponUuid: string;
+    code: string;
+    name: string;
+    description?: string;
+    discountType: string;
+    discountAmount: number;
+    freeShipping: boolean;
+    scope: { type: string; sellerUuid?: string };
+    appliesTo: string;
+  } | null>(null);
 
   // 현재 사용자의 customerKey 생성 (UUID 기반 또는 비회원)
   const customerKey = useMemo(() => {
@@ -983,6 +997,64 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               )}
             </div>
 
+            {/* 쿠폰 적용 */}
+            {(cart as any)?.sessionId && order && (
+              <CouponSelector
+                sessionId={(cart as any).sessionId}
+                orderAmount={order.totalPrice}
+                appliedCoupon={appliedCoupon}
+                onCouponApplied={(coupon, updatedTotals) => {
+                  console.log('Coupon applied:', coupon, updatedTotals);
+                  setAppliedCoupon(coupon);
+                  // Update order totals
+                  if (order) {
+                    setOrder({
+                      ...order,
+                      totalDiscount: updatedTotals.couponDiscount + (updatedTotals.pointsDiscount || 0),
+                      finalPrice: updatedTotals.finalTotal,
+                    });
+                  }
+                  // Update cart totals
+                  if (cart) {
+                    setCart({
+                      ...cart,
+                      totals: {
+                        ...cart.totals,
+                        discount: updatedTotals.couponDiscount,
+                        finalTotal: updatedTotals.finalTotal,
+                        grandTotal: updatedTotals.grandTotal,
+                      },
+                    } as any);
+                  }
+                }}
+                onCouponRemoved={(updatedTotals) => {
+                  console.log('Coupon removed:', updatedTotals);
+                  setAppliedCoupon(null);
+                  // Update order totals
+                  if (order) {
+                    setOrder({
+                      ...order,
+                      totalDiscount: (updatedTotals.pointsDiscount || 0),
+                      finalPrice: updatedTotals.finalTotal,
+                    });
+                  }
+                  // Update cart totals
+                  if (cart) {
+                    setCart({
+                      ...cart,
+                      totals: {
+                        ...cart.totals,
+                        discount: 0,
+                        finalTotal: updatedTotals.finalTotal,
+                        grandTotal: updatedTotals.grandTotal,
+                      },
+                    } as any);
+                  }
+                }}
+                onError={(error) => setError(error)}
+              />
+            )}
+
             {/* 결제 방법 - 토스페이먼츠 결제위젯 */}
             <div className="bg-white rounded-lg border overflow-hidden">
               <TossPaymentWidget
@@ -1011,10 +1083,23 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     <span>배송비</span>
                     <span>{order.shippingCost > 0 ? money(order.shippingCost) : '무료'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>할인</span>
-                    <span className="text-red-500">-{money(order.totalDiscount)}</span>
-                  </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-blue-600">
+                      <span className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                        쿠폰 할인
+                      </span>
+                      <span>-{money(appliedCoupon.discountAmount)}</span>
+                    </div>
+                  )}
+                  {order.totalDiscount > 0 && !appliedCoupon && (
+                    <div className="flex justify-between text-red-500">
+                      <span>할인</span>
+                      <span>-{money(order.totalDiscount)}</span>
+                    </div>
+                  )}
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>총 결제금액</span>

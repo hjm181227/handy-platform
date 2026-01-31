@@ -70,6 +70,7 @@ export abstract class BaseAuthService extends BaseApiService {
       method: 'POST',
       body: JSON.stringify(credentials),
       enableRetry: false,
+      skipTokenExpiredHandler: true, // 로그인 API는 401 에러 시 토큰 만료 처리 스킵
     });
 
     // Validate UUID format in login response during migration period
@@ -89,6 +90,7 @@ export abstract class BaseAuthService extends BaseApiService {
       method: 'POST',
       body: JSON.stringify(userData),
       enableRetry: false,
+      skipTokenExpiredHandler: true, // 회원가입 API는 401 에러 시 토큰 만료 처리 스킵
     });
 
     // Validate UUID format in register response during migration period
@@ -169,6 +171,7 @@ export abstract class BaseAuthService extends BaseApiService {
       method: 'POST',
       body: JSON.stringify({ accessToken }),
       enableRetry: false,
+      skipTokenExpiredHandler: true, // OAuth 로그인 API는 401 에러 시 토큰 만료 처리 스킵
     });
   }
 

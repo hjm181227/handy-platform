@@ -7,6 +7,7 @@ export interface ApiRequestOptions {
   enableRetry?: boolean;
   timeout?: number;
   disableAutoRetry?: boolean; // 수동 재시도 시 자동 재시도 비활성화
+  skipTokenExpiredHandler?: boolean; // 로그인 등 공개 API에서 401 에러 시 토큰 만료 처리 스킵
 }
 
 export abstract class BaseApiService {
@@ -36,7 +37,8 @@ export abstract class BaseApiService {
       headers = {},
       enableRetry = true,
       timeout = this.timeout,
-      disableAutoRetry = false
+      disableAutoRetry = false,
+      skipTokenExpiredHandler = false
     } = options;
 
     const makeRequest = async (): Promise<T> => {
@@ -65,7 +67,7 @@ export abstract class BaseApiService {
         // Log response status
         console.log(`🟢 API Response [${method} ${endpoint}]: ${response.status} ${response.statusText}`);
 
-        return await this.handleResponse<T>(response);
+        return await this.handleResponse<T>(response, skipTokenExpiredHandler);
       } catch (error) {
         clearTimeout(timeoutId);
 
@@ -89,16 +91,17 @@ export abstract class BaseApiService {
     return makeRequest();
   }
 
-  protected async handleResponse<T>(response: Response): Promise<T> {
+  protected async handleResponse<T>(response: Response, skipTokenExpiredHandler: boolean = false): Promise<T> {
     if (!response.ok) {
       const errorData = await safeJsonParse(response);
       const apiError = parseApiError(response, errorData);
-      
-      if (isTokenExpired(apiError)) {
+
+      // 로그인/회원가입 등 공개 API에서는 토큰 만료 처리를 스킵
+      if (!skipTokenExpiredHandler && isTokenExpired(apiError)) {
         await this.handleTokenExpiration();
         throw apiError;
       }
-      
+
       throw apiError;
     }
 

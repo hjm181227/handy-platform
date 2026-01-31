@@ -93,3 +93,13 @@ packages/web/dist/
 packages/mobile/android/app/build/
 packages/mobile/ios/build/
 .vercel
+
+# ML (datasets managed on Kaggle)
+datasets/
+.dvc/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
