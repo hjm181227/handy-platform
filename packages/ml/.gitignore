@@ -39,23 +39,8 @@ env/
 .DS_Store
 Thumbs.db
 
-# DVC - track .dvc files but not data
-*.dvc
-!datasets/.dvc/
-
-# Dataset images and annotations (tracked by DVC)
-datasets/*/images/
-datasets/*/annotations/
-datasets/*/labels/
-datasets/*/train/
-datasets/*/test/
-datasets/*/val/
-!datasets/*/.gitkeep
-!datasets/*/metadata.json
-!datasets/*/data.yaml
-
-# Label Studio import files (large, generated locally)
-datasets/*/ls_import_*.json
+# Datasets (managed on Kaggle)
+datasets/
 
 # Model weights (tracked by DVC or model registry)
 models/nail_detector/*/model.pt
