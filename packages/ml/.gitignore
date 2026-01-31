@@ -63,6 +63,11 @@ models/nail_detector/*/model.onnx
 models/nail_detector/*/model.tflite
 models/nail_detector/*/*.mlpackage/
 
+# Segmentation model weights (large files, download separately)
+models/nail_segmentation/*/*.pth
+models/nail_segmentation/*/*.onnx
+models/nail_segmentation/*/*.onnx.data
+
 # Training runs
 runs/
 mlruns/

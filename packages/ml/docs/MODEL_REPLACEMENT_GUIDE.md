@@ -1,219 +1,196 @@
 # 손톱 세그멘테이션 모델 교체 가이드
 
-이 문서는 ademakdogan/nails_segmentation 저장소 기반의 DeepLabV3+ 모델로 기존 손톱 세그멘테이션 모델을 교체하는 방법을 설명합니다.
+이 문서는 Kaggle에서 학습한 DeepLabV3+ 모델을 추론 서버에 배포하는 방법을 설명합니다.
 
 ## 아키텍처 개요
 
+### 현재 아키텍처 (v2.0.0)
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Kaggle/Colab   │     │  Inference      │     │  Mobile App     │
+│  (모델 학습)     │ ──▶ │  Server         │ ◀── │  (React Native) │
+│                 │     │  (FastAPI)      │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+      학습                    추론                   API 호출
+```
+
 ### 기반 저장소
-- **GitHub**: https://github.com/ademakdogan/nails_segmentation
 - **아키텍처**: DeepLabV3+ (segmentation-models-pytorch)
-- **Loss Function**: DiceLoss
-- **Activation**: Sigmoid (이진 세그멘테이션)
+- **Encoder**: ResNet101 (고정밀도)
+- **Loss Function**: DiceLoss + BCEWithLogitsLoss
+- **데이터셋**: vpapenko/nails-segmentation (Kaggle)
 
-### Encoder 옵션
+### 왜 서버 기반인가?
 
-| Encoder | 파라미터 수 | 모바일 적합성 | 정확도 |
-|---------|------------|--------------|--------|
-| `mobilenet_v3_large` | ~5M | ⭐⭐⭐ 최적 | 좋음 |
-| `efficientnet-b0` | ~5M | ⭐⭐⭐ 좋음 | 좋음 |
-| `resnet101` | ~44M | ⭐ 무거움 | 매우 좋음 |
+| 항목 | TFLite (이전) | Server API (현재) |
+|------|--------------|------------------|
+| 모델 크기 | 20MB (앱에 포함) | 175MB (서버에 배치) |
+| Encoder | MobileNet (경량) | ResNet101 (고정밀) |
+| 정확도 (IoU) | ~0.75 | ~0.85+ |
+| 업데이트 | 앱 재배포 필요 | 서버만 업데이트 |
+| 오프라인 | 지원 | 미지원 |
 
-모바일 앱에서는 **mobilenet_v3_large**를 권장합니다.
+## 모델 학습 (Kaggle)
 
-## 데이터셋 준비
+### 1. Kaggle Notebook 설정
 
-### Kaggle 손톱 세그멘테이션 데이터셋
+Kaggle에서 새 Notebook을 생성하고 아래 코드를 실행합니다:
 
-1. Kaggle에서 데이터셋 다운로드:
-   - https://www.kaggle.com/datasets/vpapenko/nails-segmentation
+```python
+# GPU 활성화 필수 (Settings > Accelerator > GPU T4 x2)
 
-2. 데이터셋 구조:
+!pip install segmentation-models-pytorch albumentations
+
+import torch
+import segmentation_models_pytorch as smp
+
+# 모델 생성
+model = smp.DeepLabV3Plus(
+    encoder_name="resnet101",
+    encoder_weights="imagenet",
+    classes=1,
+    activation="sigmoid",
+)
+
+# 학습 코드...
+# (전체 코드는 Kaggle Notebook 참조)
+
+# 모델 저장
+torch.save(model.state_dict(), "best_model.pth")
 ```
-packages/ml/datasets/nail_segmentation/
-├── images/
-│   ├── train/
-│   ├── val/
-│   └── test/
-└── masks/
-    ├── train/
-    ├── val/
-    └── test/
+
+### 2. 데이터셋
+
+Kaggle 데이터셋 추가:
+- **vpapenko/nails-segmentation** (Add Data 버튼)
+
+### 3. 학습 완료 후
+
+Output에서 `best_model.pth` 다운로드
+
+## 모델 배포
+
+### 1. 모델 파일 배치
+
+```bash
+# 다운로드한 모델을 배치
+cp ~/Downloads/best_model_*.pth \
+   packages/ml/models/nail_segmentation/v2.0.0/best_model.pth
 ```
 
-## 모델 학습
-
-### 1. 환경 설정
+### 2. 서버 시작
 
 ```bash
 cd packages/ml
-pip install -r requirements.txt
+./scripts/start_server.sh
 ```
 
-### 2. 학습 실행
-
-**모바일 최적화 모델 (권장)**:
-```bash
-python training/scripts/train_segmentation.py \
-  --config training/configs/nail_segmentation_deeplabv3.yaml
-```
-
-**원본 저장소와 동일한 아키텍처 (ResNet101)**:
-```bash
-python training/scripts/train_segmentation.py \
-  --config training/configs/nail_segmentation_deeplabv3.yaml \
-  --encoder resnet101
-```
-
-### 3. 학습 설정 변경
-
-`training/configs/nail_segmentation_deeplabv3.yaml` 파일에서 설정 변경:
-
-```yaml
-model:
-  encoder: mobilenet_v3_large  # 또는 resnet101
-
-input:
-  size: 256  # 모바일: 256, 고정밀: 512
-
-training:
-  epochs: 100
-  batch_size: 16
-  learning_rate: 0.0001
-```
-
-## 모델 변환 (TFLite)
-
-### 1. ONNX 및 TFLite 변환
+### 3. 서버 테스트
 
 ```bash
-python training/scripts/export_segmentation.py \
-  --model runs/segmentation/mobilenet_v3_large_*/best_model.pth \
-  --config training/configs/nail_segmentation_deeplabv3.yaml \
-  --output models/nail_segmentation/v2.0.0/
+# Health check
+curl http://localhost:8000/health
+
+# 세그멘테이션 테스트
+curl -X POST http://localhost:8000/api/segment \
+  -F "image=@test_image.jpg"
 ```
 
-### 2. 출력 파일
+## 모델 파일 구조
 
 ```
-models/nail_segmentation/v2.0.0/
-├── model.pth                    # PyTorch 가중치
-├── model.onnx                   # ONNX 형식
-├── nail_segmentation.tflite     # TFLite 형식 (모바일용)
-├── model_metadata.json          # 모델 메타데이터
-└── export_info.json             # 변환 정보
+packages/ml/models/nail_segmentation/v2.0.0/
+├── best_model.pth    # PyTorch 가중치 (175MB) - Git 제외
+├── config.yaml       # 모델 설정
+└── metadata.json     # 버전 정보
 ```
 
-## 모바일 앱에 적용
+## 모바일 앱 연동
 
-### 1. 모델 파일 교체
+### API 엔드포인트
 
-**Android**:
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/health` | GET | 서버/모델 상태 확인 |
+| `/api/segment` | POST | 이미지 세그멘테이션 |
+| `/api/measure` | POST | 손톱 측정 (mm) |
+
+### 개발 환경 설정
+
+```typescript
+// packages/mobile/src/services/nailMeasurement/NailSegmentationAPI.ts
+
+const DEV_HOST_IP = '172.30.1.80';  // 개발 PC IP (ifconfig로 확인)
+
+const API_SERVER_URL = __DEV__
+  ? Platform.select({
+      android: `http://${DEV_HOST_IP}:8000`,
+      ios: 'http://localhost:8000',
+    })
+  : 'http://15.165.5.64:8000';  // 프로덕션 서버
+```
+
+### Android 포트 포워딩 (USB 연결 시)
+
 ```bash
-cp models/nail_segmentation/v2.0.0/nail_segmentation.tflite \
-   ../mobile/android/app/src/main/assets/nail_segmentation.tflite
-```
-
-**iOS**:
-```bash
-cp models/nail_segmentation/v2.0.0/nail_segmentation.tflite \
-   ../mobile/src/assets/models/nail_segmentation.tflite
-```
-
-### 2. 앱 빌드
-
-```bash
-cd ../mobile
-
-# Android
-npm run android:dev
-
-# iOS
-cd ios && pod install && cd ..
-npm run ios:dev
+adb reverse tcp:8000 tcp:8000
+adb reverse tcp:8081 tcp:8081
 ```
 
 ## 모델 입출력 사양
 
 ### 입력
 
-- **Shape**: `[1, 256, 256, 3]` (NHWC format)
+- **Shape**: `[1, 3, 640, 640]` (NCHW format)
 - **타입**: `float32`
-- **범위**: `0-255` (RGB)
-- **전처리**: 정사각형 크롭, 바이리니어 리사이즈
+- **전처리**: ImageNet normalization
+  - mean: [0.485, 0.456, 0.406]
+  - std: [0.229, 0.224, 0.225]
 
 ### 출력
 
-- **Shape**: `[1, 256, 256, 1]`
+- **Shape**: `[1, 640, 640]`
 - **타입**: `float32`
 - **범위**: `0-1` (Sigmoid)
 - **후처리**: threshold 0.5로 이진화
 
-## 검증
+## 버전 히스토리
 
-### TFLite 모델 검증
-
-```python
-import tensorflow as tf
-import numpy as np
-
-# 모델 로드
-interpreter = tf.lite.Interpreter(model_path='nail_segmentation.tflite')
-interpreter.allocate_tensors()
-
-# 테스트 입력
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
-
-test_input = np.random.rand(1, 256, 256, 3).astype(np.float32) * 255
-interpreter.set_tensor(input_details[0]['index'], test_input)
-interpreter.invoke()
-
-output = interpreter.get_tensor(output_details[0]['index'])
-print(f"Output shape: {output.shape}")
-print(f"Output range: [{output.min():.4f}, {output.max():.4f}]")
-```
-
-### 모바일 앱에서 검증
-
-앱 실행 후 콘솔 로그 확인:
-```
-[Stage 1] Model loaded successfully
-[Stage 1] Input shape: [1, 256, 256, 3]
-[Stage 1] Output shape: [1, 256, 256, 1]
-[Stage 2] Inference: XXX ms
-[Stage 2] Mask stats: min=X.XXX, max=X.XXX, mean=X.XXX
-```
+| 버전 | 날짜 | Encoder | Input | IoU |
+|------|------|---------|-------|-----|
+| v2.0.0 | 2026-01-31 | ResNet101 | 640x640 | ~0.85 |
+| v1.0.0 | 2026-01-29 | MobileNetV2 | 256x256 | ~0.75 |
 
 ## 트러블슈팅
 
-### ONNX 변환 실패
+### 서버 시작 실패
 
 ```bash
-pip install onnx onnx-tf --upgrade
+# Python 3.11 필요 (PyTorch 호환성)
+/usr/local/bin/python3.11 -m venv venv
+
+# 패키지 재설치
+rm -rf venv
+./scripts/start_server.sh
 ```
 
-### TFLite 변환 실패
+### 모바일에서 연결 실패
+
+1. 서버 IP 확인: `ifconfig | grep "inet "`
+2. 방화벽 확인: 포트 8000 허용
+3. 포트 포워딩: `adb reverse tcp:8000 tcp:8000`
+
+### NumPy 버전 충돌
 
 ```bash
-pip install tensorflow>=2.13.0 tf2onnx --upgrade
+# numpy 1.26.x 사용 필요
+pip install numpy==1.26.4
+pip install opencv-python==4.9.0.80
 ```
-
-### 모바일에서 모델 로드 실패
-
-1. 파일 경로 확인
-2. 파일 크기 확인 (Android assets에 대용량 제한 있음)
-3. TFLite 버전 호환성 확인
-
-## 성능 비교
-
-| 지표 | 기존 모델 | 새 모델 (MobileNet) | 새 모델 (ResNet101) |
-|------|----------|--------------------|--------------------|
-| 추론 시간 | ~500ms | ~500ms | ~2000ms |
-| 모델 크기 | ~15MB | ~20MB | ~170MB |
-| IoU | 0.85 | 0.87 | 0.92 |
 
 ## 참고 자료
 
-- [ademakdogan/nails_segmentation](https://github.com/ademakdogan/nails_segmentation)
 - [segmentation-models-pytorch](https://github.com/qubvel/segmentation_models.pytorch)
-- [react-native-fast-tflite](https://github.com/mrousavy/react-native-fast-tflite)
+- [vpapenko/nails-segmentation](https://www.kaggle.com/datasets/vpapenko/nails-segmentation)
+- [FastAPI](https://fastapi.tiangolo.com/)

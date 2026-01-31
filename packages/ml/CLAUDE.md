@@ -2,67 +2,177 @@
 
 ## 개요
 
-손톱 감지 ML 모델의 학습, 평가, 배포를 관리하는 패키지입니다.
+손톱 세그멘테이션 ML 모델의 추론 서버 및 배포를 관리하는 패키지입니다.
 
-## 핵심 파일
+> **참고**: 로컬 학습은 지원하지 않습니다. 학습은 Kaggle 또는 Google Colab에서 수행합니다.
 
-| 파일 | 용도 |
-|------|------|
-| `training/scripts/train.py` | YOLOv8 모델 학습 |
-| `training/scripts/evaluate.py` | 모델 평가 및 메트릭 |
-| `training/scripts/export.py` | TFLite/CoreML 변환 |
-| `training/scripts/register_model.py` | 모델 레지스트리 등록 |
-| `training/scripts/validate_dataset.py` | 데이터셋 검증 |
-| `models/registry/model_registry.json` | 모델 버전 관리 |
-| `deployment/generate_manifest.py` | OTA manifest 생성 |
+## 현재 상태 (2026-01-31)
 
-## 주요 명령어
+| 항목 | 값 |
+|------|-----|
+| 모델 버전 | v2.0.0 |
+| 아키텍처 | DeepLabV3+ |
+| Encoder | ResNet101 |
+| 입력 크기 | 640x640 |
+| 학습 플랫폼 | Kaggle |
+| 추론 방식 | FastAPI 서버 |
 
-```bash
-# 가상환경 활성화
-cd packages/ml
-source venv/bin/activate
+## 디렉토리 구조
 
-# 데이터셋 검증
-python training/scripts/validate_dataset.py --dataset datasets/nail_v1/
-
-# 학습
-python training/scripts/train.py --config training/configs/nail_detector_v1.yaml
-
-# 평가
-python training/scripts/evaluate.py --model path/to/best.pt --data dataset.yaml
-
-# 내보내기
-python training/scripts/export.py --model path/to/best.pt --output models/nail_detector/v1.0.0/
-
-# 등록
-python training/scripts/register_model.py --version 1.0.0 --model-dir models/nail_detector/v1.0.0/ --dataset nail_v1 --status staging
+```
+packages/ml/
+├── inference/                      # FastAPI 추론 서버
+│   ├── server.py                   # 메인 서버 코드
+│   └── __init__.py
+├── models/                         # 프로덕션 모델
+│   └── nail_segmentation/
+│       ├── v2.0.0/                 # 현재 프로덕션 버전
+│       │   ├── best_model.pth      # 모델 가중치 (Git 제외)
+│       │   ├── config.yaml         # 모델 설정
+│       │   └── metadata.json       # 메타데이터
+│       └── README.md               # 모델 배치 가이드
+├── scripts/
+│   └── start_server.sh             # 서버 시작 스크립트
+├── docs/
+│   ├── MODEL_REPLACEMENT_GUIDE.md  # 모델 교체 가이드
+│   └── LABELING_GUIDE.md           # 라벨링 가이드
+└── venv/                           # Python 가상환경 (Git 제외)
 ```
 
-## 감지 클래스
+## 빠른 시작
 
-- 0: credit_card (스케일 기준)
-- 1: nail_thumb (엄지)
-- 2: nail_index (검지)
-- 3: nail_middle (중지)
-- 4: nail_ring (약지)
-- 5: nail_little (새끼)
+### 1. 서버 시작
+
+```bash
+cd packages/ml
+./scripts/start_server.sh
+```
+
+첫 실행 시 자동으로:
+- Python 3.11 가상환경 생성
+- 의존성 설치 (PyTorch, FastAPI 등)
+- 서버 시작
+
+### 2. 서버 테스트
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# 세그멘테이션
+curl -X POST http://localhost:8000/api/segment \
+  -F "image=@test_image.jpg"
+
+# 측정 (mm 단위)
+curl -X POST "http://localhost:8000/api/measure?card_width_pixels=280" \
+  -F "image=@test_image.jpg"
+```
+
+## API 엔드포인트
+
+| 엔드포인트 | 메서드 | 설명 |
+|------------|--------|------|
+| `/health` | GET | 서버/모델 상태 확인 |
+| `/api/segment` | POST | 이미지 세그멘테이션 (마스크 반환) |
+| `/api/measure` | POST | 손톱 측정 (mm 단위) |
+
+### /api/segment 응답 예시
+
+```json
+{
+  "success": true,
+  "mask": [[0.0, 0.1, ...], ...],
+  "width": 640,
+  "height": 640,
+  "processing_time_ms": 1275.07,
+  "mask_stats": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.01,
+    "positive_ratio": 1.05
+  }
+}
+```
 
 ## 모델 배포 플로우
 
 ```
-학습 → 평가 → 내보내기 → 등록(staging) → QA → 등록(production) → OTA manifest 생성 → CDN 업로드
+Kaggle 학습 → best_model.pth 다운로드 → models/v2.0.0/에 배치 → 서버 재시작
 ```
 
-## 데이터셋 버저닝 (DVC)
+### 새 모델 배포
+
+1. Kaggle에서 모델 학습 완료
+2. `best_model.pth` 다운로드
+3. 모델 파일 배치:
+   ```bash
+   cp ~/Downloads/best_model_*.pth \
+      packages/ml/models/nail_segmentation/v2.0.0/best_model.pth
+   ```
+4. 서버 재시작:
+   ```bash
+   pkill -f uvicorn
+   ./scripts/start_server.sh
+   ```
+
+## 모바일 앱 연동
+
+모바일 앱은 `NailSegmentationAPI.ts`를 통해 서버와 통신합니다.
+
+### 개발 환경
+
+```typescript
+// DEV_HOST_IP를 개발 PC IP로 설정
+const DEV_HOST_IP = '172.30.1.80';  // ifconfig로 확인
+```
+
+### Android 포트 포워딩
+
+USB 연결 시 필요:
+```bash
+adb reverse tcp:8000 tcp:8000
+adb reverse tcp:8081 tcp:8081
+```
+
+## 의존성
+
+주요 패키지 (Python 3.11 필수):
+
+| 패키지 | 버전 | 용도 |
+|--------|------|------|
+| torch | 2.2.2 | PyTorch |
+| torchvision | 0.17.2 | 이미지 처리 |
+| segmentation-models-pytorch | 0.5.0 | DeepLabV3+ |
+| fastapi | 0.128.0 | API 서버 |
+| uvicorn | 0.40.0 | ASGI 서버 |
+| opencv-python | 4.9.0.80 | 이미지 처리 |
+| numpy | 1.26.4 | 수치 연산 |
+
+## 트러블슈팅
+
+### Python 버전 문제
+
+PyTorch는 Python 3.13을 지원하지 않습니다. Python 3.11 사용:
 
 ```bash
-# 데이터 추가
-dvc add datasets/nail_v1/images
-git add datasets/nail_v1/images.dvc
-git commit -m "Add dataset v1"
-dvc push
-
-# 데이터 가져오기
-dvc pull
+/usr/local/bin/python3.11 -m venv venv
 ```
+
+### NumPy 버전 충돌
+
+```bash
+pip install numpy==1.26.4
+pip install opencv-python==4.9.0.80
+```
+
+### 포트 충돌
+
+```bash
+lsof -i :8000 | grep LISTEN | awk '{print $2}' | xargs kill -9
+```
+
+## 참고 문서
+
+- [모델 교체 가이드](docs/MODEL_REPLACEMENT_GUIDE.md)
+- [라벨링 가이드](docs/LABELING_GUIDE.md)
+- [모델 README](models/nail_segmentation/README.md)
