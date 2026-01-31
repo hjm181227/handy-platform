@@ -1,0 +1,44 @@
+{
+  "model_name": "nail_segmentation",
+  "version": "2026.01.29",
+  "architecture": "DeepLabV3Plus",
+  "encoder": "mobilenet_v2",
+  "input": {
+    "shape": [
+      1,
+      256,
+      256,
+      3
+    ],
+    "dtype": "float32",
+    "range": [
+      0,
+      255
+    ],
+    "format": "NHWC"
+  },
+  "output": {
+    "shape": [
+      1,
+      256,
+      256,
+      1
+    ],
+    "dtype": "float32",
+    "range": [
+      0,
+      1
+    ],
+    "format": "NHWC"
+  },
+  "preprocessing": {
+    "resize": 256,
+    "normalize": false,
+    "mean": null,
+    "std": null
+  },
+  "postprocessing": {
+    "threshold": 0.5,
+    "output_type": "binary_mask"
+  }
+}
