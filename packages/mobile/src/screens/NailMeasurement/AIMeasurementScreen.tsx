@@ -28,7 +28,6 @@ import {
 // Hermes 엔진에서 "property is not configurable" 에러 발생
 import {
   NailMeasurementResult,
-  FingerNailMeasurement,
   FingerType,
   MODEL_INPUT_SIZE,
   CARD_GUIDE_WIDTH_MOBILE,
@@ -85,7 +84,7 @@ const FINGER_KOREAN: Record<FingerType, string> = {
 
 const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   selectedHand,
-  selectedFinger,
+  selectedFinger: _,
   imageUri,
   isThumbOnly = true,
   initialMeasurementResult,
