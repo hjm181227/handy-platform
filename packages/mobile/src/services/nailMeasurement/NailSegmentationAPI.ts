@@ -77,6 +77,22 @@ interface MeasurementAPIResponse {
   mask?: number[][];
 }
 
+interface SegmentWithOverlayAPIResponse {
+  success: boolean;
+  cropped_image: string;  // base64 PNG
+  mask_overlay: string;   // base64 PNG (transparent background)
+  mask: number[][];
+  width: number;
+  height: number;
+  processing_time_ms: number;
+  mask_stats: {
+    min: number;
+    max: number;
+    mean: number;
+    positive_ratio: number;
+  };
+}
+
 interface HealthCheckResponse {
   status: string;
   model_loaded: boolean;
@@ -290,6 +306,106 @@ class NailSegmentationAPI {
     }
 
     return await response.json();
+  }
+
+  /**
+   * 세그멘테이션 + 오버레이 이미지 반환 (서버에서 생성)
+   *
+   * 서버에서 마스크 오버레이 이미지를 직접 생성하여 반환합니다.
+   * Python/OpenCV의 정확한 이미지 처리를 활용하여 마스크와 이미지가
+   * 동일 좌표계에서 생성되어 완벽하게 정렬됩니다.
+   *
+   * @param imageUri - 이미지 파일 URI (file:// 형식)
+   * @returns 세그멘테이션 결과 + 오버레이 이미지 (base64)
+   */
+  async predictWithOverlay(imageUri: string): Promise<NailSegmentationResult> {
+    const totalStartTime = Date.now();
+
+    console.log('[NailSegmentationAPI] ========================================');
+    console.log('[NailSegmentationAPI] Starting predictWithOverlay...');
+    console.log('[NailSegmentationAPI] Image URI:', imageUri.substring(0, 50) + '...');
+
+    try {
+      // 1. 파일 존재 확인
+      const cleanUri = imageUri.replace('file://', '');
+      const exists = await RNFS.exists(cleanUri);
+      if (!exists) {
+        throw new Error(`Image file not found: ${cleanUri}`);
+      }
+
+      // 2. FormData 생성
+      const formData = new FormData();
+      formData.append('image', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'image.jpg',
+      } as any);
+
+      // 3. API 호출
+      const apiStartTime = Date.now();
+      console.log('[NailSegmentationAPI] Calling API:', `${this.serverUrl}/api/segment-with-overlay`);
+
+      const response = await fetch(`${this.serverUrl}/api/segment-with-overlay`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      console.log('[NailSegmentationAPI] API response time:', Date.now() - apiStartTime, 'ms');
+      console.log('[NailSegmentationAPI] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error ${response.status}: ${errorText}`);
+      }
+
+      // 4. 응답 파싱
+      const parseStartTime = Date.now();
+      const data: SegmentWithOverlayAPIResponse = await response.json();
+      console.log('[NailSegmentationAPI] Parse time:', Date.now() - parseStartTime, 'ms');
+
+      if (!data.success) {
+        throw new Error('API returned success=false');
+      }
+
+      // 5. 마스크 크기 조정 (서버는 640x640, 모바일은 256x256 기대)
+      const resizeStartTime = Date.now();
+      const resizedMask = this.resizeMask(data.mask, MODEL_INPUT_SIZE);
+      console.log('[NailSegmentationAPI] Resize time:', Date.now() - resizeStartTime, 'ms');
+
+      const totalTime = Date.now() - totalStartTime;
+
+      // 6. 결과 로깅
+      console.log('[NailSegmentationAPI] Mask stats:', {
+        min: data.mask_stats.min.toFixed(3),
+        max: data.mask_stats.max.toFixed(3),
+        mean: data.mask_stats.mean.toFixed(3),
+        positiveRatio: data.mask_stats.positive_ratio.toFixed(1) + '%',
+      });
+      console.log('[NailSegmentationAPI] Cropped image base64 length:', data.cropped_image.length);
+      console.log('[NailSegmentationAPI] Overlay base64 length:', data.mask_overlay.length);
+      console.log('[NailSegmentationAPI] Total time:', totalTime, 'ms');
+      console.log('[NailSegmentationAPI] Server processing time:', data.processing_time_ms, 'ms');
+      console.log('[NailSegmentationAPI] ========================================');
+
+      return {
+        mask: resizedMask,
+        confidence: data.mask_stats.mean > 0.1 ? 0.9 : 0.5,
+        processingTimeMs: totalTime,
+        croppedImageUri: undefined,
+        // 서버에서 생성된 base64 이미지
+        croppedImageBase64: data.cropped_image,
+        maskOverlayBase64: data.mask_overlay,
+      };
+
+    } catch (error) {
+      console.error('[NailSegmentationAPI] ========================================');
+      console.error('[NailSegmentationAPI] predictWithOverlay failed:', error);
+      console.error('[NailSegmentationAPI] ========================================');
+      throw error;
+    }
   }
 
   /**

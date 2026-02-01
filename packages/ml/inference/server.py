@@ -18,6 +18,7 @@ Endpoints:
     GET /health - Health check
 """
 
+import base64
 import io
 import os
 import time
@@ -64,6 +65,18 @@ CREDIT_CARD_HEIGHT_MM = 53.98
 class SegmentationResponse(BaseModel):
     """Response model for segmentation endpoint."""
     success: bool
+    mask: List[List[float]]  # 2D array of floats (0-1)
+    width: int
+    height: int
+    processing_time_ms: float
+    mask_stats: dict
+
+
+class SegmentWithOverlayResponse(BaseModel):
+    """Response model for segment-with-overlay endpoint."""
+    success: bool
+    cropped_image: str  # base64 PNG of cropped input image
+    mask_overlay: str   # base64 PNG with transparent background + green mask
     mask: List[List[float]]  # 2D array of floats (0-1)
     width: int
     height: int
@@ -398,6 +411,90 @@ async def segment_image(
             mask=mask.tolist(),
             width=mask.shape[1],
             height=mask.shape[0],
+            processing_time_ms=round(processing_time_ms, 2),
+            mask_stats=mask_stats,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/segment-with-overlay", response_model=SegmentWithOverlayResponse)
+async def segment_with_overlay(
+    image: UploadFile = File(...),
+):
+    """
+    Segment nail regions and return overlay image for mobile display.
+
+    Returns:
+        - cropped_image: Cropped input image (base64 PNG)
+        - mask_overlay: Green semi-transparent mask overlay (base64 PNG with transparent background)
+        - mask: Mask data (same as /api/segment)
+    """
+    if model_manager.model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+
+    try:
+        start_time = time.time()
+
+        # Read and decode image
+        contents = await image.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid image format")
+
+        # Convert BGR to RGB for model
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Run inference
+        mask, inference_time = model_manager.predict(img_rgb)
+
+        # Get mask dimensions (same as model input size)
+        height, width = mask.shape
+
+        # Create cropped image at model input size
+        # Resize original image to model input size
+        cropped_img = cv2.resize(img, (width, height))
+
+        # Encode cropped image to base64 PNG
+        _, cropped_buffer = cv2.imencode('.png', cropped_img)
+        cropped_base64 = base64.b64encode(cropped_buffer).decode('utf-8')
+
+        # Create mask overlay (RGBA, transparent background + green mask)
+        # OpenCV uses BGRA for 4-channel images
+        overlay = np.zeros((height, width, 4), dtype=np.uint8)
+        # Set green color with 50% alpha where mask > 0.5
+        mask_binary = mask > 0.5
+        overlay[mask_binary, 0] = 0    # B
+        overlay[mask_binary, 1] = 255  # G
+        overlay[mask_binary, 2] = 0    # R
+        overlay[mask_binary, 3] = 128  # A (50% opacity)
+
+        # Encode overlay to base64 PNG (with alpha channel)
+        _, overlay_buffer = cv2.imencode('.png', overlay)
+        overlay_base64 = base64.b64encode(overlay_buffer).decode('utf-8')
+
+        # Calculate statistics
+        mask_stats = {
+            "min": float(mask.min()),
+            "max": float(mask.max()),
+            "mean": float(mask.mean()),
+            "positive_ratio": float((mask > 0.5).sum() / mask.size * 100),
+        }
+
+        processing_time_ms = (time.time() - start_time) * 1000
+
+        return SegmentWithOverlayResponse(
+            success=True,
+            cropped_image=cropped_base64,
+            mask_overlay=overlay_base64,
+            mask=mask.tolist(),
+            width=width,
+            height=height,
             processing_time_ms=round(processing_time_ms, 2),
             mask_stats=mask_stats,
         )

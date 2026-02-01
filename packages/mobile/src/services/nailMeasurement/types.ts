@@ -8,6 +8,9 @@ export interface NailSegmentationResult {
   confidence: number;
   processingTimeMs: number;
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
+  // 서버에서 생성된 이미지 (base64 PNG)
+  croppedImageBase64?: string;  // 크롭된 입력 이미지
+  maskOverlayBase64?: string;   // 녹색 반투명 마스크 오버레이 (투명 배경)
 }
 
 // 개별 손톱 영역
@@ -49,6 +52,9 @@ export interface NailMeasurementResult {
   processingTimeMs: number;
   mask?: number[][];  // 256x256 세그멘테이션 마스크 (0-1)
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
+  // 서버에서 생성된 이미지 (base64 PNG)
+  croppedImageBase64?: string;  // 크롭된 입력 이미지
+  maskOverlayBase64?: string;   // 녹색 반투명 마스크 오버레이 (투명 배경)
 }
 
 // 신용카드 기준 정보

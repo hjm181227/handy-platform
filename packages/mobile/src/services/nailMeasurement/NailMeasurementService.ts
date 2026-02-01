@@ -19,6 +19,15 @@ const getSegmentationModel = () => {
   return segmentationModelModule.nailSegmentationModel;
 };
 
+// NailSegmentationAPI를 lazy import
+let segmentationAPIModule: typeof import('./NailSegmentationAPI') | null = null;
+const getSegmentationAPI = () => {
+  if (!segmentationAPIModule) {
+    segmentationAPIModule = require('./NailSegmentationAPI');
+  }
+  return segmentationAPIModule.nailSegmentationAPI;
+};
+
 import {
   processNailMeasurement,
   findConnectedComponents,
@@ -88,8 +97,98 @@ class NailMeasurementService {
   /**
    * 손톱 측정 메인 로직
    * Stage 1-4: 모든 단계 포함
+   *
+   * 기본적으로 서버 API를 사용하여 마스크 오버레이를 생성합니다.
+   * 서버 연결 실패 시 로컬 TFLite 모델로 폴백합니다.
    */
   private async measureNails(
+    imageBase64: string,
+    cardWidthPixels: number,
+    isThumbOnly: boolean
+  ): Promise<NailMeasurementResult> {
+    const startTime = Date.now();
+
+    // 서버 API 사용 시도 (마스크 오버레이 포함)
+    try {
+      console.log('[NailMeasurementService] Trying server API with overlay...');
+      return await this.measureNailsWithServerOverlay(imageBase64, cardWidthPixels, isThumbOnly);
+    } catch (serverError) {
+      console.warn('[NailMeasurementService] Server API failed, falling back to local TFLite:', serverError);
+      return await this.measureNailsWithLocalModel(imageBase64, cardWidthPixels, isThumbOnly);
+    }
+  }
+
+  /**
+   * 서버 API를 사용한 측정 (마스크 오버레이 포함)
+   * Python/OpenCV의 정확한 이미지 처리 활용
+   */
+  private async measureNailsWithServerOverlay(
+    imageUri: string,
+    cardWidthPixels: number,
+    isThumbOnly: boolean
+  ): Promise<NailMeasurementResult> {
+    const startTime = Date.now();
+
+    // 1. 서버 API로 세그멘테이션 + 오버레이 생성
+    console.log('[NailMeasurementService] Running server segmentation with overlay...');
+    const segmentationResult = await getSegmentationAPI().predictWithOverlay(imageUri);
+
+    // 2. 영역 감지 및 검증 (Stage 3)
+    console.log('[NailMeasurementService] Processing measurements...');
+    const regions = findConnectedComponents(segmentationResult.mask);
+    const regionValidation = validateNailRegions(regions, isThumbOnly);
+
+    if (!regionValidation.isValid) {
+      console.warn('[NailMeasurementService] Region validation warnings:', regionValidation.invalidReasons);
+    }
+
+    // 3. 캘리브레이션 검증 (Stage 4)
+    const calibrationValidation = validateCalibration(cardWidthPixels);
+
+    if (!calibrationValidation.isValid) {
+      console.warn('[NailMeasurementService] Calibration validation failed');
+    }
+
+    // 4. 최종 측정값 계산
+    const measurements = processNailMeasurement(
+      segmentationResult.mask,
+      cardWidthPixels,
+      isThumbOnly
+    );
+
+    const processingTimeMs = Date.now() - startTime;
+
+    console.log('[NailMeasurementService] Server measurement complete:', {
+      fingerCount: measurements.length,
+      processingTimeMs,
+      hasOverlay: !!segmentationResult.maskOverlayBase64,
+      regionValidation: regionValidation.isValid ? 'PASS' : 'FAIL',
+      calibrationValidation: calibrationValidation.isValid ? 'PASS' : 'FAIL',
+    });
+
+    if (measurements.length === 0) {
+      throw new Error('손톱을 감지하지 못했습니다.\n\n다시 촬영해 주세요:\n• 손톱이 잘 보이도록 밝은 곳에서 촬영\n• 신용카드와 손톱이 함께 보이게 배치\n• 손톱에 반사광이 없도록 각도 조절');
+    }
+
+    return {
+      measurements,
+      referenceCardDetected: cardWidthPixels > 0,
+      pixelToMmRatio: calibrationValidation.pixelToMmRatio,
+      imageWidth: MODEL_INPUT_SIZE,
+      imageHeight: MODEL_INPUT_SIZE,
+      processingTimeMs,
+      mask: segmentationResult.mask,
+      croppedImageUri: undefined,  // 서버 방식에서는 base64 사용
+      // 서버에서 생성된 오버레이 이미지 (base64)
+      croppedImageBase64: segmentationResult.croppedImageBase64,
+      maskOverlayBase64: segmentationResult.maskOverlayBase64,
+    };
+  }
+
+  /**
+   * 로컬 TFLite 모델을 사용한 측정 (폴백)
+   */
+  private async measureNailsWithLocalModel(
     imageBase64: string,
     cardWidthPixels: number,
     isThumbOnly: boolean
@@ -102,7 +201,7 @@ class NailMeasurementService {
     }
 
     // 2. AI 세그멘테이션 실행 (Stage 2)
-    console.log('[NailMeasurementService] Running segmentation...');
+    console.log('[NailMeasurementService] Running local TFLite segmentation...');
     const segmentationResult = await getSegmentationModel().predict(imageBase64);
 
     // 3. 영역 감지 및 검증 (Stage 3)
@@ -132,7 +231,7 @@ class NailMeasurementService {
 
     const processingTimeMs = Date.now() - startTime;
 
-    console.log('[NailMeasurementService] Measurement complete:', {
+    console.log('[NailMeasurementService] Local measurement complete:', {
       fingerCount: measurements.length,
       processingTimeMs,
       regionValidation: regionValidation.isValid ? 'PASS' : 'FAIL',

@@ -171,6 +171,39 @@ pip install opencv-python==4.9.0.80
 lsof -i :8000 | grep LISTEN | awk '{print $2}' | xargs kill -9
 ```
 
+## 테스트 이미지 가져오기
+
+### Android 실물 디바이스에서 촬영한 이미지 가져오기
+
+앱에서 촬영한 이미지는 앱 캐시에 저장됩니다.
+
+```bash
+# 1. 디바이스 연결 확인
+adb devices
+
+# 2. 앱 캐시 목록 확인
+adb shell "run-as com.handyapp ls -la /data/data/com.handyapp/cache/"
+
+# 3. 최신 이미지 가져오기 (mrousavy*.jpg 파일들)
+adb shell "run-as com.handyapp cat /data/data/com.handyapp/cache/mrousavy{파일명}.jpg" > ~/Downloads/nail_app_test/device_cache/image.jpg
+```
+
+### 캐시 파일 구조
+
+| 파일 패턴 | 설명 |
+|-----------|------|
+| `mrousavy*.jpg` | react-native-vision-camera로 촬영한 고해상도 원본 (3024x4032) |
+| `*.JPEG` | 리사이즈된 이미지 |
+
+### 테스트 이미지 저장 위치
+
+```
+~/Downloads/nail_app_test/
+├── device_cache/          # 디바이스에서 가져온 이미지
+├── latest_capture.jpg     # 수동 복사한 테스트 이미지
+└── visualization_*.png    # 시각화 결과
+```
+
 ## 참고 문서
 
 - [모델 교체 가이드](docs/MODEL_REPLACEMENT_GUIDE.md)

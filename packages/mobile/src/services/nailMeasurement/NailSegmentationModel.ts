@@ -387,10 +387,26 @@ class NailSegmentationModel {
         cropSize
       );
 
-      // 5. 크롭된 이미지 저장 생략 (jpeg.encode()가 Buffer 에러 발생)
-      // 오버레이는 원본 이미지 위에 표시
-      this.lastCroppedImageUri = null;
-      console.log('[NailSegmentationModel] Skipping cropped image save (using original image for overlay)');
+      // 5. 크롭된 이미지 저장 (마스크 오버레이 정렬용)
+      // ImageResizer를 사용해 정사각형 크롭 이미지 생성
+      try {
+        const croppedImage = await ImageResizer.createResizedImage(
+          normalizedImage.path,
+          MODEL_INPUT_SIZE,  // 256
+          MODEL_INPUT_SIZE,  // 256
+          'JPEG',
+          90,
+          0,
+          undefined,
+          false,
+          { mode: 'cover' }  // 정사각형으로 크롭
+        );
+        this.lastCroppedImageUri = croppedImage.uri;
+        console.log('[NailSegmentationModel] Cropped image saved:', croppedImage.uri);
+      } catch (cropError) {
+        console.warn('[NailSegmentationModel] Failed to save cropped image:', cropError);
+        this.lastCroppedImageUri = null;
+      }
 
       return tensor;
     } catch (error) {

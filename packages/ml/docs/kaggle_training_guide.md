@@ -81,7 +81,7 @@ DATASET_PATH = Path('/kaggle/input/nail-segmentation-dataset/NailSegmentationDat
 
 # ★ 체크포인트 경로 (이어서 학습 시 수정 필요)
 # 형식: /kaggle/input/{모델이름}/pytorch/default/1/{파일경로}
-CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v2/pytorch/default/1/models/best_model_20260130_225910.pth'
+CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v3/pytorch/default/1/best_model.pth'
 
 OUTPUT_DIR = Path('/kaggle/working/models')
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -241,6 +241,9 @@ print(f"Val: {len(val_dataset)} samples, {len(val_loader)} batches")
 ## Cell 7: Loss, Optimizer, Scheduler
 
 ```python
+if 'checkpoint_data' not in dir():                                                                                                                                                                             
+     checkpoint_data = None
+     
 criterion = smp.losses.DiceLoss(mode='binary')
 
 # Phase 4: Loss 조합 (성능 개선 필요 시 아래로 교체)

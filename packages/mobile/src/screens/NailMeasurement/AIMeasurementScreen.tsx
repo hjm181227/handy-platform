@@ -8,7 +8,7 @@
  * 4. 결과 확인 및 저장
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,6 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
-import { Buffer } from 'buffer';
 // nailMeasurementService는 useEffect 내에서 lazy import
 // Svg, Rect는 서버 오버레이 방식으로 변경되어 더 이상 필요 없음
 // 모듈 레벨에서 import하면 react-native-fast-tflite가 로드되어
@@ -83,198 +82,6 @@ const FINGER_KOREAN: Record<FingerType, string> = {
   ring: '약지',
   little: '새끼',
 };
-
-// 손가락 영문명 배열 (저장 순서)
-const FINGER_ORDER: FingerType[] = ['thumb', 'index', 'middle', 'ring', 'little'];
-const FOUR_FINGERS: FingerType[] = ['index', 'middle', 'ring', 'little'];
-
-/**
- * 마스크 배열을 PNG base64 data URI로 변환
- * 서버 오버레이가 없는 경우 클라이언트에서 마스크를 직접 렌더링
- *
- * @param mask - 256x256 binary mask (0 or 1)
- * @returns PNG base64 data URI (녹색 반투명 오버레이)
- */
-function maskToDataUri(mask: number[][]): string {
-  const height = mask.length;
-  const width = mask[0]?.length || 0;
-
-  if (width === 0 || height === 0) {
-    console.warn('[maskToDataUri] Empty mask provided');
-    return '';
-  }
-
-  // PNG 생성을 위한 헬퍼 함수들
-  const crc32Table = (() => {
-    const table: number[] = [];
-    for (let n = 0; n < 256; n++) {
-      let c = n;
-      for (let k = 0; k < 8; k++) {
-        c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
-      }
-      table[n] = c >>> 0;
-    }
-    return table;
-  })();
-
-  const crc32 = (buf: Uint8Array): number => {
-    let crc = 0xffffffff;
-    for (let i = 0; i < buf.length; i++) {
-      const index = (crc ^ buf[i]!) & 0xff;
-      crc = crc32Table[index]! ^ (crc >>> 8);
-    }
-    return (crc ^ 0xffffffff) >>> 0;
-  };
-
-  const createChunk = (type: string, data: Uint8Array): Uint8Array => {
-    const typeBytes = new Uint8Array([
-      type.charCodeAt(0),
-      type.charCodeAt(1),
-      type.charCodeAt(2),
-      type.charCodeAt(3),
-    ]);
-
-    // 청크 크기: 4(length) + 4(type) + data.length + 4(crc)
-    const chunkSize = 4 + 4 + data.length + 4;
-    const chunk = new Uint8Array(chunkSize);
-    const view = new DataView(chunk.buffer);
-
-    // Length (4 bytes, big endian)
-    view.setUint32(0, data.length, false);
-
-    // Type (4 bytes)
-    chunk.set(typeBytes, 4);
-
-    // Data
-    chunk.set(data, 8);
-
-    // CRC32 (type + data)
-    const crcData = new Uint8Array(4 + data.length);
-    crcData.set(typeBytes, 0);
-    crcData.set(data, 4);
-    const crcValue = crc32(crcData);
-    view.setUint32(8 + data.length, crcValue, false);
-
-    return chunk;
-  };
-
-  // PNG 시그니처
-  const signature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
-
-  // IHDR 청크 (이미지 헤더)
-  const ihdrData = new Uint8Array(13);
-  const ihdrView = new DataView(ihdrData.buffer);
-  ihdrView.setUint32(0, width, false);   // width
-  ihdrView.setUint32(4, height, false);  // height
-  ihdrData[8] = 8;   // bit depth
-  ihdrData[9] = 6;   // color type (RGBA)
-  ihdrData[10] = 0;  // compression
-  ihdrData[11] = 0;  // filter
-  ihdrData[12] = 0;  // interlace
-  const ihdrChunk = createChunk('IHDR', ihdrData);
-
-  // IDAT 청크 (이미지 데이터)
-  // 각 행: filter byte (0) + RGBA 픽셀 (4 bytes * width)
-  const rowSize = 1 + width * 4;
-  const rawData = new Uint8Array(height * rowSize);
-
-  // 녹색 반투명 (rgba(0, 255, 0, 128)) 오버레이 생성
-  for (let y = 0; y < height; y++) {
-    const rowOffset = y * rowSize;
-    rawData[rowOffset] = 0; // filter: none
-
-    for (let x = 0; x < width; x++) {
-      const pixelOffset = rowOffset + 1 + x * 4;
-      const isMask = (mask[y]?.[x] ?? 0) > 0.5;
-
-      if (isMask) {
-        rawData[pixelOffset] = 0;     // R
-        rawData[pixelOffset + 1] = 255; // G
-        rawData[pixelOffset + 2] = 0;   // B
-        rawData[pixelOffset + 3] = 128; // A (반투명)
-      } else {
-        rawData[pixelOffset] = 0;     // R
-        rawData[pixelOffset + 1] = 0; // G
-        rawData[pixelOffset + 2] = 0; // B
-        rawData[pixelOffset + 3] = 0; // A (투명)
-      }
-    }
-  }
-
-  // zlib deflate 압축 (간단한 store 방식 - 압축 없음)
-  // 실제로는 pako 같은 라이브러리를 사용하면 더 효율적
-  // 여기서는 단순화를 위해 zlib store 방식 사용
-  const deflateStore = (data: Uint8Array): Uint8Array => {
-    const MAX_BLOCK_SIZE = 65535;
-    const blocks: Uint8Array[] = [];
-
-    let offset = 0;
-    while (offset < data.length) {
-      const remaining = data.length - offset;
-      const blockSize = Math.min(remaining, MAX_BLOCK_SIZE);
-      const isLast = offset + blockSize >= data.length;
-
-      const blockHeader = new Uint8Array(5);
-      blockHeader[0] = isLast ? 0x01 : 0x00; // BFINAL=1/0, BTYPE=00 (store)
-      blockHeader[1] = blockSize & 0xff;
-      blockHeader[2] = (blockSize >> 8) & 0xff;
-      blockHeader[3] = ~blockSize & 0xff;
-      blockHeader[4] = (~blockSize >> 8) & 0xff;
-
-      blocks.push(blockHeader);
-      blocks.push(data.slice(offset, offset + blockSize));
-      offset += blockSize;
-    }
-
-    // adler32 체크섬 계산
-    let a = 1, b = 0;
-    for (let i = 0; i < data.length; i++) {
-      a = (a + data[i]!) % 65521;
-      b = (b + a) % 65521;
-    }
-    const adler32 = ((b << 16) | a) >>> 0;
-
-    // zlib 헤더 (CMF, FLG) + 압축 데이터 + adler32
-    const totalSize = 2 + blocks.reduce((sum, b) => sum + b.length, 0) + 4;
-    const result = new Uint8Array(totalSize);
-    result[0] = 0x78; // CMF
-    result[1] = 0x01; // FLG (no dict, fastest)
-
-    let pos = 2;
-    for (const block of blocks) {
-      result.set(block, pos);
-      pos += block.length;
-    }
-
-    // adler32 (big endian)
-    result[pos] = (adler32 >> 24) & 0xff;
-    result[pos + 1] = (adler32 >> 16) & 0xff;
-    result[pos + 2] = (adler32 >> 8) & 0xff;
-    result[pos + 3] = adler32 & 0xff;
-
-    return result;
-  };
-
-  const compressedData = deflateStore(rawData);
-  const idatChunk = createChunk('IDAT', compressedData);
-
-  // IEND 청크 (이미지 끝)
-  const iendChunk = createChunk('IEND', new Uint8Array(0));
-
-  // PNG 파일 조립
-  const pngSize = signature.length + ihdrChunk.length + idatChunk.length + iendChunk.length;
-  const png = new Uint8Array(pngSize);
-  let offset = 0;
-  png.set(signature, offset); offset += signature.length;
-  png.set(ihdrChunk, offset); offset += ihdrChunk.length;
-  png.set(idatChunk, offset); offset += idatChunk.length;
-  png.set(iendChunk, offset);
-
-  // Base64 인코딩 (Buffer 사용 - 스택 오버플로우 방지)
-  const base64 = Buffer.from(png).toString('base64');
-
-  return `data:image/png;base64,${base64}`;
-}
 
 const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   selectedHand,
@@ -418,88 +225,17 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     }
   };
 
-  // 클라이언트 측 마스크 PNG 생성 (서버 오버레이가 없는 경우 폴백)
-  const maskImageUri = useMemo(() => {
-    if (measurementResult?.mask) {
-      console.log('[AIMeasurementScreen] Generating client-side mask PNG');
-      return maskToDataUri(measurementResult.mask);
-    }
-    return null;
-  }, [measurementResult?.mask]);
-
-  // 마스크 오버레이 렌더링
-  // 서버에서 생성된 오버레이 이미지 또는 클라이언트 측 PNG 사용
+  // 마스크 오버레이 렌더링 (서버에서 생성된 오버레이 이미지 사용)
   const renderMaskOverlay = () => {
-    if (!measurementResult || !imageLayout || !showOverlay) return null;
-
-    // 서버에서 생성된 오버레이 이미지 사용 (권장)
-    if (measurementResult.maskOverlayBase64) {
-      return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Image
-            source={{ uri: `data:image/png;base64,${measurementResult.maskOverlayBase64}` }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="contain"
-          />
-        </View>
-      );
-    }
-
-    // 폴백: 클라이언트 측 PNG 생성
-    if (maskImageUri) {
-      return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Image
-            source={{ uri: maskImageUri }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="contain"
-          />
-        </View>
-      );
-    }
-
-    return null;
-  };
-
-  // 바운딩 박스 오버레이 (측정 결과 표시용)
-  const renderBoundingBoxOverlay = () => {
-    if (!measurementResult || !imageLayout || !showOverlay) return null;
-
-    const scaleX = imageLayout.width / MODEL_INPUT_SIZE;
-    const scaleY = imageLayout.height / MODEL_INPUT_SIZE;
+    if (!measurementResult?.maskOverlayBase64 || !imageLayout || !showOverlay) return null;
 
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {measurementResult.measurements.map((m) => {
-          const { boundingBox } = m;
-          if (!boundingBox) return null;
-
-          const scaledBox = {
-            x: boundingBox.x * scaleX,
-            y: boundingBox.y * scaleY,
-            width: boundingBox.width * scaleX,
-            height: boundingBox.height * scaleY,
-          };
-
-          return (
-            <View
-              key={m.finger}
-              style={[
-                styles.detectionBox,
-                {
-                  left: scaledBox.x,
-                  top: scaledBox.y,
-                  width: scaledBox.width,
-                  height: scaledBox.height,
-                },
-              ]}
-            >
-              <Text style={styles.detectionLabel}>
-                {FINGER_KOREAN[m.finger]} {m.widthMm}mm
-              </Text>
-            </View>
-          );
-        })}
+        <Image
+          source={{ uri: `data:image/png;base64,${measurementResult.maskOverlayBase64}` }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="contain"
+        />
       </View>
     );
   };
@@ -632,8 +368,6 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
           />
           {/* 마스크 오버레이 (녹색 반투명) */}
           {renderMaskOverlay()}
-          {/* 바운딩 박스 + 측정값 표시 */}
-          {renderBoundingBoxOverlay()}
           {isAnalyzing && (
             <View style={styles.analyzingOverlay}>
               <ActivityIndicator size="large" color="#007AFF" />
@@ -775,25 +509,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 12,
     fontWeight: '500',
-  },
-  detectionBox: {
-    position: 'absolute',
-    borderWidth: 2,
-    borderColor: '#00FF00',
-    backgroundColor: 'rgba(0, 255, 0, 0.2)',
-    borderRadius: 4,
-  },
-  detectionLabel: {
-    position: 'absolute',
-    top: -20,
-    left: 0,
-    backgroundColor: '#00FF00',
-    color: '#000',
-    fontSize: 10,
-    fontWeight: 'bold',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 2,
   },
   overlayHint: {
     position: 'absolute',
