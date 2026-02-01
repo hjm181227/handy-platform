@@ -22,7 +22,7 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
-import { Buffer } from 'buffer';
+import Svg, { Rect } from 'react-native-svg';
 // nailMeasurementService는 useEffect 내에서 lazy import
 // 모듈 레벨에서 import하면 react-native-fast-tflite가 로드되어
 // Hermes 엔진에서 "property is not configurable" 에러 발생
@@ -31,13 +31,11 @@ import {
   FingerNailMeasurement,
   FingerType,
   MODEL_INPUT_SIZE,
-  SERVER_MODEL_INPUT_SIZE,
   SEGMENTATION_THRESHOLD,
   CARD_GUIDE_WIDTH_MOBILE,
   CARD_GUIDE_WIDTH_TABLET,
   TABLET_BREAKPOINT,
   NailRegion,
-  ServerCalibrationInfo,
 } from '../../services/nailMeasurement/types';
 import {
   findConnectedComponents,
@@ -64,158 +62,6 @@ const getNailMeasurementService = () => {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-/**
- * 마스크 배열을 PNG 이미지의 base64 data URI로 변환
- * 녹색 반투명 오버레이로 표시 (정확한 손톱 윤곽선)
- *
- * PNG 형식 사용 이유: 알파 채널 투명도를 올바르게 지원
- * Buffer 기반으로 구현하여 스택 오버플로우 방지
- */
-const maskToDataUri = (mask: number[][], threshold: number = SEGMENTATION_THRESHOLD): string => {
-  const height = mask.length;
-  const width = mask[0]?.length || 0;
-  if (width === 0 || height === 0) return '';
-
-  // RGBA 픽셀 데이터 생성 (필터 바이트 포함)
-  // 각 행: 1바이트(필터) + width * 4바이트(RGBA)
-  const rowBytes = 1 + width * 4;
-  const rawDataSize = height * rowBytes;
-  const rawData = Buffer.alloc(rawDataSize);
-
-  let offset = 0;
-  for (let y = 0; y < height; y++) {
-    rawData[offset++] = 0; // Filter type: None
-    for (let x = 0; x < width; x++) {
-      const value = mask[y][x] || 0;
-      if (value >= threshold) {
-        // Green with 50% opacity (RGBA)
-        rawData[offset++] = 0;    // R
-        rawData[offset++] = 255;  // G
-        rawData[offset++] = 0;    // B
-        rawData[offset++] = 128;  // A (50%)
-      } else {
-        // Fully transparent
-        rawData[offset++] = 0;
-        rawData[offset++] = 0;
-        rawData[offset++] = 0;
-        rawData[offset++] = 0;
-      }
-    }
-  }
-
-  // Adler-32 체크섬 계산
-  const adler32 = (buf: Buffer): number => {
-    let a = 1, b = 0;
-    for (let i = 0; i < buf.length; i++) {
-      a = (a + buf[i]) % 65521;
-      b = (b + a) % 65521;
-    }
-    return (b << 16) | a;
-  };
-
-  // CRC32 테이블 생성
-  const crc32Table = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) {
-      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    }
-    crc32Table[n] = c >>> 0;
-  }
-
-  // CRC32 계산 (PNG 청크용)
-  const crc32 = (buf: Buffer): number => {
-    let crc = 0xFFFFFFFF;
-    for (let i = 0; i < buf.length; i++) {
-      crc = crc32Table[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
-    }
-    return (crc ^ 0xFFFFFFFF) >>> 0;
-  };
-
-  // Deflate store 방식으로 압축 (실제로는 비압축)
-  // zlib header (2) + blocks + adler32 (4)
-  const numBlocks = Math.ceil(rawDataSize / 65535);
-  const deflatedSize = 2 + numBlocks * 5 + rawDataSize + 4;
-  const deflated = Buffer.alloc(deflatedSize);
-
-  let dOffset = 0;
-  // zlib header
-  deflated[dOffset++] = 0x78;
-  deflated[dOffset++] = 0x01;
-
-  // Store blocks
-  let remaining = rawDataSize;
-  let srcOffset = 0;
-  while (remaining > 0) {
-    const blockSize = Math.min(remaining, 65535);
-    const isFinal = remaining <= 65535 ? 1 : 0;
-
-    deflated[dOffset++] = isFinal;
-    deflated[dOffset++] = blockSize & 0xFF;
-    deflated[dOffset++] = (blockSize >> 8) & 0xFF;
-    deflated[dOffset++] = (~blockSize) & 0xFF;
-    deflated[dOffset++] = ((~blockSize) >> 8) & 0xFF;
-
-    rawData.copy(deflated, dOffset, srcOffset, srcOffset + blockSize);
-    dOffset += blockSize;
-    srcOffset += blockSize;
-    remaining -= blockSize;
-  }
-
-  // Adler-32 checksum (big-endian)
-  const checksum = adler32(rawData);
-  deflated[dOffset++] = (checksum >> 24) & 0xFF;
-  deflated[dOffset++] = (checksum >> 16) & 0xFF;
-  deflated[dOffset++] = (checksum >> 8) & 0xFF;
-  deflated[dOffset++] = checksum & 0xFF;
-
-  // PNG 청크 생성 함수
-  const createChunk = (type: string, data: Buffer): Buffer => {
-    const chunk = Buffer.alloc(4 + 4 + data.length + 4);
-    let cOffset = 0;
-
-    // Length (4 bytes, big-endian)
-    chunk.writeUInt32BE(data.length, cOffset);
-    cOffset += 4;
-
-    // Type (4 bytes)
-    chunk.write(type, cOffset, 4, 'ascii');
-    cOffset += 4;
-
-    // Data
-    data.copy(chunk, cOffset);
-    cOffset += data.length;
-
-    // CRC (4 bytes) - CRC of type + data
-    const crcBuf = Buffer.alloc(4 + data.length);
-    crcBuf.write(type, 0, 4, 'ascii');
-    data.copy(crcBuf, 4);
-    chunk.writeUInt32BE(crc32(crcBuf), cOffset);
-
-    return chunk;
-  };
-
-  // IHDR 데이터
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8;  // Bit depth
-  ihdr[9] = 6;  // Color type: RGBA
-  ihdr[10] = 0; // Compression method
-  ihdr[11] = 0; // Filter method
-  ihdr[12] = 0; // Interlace method
-
-  // PNG 파일 조립
-  const signature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-  const ihdrChunk = createChunk('IHDR', ihdr);
-  const idatChunk = createChunk('IDAT', deflated);
-  const iendChunk = createChunk('IEND', Buffer.alloc(0));
-
-  const png = Buffer.concat([signature, ihdrChunk, idatChunk, iendChunk]);
-
-  return `data:image/png;base64,${png.toString('base64')}`;
-};
 
 interface AIMeasurementScreenProps {
   selectedHand: 'left' | 'right';
@@ -289,27 +135,27 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
       const initSuccess = await service.initialize();
       console.log('[AIMeasurementScreen] Model initialized:', initSuccess);
 
-      // 카드 가이드 폭 계산 (고정 픽셀 기반)
+      // 카드 폭 계산 (고정 픽셀 기반)
+      // 화면 대비 카드 가이드 비율로 모델 공간에서 카드 폭 계산
       // 카드 가이드: 모바일 280px, 태블릿 400px (고정 크기)
       const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
       const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
-
-      console.log('[AIMeasurementScreen] Calibration params:', {
+      const cardToScreenRatio = cardGuideWidth / SCREEN_WIDTH;
+      const estimatedCardWidth = MODEL_INPUT_SIZE * cardToScreenRatio;
+      console.log('[AIMeasurementScreen] Card calculation:', {
         screenWidth: SCREEN_WIDTH,
         isTablet,
         cardGuideWidth,
-        // 서버 기준 계산 (640px)
-        cardToScreenRatio: (cardGuideWidth / SCREEN_WIDTH).toFixed(4),
-        cardPixelsInModel640: (SERVER_MODEL_INPUT_SIZE * cardGuideWidth / SCREEN_WIDTH).toFixed(1),
+        cardToScreenRatio,
+        estimatedCardWidth,
       });
 
-      // AI 측정 실행 (서버에서 640x640 기준으로 측정)
-      // cardGuideWidth, SCREEN_WIDTH를 서버에 전달
+      // AI 측정 실행
       let result: NailMeasurementResult;
       if (isThumbOnly) {
-        result = await service.measureThumb(imageUri, cardGuideWidth, SCREEN_WIDTH);
+        result = await service.measureThumb(imageUri, estimatedCardWidth);
       } else {
-        result = await service.measureFourFingers(imageUri, cardGuideWidth, SCREEN_WIDTH);
+        result = await service.measureFourFingers(imageUri, estimatedCardWidth);
       }
 
       console.log('[AIMeasurementScreen] Measurement result:', JSON.stringify(result, null, 2));
@@ -320,7 +166,7 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         console.warn('Measurement validation warnings:', validation.warnings);
       }
 
-      // Stage 3: 감지된 영역 저장 (디버그용) - 로컬 폴백 시에만 마스크 있음
+      // Stage 3: 감지된 영역 저장 (디버그용)
       if (result.mask) {
         const regions = findConnectedComponents(result.mask);
         setDetectedRegions(regions);
@@ -384,56 +230,66 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     }
   };
 
-  // 감지된 영역 수 계산
-  const detectedRegionsCount = useMemo(() => {
-    return measurementResult?.measurements?.length || 0;
-  }, [measurementResult?.measurements]);
+  // 다운샘플링된 마스크 블록 데이터 생성 (성능 최적화)
+  const maskBlocks = useMemo(() => {
+    if (!measurementResult?.mask || !imageLayout) return [];
 
-  // 마스크 오버레이 이미지 URI
-  // 서버에서 생성된 오버레이가 있으면 우선 사용, 없으면 클라이언트에서 생성
-  const maskImageUri = useMemo(() => {
-    // 1. 서버에서 생성된 오버레이가 있으면 사용
-    if (measurementResult?.maskOverlayBase64) {
-      console.log('[AIMeasurementScreen] Using server-generated mask overlay');
-      return `data:image/png;base64,${measurementResult.maskOverlayBase64}`;
-    }
-    // 2. 폴백: 클라이언트에서 마스크 이미지 생성
-    if (measurementResult?.mask) {
-      console.log('[AIMeasurementScreen] Generating mask overlay on client (fallback)');
-      return maskToDataUri(measurementResult.mask);
-    }
-    return null;
-  }, [measurementResult?.mask, measurementResult?.maskOverlayBase64]);
+    const mask = measurementResult.mask;
+    const blocks: { x: number; y: number; width: number; height: number }[] = [];
 
-  // 크롭된 이미지 URI (서버 생성 base64 또는 로컬 파일)
-  const croppedImageUri = useMemo(() => {
-    // 1. 서버에서 생성된 크롭 이미지가 있으면 사용
-    if (measurementResult?.croppedImageBase64) {
-      console.log('[AIMeasurementScreen] Using server-generated cropped image');
-      return `data:image/png;base64,${measurementResult.croppedImageBase64}`;
-    }
-    // 2. 로컬에서 생성된 크롭 이미지 URI가 있으면 사용
-    if (measurementResult?.croppedImageUri) {
-      return measurementResult.croppedImageUri;
-    }
-    // 3. 폴백: 원본 이미지
-    return imageUri;
-  }, [measurementResult?.croppedImageBase64, measurementResult?.croppedImageUri, imageUri]);
+    // 다운샘플링: 4x4 블록 단위로 처리 (256/4 = 64개)
+    const blockSize = 4;
+    const numBlocks = MODEL_INPUT_SIZE / blockSize;
+    const scaleX = imageLayout.width / MODEL_INPUT_SIZE;
+    const scaleY = imageLayout.height / MODEL_INPUT_SIZE;
 
-  // 마스크 오버레이 렌더링 (정확한 마스크 이미지로 표시)
+    for (let by = 0; by < numBlocks; by++) {
+      for (let bx = 0; bx < numBlocks; bx++) {
+        // 블록 내 평균값 계산
+        let sum = 0;
+        for (let dy = 0; dy < blockSize; dy++) {
+          for (let dx = 0; dx < blockSize; dx++) {
+            const y = by * blockSize + dy;
+            const x = bx * blockSize + dx;
+            sum += mask[y]?.[x] || 0;
+          }
+        }
+        const avg = sum / (blockSize * blockSize);
+
+        // threshold 이상이면 블록 추가
+        if (avg >= SEGMENTATION_THRESHOLD) {
+          blocks.push({
+            x: bx * blockSize * scaleX,
+            y: by * blockSize * scaleY,
+            width: blockSize * scaleX,
+            height: blockSize * scaleY,
+          });
+        }
+      }
+    }
+
+    return blocks;
+  }, [measurementResult?.mask, imageLayout]);
+
+  // 마스크 오버레이 렌더링 (Prediction Overlay 스타일)
   const renderMaskOverlay = () => {
-    if (!maskImageUri || !imageLayout || !showOverlay) return null;
+    if (!measurementResult?.mask || !imageLayout || !showOverlay) return null;
 
     return (
-      <Image
-        source={{ uri: maskImageUri }}
-        style={[
-          StyleSheet.absoluteFill,
-          { width: imageLayout.width, height: imageLayout.height },
-        ]}
-        resizeMode="cover"
-        pointerEvents="none"
-      />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Svg width={imageLayout.width} height={imageLayout.height}>
+          {maskBlocks.map((block, index) => (
+            <Rect
+              key={index}
+              x={block.x}
+              y={block.y}
+              width={block.width}
+              height={block.height}
+              fill="rgba(0, 255, 0, 0.5)"
+            />
+          ))}
+        </Svg>
+      </View>
     );
   };
 
@@ -441,10 +297,8 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   const renderBoundingBoxOverlay = () => {
     if (!measurementResult || !imageLayout || !showOverlay) return null;
 
-    // 서버 모드면 640, 로컬 폴백이면 256 사용
-    const modelSize = measurementResult.imageWidth || MODEL_INPUT_SIZE;
-    const scaleX = imageLayout.width / modelSize;
-    const scaleY = imageLayout.height / modelSize;
+    const scaleX = imageLayout.width / MODEL_INPUT_SIZE;
+    const scaleY = imageLayout.height / MODEL_INPUT_SIZE;
 
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -522,12 +376,7 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
     const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
     const cardToScreenRatio = cardGuideWidth / SCREEN_WIDTH;
-
-    // 서버 캘리브레이션 정보 (있으면 서버 측정 사용)
-    const serverCal = measurementResult.serverCalibration;
-    const isServerMode = !!serverCal;
-    const modelInputSize = isServerMode ? SERVER_MODEL_INPUT_SIZE : MODEL_INPUT_SIZE;
-    const cardPixelsInModel = modelInputSize * cardToScreenRatio;
+    const estimatedCardWidth = MODEL_INPUT_SIZE * cardToScreenRatio;
 
     return (
       <View style={styles.debugPanel}>
@@ -538,94 +387,40 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* 측정 모드 */}
-        <View style={styles.debugSection}>
-          <Text style={styles.debugSectionTitle}>Measurement Mode</Text>
-          <Text style={[
-            styles.debugText,
-            { color: isServerMode ? '#00FF00' : '#FFD700' }
-          ]}>
-            {isServerMode
-              ? `✓ Server mode (${SERVER_MODEL_INPUT_SIZE}x${SERVER_MODEL_INPUT_SIZE})`
-              : `⚠ Local fallback mode (${MODEL_INPUT_SIZE}x${MODEL_INPUT_SIZE})`}
-          </Text>
-        </View>
-
         {/* 캘리브레이션 정보 */}
         <View style={styles.debugSection}>
           <Text style={styles.debugSectionTitle}>Calibration (Stage 4)</Text>
           <Text style={styles.debugText}>Screen Width: {SCREEN_WIDTH}px</Text>
           <Text style={styles.debugText}>Card Guide: {cardGuideWidth}px ({isTablet ? 'tablet' : 'mobile'})</Text>
-          <Text style={styles.debugText}>Card-to-Screen Ratio: {cardToScreenRatio.toFixed(4)}</Text>
-          <Text style={styles.debugText}>Model Input Size: {modelInputSize}px</Text>
-          <Text style={styles.debugText}>Card Pixels (in model): {serverCal?.cardPixelsInModel?.toFixed(1) ?? cardPixelsInModel.toFixed(1)}px</Text>
+          <Text style={styles.debugText}>Card-to-Screen Ratio: {cardToScreenRatio.toFixed(3)}</Text>
+          <Text style={styles.debugText}>Estimated Card (in model): {estimatedCardWidth.toFixed(1)}px</Text>
           <Text style={styles.debugText}>Pixel-to-mm Ratio: {measurementResult.pixelToMmRatio.toFixed(4)} mm/px</Text>
         </View>
 
-        {/* 정확도 비교 (서버 vs 로컬) */}
-        {isServerMode && (
-          <View style={styles.debugSection}>
-            <Text style={styles.debugSectionTitle}>Accuracy Comparison</Text>
-            <Text style={styles.debugText}>
-              Server (640): {(85.6 / (serverCal?.cardPixelsInModel ?? 1)).toFixed(4)} mm/px
-            </Text>
-            <Text style={styles.debugText}>
-              Local (256): {(85.6 / (MODEL_INPUT_SIZE * cardToScreenRatio)).toFixed(4)} mm/px
-            </Text>
-            <Text style={[styles.debugText, { color: '#00FF00' }]}>
-              → 서버 모드가 {(SERVER_MODEL_INPUT_SIZE / MODEL_INPUT_SIZE).toFixed(1)}x 더 정밀
-            </Text>
-          </View>
-        )}
-
-        {/* 오버레이 생성 방식 */}
+        {/* 감지된 영역 정보 */}
         <View style={styles.debugSection}>
-          <Text style={styles.debugSectionTitle}>Overlay Source</Text>
-          <Text style={[
-            styles.debugText,
-            { color: measurementResult.maskOverlayBase64 ? '#00FF00' : '#FF6B6B' }
-          ]}>
-            {measurementResult.maskOverlayBase64
-              ? '✓ Server-generated overlay (Python/OpenCV)'
-              : '✗ Client-generated overlay (fallback)'}
-          </Text>
-          <Text style={[
-            styles.debugText,
-            { color: measurementResult.croppedImageBase64 ? '#00FF00' : '#FF6B6B' }
-          ]}>
-            {measurementResult.croppedImageBase64
-              ? '✓ Server-generated cropped image'
-              : '✗ Local cropped image'}
-          </Text>
+          <Text style={styles.debugSectionTitle}>Detected Regions (Stage 3)</Text>
+          <Text style={styles.debugText}>Expected: {isThumbOnly ? 1 : 4} region(s)</Text>
+          <Text style={styles.debugText}>Detected: {detectedRegions.length} region(s)</Text>
+
+          {detectedRegions.map((region, idx) => (
+            <View key={region.id} style={styles.debugRegion}>
+              <Text style={styles.debugRegionTitle}>Region {idx}</Text>
+              <Text style={styles.debugText}>Area: {region.area}px</Text>
+              <Text style={styles.debugText}>Center: ({region.centerX.toFixed(1)}, {region.centerY.toFixed(1)})</Text>
+              <Text style={styles.debugText}>
+                BBox: ({region.boundingBox.x}, {region.boundingBox.y}) {region.boundingBox.width}×{region.boundingBox.height}
+              </Text>
+            </View>
+          ))}
         </View>
-
-        {/* 감지된 영역 정보 (로컬 폴백 시에만 표시) */}
-        {detectedRegions.length > 0 && (
-          <View style={styles.debugSection}>
-            <Text style={styles.debugSectionTitle}>Detected Regions (Stage 3)</Text>
-            <Text style={styles.debugText}>Expected: {isThumbOnly ? 1 : 4} region(s)</Text>
-            <Text style={styles.debugText}>Detected: {detectedRegions.length} region(s)</Text>
-
-            {detectedRegions.map((region, idx) => (
-              <View key={region.id} style={styles.debugRegion}>
-                <Text style={styles.debugRegionTitle}>Region {idx}</Text>
-                <Text style={styles.debugText}>Area: {region.area}px</Text>
-                <Text style={styles.debugText}>Center: ({region.centerX.toFixed(1)}, {region.centerY.toFixed(1)})</Text>
-                <Text style={styles.debugText}>
-                  BBox: ({region.boundingBox.x}, {region.boundingBox.y}) {region.boundingBox.width}×{region.boundingBox.height}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
 
         {/* 측정 결과 정보 */}
         <View style={styles.debugSection}>
           <Text style={styles.debugSectionTitle}>Measurements (Stage 4)</Text>
-          <Text style={styles.debugText}>Resolution: {measurementResult.imageWidth}x{measurementResult.imageHeight}</Text>
           {measurementResult.measurements.map((m) => (
             <Text key={m.finger} style={styles.debugText}>
-              {m.finger}: {m.widthPixels}px → {m.widthMm}mm (conf: {(m.confidence * 100).toFixed(0)}%)
+              {m.finger}: {m.widthPixels}px → {m.widthMm}mm
             </Text>
           ))}
         </View>
@@ -657,24 +452,16 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
             setImageLayout({ width, height });
           }}
         >
-          {/* 크롭된 이미지 표시 (서버 생성 base64 → 로컬 파일 → 원본 순서) */}
+          {/* 크롭된 이미지 또는 원본 이미지 표시 */}
           <Image
-            source={{ uri: croppedImageUri }}
+            source={{ uri: measurementResult?.croppedImageUri || imageUri }}
             style={styles.previewImage}
             resizeMode="contain"
           />
           {/* 마스크 오버레이 (녹색 반투명) */}
           {renderMaskOverlay()}
-          {/* 바운딩 박스 + 측정값 표시 - 공간이 좁아 제거 */}
-          {/* {renderBoundingBoxOverlay()} */}
-          {/* 감지된 영역 수 배지 */}
-          {showOverlay && detectedRegionsCount > 0 && (
-            <View style={styles.detectionBadge}>
-              <Text style={styles.detectionBadgeText}>
-                {detectedRegionsCount}개 손톱 감지
-              </Text>
-            </View>
-          )}
+          {/* 바운딩 박스 + 측정값 표시 */}
+          {renderBoundingBoxOverlay()}
           {isAnalyzing && (
             <View style={styles.analyzingOverlay}>
               <ActivityIndicator size="large" color="#007AFF" />
@@ -850,20 +637,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-  },
-  detectionBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  detectionBadgeText: {
-    color: '#00FF00',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   statusCard: {
     flexDirection: 'row',

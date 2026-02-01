@@ -18,7 +18,6 @@ Endpoints:
     GET /health - Health check
 """
 
-import base64
 import io
 import os
 import time
@@ -72,18 +71,6 @@ class SegmentationResponse(BaseModel):
     mask_stats: dict
 
 
-class SegmentWithOverlayResponse(BaseModel):
-    """Response model for segmentation with overlay endpoint."""
-    success: bool
-    cropped_image: str  # base64 PNG of cropped input image
-    mask_overlay: str   # base64 PNG of mask overlay (transparent background + green mask)
-    mask: List[List[float]]  # 2D array of floats (0-1)
-    width: int
-    height: int
-    processing_time_ms: float
-    mask_stats: dict
-
-
 class NailMeasurement(BaseModel):
     """Individual nail measurement."""
     finger: str  # thumb, index, middle, ring, little
@@ -100,25 +87,6 @@ class MeasurementResponse(BaseModel):
     pixel_to_mm_ratio: float
     processing_time_ms: float
     mask: Optional[List[List[float]]] = None
-
-
-class CalibrationInfo(BaseModel):
-    """Calibration information for pixel-to-mm conversion."""
-    card_guide_width: float      # UI상의 카드 가이드 폭 (px)
-    screen_width: float          # 화면 전체 폭 (px)
-    card_pixels_in_model: float  # 모델 입력 크기(640) 기준 카드 폭 (px)
-    pixel_to_mm_ratio: float     # 1픽셀 = X mm (640 기준)
-    model_input_size: int        # 모델 입력 크기
-
-
-class MeasureWithOverlayResponse(BaseModel):
-    """Response model for measure-with-overlay endpoint."""
-    success: bool
-    measurements: List[NailMeasurement]
-    calibration: CalibrationInfo
-    cropped_image: str   # base64 PNG of cropped input image
-    mask_overlay: str    # base64 PNG of mask overlay
-    processing_time_ms: float
 
 
 class HealthResponse(BaseModel):
@@ -214,14 +182,7 @@ class NailSegmentationModel:
 
     def preprocess_image(self, image: np.ndarray) -> torch.Tensor:
         """Preprocess image for inference."""
-        # Center square crop to maintain aspect ratio
-        h, w = image.shape[:2]
-        crop_size = min(h, w)
-        start_x = (w - crop_size) // 2
-        start_y = (h - crop_size) // 2
-        image = image[start_y:start_y+crop_size, start_x:start_x+crop_size]
-
-        # Resize cropped square to model input size
+        # Resize to model input size
         image = cv2.resize(image, (self.input_size, self.input_size))
 
         # Apply encoder-specific preprocessing
@@ -254,50 +215,6 @@ class NailSegmentationModel:
         processing_time_ms = (time.time() - start_time) * 1000
 
         return mask, processing_time_ms
-
-    def predict_with_cropped_image(self, image: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
-        """
-        Run segmentation inference and return cropped image along with mask.
-
-        Returns:
-            - cropped_image: Center-square-cropped and resized image (input_size x input_size)
-            - mask: Segmentation mask (input_size x input_size)
-            - processing_time_ms: Processing time in milliseconds
-        """
-        if self.model is None:
-            raise RuntimeError("Model not loaded")
-
-        start_time = time.time()
-
-        # Center square crop
-        h, w = image.shape[:2]
-        crop_size = min(h, w)
-        start_x = (w - crop_size) // 2
-        start_y = (h - crop_size) // 2
-        cropped = image[start_y:start_y+crop_size, start_x:start_x+crop_size]
-
-        # Resize to model input size
-        cropped_resized = cv2.resize(cropped, (self.input_size, self.input_size))
-
-        # Preprocess for model
-        preprocessed = cropped_resized.copy()
-        if self.preprocessing_fn:
-            preprocessed = self.preprocessing_fn(preprocessed)
-
-        # Convert to tensor: HWC -> CHW
-        preprocessed = preprocessed.transpose(2, 0, 1).astype(np.float32)
-        tensor = torch.from_numpy(preprocessed).unsqueeze(0).to(self.device)
-
-        # Inference
-        with torch.no_grad():
-            output = self.model(tensor)
-
-        # Post-process
-        mask = output.squeeze().cpu().numpy()
-
-        processing_time_ms = (time.time() - start_time) * 1000
-
-        return cropped_resized, mask, processing_time_ms
 
 
 # ============================================
@@ -491,90 +408,6 @@ async def segment_image(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/segment-with-overlay", response_model=SegmentWithOverlayResponse)
-async def segment_with_overlay(
-    image: UploadFile = File(...),
-):
-    """
-    Segment nail regions and return overlay image.
-
-    This endpoint returns:
-    - cropped_image: The center-cropped input image resized to model size (base64 PNG)
-    - mask_overlay: Green semi-transparent mask overlay with transparent background (base64 PNG)
-    - mask: Raw segmentation mask data
-
-    The overlay can be directly displayed on top of the cropped image in the app,
-    ensuring perfect alignment between the mask and the image.
-
-    Args:
-        image: Image file (JPEG, PNG)
-
-    Returns:
-        SegmentWithOverlayResponse with cropped image, mask overlay, and mask data
-    """
-    if model_manager.model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
-
-    try:
-        # Read and decode image
-        contents = await image.read()
-        nparr = np.frombuffer(contents, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-        if img is None:
-            raise HTTPException(status_code=400, detail="Invalid image format")
-
-        # Convert BGR to RGB
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        # Run inference with cropped image
-        cropped_img, mask, processing_time_ms = model_manager.predict_with_cropped_image(img_rgb)
-
-        # Convert cropped image to base64 PNG (RGB -> BGR for OpenCV encoding)
-        cropped_bgr = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR)
-        _, cropped_buffer = cv2.imencode('.png', cropped_bgr)
-        cropped_base64 = base64.b64encode(cropped_buffer).decode('utf-8')
-
-        # Create mask overlay (RGBA: transparent background + green semi-transparent mask)
-        height, width = mask.shape
-        overlay = np.zeros((height, width, 4), dtype=np.uint8)
-
-        # Apply green color with 50% opacity where mask > 0.5
-        mask_binary = mask > 0.5
-        overlay[mask_binary, 0] = 0    # B (OpenCV uses BGR order for BGRA)
-        overlay[mask_binary, 1] = 255  # G
-        overlay[mask_binary, 2] = 0    # R
-        overlay[mask_binary, 3] = 128  # A (50% opacity)
-
-        # Encode overlay as PNG with alpha channel
-        _, overlay_buffer = cv2.imencode('.png', overlay)
-        overlay_base64 = base64.b64encode(overlay_buffer).decode('utf-8')
-
-        # Calculate statistics
-        mask_stats = {
-            "min": float(mask.min()),
-            "max": float(mask.max()),
-            "mean": float(mask.mean()),
-            "positive_ratio": float((mask > 0.5).sum() / mask.size * 100),
-        }
-
-        return SegmentWithOverlayResponse(
-            success=True,
-            cropped_image=cropped_base64,
-            mask_overlay=overlay_base64,
-            mask=mask.tolist(),
-            width=mask.shape[1],
-            height=mask.shape[0],
-            processing_time_ms=round(processing_time_ms, 2),
-            mask_stats=mask_stats,
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/api/measure", response_model=MeasurementResponse)
 async def measure_nails(
     image: UploadFile = File(...),
@@ -631,9 +464,7 @@ async def measure_nails(
 
         # Calculate measurements
         # Note: card_width_pixels should be scaled to model input size
-        # After center square crop, the reference is the cropped size (min dimension)
-        crop_size = min(img.shape[:2])
-        scale_factor = model_manager.input_size / crop_size
+        scale_factor = model_manager.input_size / max(img.shape[:2])
         scaled_card_width = card_width_pixels * scale_factor
 
         measurements = calculate_measurements(
@@ -650,147 +481,6 @@ async def measure_nails(
             pixel_to_mm_ratio=round(pixel_to_mm_ratio, 4),
             processing_time_ms=round((time.time() - start_time) * 1000, 2),
             mask=mask.tolist() if include_mask else None,
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/measure-with-overlay", response_model=MeasureWithOverlayResponse)
-async def measure_with_overlay(
-    image: UploadFile = File(...),
-    card_guide_width: float = 280,  # 화면상 카드 가이드 폭 (px)
-    screen_width: float = 393,      # 화면 전체 폭 (px)
-    is_thumb_only: bool = True,
-):
-    """
-    Segmentation + measurement + overlay in one call.
-
-    This endpoint performs all calculations at native 640x640 resolution,
-    eliminating coordinate system mismatches that occur when resizing.
-
-    pixel-to-mm calculation:
-    1. cardToScreenRatio = card_guide_width / screen_width
-    2. cardPixelsInModel = 640 * cardToScreenRatio
-    3. pixelToMmRatio = 85.6 / cardPixelsInModel
-
-    Args:
-        image: Image file (JPEG, PNG)
-        card_guide_width: Width of credit card guide on screen (pixels)
-        screen_width: Total screen width (pixels)
-        is_thumb_only: True for thumb measurement, False for 4 fingers
-
-    Returns:
-        MeasureWithOverlayResponse with measurements in mm, calibration info, and overlay images
-    """
-    if model_manager.model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
-
-    try:
-        start_time = time.time()
-
-        # Read and decode image
-        contents = await image.read()
-        nparr = np.frombuffer(contents, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-        if img is None:
-            raise HTTPException(status_code=400, detail="Invalid image format")
-
-        # Convert BGR to RGB
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        # Run inference with cropped image (640x640 native resolution)
-        cropped_img, mask, inference_time = model_manager.predict_with_cropped_image(img_rgb)
-
-        # Calculate pixel-to-mm ratio at 640x640 model resolution
-        model_input_size = model_manager.input_size  # 640
-        card_to_screen_ratio = card_guide_width / screen_width
-        card_pixels_in_model = model_input_size * card_to_screen_ratio
-        pixel_to_mm_ratio = CREDIT_CARD_WIDTH_MM / card_pixels_in_model
-
-        # Find connected components in 640x640 mask
-        regions = find_connected_components(mask)
-
-        # Classify fingers
-        classified_regions = classify_fingers(regions, is_thumb_only)
-
-        if not classified_regions:
-            # Return empty result if no nails detected
-            # Create empty overlay
-            height, width = mask.shape
-            overlay = np.zeros((height, width, 4), dtype=np.uint8)
-            _, overlay_buffer = cv2.imencode('.png', overlay)
-            overlay_base64 = base64.b64encode(overlay_buffer).decode('utf-8')
-
-            # Cropped image
-            cropped_bgr = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR)
-            _, cropped_buffer = cv2.imencode('.png', cropped_bgr)
-            cropped_base64 = base64.b64encode(cropped_buffer).decode('utf-8')
-
-            return MeasureWithOverlayResponse(
-                success=False,
-                measurements=[],
-                calibration=CalibrationInfo(
-                    card_guide_width=card_guide_width,
-                    screen_width=screen_width,
-                    card_pixels_in_model=round(card_pixels_in_model, 2),
-                    pixel_to_mm_ratio=round(pixel_to_mm_ratio, 4),
-                    model_input_size=model_input_size,
-                ),
-                cropped_image=cropped_base64,
-                mask_overlay=overlay_base64,
-                processing_time_ms=round((time.time() - start_time) * 1000, 2),
-            )
-
-        # Calculate measurements using 640x640 native coordinates
-        measurements = []
-        for region in classified_regions:
-            width_mm = region["width_pixels"] * pixel_to_mm_ratio
-
-            measurements.append(NailMeasurement(
-                finger=region.get("finger", "unknown"),
-                width_mm=round(width_mm, 2),
-                width_pixels=region["width_pixels"],
-                confidence=0.9,  # TODO: Calculate actual confidence
-                bounding_box=region["bounding_box"],
-            ))
-
-        # Create mask overlay (RGBA: transparent background + green semi-transparent mask)
-        height, width = mask.shape
-        overlay = np.zeros((height, width, 4), dtype=np.uint8)
-
-        # Apply green color with 50% opacity where mask > 0.5
-        mask_binary = mask > 0.5
-        overlay[mask_binary, 0] = 0    # B (OpenCV uses BGR order for BGRA)
-        overlay[mask_binary, 1] = 255  # G
-        overlay[mask_binary, 2] = 0    # R
-        overlay[mask_binary, 3] = 128  # A (50% opacity)
-
-        # Encode overlay as PNG with alpha channel
-        _, overlay_buffer = cv2.imencode('.png', overlay)
-        overlay_base64 = base64.b64encode(overlay_buffer).decode('utf-8')
-
-        # Convert cropped image to base64 PNG
-        cropped_bgr = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR)
-        _, cropped_buffer = cv2.imencode('.png', cropped_bgr)
-        cropped_base64 = base64.b64encode(cropped_buffer).decode('utf-8')
-
-        return MeasureWithOverlayResponse(
-            success=True,
-            measurements=measurements,
-            calibration=CalibrationInfo(
-                card_guide_width=card_guide_width,
-                screen_width=screen_width,
-                card_pixels_in_model=round(card_pixels_in_model, 2),
-                pixel_to_mm_ratio=round(pixel_to_mm_ratio, 4),
-                model_input_size=model_input_size,
-            ),
-            cropped_image=cropped_base64,
-            mask_overlay=overlay_base64,
-            processing_time_ms=round((time.time() - start_time) * 1000, 2),
         )
 
     except HTTPException:

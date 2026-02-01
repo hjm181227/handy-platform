@@ -8,9 +8,6 @@ export interface NailSegmentationResult {
   confidence: number;
   processingTimeMs: number;
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
-  // 서버에서 생성된 이미지 (base64)
-  croppedImageBase64?: string;  // 크롭된 입력 이미지 (base64 PNG)
-  maskOverlayBase64?: string;   // 마스크 오버레이 (base64 PNG, 투명 배경 + 녹색 마스크)
 }
 
 // 개별 손톱 영역
@@ -47,16 +44,11 @@ export interface NailMeasurementResult {
   measurements: FingerNailMeasurement[];
   referenceCardDetected: boolean;
   pixelToMmRatio: number;  // 1픽셀 = X mm
-  imageWidth: number;      // 측정 기준 크기 (서버: 640, 로컬: 256)
-  imageHeight: number;     // 측정 기준 크기 (서버: 640, 로컬: 256)
+  imageWidth: number;
+  imageHeight: number;
   processingTimeMs: number;
-  mask?: number[][];  // 세그멘테이션 마스크 (로컬 폴백 시에만 사용)
+  mask?: number[][];  // 256x256 세그멘테이션 마스크 (0-1)
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
-  // 서버에서 생성된 이미지 (base64)
-  croppedImageBase64?: string;  // 크롭된 입력 이미지 (base64 PNG)
-  maskOverlayBase64?: string;   // 마스크 오버레이 (base64 PNG, 투명 배경 + 녹색 마스크)
-  // 서버 캘리브레이션 정보 (서버 측정 시에만 사용)
-  serverCalibration?: ServerCalibrationInfo;
 }
 
 // 신용카드 기준 정보
@@ -64,8 +56,7 @@ export const CREDIT_CARD_WIDTH_MM = 85.6;  // ISO/IEC 7810 규격
 export const CREDIT_CARD_HEIGHT_MM = 53.98;
 
 // 모델 설정
-export const MODEL_INPUT_SIZE = 256;  // 로컬 폴백용 (클라이언트 마스크 처리)
-export const SERVER_MODEL_INPUT_SIZE = 640;  // 서버 모델 입력 크기 (측정 기준)
+export const MODEL_INPUT_SIZE = 256;
 export const SEGMENTATION_THRESHOLD = 0.5;
 
 // 모델 메타데이터 (ademakdogan/nails_segmentation 기반)
@@ -152,37 +143,4 @@ export interface CalibrationValidationResult {
   pixelToMmRatio: number;
   estimatedCardWidthMm: number;
   errorPercentage: number;
-}
-
-// ============================================
-// 서버 기반 측정 관련 타입 (640x640 기준)
-// ============================================
-
-// 서버에서 반환하는 캘리브레이션 정보
-export interface ServerCalibrationInfo {
-  cardGuideWidth: number;       // UI상의 카드 가이드 폭 (px)
-  screenWidth: number;          // 화면 전체 폭 (px)
-  cardPixelsInModel: number;    // 모델 입력 크기(640) 기준 카드 폭 (px)
-  pixelToMmRatio: number;       // 1픽셀 = X mm (640 기준)
-  modelInputSize: number;       // 모델 입력 크기
-}
-
-// 서버 /api/measure-with-overlay 응답 타입
-export interface MeasureWithOverlayResponse {
-  success: boolean;
-  measurements: FingerNailMeasurement[];
-  calibration: ServerCalibrationInfo;
-  croppedImageBase64: string;   // 크롭된 입력 이미지 (base64 PNG)
-  maskOverlayBase64: string;    // 마스크 오버레이 (base64 PNG)
-  processingTimeMs: number;
-}
-
-// 서버 기준 pixel-to-mm 비율 계산 헬퍼 (640px 기준)
-// cardGuideWidth: 화면에서 카드 가이드 폭 (고정 픽셀)
-// screenWidth: 화면 폭
-// 반환: 640px 모델 입력에서 1픽셀당 mm
-export function calculateServerPixelToMmRatio(cardGuideWidth: number, screenWidth: number): number {
-  const cardToScreenRatio = cardGuideWidth / screenWidth;
-  const cardPixelsInModel = SERVER_MODEL_INPUT_SIZE * cardToScreenRatio;
-  return CREDIT_CARD_WIDTH_MM / cardPixelsInModel;
 }
