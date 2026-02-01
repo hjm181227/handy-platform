@@ -22,7 +22,7 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+import { Buffer } from 'buffer';
 // nailMeasurementService는 useEffect 내에서 lazy import
 // 모듈 레벨에서 import하면 react-native-fast-tflite가 로드되어
 // Hermes 엔진에서 "property is not configurable" 에러 발생
@@ -62,6 +62,157 @@ const getNailMeasurementService = () => {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+/**
+ * 마스크 배열을 PNG base64 data URI로 변환
+ * SVG 블록 방식 대신 픽셀 단위로 정밀한 마스크 표시
+ *
+ * @param mask 2D 마스크 배열 (0~1 값)
+ * @returns PNG base64 data URI
+ */
+const maskToDataUri = (mask: number[][]): string => {
+  const height = mask.length;
+  const width = mask[0]?.length || 0;
+
+  if (width === 0 || height === 0) {
+    return '';
+  }
+
+  // PNG 파일 구조 생성 (simplified uncompressed)
+  // PNG 시그니처: 137 80 78 71 13 10 26 10
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+
+  // CRC32 테이블 생성
+  const crcTable: number[] = [];
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    }
+    crcTable[n] = c;
+  }
+
+  const crc32 = (data: number[]): number => {
+    let crc = 0xffffffff;
+    for (let i = 0; i < data.length; i++) {
+      crc = crcTable[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
+    }
+    return crc ^ 0xffffffff;
+  };
+
+  // 32비트 정수를 바이트 배열로 (big endian)
+  const int32ToBytes = (val: number): number[] => {
+    return [
+      (val >>> 24) & 0xff,
+      (val >>> 16) & 0xff,
+      (val >>> 8) & 0xff,
+      val & 0xff,
+    ];
+  };
+
+  // IHDR 청크 생성
+  const ihdrData = [
+    ...int32ToBytes(width), // width
+    ...int32ToBytes(height), // height
+    8, // bit depth
+    6, // color type: RGBA
+    0, // compression method
+    0, // filter method
+    0, // interlace method
+  ];
+  const ihdrType = [0x49, 0x48, 0x44, 0x52]; // "IHDR"
+  const ihdrCrc = crc32([...ihdrType, ...ihdrData]);
+  const ihdrChunk = [
+    ...int32ToBytes(ihdrData.length),
+    ...ihdrType,
+    ...ihdrData,
+    ...int32ToBytes(ihdrCrc),
+  ];
+
+  // 이미지 데이터 생성 (RGBA)
+  // 각 행의 시작에 필터 바이트(0)가 있음
+  const rawData: number[] = [];
+  for (let y = 0; y < height; y++) {
+    rawData.push(0); // filter byte: None
+    for (let x = 0; x < width; x++) {
+      const value = mask[y][x];
+      if (value >= SEGMENTATION_THRESHOLD) {
+        // 녹색 반투명: rgba(0, 255, 0, 0.5)
+        rawData.push(0, 255, 0, 128);
+      } else {
+        // 투명
+        rawData.push(0, 0, 0, 0);
+      }
+    }
+  }
+
+  // zlib 압축 (deflate) - 단순 무압축 store 방식 사용
+  // zlib 헤더: 0x78 0x01 (low compression)
+  const zlibHeader = [0x78, 0x01];
+
+  // deflate blocks (uncompressed)
+  const deflateBlocks: number[] = [];
+  const chunkSize = 65535; // 최대 블록 크기
+  for (let i = 0; i < rawData.length; i += chunkSize) {
+    const chunk = rawData.slice(i, Math.min(i + chunkSize, rawData.length));
+    const isLast = i + chunkSize >= rawData.length;
+
+    // block header: BFINAL(1bit) + BTYPE(2bits) = 00 or 01 (stored)
+    deflateBlocks.push(isLast ? 0x01 : 0x00);
+
+    // LEN (2 bytes, little endian)
+    deflateBlocks.push(chunk.length & 0xff);
+    deflateBlocks.push((chunk.length >>> 8) & 0xff);
+
+    // NLEN (2 bytes, little endian, one's complement of LEN)
+    const nlen = ~chunk.length & 0xffff;
+    deflateBlocks.push(nlen & 0xff);
+    deflateBlocks.push((nlen >>> 8) & 0xff);
+
+    // data
+    deflateBlocks.push(...chunk);
+  }
+
+  // Adler-32 체크섬
+  let s1 = 1;
+  let s2 = 0;
+  for (let i = 0; i < rawData.length; i++) {
+    s1 = (s1 + rawData[i]) % 65521;
+    s2 = (s2 + s1) % 65521;
+  }
+  const adler32 = (s2 << 16) | s1;
+  const adler32Bytes = int32ToBytes(adler32);
+
+  const compressedData = [...zlibHeader, ...deflateBlocks, ...adler32Bytes];
+
+  // IDAT 청크 생성
+  const idatType = [0x49, 0x44, 0x41, 0x54]; // "IDAT"
+  const idatCrc = crc32([...idatType, ...compressedData]);
+  const idatChunk = [
+    ...int32ToBytes(compressedData.length),
+    ...idatType,
+    ...compressedData,
+    ...int32ToBytes(idatCrc),
+  ];
+
+  // IEND 청크 생성
+  const iendType = [0x49, 0x45, 0x4e, 0x44]; // "IEND"
+  const iendCrc = crc32(iendType);
+  const iendChunk = [
+    ...int32ToBytes(0),
+    ...iendType,
+    ...int32ToBytes(iendCrc),
+  ];
+
+  // 전체 PNG 데이터 조합
+  const pngData = [...signature, ...ihdrChunk, ...idatChunk, ...iendChunk];
+
+  // Buffer 기반 base64 인코딩 (스택 오버플로우 방지)
+  const buffer = Buffer.from(pngData);
+  const base64 = buffer.toString('base64');
+
+  return `data:image/png;base64,${base64}`;
+};
 
 interface AIMeasurementScreenProps {
   selectedHand: 'left' | 'right';
@@ -230,65 +381,28 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     }
   };
 
-  // 다운샘플링된 마스크 블록 데이터 생성 (성능 최적화)
-  const maskBlocks = useMemo(() => {
-    if (!measurementResult?.mask || !imageLayout) return [];
-
-    const mask = measurementResult.mask;
-    const blocks: { x: number; y: number; width: number; height: number }[] = [];
-
-    // 다운샘플링: 4x4 블록 단위로 처리 (256/4 = 64개)
-    const blockSize = 4;
-    const numBlocks = MODEL_INPUT_SIZE / blockSize;
-    const scaleX = imageLayout.width / MODEL_INPUT_SIZE;
-    const scaleY = imageLayout.height / MODEL_INPUT_SIZE;
-
-    for (let by = 0; by < numBlocks; by++) {
-      for (let bx = 0; bx < numBlocks; bx++) {
-        // 블록 내 평균값 계산
-        let sum = 0;
-        for (let dy = 0; dy < blockSize; dy++) {
-          for (let dx = 0; dx < blockSize; dx++) {
-            const y = by * blockSize + dy;
-            const x = bx * blockSize + dx;
-            sum += mask[y]?.[x] || 0;
-          }
-        }
-        const avg = sum / (blockSize * blockSize);
-
-        // threshold 이상이면 블록 추가
-        if (avg >= SEGMENTATION_THRESHOLD) {
-          blocks.push({
-            x: bx * blockSize * scaleX,
-            y: by * blockSize * scaleY,
-            width: blockSize * scaleX,
-            height: blockSize * scaleY,
-          });
-        }
-      }
+  // 마스크를 PNG data URI로 변환
+  const maskImageUri = useMemo(() => {
+    if (measurementResult?.mask) {
+      return maskToDataUri(measurementResult.mask);
     }
+    return null;
+  }, [measurementResult?.mask]);
 
-    return blocks;
-  }, [measurementResult?.mask, imageLayout]);
-
-  // 마스크 오버레이 렌더링 (Prediction Overlay 스타일)
+  // 마스크 오버레이 렌더링 (PNG Image 방식 - 픽셀 단위 정밀 표시)
   const renderMaskOverlay = () => {
-    if (!measurementResult?.mask || !imageLayout || !showOverlay) return null;
+    if (!maskImageUri || !imageLayout || !showOverlay) return null;
 
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Svg width={imageLayout.width} height={imageLayout.height}>
-          {maskBlocks.map((block, index) => (
-            <Rect
-              key={index}
-              x={block.x}
-              y={block.y}
-              width={block.width}
-              height={block.height}
-              fill="rgba(0, 255, 0, 0.5)"
-            />
-          ))}
-        </Svg>
+        <Image
+          source={{ uri: maskImageUri }}
+          style={[
+            StyleSheet.absoluteFill,
+            { width: imageLayout.width, height: imageLayout.height },
+          ]}
+          resizeMode="cover"
+        />
       </View>
     );
   };
