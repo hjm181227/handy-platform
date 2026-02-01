@@ -253,11 +253,11 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=CONFIG['learning_rate'], we
 
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=2, eta_min=1e-6)
 
-# 체크포인트에서 optimizer 상태 복원
-if checkpoint_data is not None and 'optimizer_state_dict' in checkpoint_data:
+# 체크포인트에서 optimizer 상태 복원 (checkpoint_data는 Cell 5에서 정의됨)
+if 'checkpoint_data' in dir() and checkpoint_data is not None and 'optimizer_state_dict' in checkpoint_data:
     optimizer.load_state_dict(checkpoint_data['optimizer_state_dict'])
     print("★ Optimizer state restored from checkpoint")
-if checkpoint_data is not None and 'scheduler_state_dict' in checkpoint_data:
+if 'checkpoint_data' in dir() and checkpoint_data is not None and 'scheduler_state_dict' in checkpoint_data:
     scheduler.load_state_dict(checkpoint_data['scheduler_state_dict'])
     print("★ Scheduler state restored from checkpoint")
 
