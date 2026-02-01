@@ -67,12 +67,13 @@ if torch.cuda.is_available():
 CONFIG = {
     'encoder': 'resnet101',
     'input_size': 640,
-    'epochs': 100,
+    'epochs': 30,                  # ★ 12시간 제한 대비 30 에포크씩 학습
     'batch_size': 8,
     'learning_rate': 0.00005,      # 이어서 학습 시 낮은 LR 권장
     'weight_decay': 0.0005,
     'patience': 20,
     'previous_best_iou': 0.0,      # ★ 이전 최고 IoU 값으로 수정
+    'start_epoch': 0,              # ★ 이어서 학습 시 시작 에포크
 }
 
 # Kaggle 경로
@@ -187,12 +188,23 @@ model = model.to(device)
 total_params = sum(p.numel() for p in model.parameters())
 print(f"Total parameters: {total_params:,}")
 
-# 체크포인트 로드
+# 체크포인트 로드 (optimizer 상태 포함)
+checkpoint_data = None
 if Path(CHECKPOINT_FILE).exists():
     print(f"\n★ Loading checkpoint: {CHECKPOINT_FILE}")
-    checkpoint = torch.load(CHECKPOINT_FILE, map_location=device)
-    model.load_state_dict(checkpoint)
-    print("★ Checkpoint loaded successfully!")
+    checkpoint_data = torch.load(CHECKPOINT_FILE, map_location=device)
+
+    # 새 형식 (dict with model_state_dict) vs 이전 형식 (state_dict only)
+    if isinstance(checkpoint_data, dict) and 'model_state_dict' in checkpoint_data:
+        model.load_state_dict(checkpoint_data['model_state_dict'])
+        CONFIG['start_epoch'] = checkpoint_data.get('epoch', 0) + 1
+        CONFIG['previous_best_iou'] = checkpoint_data.get('best_iou', 0.0)
+        print(f"★ Resuming from epoch {CONFIG['start_epoch']}, best IoU: {CONFIG['previous_best_iou']:.4f}")
+    else:
+        # 이전 형식 호환
+        model.load_state_dict(checkpoint_data)
+        checkpoint_data = None  # optimizer 로드 안 함
+        print("★ Checkpoint loaded (legacy format)")
 else:
     print(f"\n⚠ Checkpoint not found: {CHECKPOINT_FILE}")
     print("Training from scratch with ImageNet weights.")
@@ -241,9 +253,18 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=CONFIG['learning_rate'], we
 
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=2, eta_min=1e-6)
 
+# 체크포인트에서 optimizer 상태 복원
+if checkpoint_data is not None and 'optimizer_state_dict' in checkpoint_data:
+    optimizer.load_state_dict(checkpoint_data['optimizer_state_dict'])
+    print("★ Optimizer state restored from checkpoint")
+if checkpoint_data is not None and 'scheduler_state_dict' in checkpoint_data:
+    scheduler.load_state_dict(checkpoint_data['scheduler_state_dict'])
+    print("★ Scheduler state restored from checkpoint")
+
 print(f"Loss: DiceLoss")
 print(f"Optimizer: AdamW (lr={CONFIG['learning_rate']})")
 print(f"Scheduler: CosineAnnealingWarmRestarts")
+print(f"Start epoch: {CONFIG['start_epoch']}")
 ```
 
 ---
@@ -299,12 +320,17 @@ print("Starting Training")
 print("="*60)
 
 best_iou = CONFIG['previous_best_iou']
+start_epoch = CONFIG['start_epoch']
+end_epoch = start_epoch + CONFIG['epochs']
 patience_counter = 0
 history = {'train_loss': [], 'train_iou': [], 'val_loss': [], 'val_iou': [], 'lr': []}
 
-for epoch in range(CONFIG['epochs']):
+print(f"Training from epoch {start_epoch} to {end_epoch}")
+print(f"Previous best IoU: {best_iou:.4f}")
+
+for epoch in range(start_epoch, end_epoch):
     current_lr = optimizer.param_groups[0]['lr']
-    print(f"\nEpoch {epoch + 1}/{CONFIG['epochs']} | LR: {current_lr:.6f}")
+    print(f"\nEpoch {epoch + 1}/{end_epoch} (global) | LR: {current_lr:.6f}")
 
     train_loss, train_iou = train_one_epoch(model, train_loader, criterion, optimizer, device)
     val_loss, val_iou = validate(model, val_loader, criterion, device)
@@ -319,10 +345,25 @@ for epoch in range(CONFIG['epochs']):
     print(f"  Train Loss: {train_loss:.4f} | Train IoU: {train_iou:.4f}")
     print(f"  Val Loss:   {val_loss:.4f} | Val IoU:   {val_iou:.4f}")
 
+    # ★ 매 에포크마다 전체 상태 저장 (강제 종료 대비)
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'scheduler_state_dict': scheduler.state_dict(),
+        'best_iou': best_iou,
+        'val_iou': val_iou,
+        'train_iou': train_iou,
+    }
+    torch.save(checkpoint, OUTPUT_DIR / 'last_checkpoint.pth')
+
     if val_iou > best_iou:
         improvement = val_iou - best_iou
         best_iou = val_iou
+        checkpoint['best_iou'] = best_iou
         patience_counter = 0
+        torch.save(checkpoint, OUTPUT_DIR / 'best_checkpoint.pth')
+        # 호환성 위해 model state만 따로 저장
         torch.save(model.state_dict(), OUTPUT_DIR / 'best_model.pth')
         print(f"  ★★★ NEW BEST! IoU: {best_iou:.4f} (+{improvement:.4f}) ★★★")
     else:
@@ -333,9 +374,11 @@ for epoch in range(CONFIG['epochs']):
         print(f"\n★ EARLY STOPPING at epoch {epoch + 1}")
         break
 
-    torch.save(model.state_dict(), OUTPUT_DIR / 'last_model.pth')
-
-print(f"\nTraining Complete! Best IoU: {best_iou:.4f}")
+print(f"\n{'='*60}")
+print(f"Training Complete!")
+print(f"  Epochs: {start_epoch} → {epoch + 1}")
+print(f"  Best IoU: {best_iou:.4f}")
+print(f"{'='*60}")
 ```
 
 ---
@@ -415,10 +458,12 @@ print("\n★ 다운로드: /kaggle/working/models/best_model.pth")
 
 ---
 
-## 이어서 학습하기 (다음 버전)
+## 이어서 학습하기 (다음 세션)
 
-### 1. 모델 저장
-학습 완료 후 Output에서 `best_model.pth` 선택 > "Create Model" 클릭
+### 1. 체크포인트 저장
+학습 완료 후 Output에서 **`best_checkpoint.pth`** 선택 > "Create Model" 클릭
+
+> ⚠️ `best_model.pth`가 아닌 **`best_checkpoint.pth`**를 저장해야 optimizer 상태가 유지됩니다.
 
 ### 2. 모델 업로드 설정
 | 항목 | 값 |
@@ -430,13 +475,20 @@ print("\n★ 다운로드: /kaggle/working/models/best_model.pth")
 
 ### 3. 새 노트북에서 Input 추가
 - `nail-segmentation-dataset` (데이터셋)
-- `nail-segmentation-checkpoint-v3` (새 모델)
+- `nail-segmentation-checkpoint-v3` (새 체크포인트)
 
 ### 4. Cell 2 수정
 ```python
-CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v3/pytorch/default/1/models/best_model.pth'
-CONFIG['previous_best_iou'] = 0.XX  # 이전 최고 IoU
+# ★ best_checkpoint.pth 경로로 변경 (best_model.pth 아님!)
+CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v3/pytorch/default/1/best_checkpoint.pth'
+
+# start_epoch과 previous_best_iou는 체크포인트에서 자동으로 로드됨
 ```
+
+### 5. 세션 관리 팁
+- **30 에포크 = 약 3-4시간** (데이터셋 크기에 따라 다름)
+- 12시간 제한 내에 안전하게 완료 가능
+- 총 100 에포크 학습 시 **4번의 세션**으로 나눠서 진행
 
 ---
 
@@ -453,10 +505,11 @@ CONFIG['previous_best_iou'] = 0.XX  # 이전 최고 IoU
 
 ## 학습 이력
 
-| 버전 | 날짜 | Epochs | Best IoU | 비고 |
-|------|------|--------|----------|------|
-| v1 | 2026-01-30 | 50 | 0.XX | 초기 학습 |
-| v2 | 2026-01-31 | +100 | 0.XX | 이어서 학습 |
+| 버전 | 날짜 | Epochs | Best IoU | 비고            |
+|----|------|--------|----------|---------------|
+| v1 | 2026-01-30 | 0-50   | 0.XX | 초기 학습 (세션 1)  |
+| v2 | 2026-01-31 | 50-80  | 0.XX | 이어서 학습 (세션 2) |
+| v3 | YYYY-MM-DD | 80-100 | 0.XX | 마무리 (세션 3)    |
 
 ---
 
