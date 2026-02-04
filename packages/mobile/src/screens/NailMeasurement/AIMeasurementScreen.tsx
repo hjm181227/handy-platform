@@ -33,6 +33,7 @@ import {
   CARD_GUIDE_WIDTH_MOBILE,
   CARD_GUIDE_WIDTH_TABLET,
   TABLET_BREAKPOINT,
+  CAMERA_SENSOR_ASPECT_RATIO,
   NailRegion,
 } from '../../services/nailMeasurement/types';
 import {
@@ -59,7 +60,7 @@ const getNailMeasurementService = () => {
   return cachedService;
 };
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface AIMeasurementScreenProps {
   selectedHand: 'left' | 'right';
@@ -129,18 +130,29 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
       const initSuccess = await service.initialize();
       console.log('[AIMeasurementScreen] Model initialized:', initSuccess);
 
-      // 카드 폭 계산 (고정 픽셀 기반)
-      // 화면 대비 카드 가이드 비율로 모델 공간에서 카드 폭 계산
-      // 카드 가이드: 모바일 280px, 태블릿 400px (고정 크기)
+      // 카드 폭 계산 (센서 가로세로비 기반)
+      // 카메라 프리뷰가 "cover" 모드로 화면 높이에 맞춰 확대될 때,
+      // 실제 보이는 프리뷰 폭 = 화면 높이 * 센서 가로세로비 (3:4)
       const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
       const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
-      const cardToScreenRatio = cardGuideWidth / SCREEN_WIDTH;
-      const estimatedCardWidth = MODEL_INPUT_SIZE * cardToScreenRatio;
-      console.log('[AIMeasurementScreen] Card calculation:', {
+
+      // 센서 비율 기반 실제 프리뷰 폭 계산
+      const actualPreviewWidth = SCREEN_HEIGHT * CAMERA_SENSOR_ASPECT_RATIO;
+
+      // 카드가 프리뷰에서 차지하는 비율
+      const cardToPreviewRatio = cardGuideWidth / actualPreviewWidth;
+
+      // 모델 공간(640x640)에서의 카드 폭
+      const estimatedCardWidth = MODEL_INPUT_SIZE * cardToPreviewRatio;
+
+      console.log('[AIMeasurementScreen] Card calculation (sensor-based):', {
         screenWidth: SCREEN_WIDTH,
+        screenHeight: SCREEN_HEIGHT,
         isTablet,
         cardGuideWidth,
-        cardToScreenRatio,
+        sensorAspectRatio: CAMERA_SENSOR_ASPECT_RATIO,
+        actualPreviewWidth,
+        cardToPreviewRatio,
         estimatedCardWidth,
       });
 
@@ -278,8 +290,10 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
 
     const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
     const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
-    const cardToScreenRatio = cardGuideWidth / SCREEN_WIDTH;
-    const estimatedCardWidth = MODEL_INPUT_SIZE * cardToScreenRatio;
+    // 센서 비율 기반 실제 프리뷰 폭 계산
+    const actualPreviewWidth = SCREEN_HEIGHT * CAMERA_SENSOR_ASPECT_RATIO;
+    const cardToPreviewRatio = cardGuideWidth / actualPreviewWidth;
+    const estimatedCardWidth = MODEL_INPUT_SIZE * cardToPreviewRatio;
 
     return (
       <View style={styles.debugPanel}>
@@ -293,11 +307,13 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         {/* 캘리브레이션 정보 */}
         <View style={styles.debugSection}>
           <Text style={styles.debugSectionTitle}>Calibration (Stage 4)</Text>
-          <Text style={styles.debugText}>Screen Width: {SCREEN_WIDTH}px</Text>
+          <Text style={styles.debugText}>Screen: {SCREEN_WIDTH}x{SCREEN_HEIGHT}px</Text>
           <Text style={styles.debugText}>Card Guide: {cardGuideWidth}px ({isTablet ? 'tablet' : 'mobile'})</Text>
-          <Text style={styles.debugText}>Card-to-Screen Ratio: {cardToScreenRatio.toFixed(3)}</Text>
-          <Text style={styles.debugText}>Estimated Card (in model): {estimatedCardWidth.toFixed(1)}px</Text>
-          <Text style={styles.debugText}>Pixel-to-mm Ratio: {measurementResult.pixelToMmRatio.toFixed(4)} mm/px</Text>
+          <Text style={styles.debugText}>Sensor Ratio: {CAMERA_SENSOR_ASPECT_RATIO.toFixed(3)} (3:4)</Text>
+          <Text style={styles.debugText}>Actual Preview Width: {actualPreviewWidth.toFixed(1)}px</Text>
+          <Text style={styles.debugText}>Card-to-Preview: {cardToPreviewRatio.toFixed(3)}</Text>
+          <Text style={styles.debugText}>Card in Model: {estimatedCardWidth.toFixed(1)}px</Text>
+          <Text style={styles.debugText}>Pixel-to-mm: {measurementResult.pixelToMmRatio.toFixed(4)} mm/px</Text>
         </View>
 
         {/* 감지된 영역 정보 */}

@@ -4,7 +4,7 @@
 
 // 손톱 세그멘테이션 결과
 export interface NailSegmentationResult {
-  mask: number[][];  // 256x256 binary mask (0 or 1)
+  mask: number[][];  // 640x640 binary mask (0 or 1)
   confidence: number;
   processingTimeMs: number;
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
@@ -37,7 +37,7 @@ export interface FingerNailMeasurement {
   widthMm: number;
   widthPixels: number;
   confidence: number;
-  boundingBox: BoundingBox;  // 모델 공간(256x256)에서의 감지 영역
+  boundingBox: BoundingBox;  // 모델 공간(640x640)에서의 감지 영역
 }
 
 export type FingerType = 'thumb' | 'index' | 'middle' | 'ring' | 'little';
@@ -50,7 +50,7 @@ export interface NailMeasurementResult {
   imageWidth: number;
   imageHeight: number;
   processingTimeMs: number;
-  mask?: number[][];  // 256x256 세그멘테이션 마스크 (0-1)
+  mask?: number[][];  // 640x640 세그멘테이션 마스크 (0-1)
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
   // 서버에서 생성된 이미지 (base64 PNG)
   croppedImageBase64?: string;  // 크롭된 입력 이미지
@@ -62,21 +62,22 @@ export const CREDIT_CARD_WIDTH_MM = 85.6;  // ISO/IEC 7810 규격
 export const CREDIT_CARD_HEIGHT_MM = 53.98;
 
 // 모델 설정
-export const MODEL_INPUT_SIZE = 256;
+// 서버 모델은 640x640 입력을 사용 (v2.0.0 DeepLabV3+ ResNet101)
+export const MODEL_INPUT_SIZE = 640;
 export const SEGMENTATION_THRESHOLD = 0.5;
 
-// 모델 메타데이터 (ademakdogan/nails_segmentation 기반)
+// 모델 메타데이터 (서버 추론 모델 v2.0.0)
 export const MODEL_METADATA = {
   name: 'nail_segmentation',
   architecture: 'DeepLabV3Plus',
-  encoder: 'mobilenet_v3_large',  // 또는 'resnet101' (원본 저장소)
+  encoder: 'resnet101',  // 서버 모델은 ResNet101 사용
   version: '2.0.0',
   inputShape: [1, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, 3] as const,
   outputShape: [1, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, 1] as const,
-  inputFormat: 'NHWC' as const,  // TFLite format
+  inputFormat: 'NCHW' as const,  // PyTorch format (서버)
   inputRange: [0, 255] as const,  // RGB 0-255
   outputRange: [0, 1] as const,   // Sigmoid activation
-  source: 'https://github.com/ademakdogan/nails_segmentation',
+  source: 'Kaggle trained model',
 };
 
 // 카메라 가이드라인 설정 - 고정 픽셀 크기
@@ -85,16 +86,27 @@ export const CARD_GUIDE_WIDTH_MOBILE = 280;  // 모바일용 (< 600px 화면)
 export const CARD_GUIDE_WIDTH_TABLET = 400;  // 태블릿용 (>= 600px 화면)
 export const TABLET_BREAKPOINT = 600;        // 태블릿 판단 기준 (화면 폭)
 
+// 카메라 센서 가로세로비 (4:3 세로 모드에서 3:4)
+// 대부분의 스마트폰 카메라는 4:3 비율 센서 사용
+// 카메라 프리뷰가 "cover" 모드로 화면을 채울 때, 실제 보이는 프리뷰 폭은
+// 화면 높이 * 센서 가로세로비로 계산됨
+export const CAMERA_SENSOR_ASPECT_RATIO = 3 / 4;  // 세로 모드에서 가로/세로 비율
+
 // 신용카드 비율 (ISO/IEC 7810)
 export const CARD_ASPECT_RATIO = 85.60 / 53.98; // 약 1.586
 
-// pixel-to-mm 비율 계산 헬퍼
+// pixel-to-mm 비율 계산 헬퍼 (센서 기반)
 // cardGuideWidth: 화면에서 카드 가이드 폭 (고정 픽셀)
-// screenWidth: 화면 폭
-// 반환: 256px 모델 입력에서 1픽셀당 mm
-export function calculatePixelToMmRatio(cardGuideWidth: number, screenWidth: number): number {
-  const cardToScreenRatio = cardGuideWidth / screenWidth;
-  const cardPixelsInModel = MODEL_INPUT_SIZE * cardToScreenRatio;
+// screenHeight: 화면 높이
+// 반환: 640px 모델 입력에서 1픽셀당 mm
+//
+// 카메라 프리뷰가 "cover" 모드로 화면 높이에 맞춰 확대될 때,
+// 실제 보이는 프리뷰 폭 = 화면 높이 * 센서 가로세로비 (3:4)
+// 예: 화면 800px 높이 → 프리뷰 폭 600px
+export function calculatePixelToMmRatio(cardGuideWidth: number, screenHeight: number): number {
+  const actualPreviewWidth = screenHeight * CAMERA_SENSOR_ASPECT_RATIO;
+  const cardToPreviewRatio = cardGuideWidth / actualPreviewWidth;
+  const cardPixelsInModel = MODEL_INPUT_SIZE * cardToPreviewRatio;
   return CREDIT_CARD_WIDTH_MM / cardPixelsInModel;
 }
 
