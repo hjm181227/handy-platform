@@ -233,7 +233,7 @@ class NailSegmentationAPI {
         throw new Error('API returned success=false');
       }
 
-      // 5. 마스크 크기 조정 (서버는 800x800, 모바일은 256x256 기대)
+      // 5. 마스크 크기 조정 (서버와 동일한 640x640 크기이면 리사이즈 생략)
       const resizeStartTime = Date.now();
       const resizedMask = this.resizeMask(data.mask, MODEL_INPUT_SIZE);
       console.log('[NailSegmentationAPI] Resize time:', Date.now() - resizeStartTime, 'ms');
@@ -370,7 +370,7 @@ class NailSegmentationAPI {
         throw new Error('API returned success=false');
       }
 
-      // 5. 마스크 크기 조정 (서버는 640x640, 모바일은 256x256 기대)
+      // 5. 마스크 크기 조정 (서버와 동일한 640x640 크기이면 리사이즈 생략)
       const resizeStartTime = Date.now();
       const resizedMask = this.resizeMask(data.mask, MODEL_INPUT_SIZE);
       console.log('[NailSegmentationAPI] Resize time:', Date.now() - resizeStartTime, 'ms');

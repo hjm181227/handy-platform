@@ -195,7 +195,14 @@ class NailSegmentationModel:
 
     def preprocess_image(self, image: np.ndarray) -> torch.Tensor:
         """Preprocess image for inference."""
-        # Resize to model input size
+        # Center square crop to maintain aspect ratio
+        h, w = image.shape[:2]
+        crop_size = min(h, w)
+        start_x = (w - crop_size) // 2
+        start_y = (h - crop_size) // 2
+        image = image[start_y:start_y+crop_size, start_x:start_x+crop_size]
+
+        # Resize cropped square to model input size
         image = cv2.resize(image, (self.input_size, self.input_size))
 
         # Apply encoder-specific preprocessing
@@ -457,8 +464,13 @@ async def segment_with_overlay(
         height, width = mask.shape
 
         # Create cropped image at model input size
-        # Resize original image to model input size
-        cropped_img = cv2.resize(img, (width, height))
+        # Apply same center crop as preprocessing
+        h, w = img.shape[:2]
+        crop_size = min(h, w)
+        start_x = (w - crop_size) // 2
+        start_y = (h - crop_size) // 2
+        cropped_img = img[start_y:start_y+crop_size, start_x:start_x+crop_size]
+        cropped_img = cv2.resize(cropped_img, (width, height))
 
         # Encode cropped image to base64 PNG
         _, cropped_buffer = cv2.imencode('.png', cropped_img)
@@ -560,9 +572,10 @@ async def measure_nails(
             )
 
         # Calculate measurements
-        # Note: card_width_pixels should be scaled to model input size
-        scale_factor = model_manager.input_size / max(img.shape[:2])
-        scaled_card_width = card_width_pixels * scale_factor
+        # Note: card_width_pixels is already in 640x640 model space from app
+        # App calculates: MODEL_INPUT_SIZE * (cardGuideWidth / screenWidth)
+        # No additional scaling needed
+        scaled_card_width = card_width_pixels
 
         measurements = calculate_measurements(
             classified_regions,
