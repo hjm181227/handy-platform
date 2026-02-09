@@ -14,7 +14,9 @@ import {
   useCameraDevice,
   useCameraPermission,
 } from 'react-native-vision-camera';
+import Icon from 'react-native-vector-icons/Feather';
 import CameraGuideOverlay from '../../components/CameraGuideOverlay';
+import { NMColors } from '../../styles/nailMeasurementTheme';
 
 interface CameraScreenProps {
   selectedHand: 'left' | 'right';
@@ -44,21 +46,22 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
     }
   }, [hasPermission, requestPermission]);
 
+  const handText = selectedHand === 'left' ? '왼손' : '오른손';
+  const fingerText = isThumbOnly ? '엄지' : '4개 손가락';
+  const headerTitle = `${handText} ${fingerText} 촬영`;
+
   const handleTakePhoto = async () => {
     if (!cameraRef.current || isCapturing) return;
 
     setIsCapturing(true);
 
     try {
-      // 사진 촬영
       const photo = await cameraRef.current.takePhoto({
         qualityPrioritization: 'balanced',
       });
 
       const photoUri = `file://${photo.path}`;
       console.log('[CameraScreen] Photo taken:', photoUri);
-
-      // 이미지만 전달 (AI 분석은 AIMeasurementScreen에서 수행)
       onPhotoTaken(photoUri);
     } catch (error) {
       console.error('Photo capture failed:', error);
@@ -136,24 +139,39 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Icon name="arrow-left" size={20} color={NMColors.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>네일 사이즈 측정</Text>
+        <Text style={styles.title}>{headerTitle}</Text>
         <View style={styles.headerPlaceholder} />
+      </View>
+
+      {/* 안내 섹션 */}
+      <View style={styles.instructionSection}>
+        <Text style={styles.instructionTitle}>
+          {isThumbOnly
+            ? '신용카드 위에 엄지를 올려주세요'
+            : '신용카드 위에 4개 손가락을 올려주세요'
+          }
+        </Text>
+        <Text style={styles.instructionSubtitle}>
+          {isThumbOnly
+            ? '손톱이 정면을 향하도록 기울이지 마세요'
+            : '검지, 중지, 약지, 소지를 나란히 펴서 촬영해주세요'
+          }
+        </Text>
       </View>
 
       {/* 하단 버튼 */}
       <View style={styles.bottomButtons}>
         <TouchableOpacity
-          style={[styles.button, styles.backActionButton]}
+          style={styles.backActionButton}
           onPress={onBack}
           disabled={isCapturing}
         >
-          <Text style={styles.buttonText}>뒤로</Text>
+          <Text style={styles.backActionText}>뒤로</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
-            styles.button,
             styles.captureButton,
             (!isCameraReady || isCapturing) && styles.buttonDisabled,
           ]}
@@ -161,9 +179,12 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
           disabled={!isCameraReady || isCapturing}
         >
           {isCapturing ? (
-            <ActivityIndicator size="small" color="#FFF" />
+            <ActivityIndicator size="small" color={NMColors.white} />
           ) : (
-            <Text style={styles.buttonText}>촬영</Text>
+            <>
+              <Icon name="camera" size={20} color={NMColors.white} />
+              <Text style={styles.captureText}>촬영</Text>
+            </>
           )}
         </TouchableOpacity>
       </View>
@@ -185,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 10,
     paddingBottom: 10,
     zIndex: 20,
   },
@@ -193,22 +214,38 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: NMColors.whiteSemiTranslucent,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   title: {
-    color: '#FFF',
+    color: NMColors.white,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   headerPlaceholder: {
     width: 40,
+  },
+  instructionSection: {
+    position: 'absolute',
+    top: 110,
+    left: 24,
+    right: 24,
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 20,
+  },
+  instructionTitle: {
+    color: NMColors.white,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  instructionSubtitle: {
+    color: NMColors.whiteTranslucent,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   bottomButtons: {
     position: 'absolute',
@@ -216,33 +253,42 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    paddingHorizontal: 30,
-    paddingBottom: 40,
-    gap: 15,
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+    paddingTop: 16,
+    gap: 12,
     zIndex: 20,
   },
-  button: {
+  backActionButton: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 30,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: NMColors.whiteSemiTranslucent,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 56,
   },
-  backActionButton: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
+  backActionText: {
+    color: NMColors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   captureButton: {
-    backgroundColor: '#007AFF',
+    flex: 1,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: NMColors.purple,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  captureText: {
+    color: NMColors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   buttonDisabled: {
     backgroundColor: '#666',
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   permissionContainer: {
     flex: 1,
@@ -251,20 +297,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   permissionText: {
-    color: '#FFF',
+    color: NMColors.white,
     fontSize: 18,
     textAlign: 'center',
     marginBottom: 20,
   },
   permissionButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: NMColors.purple,
     paddingVertical: 14,
     paddingHorizontal: 30,
     borderRadius: 25,
     marginBottom: 20,
   },
   permissionButtonText: {
-    color: '#FFF',
+    color: NMColors.white,
     fontSize: 16,
     fontWeight: '600',
   },

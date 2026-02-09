@@ -315,7 +315,7 @@ export function QuoteBottomSheet({
         {/* 푸터 */}
         <div
           className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200 bg-gray-50"
-          style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+          style={{ paddingBottom: 'calc(1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
         >
           {!isSeller && data && data.status === 'pending' ? (
             <div className="flex gap-3">

@@ -8,7 +8,7 @@
  * 4. 결과 확인 및 저장
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,11 +21,10 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
+  Animated,
+  Easing,
 } from 'react-native';
-// nailMeasurementService는 useEffect 내에서 lazy import
-// Svg, Rect는 서버 오버레이 방식으로 변경되어 더 이상 필요 없음
-// 모듈 레벨에서 import하면 react-native-fast-tflite가 로드되어
-// Hermes 엔진에서 "property is not configurable" 에러 발생
+import Icon from 'react-native-vector-icons/Feather';
 import {
   NailMeasurementResult,
   FingerType,
@@ -41,10 +40,8 @@ import {
   validateNailRegions,
 } from '../../services/nailMeasurement/imageProcessor';
 import { userService } from '../../services/apiService';
+import { NMColors } from '../../styles/nailMeasurementTheme';
 
-// nailMeasurementService를 lazy하게 가져오는 함수
-// index.ts를 통하지 않고 직접 NailMeasurementService.ts를 require
-// (index.ts가 모듈 체인을 로드하면서 TFLite 에러 발생 방지)
 let cachedService: any = null;
 const getNailMeasurementService = () => {
   if (!cachedService) {
@@ -66,15 +63,14 @@ interface AIMeasurementScreenProps {
   selectedHand: 'left' | 'right';
   selectedFinger: string;
   imageUri: string;
-  isThumbOnly?: boolean;  // true면 엄지만, false면 4손가락
-  initialMeasurementResult?: NailMeasurementResult;  // CameraScreen에서 미리 계산된 결과
+  isThumbOnly?: boolean;
+  initialMeasurementResult?: NailMeasurementResult;
   onComplete: () => void;
   onBack: () => void;
   onRetake: () => void;
   onNavigateToSizes?: () => void;
 }
 
-// 손가락 한글명 매핑
 const FINGER_KOREAN: Record<FingerType, string> = {
   thumb: '엄지',
   index: '검지',
@@ -82,6 +78,14 @@ const FINGER_KOREAN: Record<FingerType, string> = {
   ring: '약지',
   little: '새끼',
 };
+
+// Analysis steps for loading UI
+type StepStatus = 'done' | 'active' | 'pending';
+
+interface AnalysisStep {
+  label: string;
+  status: StepStatus;
+}
 
 const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   selectedHand,
@@ -101,11 +105,71 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [imageLayout, setImageLayout] = useState<{ width: number; height: number } | null>(null);
-  const [showOverlay, setShowOverlay] = useState(true);  // 오버레이 표시 여부
-  const [showDebugInfo, setShowDebugInfo] = useState(__DEV__);  // 개발 모드에서만 디버그 정보 표시
-  const [detectedRegions, setDetectedRegions] = useState<NailRegion[]>([]);  // Stage 3: 감지된 영역
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [showDebugInfo, setShowDebugInfo] = useState(__DEV__);
+  const [detectedRegions, setDetectedRegions] = useState<NailRegion[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [analysisSteps, setAnalysisSteps] = useState<AnalysisStep[]>([
+    { label: '이미지 촬영 완료', status: 'done' },
+    { label: '신용카드 인식 완료', status: 'pending' },
+    { label: '손톱 영역 분석 중...', status: 'pending' },
+    { label: '사이즈 계산', status: 'pending' },
+  ]);
 
-  // 이미지 분석 실행 (미리 계산된 결과가 없는 경우에만)
+  // Pulse animation for loading
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isAnalyzing) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0.95,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [isAnalyzing, pulseAnim]);
+
+  // Simulate progress updates during analysis
+  useEffect(() => {
+    if (!isAnalyzing) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    timers.push(setTimeout(() => {
+      setProgress(30);
+      setAnalysisSteps(prev => prev.map((s, i) =>
+        i === 1 ? { ...s, status: 'active' } : s
+      ));
+    }, 500));
+
+    timers.push(setTimeout(() => {
+      setProgress(50);
+      setAnalysisSteps(prev => prev.map((s, i) =>
+        i === 1 ? { ...s, status: 'done', label: '신용카드 인식 완료' } :
+        i === 2 ? { ...s, status: 'active' } : s
+      ));
+    }, 1500));
+
+    timers.push(setTimeout(() => {
+      setProgress(70);
+    }, 2500));
+
+    return () => timers.forEach(clearTimeout);
+  }, [isAnalyzing]);
+
   useEffect(() => {
     if (initialMeasurementResult) {
       console.log('[AIMeasurementScreen] Using pre-computed measurement result');
@@ -119,30 +183,27 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     setError(null);
+    setProgress(0);
+    setAnalysisSteps([
+      { label: '이미지 촬영 완료', status: 'done' },
+      { label: '신용카드 인식 중...', status: 'pending' },
+      { label: '손톱 영역 분석 중...', status: 'pending' },
+      { label: '사이즈 계산', status: 'pending' },
+    ]);
 
     try {
       console.log('[AIMeasurementScreen] Starting analysis...');
       console.log('[AIMeasurementScreen] imageUri:', imageUri);
       console.log('[AIMeasurementScreen] isThumbOnly:', isThumbOnly);
 
-      // AI 모델 초기화 (lazy import)
       const service = getNailMeasurementService();
       const initSuccess = await service.initialize();
       console.log('[AIMeasurementScreen] Model initialized:', initSuccess);
 
-      // 카드 폭 계산 (센서 가로세로비 기반)
-      // 카메라 프리뷰가 "cover" 모드로 화면 높이에 맞춰 확대될 때,
-      // 실제 보이는 프리뷰 폭 = 화면 높이 * 센서 가로세로비 (3:4)
       const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
       const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
-
-      // 센서 비율 기반 실제 프리뷰 폭 계산
       const actualPreviewWidth = SCREEN_HEIGHT * CAMERA_SENSOR_ASPECT_RATIO;
-
-      // 카드가 프리뷰에서 차지하는 비율
       const cardToPreviewRatio = cardGuideWidth / actualPreviewWidth;
-
-      // 모델 공간(640x640)에서의 카드 폭
       const estimatedCardWidth = MODEL_INPUT_SIZE * cardToPreviewRatio;
 
       console.log('[AIMeasurementScreen] Card calculation (sensor-based):', {
@@ -156,7 +217,6 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         estimatedCardWidth,
       });
 
-      // AI 측정 실행
       let result: NailMeasurementResult;
       if (isThumbOnly) {
         result = await service.measureThumb(imageUri, estimatedCardWidth);
@@ -164,15 +224,22 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         result = await service.measureFourFingers(imageUri, estimatedCardWidth);
       }
 
+      // Update steps to completion
+      setProgress(100);
+      setAnalysisSteps([
+        { label: '이미지 촬영 완료', status: 'done' },
+        { label: '신용카드 인식 완료', status: 'done' },
+        { label: '손톱 영역 분석 완료', status: 'done' },
+        { label: '사이즈 계산 완료', status: 'done' },
+      ]);
+
       console.log('[AIMeasurementScreen] Measurement result:', JSON.stringify(result, null, 2));
 
-      // 결과 검증
       const validation = service.validateMeasurements(result.measurements);
       if (!validation.isValid) {
         console.warn('Measurement validation warnings:', validation.warnings);
       }
 
-      // Stage 3: 감지된 영역 저장 (디버그용)
       if (result.mask) {
         const regions = findConnectedComponents(result.mask);
         setDetectedRegions(regions);
@@ -197,7 +264,6 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     try {
       setIsSaving(true);
 
-      // 모든 측정 결과 저장
       const savePromises = measurementResult.measurements.map(m =>
         userService.updateNailSize(selectedHand, m.finger, m.widthMm)
       );
@@ -236,61 +302,173 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     }
   };
 
-  // 마스크 오버레이 렌더링 (서버에서 생성된 오버레이 이미지 사용)
-  const renderMaskOverlay = () => {
-    if (!measurementResult?.maskOverlayBase64 || !imageLayout || !showOverlay) return null;
-
+  // V2 Loading UI
+  const renderLoadingUI = () => {
     return (
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Image
-          source={{ uri: `data:image/png;base64,${measurementResult.maskOverlayBase64}` }}
-          style={StyleSheet.absoluteFill}
-          resizeMode="contain"
-        />
-      </View>
-    );
-  };
+      <View style={styles.loadingContainer}>
+        {/* Concentric circles animation */}
+        <Animated.View style={[styles.scanAnimContainer, { transform: [{ scale: pulseAnim }] }]}>
+          <View style={[styles.concentricCircle, styles.circle1]} />
+          <View style={[styles.concentricCircle, styles.circle2]} />
+          <View style={[styles.concentricCircle, styles.circle3]} />
+          <Icon name="maximize" size={40} color={NMColors.purple} />
+        </Animated.View>
 
-  const renderMeasurementResults = () => {
-    if (!measurementResult) return null;
+        {/* Text */}
+        <View style={styles.loadingTextContainer}>
+          <Text style={styles.loadingTitle}>손톱 사이즈 분석 중</Text>
+          <Text style={styles.loadingSubtitle}>AI가 손톱 영역을 인식하고 있어요</Text>
+        </View>
 
-    return (
-      <View style={styles.resultsCard}>
-        <Text style={styles.resultsTitle}>측정 결과</Text>
-        <Text style={styles.resultsSubtitle}>
-          {selectedHand === 'left' ? '왼손' : '오른손'} {isThumbOnly ? '엄지' : '4손가락'}
-        </Text>
+        {/* Progress bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${progress}%` }]} />
+          </View>
+          <Text style={styles.progressText}>{progress}%</Text>
+        </View>
 
-        <View style={styles.measurementsList}>
-          {measurementResult.measurements.map((m) => (
-            <View key={m.finger} style={styles.measurementItem}>
-              <View style={styles.fingerInfo}>
-                <Text style={styles.fingerName}>{FINGER_KOREAN[m.finger]}</Text>
-                {m.confidence < 0.8 && (
-                  <View style={styles.warningBadge}>
-                    <Text style={styles.warningText}>확인 필요</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.measurementValue}>{m.widthMm}mm</Text>
+        {/* Steps */}
+        <View style={styles.stepsContainer}>
+          {analysisSteps.map((step, index) => (
+            <View key={index} style={styles.stepItem}>
+              {step.status === 'done' ? (
+                <View style={styles.stepIconDone}>
+                  <Icon name="check" size={12} color={NMColors.white} />
+                </View>
+              ) : step.status === 'active' ? (
+                <ActivityIndicator size="small" color={NMColors.purple} style={styles.stepSpinner} />
+              ) : (
+                <View style={styles.stepIconPending} />
+              )}
+              <Text style={[
+                styles.stepText,
+                step.status === 'done' && styles.stepTextDone,
+                step.status === 'active' && styles.stepTextActive,
+              ]}>
+                {step.label}
+              </Text>
             </View>
           ))}
         </View>
-
-        <Text style={styles.processingTime}>
-          분석 시간: {(measurementResult.processingTimeMs / 1000).toFixed(1)}초
-        </Text>
       </View>
     );
   };
 
-  // Stage 3: 디버그 정보 패널 렌더링
+  // V2 Result UI
+  const renderResultUI = () => {
+    if (!measurementResult) return null;
+
+    const handText = selectedHand === 'left' ? '왼손' : '오른손';
+    const fingerText = isThumbOnly ? '엄지' : '4손가락';
+
+    return (
+      <>
+        <ScrollView style={styles.resultContent} contentContainerStyle={styles.resultContentContainer}>
+          {/* Success badge */}
+          <View style={styles.successBadge}>
+            <Icon name="check" size={16} color={NMColors.green} />
+            <Text style={styles.successBadgeText}>손톱 인식 성공</Text>
+          </View>
+
+          {/* Image area */}
+          <TouchableOpacity
+            style={styles.imageArea}
+            onPress={() => setShowOverlay(!showOverlay)}
+            activeOpacity={0.9}
+            onLayout={(e) => {
+              const { width, height } = e.nativeEvent.layout;
+              setImageLayout({ width, height });
+            }}
+          >
+            <Image
+              source={{
+                uri: measurementResult?.croppedImageBase64
+                  ? `data:image/png;base64,${measurementResult.croppedImageBase64}`
+                  : measurementResult?.croppedImageUri || imageUri
+              }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+            {/* Mask overlay */}
+            {measurementResult?.maskOverlayBase64 && imageLayout && showOverlay && (
+              <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                <Image
+                  source={{ uri: `data:image/png;base64,${measurementResult.maskOverlayBase64}` }}
+                  style={StyleSheet.absoluteFill}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Info label */}
+          <Text style={styles.resultInfoLabel}>
+            {handText} {fingerText} 측정 결과
+          </Text>
+
+          {/* Measurement cards */}
+          {measurementResult.measurements.map((m) => (
+            <View key={m.finger} style={styles.sizeCard}>
+              <Text style={styles.sizeCardLabel}>
+                {FINGER_KOREAN[m.finger]} 가로 길이
+              </Text>
+              <View style={styles.sizeCardValueRow}>
+                <Text style={styles.sizeCardValue}>{m.widthMm}</Text>
+                <Text style={styles.sizeCardUnit}>mm</Text>
+              </View>
+              <Text style={styles.sizeCardNote}>
+                신용카드 기준으로 측정되었습니다
+              </Text>
+            </View>
+          ))}
+
+          {/* Debug info (dev only) */}
+          {renderDebugInfo()}
+          {__DEV__ && !isAnalyzing && measurementResult && !showDebugInfo && (
+            <TouchableOpacity
+              style={styles.debugToggleBtn}
+              onPress={() => setShowDebugInfo(true)}
+            >
+              <Text style={styles.debugToggleBtnText}>Show Debug</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+
+        {/* Bottom buttons */}
+        <View style={styles.bottomButtons}>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleSaveAll}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color={NMColors.white} />
+            ) : (
+              <>
+                <Icon name="check" size={20} color={NMColors.white} />
+                <Text style={styles.primaryButtonText}>저장하기</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={onRetake}
+          >
+            <Icon name="refresh-cw" size={18} color={NMColors.textSecondary} />
+            <Text style={styles.secondaryButtonText}>다시 측정하기</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  };
+
+  // Debug info panel
   const renderDebugInfo = () => {
     if (!showDebugInfo || !measurementResult) return null;
 
     const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
     const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
-    // 센서 비율 기반 실제 프리뷰 폭 계산
     const actualPreviewWidth = SCREEN_HEIGHT * CAMERA_SENSOR_ASPECT_RATIO;
     const cardToPreviewRatio = cardGuideWidth / actualPreviewWidth;
     const estimatedCardWidth = MODEL_INPUT_SIZE * cardToPreviewRatio;
@@ -300,11 +478,10 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         <View style={styles.debugHeader}>
           <Text style={styles.debugTitle}>Debug Info (Stage 3 & 4)</Text>
           <TouchableOpacity onPress={() => setShowDebugInfo(false)}>
-            <Text style={styles.debugCloseBtn}>×</Text>
+            <Text style={styles.debugCloseBtn}>x</Text>
           </TouchableOpacity>
         </View>
 
-        {/* 캘리브레이션 정보 */}
         <View style={styles.debugSection}>
           <Text style={styles.debugSectionTitle}>Calibration (Stage 4)</Text>
           <Text style={styles.debugText}>Screen: {SCREEN_WIDTH}x{SCREEN_HEIGHT}px</Text>
@@ -316,7 +493,6 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
           <Text style={styles.debugText}>Pixel-to-mm: {measurementResult.pixelToMmRatio.toFixed(4)} mm/px</Text>
         </View>
 
-        {/* 감지된 영역 정보 */}
         <View style={styles.debugSection}>
           <Text style={styles.debugSectionTitle}>Detected Regions (Stage 3)</Text>
           <Text style={styles.debugText}>Expected: {isThumbOnly ? 1 : 4} region(s)</Text>
@@ -328,18 +504,17 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
               <Text style={styles.debugText}>Area: {region.area}px</Text>
               <Text style={styles.debugText}>Center: ({region.centerX.toFixed(1)}, {region.centerY.toFixed(1)})</Text>
               <Text style={styles.debugText}>
-                BBox: ({region.boundingBox.x}, {region.boundingBox.y}) {region.boundingBox.width}×{region.boundingBox.height}
+                BBox: ({region.boundingBox.x}, {region.boundingBox.y}) {region.boundingBox.width}x{region.boundingBox.height}
               </Text>
             </View>
           ))}
         </View>
 
-        {/* 측정 결과 정보 */}
         <View style={styles.debugSection}>
           <Text style={styles.debugSectionTitle}>Measurements (Stage 4)</Text>
           {measurementResult.measurements.map((m) => (
             <Text key={m.finger} style={styles.debugText}>
-              {m.finger}: {m.widthPixels}px → {m.widthMm}mm
+              {`${m.finger}: ${m.widthPixels}px → ${m.widthMm}mm`}
             </Text>
           ))}
         </View>
@@ -347,116 +522,50 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     );
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
-
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>측정 결과</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {/* 이미지 미리보기 + 마스크 오버레이 */}
-        <TouchableOpacity
-          style={styles.imagePreview}
-          onPress={() => setShowOverlay(!showOverlay)}
-          activeOpacity={0.9}
-          onLayout={(e) => {
-            const { width, height } = e.nativeEvent.layout;
-            setImageLayout({ width, height });
-          }}
-        >
-          {/* 크롭된 이미지 표시: 서버 base64 > 로컬 URI > 원본 이미지 */}
-          <Image
-            source={{
-              uri: measurementResult?.croppedImageBase64
-                ? `data:image/png;base64,${measurementResult.croppedImageBase64}`
-                : measurementResult?.croppedImageUri || imageUri
-            }}
-            style={styles.previewImage}
-            resizeMode="contain"
-          />
-          {/* 마스크 오버레이 (녹색 반투명) */}
-          {renderMaskOverlay()}
-          {isAnalyzing && (
-            <View style={styles.analyzingOverlay}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.analyzingText}>AI가 분석 중...</Text>
-            </View>
-          )}
-          {/* 오버레이 토글 힌트 */}
-          {!isAnalyzing && measurementResult && (
-            <View style={styles.overlayHint}>
-              <Text style={styles.overlayHintText}>
-                {showOverlay ? '탭하여 감지 영역 숨기기' : '탭하여 감지 영역 보기'}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        {/* 분석 중 */}
-        {isAnalyzing && (
-          <View style={styles.statusCard}>
-            <ActivityIndicator size="small" color="#007AFF" />
-            <Text style={styles.statusText}>손톱 영역을 분석하고 있습니다...</Text>
-          </View>
-        )}
-
-        {/* 에러 */}
-        {!isAnalyzing && error && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorIcon}>!</Text>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={analyzeImage}>
-              <Text style={styles.retryButtonText}>다시 시도</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* 측정 결과 */}
-        {!isAnalyzing && !error && measurementResult && renderMeasurementResults()}
-
-        {/* Stage 3 & 4: 디버그 정보 패널 */}
-        {renderDebugInfo()}
-
-        {/* 디버그 토글 버튼 (개발 모드) */}
-        {__DEV__ && !isAnalyzing && measurementResult && !showDebugInfo && (
-          <TouchableOpacity
-            style={styles.debugToggleBtn}
-            onPress={() => setShowDebugInfo(true)}
-          >
-            <Text style={styles.debugToggleBtnText}>Show Debug</Text>
+  // Error UI
+  if (!isAnalyzing && error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={NMColors.white} />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={onBack}>
+            <Icon name="x" size={20} color={NMColors.text} />
           </TouchableOpacity>
-        )}
-      </ScrollView>
-
-      {/* 하단 버튼 */}
-      {!isAnalyzing && !error && measurementResult && (
-        <View style={styles.bottomButtons}>
-          <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
-            onPress={onRetake}
-          >
-            <Text style={styles.secondaryButtonText}>다시 촬영</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.primaryButton]}
-            onPress={handleSaveAll}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Text style={styles.primaryButtonText}>저장하기</Text>
-            )}
+          <Text style={styles.headerTitle}>측정 오류</Text>
+          <View style={styles.headerPlaceholder} />
+        </View>
+        <View style={styles.errorContainer}>
+          <View style={styles.errorIcon}>
+            <Text style={styles.errorIconText}>!</Text>
+          </View>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={analyzeImage}>
+            <Text style={styles.retryButtonText}>다시 시도</Text>
           </TouchableOpacity>
         </View>
-      )}
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={NMColors.white} />
+
+      {isAnalyzing ? (
+        renderLoadingUI()
+      ) : measurementResult ? (
+        <>
+          {/* Result header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.closeButton} onPress={onBack}>
+              <Icon name="x" size={20} color={NMColors.text} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>측정 완료</Text>
+            <View style={styles.headerPlaceholder} />
+          </View>
+          {renderResultUI()}
+        </>
+      ) : null}
     </SafeAreaView>
   );
 };
@@ -464,113 +573,277 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: NMColors.white,
   },
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    height: 56,
+    paddingHorizontal: 20,
   },
-  backButton: {
+  closeButton: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: NMColors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButtonText: {
-    color: '#333',
-    fontSize: 24,
-    fontWeight: '300',
-  },
-  title: {
-    color: '#212529',
+  headerTitle: {
+    color: NMColors.text,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  placeholder: {
+  headerPlaceholder: {
     width: 40,
   },
-  content: {
+
+  // ===== Loading UI =====
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    gap: 32,
+  },
+  scanAnimContainer: {
+    width: 160,
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  concentricCircle: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: NMColors.purple,
+    borderRadius: 999,
+  },
+  circle1: {
+    width: 160,
+    height: 160,
+    opacity: 0.15,
+  },
+  circle2: {
+    width: 120,
+    height: 120,
+    opacity: 0.3,
+  },
+  circle3: {
+    width: 80,
+    height: 80,
+    opacity: 0.5,
+  },
+  loadingTextContainer: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: NMColors.text,
+  },
+  loadingSubtitle: {
+    fontSize: 15,
+    color: NMColors.textSecondary,
+  },
+  progressContainer: {
+    alignItems: 'center',
+    gap: 8,
+    width: 200,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 4,
+    backgroundColor: NMColors.border,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: NMColors.purple,
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: NMColors.purple,
+  },
+  stepsContainer: {
+    gap: 12,
+    alignSelf: 'stretch',
+    marginHorizontal: 20,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stepIconDone: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: NMColors.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepSpinner: {
+    width: 20,
+    height: 20,
+  },
+  stepIconPending: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: NMColors.border,
+  },
+  stepText: {
+    fontSize: 14,
+    color: NMColors.textTertiary,
+  },
+  stepTextDone: {
+    color: NMColors.textSecondary,
+  },
+  stepTextActive: {
+    color: NMColors.purple,
+    fontWeight: '500',
+  },
+
+  // ===== Result UI =====
+  resultContent: {
     flex: 1,
   },
-  contentContainer: {
-    padding: 20,
+  resultContentContainer: {
+    alignItems: 'center',
+    padding: 24,
+    gap: 24,
   },
-  imagePreview: {
-    width: '100%',
-    aspectRatio: 1,  // 크롭된 이미지는 1:1 정사각형
-    borderRadius: 16,
+  successBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: NMColors.greenLight,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+  },
+  successBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: NMColors.green,
+  },
+  imageArea: {
+    width: 280,
+    height: 280,
+    borderRadius: 20,
+    backgroundColor: NMColors.border,
     overflow: 'hidden',
-    backgroundColor: '#1a1a1a',
-    marginBottom: 20,
   },
   previewImage: {
     width: '100%',
     height: '100%',
   },
-  analyzingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
+  resultInfoLabel: {
+    fontSize: 14,
+    color: NMColors.textSecondary,
+    textAlign: 'center',
+  },
+  sizeCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: NMColors.border,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
     alignItems: 'center',
+    gap: 4,
   },
-  analyzingText: {
-    color: '#FFF',
-    fontSize: 16,
-    marginTop: 12,
-    fontWeight: '500',
+  sizeCardLabel: {
+    fontSize: 13,
+    color: NMColors.textTertiary,
   },
-  overlayHint: {
-    position: 'absolute',
-    bottom: 8,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+  sizeCardValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+    marginVertical: 4,
   },
-  overlayHintText: {
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    color: '#FFF',
-    fontSize: 11,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+  sizeCardValue: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: NMColors.text,
   },
-  statusCard: {
+  sizeCardUnit: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: NMColors.purple,
+  },
+  sizeCardNote: {
+    fontSize: 12,
+    color: NMColors.textSecondary,
+  },
+
+  // Bottom buttons
+  bottomButtons: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  primaryButton: {
+    backgroundColor: NMColors.purple,
+    height: 56,
+    borderRadius: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
+    gap: 8,
   },
-  statusText: {
-    fontSize: 15,
-    color: '#495057',
+  primaryButtonText: {
+    color: NMColors.white,
+    fontSize: 17,
+    fontWeight: '600',
   },
-  errorCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 24,
+  secondaryButton: {
+    backgroundColor: NMColors.white,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: NMColors.border,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  secondaryButtonText: {
+    color: NMColors.textSecondary,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  // Error
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
   },
   errorIcon: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#DC3545',
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFF3CD',
-    textAlign: 'center',
-    lineHeight: 44,
-    overflow: 'hidden',
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  errorIconText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#DC3545',
   },
   errorText: {
     fontSize: 15,
@@ -579,116 +852,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: NMColors.purple,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 20,
   },
   retryButtonText: {
-    color: '#FFF',
+    color: NMColors.white,
     fontSize: 15,
     fontWeight: '600',
   },
-  resultsCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 20,
-  },
-  resultsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 4,
-  },
-  resultsSubtitle: {
-    fontSize: 14,
-    color: '#6C757D',
-    marginBottom: 20,
-  },
-  measurementsList: {
-    gap: 12,
-  },
-  measurementItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 10,
-  },
-  fingerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  fingerName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#212529',
-  },
-  warningBadge: {
-    backgroundColor: '#FFF3CD',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  warningText: {
-    fontSize: 11,
-    color: '#856404',
-    fontWeight: '500',
-  },
-  measurementValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  processingTime: {
-    fontSize: 12,
-    color: '#ADB5BD',
-    textAlign: 'center',
-    marginTop: 16,
-  },
-  bottomButtons: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 34,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  secondaryButton: {
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#DEE2E6',
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#495057',
-  },
-  primaryButton: {
-    backgroundColor: '#007AFF',
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-  // Stage 3 & 4: 디버그 패널 스타일
+
+  // Debug panel
   debugPanel: {
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
+    width: '100%',
   },
   debugHeader: {
     flexDirection: 'row',
