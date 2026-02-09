@@ -44,13 +44,13 @@ from pydantic import BaseModel
 # v2.0.0: Kaggle-trained ResNet101 model
 DEFAULT_MODEL_PATH = os.environ.get(
     "NAIL_SEG_MODEL_PATH",
-    str(Path(__file__).parent.parent / "models/nail_segmentation/v2.0.0/best_model.pth")
+    str(Path(__file__).parent.parent / "models/nail_segmentation/v0.0.0/best_model.pth")
 )
 
 # Default config path
 DEFAULT_CONFIG_PATH = os.environ.get(
     "NAIL_SEG_CONFIG_PATH",
-    str(Path(__file__).parent.parent / "models/nail_segmentation/v2.0.0/config.yaml")
+    str(Path(__file__).parent.parent / "models/nail_segmentation/v0.0.0/config.yaml")
 )
 
 # Credit card dimensions (ISO/IEC 7810)
@@ -123,8 +123,9 @@ class NailSegmentationModel:
         self.preprocessing_fn = None
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.config = {}
-        self.input_size = 640  # Default for v2.0.0 Kaggle model
+        self.input_size = 800  # v2.0.0: 800px for measurement precision
         self.encoder = "resnet101"
+        self.threshold = 0.5
 
     def load_config(self, config_path: str) -> dict:
         """Load training configuration."""
@@ -142,21 +143,22 @@ class NailSegmentationModel:
             if os.path.exists(config_path):
                 self.config = self.load_config(config_path)
                 self.encoder = self.config.get('model', {}).get('encoder', 'resnet101')
-                self.input_size = self.config.get('input', {}).get('size', 640)
+                self.input_size = self.config.get('input', {}).get('size', 800)
+                self.threshold = self.config.get('inference', {}).get('threshold', 0.5)
             else:
                 print(f"[Server] Config not found, using defaults")
                 self.encoder = 'resnet101'
-                self.input_size = 640  # Default for v2.0.0 Kaggle model
+                self.input_size = 800  # v2.0.0: 800px for measurement precision
 
             print(f"[Server] Encoder: {self.encoder}")
             print(f"[Server] Input size: {self.input_size}")
 
-            # Create model
+            # Create model (activation=None: raw logits, sigmoid applied in post-processing)
             self.model = smp.DeepLabV3Plus(
                 encoder_name=self.encoder,
                 encoder_weights=None,  # We'll load our own weights
                 classes=1,
-                activation='sigmoid',
+                activation=None,
             )
 
             # Load weights
@@ -172,7 +174,7 @@ class NailSegmentationModel:
                     encoder_name=self.encoder,
                     encoder_weights='imagenet',
                     classes=1,
-                    activation='sigmoid',
+                    activation=None,
                 )
 
             self.model = self.model.to(self.device)
@@ -205,6 +207,12 @@ class NailSegmentationModel:
         # Resize cropped square to model input size
         image = cv2.resize(image, (self.input_size, self.input_size))
 
+        # Apply CLAHE on L channel (LAB color space) for edge contrast
+        clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+        lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+        lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+        image = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+
         # Apply encoder-specific preprocessing
         if self.preprocessing_fn:
             image = self.preprocessing_fn(image)
@@ -228,6 +236,7 @@ class NailSegmentationModel:
         # Inference
         with torch.no_grad():
             output = self.model(input_tensor)
+            output = torch.sigmoid(output)  # Apply sigmoid to raw logits
 
         # Post-process
         mask = output.squeeze().cpu().numpy()  # Remove batch and channel dims
@@ -410,7 +419,7 @@ async def segment_image(
             "min": float(mask.min()),
             "max": float(mask.max()),
             "mean": float(mask.mean()),
-            "positive_ratio": float((mask > 0.5).sum() / mask.size * 100),
+            "positive_ratio": float((mask > model_manager.threshold).sum() / mask.size * 100),
         }
 
         return SegmentationResponse(
@@ -479,8 +488,8 @@ async def segment_with_overlay(
         # Create mask overlay (RGBA, transparent background + green mask)
         # OpenCV uses BGRA for 4-channel images
         overlay = np.zeros((height, width, 4), dtype=np.uint8)
-        # Set green color with 50% alpha where mask > 0.5
-        mask_binary = mask > 0.5
+        # Set green color with 50% alpha where mask > threshold
+        mask_binary = mask > model_manager.threshold
         overlay[mask_binary, 0] = 0    # B
         overlay[mask_binary, 1] = 255  # G
         overlay[mask_binary, 2] = 0    # R
@@ -495,7 +504,7 @@ async def segment_with_overlay(
             "min": float(mask.min()),
             "max": float(mask.max()),
             "mean": float(mask.mean()),
-            "positive_ratio": float((mask > 0.5).sum() / mask.size * 100),
+            "positive_ratio": float((mask > model_manager.threshold).sum() / mask.size * 100),
         }
 
         processing_time_ms = (time.time() - start_time) * 1000
@@ -557,7 +566,7 @@ async def measure_nails(
         mask, inference_time = model_manager.predict(img_rgb)
 
         # Find connected components
-        regions = find_connected_components(mask)
+        regions = find_connected_components(mask, threshold=model_manager.threshold)
 
         # Classify fingers
         classified_regions = classify_fingers(regions, is_thumb_only)

@@ -1,6 +1,6 @@
 # Nail Segmentation Model Configuration
 # ResNet101 + DeepLabV3+ trained on Kaggle
-# v2.0.0: Full Training with CLAHE + Dice+1.5xBCE
+# v0.0.0: Full Training — CLAHE + Dice+1.5xBCE + 800px
 
 model:
   architecture: DeepLabV3Plus
@@ -27,4 +27,4 @@ inference:
 training:
   dataset: vpapenko/nail-segmentation-dataset
   platform: kaggle
-  notes: Full training from scratch with CLAHE + Dice+1.5xBCE
+  notes: Full training from scratch with CLAHE + Dice+1.5xBCE + 800px
