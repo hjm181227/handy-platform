@@ -1,6 +1,6 @@
 # Mixed Training Kaggle 노트북
 
-> 엄지 + 기존 4손가락 데이터를 균형있게 학습하여 단일 모델로 최고 성능 달성
+> 엄지 + 기존 4손가락 + Roboflow 데이터를 균형있게 학습하여 단일 모델로 최고 성능 달성
 
 ## 배경
 
@@ -9,8 +9,18 @@
 - 엄지만 Fine-tuning 후: ~0.80 (성능 저하 - Catastrophic Forgetting)
 
 ### 해결책: Balanced Mixed Training
-- 엄지 데이터와 기존 데이터를 **약 1:1 비율**로 혼합
+- 엄지 데이터 + 기존 데이터 + Roboflow 데이터를 **균형있게 혼합**
 - Encoder **부분 Freeze**로 기존 지식 보존 + 새로운 패턴 학습
+
+## 데이터 출처
+
+| 데이터셋 | 출처 | 설명 |
+|----------|------|------|
+| 기존 데이터 | 내부 수집 | 4손가락 손톱 데이터 (~2,000장) |
+| 엄지 데이터 | 내부 촬영 | 엄지 손톱 (18장) |
+| Roboflow | [nail_segmentation](https://universe.roboflow.com/nailproject-padk9/nail_segmentation) | COCO → PNG 마스크 변환 (266장) |
+
+---
 
 ## 사전 준비 (Kaggle)
 
@@ -24,7 +34,8 @@
 |---------|------|
 | `nail-segmentation-dataset` | 기존 Train + Validation Set |
 | `nail-segmentation-checkpoint-v3` | 기존 학습된 모델 |
-| `thumb-nail-training-data` | 엄지 데이터 (새로 추가) |
+| `thumb-nail-training-data` | 엄지 데이터 |
+| `roboflow-nail-detection` | Roboflow 손톱 데이터 (266장) |
 
 ### 3. GPU 설정
 Settings > Accelerator > GPU T4 x2
@@ -66,24 +77,29 @@ torch.manual_seed(42)
 ## Cell 2: Mixed Training 설정
 
 ```python
-# ★★★ Mixed Training 전용 설정 ★★★
+# ★★★ Fine-tuning 전용 설정 (Dice + BCE Combined Loss) ★★★
 CONFIG = {
     'encoder': 'resnet101',
     'input_size': 640,
-    'epochs': 20,                  # 데이터 많아졌으니 증가
+    'epochs': 20,                  # 3차 Fine-tuning: 충분한 학습 (20 epoch)
     'batch_size': 8,               # 충분한 데이터로 배치 증가
-    'learning_rate': 0.00003,      # 약간 높여서 학습 효과 증가
+    'learning_rate': 0.00001,      # 3차 Fine-tuning: LR 복원 (1e-5)
     'weight_decay': 0.0005,
-    'patience': 8,
+    'patience': 10,                # 3차 Fine-tuning: 충분한 patience (10)
     'freeze_encoder_layers': 3,    # ★ 처음 3개 layer만 freeze
     'thumb_repeat': 15,            # ★ 엄지 15배 반복
     'original_sample': 300,        # ★ 기존 데이터 300장 샘플링
+    'roboflow_sample': 266,        # ★ Roboflow 전체 사용 (266장)
+    'dice_weight': 0.4,            # ★ Dice Loss 가중치
+    'bce_weight': 0.6,             # ★ BCE Loss 가중치
 }
 
-# 경로 설정
-CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v2/pytorch/default/2/models/best_checkpoint.pth'
+# 체크포인트 동적 탐색 (버전 번호에 의존하지 않음)
+_loss_ckpt = list(Path('/kaggle/input/nail-segmentation-loss-checkpoint').glob('**/best_checkpoint.pth'))
+CHECKPOINT_FILE = str(_loss_ckpt[0]) if _loss_ckpt else ''
 THUMB_DATA_DIR = Path('/kaggle/input/thumb-nail-training-data/thumb_train')
 ORIGINAL_TRAIN_DIR = Path('/kaggle/input/nail-segmentation-dataset/NailSegmentationDatasetV2/train')
+ROBOFLOW_DATA_DIR = Path('/kaggle/input/roboflow-nail-detection/roboflow_nail_masks')  # ★ Roboflow 데이터
 VAL_DATA_DIR = Path('/kaggle/input/nail-segmentation-dataset/NailSegmentationDatasetV2/val')
 OUTPUT_DIR = Path('/kaggle/working/models')
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -92,9 +108,11 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 print("=" * 60)
 print("Mixed Training Configuration")
 print("=" * 60)
-print(f"Checkpoint exists: {Path(CHECKPOINT_FILE).exists()}")
+print(f"Checkpoint: {CHECKPOINT_FILE or 'NOT FOUND'}")
+print(f"Checkpoint exists: {bool(CHECKPOINT_FILE) and Path(CHECKPOINT_FILE).exists()}")
 print(f"Thumb data exists: {THUMB_DATA_DIR.exists()}")
 print(f"Original train exists: {ORIGINAL_TRAIN_DIR.exists()}")
+print(f"Roboflow data exists: {ROBOFLOW_DATA_DIR.exists()}")
 print(f"Val data exists: {VAL_DATA_DIR.exists()}")
 
 if THUMB_DATA_DIR.exists():
@@ -107,8 +125,14 @@ if ORIGINAL_TRAIN_DIR.exists():
     print(f"\nOriginal train images: {original_count}")
     print(f"  → Sampling: {CONFIG['original_sample']}")
 
-print(f"\n★ Expected mixed dataset: {thumb_count * CONFIG['thumb_repeat'] + CONFIG['original_sample']} images")
-print(f"★ Ratio - Thumb: {thumb_count * CONFIG['thumb_repeat']}({(thumb_count * CONFIG['thumb_repeat']) / (thumb_count * CONFIG['thumb_repeat'] + CONFIG['original_sample']) * 100:.0f}%) | Original: {CONFIG['original_sample']}({CONFIG['original_sample'] / (thumb_count * CONFIG['thumb_repeat'] + CONFIG['original_sample']) * 100:.0f}%)")
+if ROBOFLOW_DATA_DIR.exists():
+    roboflow_count = len(list((ROBOFLOW_DATA_DIR / 'images').glob('*.jpg')))
+    print(f"\nRoboflow images: {roboflow_count}")
+    print(f"  → Using: {CONFIG['roboflow_sample']}")
+
+total_expected = thumb_count * CONFIG['thumb_repeat'] + CONFIG['original_sample'] + CONFIG['roboflow_sample']
+print(f"\n★ Expected mixed dataset: {total_expected} images")
+print(f"★ Ratio - Thumb: {thumb_count * CONFIG['thumb_repeat']} | Original: {CONFIG['original_sample']} | Roboflow: {CONFIG['roboflow_sample']}")
 ```
 
 ---
@@ -212,12 +236,12 @@ if Path(CHECKPOINT_FILE).exists():
 
     if isinstance(checkpoint_data, dict) and 'model_state_dict' in checkpoint_data:
         model.load_state_dict(checkpoint_data['model_state_dict'])
-        # Mixed training은 새로운 학습이므로 epoch 0부터 시작
-        # start_epoch = checkpoint_data.get('epoch', 0) + 1  # 이어서 학습할 때
-        start_epoch = 0  # ★ 새로운 Mixed Training 세션
+        # Fine-tuning: epoch 0부터 시작, optimizer/scheduler는 새로 생성
+        # (새 loss function에 맞게 처음부터 적응)
+        start_epoch = 0  # ★ Fine-tuning 세션 - epoch 카운트 리셋
         previous_best_iou = checkpoint_data.get('best_iou', 0.0)
         print(f"★ Loaded weights from checkpoint (IoU: {previous_best_iou:.4f})")
-        print(f"★ Starting fresh training from epoch 0")
+        print(f"★ Fine-tuning with Dice+BCE loss from epoch 0")
     else:
         model.load_state_dict(checkpoint_data)
         print("★ Checkpoint loaded (legacy format)")
@@ -294,9 +318,27 @@ original_masks = [original_masks_all[i] for i in indices]
 
 print(f"Original sampled: {len(original_images)} images")
 
+# ==================== Roboflow 데이터 ====================
+roboflow_images_all = sorted((ROBOFLOW_DATA_DIR / 'images').glob('*.jpg'))
+roboflow_masks_all = sorted((ROBOFLOW_DATA_DIR / 'masks').glob('*.png'))
+
+print(f"Roboflow total: {len(roboflow_images_all)} images")
+
+# 샘플링 (전체 사용 시 그대로)
+roboflow_sample_size = min(CONFIG['roboflow_sample'], len(roboflow_images_all))
+if roboflow_sample_size < len(roboflow_images_all):
+    roboflow_indices = random.sample(range(len(roboflow_images_all)), roboflow_sample_size)
+    roboflow_images = [roboflow_images_all[i] for i in roboflow_indices]
+    roboflow_masks = [roboflow_masks_all[i] for i in roboflow_indices]
+else:
+    roboflow_images = list(roboflow_images_all)
+    roboflow_masks = list(roboflow_masks_all)
+
+print(f"Roboflow sampled: {len(roboflow_images)} images")
+
 # ==================== 병합 및 셔플 ====================
-all_images = thumb_images_repeated + original_images
-all_masks = thumb_masks_repeated + original_masks
+all_images = thumb_images_repeated + original_images + roboflow_images
+all_masks = thumb_masks_repeated + original_masks + roboflow_masks
 
 # 셔플
 combined = list(zip(all_images, all_masks))
@@ -307,9 +349,11 @@ print(f"\n★ Mixed Dataset Summary:")
 print(f"  Total: {len(all_images)} images")
 print(f"  - Thumb: {len(thumb_images_repeated)} ({len(thumb_images)} × {CONFIG['thumb_repeat']})")
 print(f"  - Original: {len(original_images)}")
+print(f"  - Roboflow: {len(roboflow_images)}")
 thumb_ratio = len(thumb_images_repeated) / len(all_images) * 100
 original_ratio = len(original_images) / len(all_images) * 100
-print(f"  Ratio: Thumb {thumb_ratio:.1f}% | Original {original_ratio:.1f}%")
+roboflow_ratio = len(roboflow_images) / len(all_images) * 100
+print(f"  Ratio: Thumb {thumb_ratio:.1f}% | Original {original_ratio:.1f}% | Roboflow {roboflow_ratio:.1f}%")
 
 # Train 데이터셋 생성
 train_dataset = NailDataset(
@@ -356,23 +400,33 @@ print(f"  Val: {len(val_dataset)} samples, {len(val_loader)} batches (기존 val
 ## Cell 7: Loss, Optimizer
 
 ```python
-criterion = smp.losses.DiceLoss(mode='binary')
+# ★★★ Dice + BCE Combined Loss ★★★
+# 모델이 activation='sigmoid'로 출력이 이미 [0,1] 확률값이므로
+# BCEWithLogitsLoss가 아닌 BCELoss를 사용해야 함 (double sigmoid 방지)
+dice_loss_fn = smp.losses.DiceLoss(mode='binary')
+bce_loss_fn = nn.BCELoss()
 
-# Mixed Training용 LR (Fine-tuning보다 높음)
+def criterion(pred, target):
+    return CONFIG['dice_weight'] * dice_loss_fn(pred, target) + CONFIG['bce_weight'] * bce_loss_fn(pred, target)
+
+# Fine-tuning용 낮은 LR
 optimizer = torch.optim.AdamW(
     filter(lambda p: p.requires_grad, model.parameters()),  # 학습 가능한 파라미터만
     lr=CONFIG['learning_rate'],
     weight_decay=CONFIG['weight_decay']
 )
 
-# Scheduler
+# Scheduler (20 epoch에 맞춤 T_0=3)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-    optimizer, T_0=5, T_mult=2, eta_min=1e-7
+    optimizer, T_0=3, T_mult=2, eta_min=1e-7
 )
 
-print(f"Loss: DiceLoss")
+print(f"Loss: CombinedDiceBCE (Dice {CONFIG['dice_weight']} + BCE {CONFIG['bce_weight']})")
+print(f"  - DiceLoss(mode='binary') weight={CONFIG['dice_weight']}")
+print(f"  - BCELoss() weight={CONFIG['bce_weight']}")
+print(f"  - Note: BCELoss (not BCEWithLogitsLoss) because model uses activation='sigmoid'")
 print(f"Optimizer: AdamW (lr={CONFIG['learning_rate']})")
-print(f"Scheduler: CosineAnnealingWarmRestarts (T_0=5, T_mult=2)")
+print(f"Scheduler: CosineAnnealingWarmRestarts (T_0=3, T_mult=2)")
 ```
 
 ---
@@ -434,7 +488,7 @@ def validate(model, loader, criterion, device):
 
 ```python
 print("=" * 60)
-print("Starting Mixed Training (Thumb + Original Data)")
+print("Starting Fine-tuning with Dice+BCE Loss (Thumb + Original + Roboflow Data)")
 print("=" * 60)
 
 # ★ 이번 학습 세션에서 새로 시작 (previous_best_iou와 비교하지 않음)
@@ -445,9 +499,9 @@ history = {'train_loss': [], 'train_iou': [], 'val_loss': [], 'val_iou': [], 'lr
 end_epoch = start_epoch + CONFIG['epochs']
 print(f"Training from epoch {start_epoch} to {end_epoch}")
 print(f"Previous checkpoint IoU: {previous_best_iou:.4f} (참고용)")
-print(f"★ This session starts fresh - tracking best from 0.0")
+print(f"★ Fine-tuning with Dice+BCE loss - tracking best from 0.0")
 print(f"Encoder layers frozen: 0 to {CONFIG['freeze_encoder_layers'] - 1}")
-print(f"Mixed dataset: {len(train_dataset)} images (Thumb {len(thumb_images_repeated)} + Original {len(original_images)})")
+print(f"Mixed dataset: {len(train_dataset)} images (Thumb {len(thumb_images_repeated)} + Original {len(original_images)} + Roboflow {len(roboflow_images)})")
 
 for epoch in range(start_epoch, end_epoch):
     current_lr = optimizer.param_groups[0]['lr']
@@ -495,7 +549,7 @@ for epoch in range(start_epoch, end_epoch):
         break
 
 print(f"\n{'=' * 60}")
-print(f"Mixed Training Complete!")
+print(f"Fine-tuning (Dice+BCE) Complete!")
 print(f"  Epochs: {start_epoch} → {epoch + 1}")
 print(f"  Best IoU: {best_iou:.4f}")
 print(f"  Previous IoU: {previous_best_iou:.4f}")
@@ -610,7 +664,66 @@ visualize_thumb_predictions(model, device)
 
 ---
 
-## Cell 12: 4손가락 (기존 데이터) 예측 시각화
+## Cell 12: Roboflow 데이터 예측 시각화
+
+```python
+@torch.no_grad()
+def visualize_roboflow_predictions(model, device, num_samples=4):
+    """Roboflow 데이터에 대한 예측 시각화"""
+    model.eval()
+
+    # Roboflow 이미지 사용
+    sample_indices = random.sample(range(len(roboflow_images)), min(num_samples, len(roboflow_images)))
+
+    fig, axes = plt.subplots(num_samples, 3, figsize=(12, 4 * num_samples))
+
+    for i, idx in enumerate(sample_indices):
+        # 이미지 로드
+        img = cv2.imread(str(roboflow_images[idx]))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_resized = cv2.resize(img, (CONFIG['input_size'], CONFIG['input_size']))
+
+        # 마스크 로드
+        mask = cv2.imread(str(roboflow_masks[idx]), cv2.IMREAD_GRAYSCALE)
+        mask_resized = cv2.resize(mask, (CONFIG['input_size'], CONFIG['input_size']))
+
+        # 전처리 및 예측
+        img_tensor = get_val_transform(CONFIG['input_size'])(image=img_resized)['image']
+        pred = model(img_tensor.unsqueeze(0).to(device)).squeeze().cpu().numpy()
+        pred_binary = (pred > 0.5).astype(np.float32)
+
+        # IoU 계산
+        gt = (mask_resized > 127).astype(np.float32)
+        intersection = (pred_binary * gt).sum()
+        union = pred_binary.sum() + gt.sum() - intersection
+        iou = intersection / (union + 1e-6)
+
+        # 시각화
+        axes[i, 0].imshow(img_resized)
+        axes[i, 0].set_title(f'Roboflow {idx}')
+        axes[i, 0].axis('off')
+
+        axes[i, 1].imshow(mask_resized, cmap='gray')
+        axes[i, 1].set_title('Ground Truth')
+        axes[i, 1].axis('off')
+
+        axes[i, 2].imshow(pred_binary, cmap='gray')
+        axes[i, 2].set_title(f'Prediction (IoU: {iou:.4f})')
+        axes[i, 2].axis('off')
+
+    plt.suptitle('Roboflow Data Predictions', fontsize=14)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / 'roboflow_predictions.png', dpi=150)
+    plt.show()
+
+
+# Roboflow 예측 시각화
+visualize_roboflow_predictions(model, device)
+```
+
+---
+
+## Cell 13: 4손가락 (기존 데이터) 예측 시각화
 
 ```python
 @torch.no_grad()
@@ -669,7 +782,7 @@ visualize_finger_predictions(model, device)
 
 ---
 
-## Cell 13: 출력 파일 확인
+## Cell 14: 출력 파일 확인
 
 ```python
 print("=" * 60)
@@ -685,6 +798,7 @@ print("  - best_model.pth (추론용)")
 print("  - best_checkpoint.pth (이어서 학습용)")
 print("  - training_history.png (학습 그래프)")
 print("  - thumb_predictions.png (엄지 예측 결과)")
+print("  - roboflow_predictions.png (Roboflow 예측 결과)")
 print("  - finger_predictions.png (4손가락 예측 결과)")
 ```
 
@@ -713,13 +827,24 @@ curl -X POST http://localhost:8000/api/segment-with-overlay \
 
 | 항목 | 엄지만 Fine-tuning | Mixed Training |
 |------|-------------------|----------------|
-| **데이터** | 엄지 18장 × 5배 = 90장 | 엄지 270 + 기존 300 = **570장** |
+| **데이터** | 엄지 18장 × 5배 = 90장 | 엄지 270 + 기존 300 + Roboflow 266 = **836장** |
 | **Encoder** | 전체 Frozen | **부분 Frozen** (layer 0-2만) |
 | **Learning Rate** | 0.00001 | **0.00003** |
 | **Batch Size** | 4 | **8** |
-| **Epochs** | 15 | **20** |
+| **Epochs** | 15 | **25** |
 | **망각 위험** | 높음 | **낮음** |
 | **예상 Val IoU** | ~0.80 (저하) | **0.84~0.86** (유지/개선) |
+
+---
+
+## 데이터 구성 비율
+
+| 데이터 소스 | 원본 수 | 반복/샘플 | 최종 수 | 비율 |
+|------------|---------|----------|--------|------|
+| 엄지 | 18 | ×15 | 270 | 32% |
+| 기존 (4손가락) | ~2,000 | 300 샘플 | 300 | 36% |
+| Roboflow | 266 | 전체 사용 | 266 | 32% |
+| **합계** | - | - | **836** | 100% |
 
 ---
 

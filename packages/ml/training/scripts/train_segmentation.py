@@ -368,8 +368,21 @@ def train(
         criterion = smp.losses.DiceLoss(mode='binary')
     elif loss_type == 'BCEWithLogitsLoss':
         criterion = nn.BCEWithLogitsLoss()
+    elif loss_type == 'BCELoss':
+        criterion = nn.BCELoss()
     elif loss_type == 'FocalLoss':
         criterion = smp.losses.FocalLoss(mode='binary')
+    elif loss_type == 'CombinedDiceBCE':
+        # Dice + BCE combined loss for fine-tuning
+        # Use BCELoss (not BCEWithLogitsLoss) when model has activation='sigmoid'
+        dice_weight = loss_config.get('dice_weight', 0.4)
+        bce_weight = loss_config.get('bce_weight', 0.6)
+        dice_loss_fn = smp.losses.DiceLoss(mode='binary')
+        bce_loss_fn = nn.BCELoss()
+        criterion = lambda pred, target: (
+            dice_weight * dice_loss_fn(pred, target) + bce_weight * bce_loss_fn(pred, target)
+        )
+        print(f"Loss: CombinedDiceBCE (Dice {dice_weight} + BCE {bce_weight})")
     else:
         criterion = smp.losses.DiceLoss(mode='binary')
 

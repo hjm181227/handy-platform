@@ -50,7 +50,11 @@ training:
 # Loss function
 loss:
   type: DiceLoss  # Good for segmentation
-  # Alternatives: BCEWithLogitsLoss, FocalLoss, TverskyLoss
+  # Alternatives: BCEWithLogitsLoss, BCELoss, FocalLoss, TverskyLoss, CombinedDiceBCE
+  # CombinedDiceBCE settings (used when type: CombinedDiceBCE):
+  #   dice_weight: 0.4
+  #   bce_weight: 0.6
+  #   Note: Uses BCELoss (not BCEWithLogitsLoss) for models with activation='sigmoid'
 
 # Metrics
 metrics:
