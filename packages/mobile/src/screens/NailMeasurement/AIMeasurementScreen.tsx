@@ -410,7 +410,7 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         {/* 에러 */}
         {!isAnalyzing && error && (
           <View style={styles.errorCard}>
-            <Text style={styles.errorIcon}>⚠️</Text>
+            <Text style={styles.errorIcon}>!</Text>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={analyzeImage}>
               <Text style={styles.retryButtonText}>다시 시도</Text>
@@ -560,7 +560,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorIcon: {
-    fontSize: 40,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#DC3545',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFF3CD',
+    textAlign: 'center',
+    lineHeight: 44,
+    overflow: 'hidden',
     marginBottom: 12,
   },
   errorText: {

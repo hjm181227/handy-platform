@@ -163,7 +163,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
           {isCapturing ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Text style={styles.buttonText}>📸 촬영</Text>
+            <Text style={styles.buttonText}>촬영</Text>
           )}
         </TouchableOpacity>
       </View>

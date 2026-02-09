@@ -117,7 +117,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
         <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>❌ {error}</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadNailSizeData}>
             <Text style={styles.retryButtonText}>다시 시도</Text>
           </TouchableOpacity>
@@ -144,7 +144,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
         </TouchableOpacity>
         <Text style={styles.title}>손톱 사이즈</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={loadNailSizeData}>
-          <Text style={styles.refreshButtonText}>🔄</Text>
+          <Text style={styles.refreshButtonText}>새로고침</Text>
         </TouchableOpacity>
       </View>
 
@@ -159,7 +159,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
           }}
         >
           <View style={styles.arButtonContent}>
-            <Text style={styles.arButtonIcon}>📱</Text>
+            <Text style={styles.arButtonIcon}>AI</Text>
             <View style={styles.arButtonTexts}>
               <Text style={styles.arButtonTitle}>AR 측정하기</Text>
               <Text style={styles.arButtonSubtitle}>카메라로 정확한 측정</Text>
@@ -178,7 +178,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
         {/* 데이터가 없을 때 */}
         {!nailSizeData && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📏</Text>
+            <Text style={styles.emptyIcon}>--</Text>
             <Text style={styles.emptyText}>아직 측정된 손톱 사이즈가 없습니다</Text>
             <TouchableOpacity
               style={styles.startMeasureButton}
@@ -197,7 +197,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
         {nailSizeData && (
           <View style={styles.handSection}>
             <View style={styles.handHeader}>
-              <Text style={styles.handIcon}>🤚</Text>
+              <Text style={styles.handIcon}>L</Text>
               <Text style={styles.handTitle}>왼손</Text>
             </View>
             <View style={styles.fingersContainer}>
@@ -212,7 +212,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
         {nailSizeData && (
           <View style={styles.handSection}>
             <View style={styles.handHeader}>
-              <Text style={styles.handIcon}>✋</Text>
+              <Text style={styles.handIcon}>R</Text>
               <Text style={styles.handTitle}>오른손</Text>
             </View>
             <View style={styles.fingersContainer}>
@@ -234,7 +234,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
             }
           }}
         >
-          <Text style={styles.newMeasureButtonText}>📏 새로 측정하기</Text>
+          <Text style={styles.newMeasureButtonText}>새로 측정하기</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -311,7 +311,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   refreshButtonText: {
-    fontSize: 18,
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -340,7 +342,9 @@ const styles = StyleSheet.create({
     paddingVertical: 80,
   },
   emptyIcon: {
-    fontSize: 60,
+    fontSize: 40,
+    fontWeight: '300',
+    color: '#CCC',
     marginBottom: 20,
   },
   emptyText: {
@@ -370,7 +374,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   handIcon: {
-    fontSize: 24,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#007AFF',
+    textAlign: 'center',
+    lineHeight: 28,
+    overflow: 'hidden',
     marginRight: 10,
   },
   handTitle: {
@@ -459,7 +472,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arButtonIcon: {
-    fontSize: 40,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
     marginRight: 15,
   },
   arButtonTexts: {

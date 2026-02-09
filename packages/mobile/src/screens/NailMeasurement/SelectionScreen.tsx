@@ -63,7 +63,7 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
               ]}
               onPress={() => onHandSelect('left')}
             >
-              <Text style={styles.handEmoji}>🤚</Text>
+              <Text style={styles.handLabel}>L</Text>
               <Text
                 style={[
                   styles.handButtonText,
@@ -80,7 +80,7 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
               ]}
               onPress={() => onHandSelect('right')}
             >
-              <Text style={styles.handEmoji}>✋</Text>
+              <Text style={styles.handLabel}>R</Text>
               <Text
                 style={[
                   styles.handButtonText,
@@ -105,7 +105,7 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
               onPress={() => onFingerTypeSelect('thumb')}
             >
               <View style={styles.fingerTypeContent}>
-                <Text style={styles.fingerTypeEmoji}>👍</Text>
+                <Text style={styles.fingerTypeLabel}>1</Text>
                 <View style={styles.fingerTypeTextContainer}>
                   <Text
                     style={[
@@ -133,7 +133,7 @@ const SelectionScreen: React.FC<SelectionScreenProps> = ({
               onPress={() => onFingerTypeSelect('four_fingers')}
             >
               <View style={styles.fingerTypeContent}>
-                <Text style={styles.fingerTypeEmoji}>🖐️</Text>
+                <Text style={styles.fingerTypeLabel}>4</Text>
                 <View style={styles.fingerTypeTextContainer}>
                   <Text
                     style={[
@@ -255,8 +255,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F4FD',
     borderColor: '#007AFF',
   },
-  handEmoji: {
-    fontSize: 24,
+  handLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#495057',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#E9ECEF',
+    textAlign: 'center',
+    lineHeight: 28,
+    overflow: 'hidden',
   },
   handButtonText: {
     fontSize: 16,
@@ -289,9 +298,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  fingerTypeEmoji: {
-    fontSize: 32,
+  fingerTypeLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#495057',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E9ECEF',
+    textAlign: 'center',
+    lineHeight: 36,
     marginRight: 16,
+    overflow: 'hidden',
   },
   fingerTypeTextContainer: {
     flex: 1,
