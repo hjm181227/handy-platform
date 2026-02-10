@@ -89,9 +89,10 @@ class NailMeasurementService {
    */
   async measureFourFingers(
     imageBase64: string,
-    cardWidthPixels: number
+    cardWidthPixels: number,
+    selectedHand: 'left' | 'right' = 'right'
   ): Promise<NailMeasurementResult> {
-    return this.measureNails(imageBase64, cardWidthPixels, false);
+    return this.measureNails(imageBase64, cardWidthPixels, false, selectedHand);
   }
 
   /**
@@ -104,17 +105,18 @@ class NailMeasurementService {
   private async measureNails(
     imageBase64: string,
     cardWidthPixels: number,
-    isThumbOnly: boolean
+    isThumbOnly: boolean,
+    selectedHand: 'left' | 'right' = 'right'
   ): Promise<NailMeasurementResult> {
     const startTime = Date.now();
 
     // 서버 API 사용 시도 (마스크 오버레이 포함)
     try {
       console.log('[NailMeasurementService] Trying server API with overlay...');
-      return await this.measureNailsWithServerOverlay(imageBase64, cardWidthPixels, isThumbOnly);
+      return await this.measureNailsWithServerOverlay(imageBase64, cardWidthPixels, isThumbOnly, selectedHand);
     } catch (serverError) {
       console.warn('[NailMeasurementService] Server API failed, falling back to local TFLite:', serverError);
-      return await this.measureNailsWithLocalModel(imageBase64, cardWidthPixels, isThumbOnly);
+      return await this.measureNailsWithLocalModel(imageBase64, cardWidthPixels, isThumbOnly, selectedHand);
     }
   }
 
@@ -125,7 +127,8 @@ class NailMeasurementService {
   private async measureNailsWithServerOverlay(
     imageUri: string,
     cardWidthPixels: number,
-    isThumbOnly: boolean
+    isThumbOnly: boolean,
+    selectedHand: 'left' | 'right' = 'right'
   ): Promise<NailMeasurementResult> {
     const startTime = Date.now();
 
@@ -153,7 +156,8 @@ class NailMeasurementService {
     const measurements = processNailMeasurement(
       segmentationResult.mask,
       cardWidthPixels,
-      isThumbOnly
+      isThumbOnly,
+      selectedHand
     );
 
     const processingTimeMs = Date.now() - startTime;
@@ -191,7 +195,8 @@ class NailMeasurementService {
   private async measureNailsWithLocalModel(
     imageBase64: string,
     cardWidthPixels: number,
-    isThumbOnly: boolean
+    isThumbOnly: boolean,
+    selectedHand: 'left' | 'right' = 'right'
   ): Promise<NailMeasurementResult> {
     const startTime = Date.now();
 
@@ -226,7 +231,8 @@ class NailMeasurementService {
     const measurements = processNailMeasurement(
       segmentationResult.mask,
       cardWidthPixels,
-      isThumbOnly
+      isThumbOnly,
+      selectedHand
     );
 
     const processingTimeMs = Date.now() - startTime;

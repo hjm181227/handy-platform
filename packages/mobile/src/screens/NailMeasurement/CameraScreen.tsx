@@ -126,6 +126,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
         device={device}
         isActive={true}
         photo={true}
+        outputOrientation="portrait"
         onInitialized={() => setIsCameraReady(true)}
       />
 

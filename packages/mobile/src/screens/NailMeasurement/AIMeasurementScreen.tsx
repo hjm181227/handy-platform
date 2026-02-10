@@ -17,7 +17,6 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
-  Alert,
   ActivityIndicator,
   Dimensions,
   ScrollView,
@@ -40,6 +39,7 @@ import {
   validateNailRegions,
 } from '../../services/nailMeasurement/imageProcessor';
 import { userService } from '../../services/apiService';
+import { alertService } from '@handy-platform/shared/src/services/utils/AlertService';
 import { NMColors } from '../../styles/nailMeasurementTheme';
 
 let cachedService: any = null;
@@ -76,7 +76,7 @@ const FINGER_KOREAN: Record<FingerType, string> = {
   index: '검지',
   middle: '중지',
   ring: '약지',
-  little: '새끼',
+  little: '소지',
 };
 
 // Analysis steps for loading UI
@@ -221,7 +221,7 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
       if (isThumbOnly) {
         result = await service.measureThumb(imageUri, estimatedCardWidth);
       } else {
-        result = await service.measureFourFingers(imageUri, estimatedCardWidth);
+        result = await service.measureFourFingers(imageUri, estimatedCardWidth, selectedHand);
       }
 
       // Update steps to completion
@@ -276,27 +276,26 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
           .map(m => `${FINGER_KOREAN[m.finger]}: ${m.widthMm}mm`)
           .join('\n');
 
-        Alert.alert(
-          '측정 완료!',
-          `${selectedHand === 'left' ? '왼손' : '오른손'} ${isThumbOnly ? '엄지' : '4손가락'}\n\n${fingerList}`,
-          [
-            {
-              text: '확인',
-              onPress: () => {
-                if (onNavigateToSizes) {
-                  onNavigateToSizes();
-                } else {
-                  onComplete();
-                }
-              },
-            },
-          ]
-        );
+        alertService.toast(fingerList, {
+          title: '저장 완료',
+          variant: 'success',
+          duration: 3000,
+        });
+
+        if (onNavigateToSizes) {
+          onNavigateToSizes();
+        } else {
+          onComplete();
+        }
       } else {
         throw new Error('일부 측정 결과 저장에 실패했습니다.');
       }
     } catch (err: any) {
-      Alert.alert('저장 실패', err.message);
+      alertService.toast(err.message, {
+        title: '저장 실패',
+        variant: 'danger',
+        duration: 4000,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -373,7 +372,7 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
 
           {/* Image area */}
           <TouchableOpacity
-            style={styles.imageArea}
+            style={isThumbOnly ? styles.imageArea : styles.imageAreaFourFinger}
             onPress={() => setShowOverlay(!showOverlay)}
             activeOpacity={0.9}
             onLayout={(e) => {
@@ -404,24 +403,36 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
 
           {/* Info label */}
           <Text style={styles.resultInfoLabel}>
-            {handText} {fingerText} 측정 결과
+            {handText} {fingerText} 측정 결과 (mm)
           </Text>
 
           {/* Measurement cards */}
-          {measurementResult.measurements.map((m) => (
-            <View key={m.finger} style={styles.sizeCard}>
-              <Text style={styles.sizeCardLabel}>
-                {FINGER_KOREAN[m.finger]} 가로 길이
-              </Text>
-              <View style={styles.sizeCardValueRow}>
-                <Text style={styles.sizeCardValue}>{m.widthMm}</Text>
-                <Text style={styles.sizeCardUnit}>mm</Text>
+          {isThumbOnly ? (
+            measurementResult.measurements.map((m) => (
+              <View key={m.finger} style={styles.sizeCard}>
+                <Text style={styles.sizeCardLabel}>손톱 가로 길이</Text>
+                <View style={styles.sizeCardValueRow}>
+                  <Text style={styles.sizeCardValue}>{m.widthMm}</Text>
+                  <Text style={styles.sizeCardUnit}>mm</Text>
+                </View>
+                <Text style={styles.sizeCardNote}>
+                  신용카드 기준으로 측정되었습니다
+                </Text>
               </View>
-              <Text style={styles.sizeCardNote}>
-                신용카드 기준으로 측정되었습니다
-              </Text>
+            ))
+          ) : (
+            <View style={styles.sizeGrid}>
+              {(['index', 'middle', 'ring', 'little'] as FingerType[])
+                .map(f => measurementResult.measurements.find(m => m.finger === f))
+                .filter(Boolean)
+                .map((m) => (
+                <View key={m!.finger} style={styles.sizeGridCell}>
+                  <Text style={styles.sizeGridCellLabel}>{FINGER_KOREAN[m!.finger]}</Text>
+                  <Text style={styles.sizeGridCellValue}>{m!.widthMm}</Text>
+                </View>
+              ))}
             </View>
-          ))}
+          )}
 
           {/* Debug info (dev only) */}
           {renderDebugInfo()}
@@ -560,7 +571,9 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
             <TouchableOpacity style={styles.closeButton} onPress={onBack}>
               <Icon name="x" size={20} color={NMColors.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>측정 완료</Text>
+            <Text style={styles.headerTitle}>
+              {isThumbOnly ? '측정 완료' : '4손가락 측정 완료'}
+            </Text>
             <View style={styles.headerPlaceholder} />
           </View>
           {renderResultUI()}
@@ -736,10 +749,19 @@ const styles = StyleSheet.create({
     color: NMColors.green,
   },
   imageArea: {
-    width: 280,
-    height: 280,
+    width: 200,
+    height: 200,
     borderRadius: 20,
     backgroundColor: NMColors.border,
+    overflow: 'hidden',
+  },
+  imageAreaFourFinger: {
+    width: '100%' as any,
+    aspectRatio: 1,
+    borderRadius: 16,
+    backgroundColor: NMColors.border,
+    borderWidth: 1,
+    borderColor: NMColors.border,
     overflow: 'hidden',
   },
   previewImage: {
@@ -756,10 +778,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: NMColors.border,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   sizeCardLabel: {
     fontSize: 13,
@@ -772,18 +794,46 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   sizeCardValue: {
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: '700',
     color: NMColors.text,
   },
   sizeCardUnit: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
     color: NMColors.purple,
   },
   sizeCardNote: {
     fontSize: 12,
     color: NMColors.textSecondary,
+  },
+
+  // 4-finger result grid
+  sizeGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+  },
+  sizeGridCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 12,
+    backgroundColor: NMColors.white,
+    borderWidth: 1,
+    borderColor: NMColors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  sizeGridCellLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: NMColors.textSecondary,
+  },
+  sizeGridCellValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: NMColors.purple,
   },
 
   // Bottom buttons

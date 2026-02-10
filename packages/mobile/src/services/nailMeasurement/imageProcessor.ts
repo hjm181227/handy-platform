@@ -110,7 +110,8 @@ function floodFill(
  */
 export function classifyFingersByPosition(
   regions: NailRegion[],
-  isThumbOnly: boolean = false
+  isThumbOnly: boolean = false,
+  selectedHand: 'left' | 'right' = 'right'
 ): Map<FingerType, NailRegion> {
   const result = new Map<FingerType, NailRegion>();
 
@@ -126,7 +127,11 @@ export function classifyFingersByPosition(
     }
   } else {
     // 4손가락 촬영한 경우 (검지, 중지, 약지, 새끼)
-    const fingerOrder: FingerType[] = ['index', 'middle', 'ring', 'little'];
+    // 왼손: 카메라 기준 좌→우 = 소지→약지→중지→검지
+    // 오른손: 카메라 기준 좌→우 = 검지→중지→약지→소지
+    const fingerOrder: FingerType[] = selectedHand === 'left'
+      ? ['little', 'ring', 'middle', 'index']
+      : ['index', 'middle', 'ring', 'little'];
 
     for (let i = 0; i < Math.min(sortedRegions.length, 4); i++) {
       result.set(fingerOrder[i], sortedRegions[i]);
@@ -194,13 +199,14 @@ export function pixelsToMm(
 export function processNailMeasurement(
   mask: number[][],
   cardWidthPixels: number,
-  isThumbOnly: boolean = false
+  isThumbOnly: boolean = false,
+  selectedHand: 'left' | 'right' = 'right'
 ): FingerNailMeasurement[] {
   // 1. 연결된 손톱 영역 찾기
   const regions = findConnectedComponents(mask);
 
   // 2. 손가락별 분류
-  const fingerRegions = classifyFingersByPosition(regions, isThumbOnly);
+  const fingerRegions = classifyFingersByPosition(regions, isThumbOnly, selectedHand);
 
   // 3. 픽셀-mm 비율 계산
   const pixelToMmRatio = calculatePixelToMmRatio(cardWidthPixels);

@@ -32,7 +32,7 @@ import {
 // API 서버 URL 설정
 // 개발 환경에서는 호스트 머신의 IP 사용 (실제 디바이스에서 접근 가능)
 // 에뮬레이터는 10.0.2.2, 실제 디바이스는 호스트 IP 사용
-const DEV_HOST_IP = '172.30.1.80';  // 현재 호스트 IP (ifconfig로 확인)
+const DEV_HOST_IP = '172.30.1.71';  // 현재 호스트 IP (ifconfig로 확인)
 
 const API_SERVER_URL = __DEV__
   ? Platform.select({

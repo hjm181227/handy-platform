@@ -5,6 +5,7 @@ import { getWebURL } from '../config/webUrl';
 import { englishToKoreanFinger } from '@handy-platform/shared/src/utils/fingerMapping';
 import NailSizesScreen from '../screens/NailSizesScreen';
 import NailMeasurement from '../screens/NailMeasurement';
+import CustomToast from '../components/CustomToast';
 
 // Context 타입 정의
 interface NativeScreenContextType {
@@ -37,6 +38,7 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
   const [showMeasurement, setShowMeasurement] = useState(false);
   const [selectedHand, setSelectedHand] = useState<'left' | 'right'>('right');
   const [selectedFinger, setSelectedFinger] = useState<string>('엄지');
+  const [nailSizesRefreshKey, setNailSizesRefreshKey] = useState(0);
 
   // WebView ref 등록
   const registerWebView = (ref: RefObject<WebView>) => {
@@ -158,6 +160,7 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
       >
         <NailSizesScreen
           onClose={closeNailSizes}
+          refreshKey={nailSizesRefreshKey}
           onNavigateToCamera={(hand, finger) => {
             console.log(`🎯 [NativeScreenProvider] onNavigateToCamera called with hand: ${hand}, finger: ${finger}`);
             if (hand && finger) {
@@ -186,9 +189,14 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
             console.log('🔵 [NativeScreenProvider] onNavigateToSizes called');
             closeMeasurement();
             openNailSizes();
+            setNailSizesRefreshKey(prev => prev + 1);
           }}
         />
+        <CustomToast />
       </Modal>
+
+      {/* Provider 레벨 Toast — 메인 화면에서 표시 */}
+      <CustomToast />
     </NativeScreenContext.Provider>
   );
 };
