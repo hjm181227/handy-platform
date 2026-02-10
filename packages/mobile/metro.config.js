@@ -1,6 +1,9 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const path = require('path');
 
+const defaultConfig = getDefaultConfig(__dirname);
+const defaultAssetExts = defaultConfig.resolver.assetExts;
+
 /**
  * Metro configuration for monorepo workspace
  * https://facebook.github.io/metro/docs/configuration
@@ -20,7 +23,9 @@ const config = {
       path.resolve(__dirname, 'node_modules'),
       path.resolve(__dirname, '../../node_modules'),
     ],
+    // TFLite 모델 파일을 asset으로 인식 (기존 확장자 유지)
+    assetExts: [...defaultAssetExts, 'tflite', 'bin'],
   },
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = mergeConfig(defaultConfig, config);

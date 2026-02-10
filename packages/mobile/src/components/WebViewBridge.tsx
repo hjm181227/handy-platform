@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Alert, Platform, PermissionsAndroid, Linking, DeviceEventEmitter } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
 import { mobileApiService } from '../services/apiService';
@@ -18,7 +19,8 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   ref
 ) => {
   const webViewRef = useRef<WebView>(null);
-  
+  const insets = useSafeAreaInsets();
+
   // forwardRef로 전달받은 ref를 내부 ref와 동기화
   React.useImperativeHandle(ref, () => webViewRef.current as WebView);
 
@@ -678,37 +680,19 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       document.body.classList.add('webview-mode');
       console.log('🟢 [INJECT] WebView 모드 활성화: webview-mode 클래스 추가됨');
       
-      // Safe area 설정을 위한 CSS 변수 추가
+      // 네이티브 safe area 값을 CSS 변수로 주입 (Android WebView는 env() 미지원)
       const style = document.createElement('style');
       style.textContent = \`
         :root {
-          --safe-area-inset-top: env(safe-area-inset-top);
-          --safe-area-inset-right: env(safe-area-inset-right);
-          --safe-area-inset-bottom: env(safe-area-inset-bottom);
-          --safe-area-inset-left: env(safe-area-inset-left);
+          --safe-area-inset-top: 0px;
+          --safe-area-inset-bottom: ${insets.bottom}px;
         }
-        
+
         .webview-mode {
-          /* 네이티브 SafeAreaView가 탭바를 이미 처리하므로 iOS safe area만 적용 */
-          padding-bottom: env(safe-area-inset-bottom);
-          /* 상단 상태바/노치를 위한 여백 */
-          padding-top: env(safe-area-inset-top);
-        }
-
-        /* 전체 화면 컨텐츠가 있는 경우 */
-        .webview-mode .fullscreen-content {
-          padding-bottom: env(safe-area-inset-bottom);
-          padding-top: env(safe-area-inset-top);
-        }
-
-        /* 하단 고정 버튼/바가 있는 경우 */
-        .webview-mode .bottom-fixed {
-          bottom: env(safe-area-inset-bottom);
-        }
-        
-        /* 상단 고정 헤더가 있는 경우 */
-        .webview-mode .top-fixed {
-          top: env(safe-area-inset-top);
+          /* 상단은 네이티브 SafeAreaView가 처리 */
+          padding-top: 0;
+          /* 하단은 제스처 바 영역만큼 콘텐츠 여백 확보 */
+          padding-bottom: ${insets.bottom}px;
         }
       \`;
       document.head.appendChild(style);

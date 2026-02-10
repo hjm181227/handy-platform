@@ -1,0 +1,91 @@
+# Nail Segmentation Training Configuration
+# DeepLabV3+ based on ademakdogan/nails_segmentation architecture
+#
+# Encoder options:
+# 1. resnet101 - Original architecture, higher accuracy but heavy (~44M params)
+# 2. mobilenet_v2 - Mobile optimized, faster (~3.5M params)
+# 3. efficientnet-b0 - Balanced accuracy/speed (~5M params)
+
+# Model configuration
+model:
+  architecture: DeepLabV3Plus
+  # Encoder options: resnet101, mobilenet_v2, efficientnet-b0, mobileone_s0
+  encoder: mobilenet_v2  # Recommended for mobile
+  encoder_weights: null  # Set to 'imagenet' if network allows downloading pretrained weights
+  activation: sigmoid  # Binary segmentation
+  num_classes: 1  # Nail vs background
+
+# Input configuration
+input:
+  # Size options: 256 (mobile), 512 (balanced), 800 (original)
+  size: 256  # Recommended for mobile
+  channels: 3  # RGB
+
+# Dataset configuration
+dataset:
+  name: nail_segmentation_v1
+  # Kaggle dataset: https://www.kaggle.com/datasets/vpapenko/nails-segmentation
+  path: ../../datasets/nail_segmentation
+  train_images: images/train
+  train_masks: masks/train
+  val_images: images/val
+  val_masks: masks/val
+  test_images: images/test
+  test_masks: masks/test
+
+# Training configuration
+training:
+  epochs: 5  # Set to 100 for full training with GPU
+  batch_size: 4  # Reduced for CPU training, increase to 16 with GPU
+  optimizer: AdamW
+  learning_rate: 0.0001
+  lr_scheduler: CosineAnnealingWarmRestarts
+  scheduler_params:
+    T_0: 1
+    T_mult: 2
+    eta_min: 0.00005
+  weight_decay: 0.0005
+  early_stopping_patience: 20
+
+# Loss function
+loss:
+  type: DiceLoss  # Good for segmentation
+  # Alternatives: BCEWithLogitsLoss, BCELoss, FocalLoss, TverskyLoss, CombinedDiceBCE
+  # CombinedDiceBCE settings (used when type: CombinedDiceBCE):
+  #   dice_weight: 0.4
+  #   bce_weight: 0.6
+  #   Note: Uses BCELoss (not BCEWithLogitsLoss) for models with activation='sigmoid'
+
+# Metrics
+metrics:
+  - iou
+  - dice
+  - precision
+  - recall
+
+# Augmentation
+augmentation:
+  horizontal_flip: true
+  vertical_flip: false  # Nails have orientation
+  rotate_limit: 15
+  brightness_limit: 0.2
+  contrast_limit: 0.2
+  hue_shift_limit: 0.05
+  saturation_shift_limit: 0.3
+  random_crop: true
+  elastic_transform: false
+
+# Export configuration
+export:
+  formats:
+    - pytorch
+    - onnx
+    - tflite
+  optimize_for_mobile: true
+  quantization: false  # Keep FP32 for accuracy
+  opset_version: 12  # ONNX opset
+
+# MLflow tracking
+mlflow:
+  experiment_name: nail_segmentation_deeplabv3
+  tracking_uri: ./mlruns

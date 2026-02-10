@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "models": {
+    "nail_detector": {
+      "description": "Detects nail regions on fingers placed on credit card for size measurement",
+      "task": "object_detection",
+      "latest": null,
+      "production": null,
+      "staging": null,
+      "versions": {}
+    }
+  },
+  "deployment": {
+    "platforms": {
+      "android": {
+        "format": "tflite",
+        "min_sdk": 24
+      },
+      "ios": {
+        "format": "mlmodel",
+        "min_ios": "14.0"
+      }
+    },
+    "cdn_base_url": "https://cdn.handy-platform.com/models"
+  }
+}

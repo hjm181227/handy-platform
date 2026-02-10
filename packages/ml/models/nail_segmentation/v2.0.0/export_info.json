@@ -1,0 +1,20 @@
+{
+  "source_model": "runs/segmentation/mobilenet_v2_20260129_170450/best_model.pth",
+  "config": "training/configs/nail_segmentation_deeplabv3.yaml",
+  "exported_at": "2026-01-29T17:27:28.572673",
+  "encoder": "mobilenet_v2",
+  "input_size": 256,
+  "quantized": false,
+  "files": {
+    "pytorch": {
+      "filename": "model.pth",
+      "size_bytes": 17796998,
+      "sha256": "56bb0db107cc11f39b6d31e5f00c0af1f190a92bf10028d0195e2e6e90541fa6"
+    },
+    "onnx": {
+      "filename": "model.onnx",
+      "size_bytes": 396206,
+      "sha256": "2ef449711d63fc730b1bfd1512916873ab50d674c2a10e359d0a703765363b7e"
+    }
+  }
+}

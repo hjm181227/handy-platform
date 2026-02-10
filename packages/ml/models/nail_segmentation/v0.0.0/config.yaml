@@ -1,0 +1,30 @@
+# Nail Segmentation Model Configuration
+# ResNet101 + DeepLabV3+ trained on Kaggle
+# v0.0.0: Full Training — CLAHE + Dice+1.5xBCE + 800px
+
+model:
+  architecture: DeepLabV3Plus
+  encoder: resnet101
+  encoder_weights: null  # Custom trained on Kaggle
+  classes: 1
+  activation: null  # Raw logits (sigmoid applied in post-processing)
+
+input:
+  size: 800  # 측정 정밀도 향상 (1px ≈ 0.107mm)
+  channels: 3
+  normalization:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+
+inference:
+  threshold: 0.5  # Update after threshold optimization
+  clahe:
+    enabled: true
+    clip_limit: 4.0
+    tile_grid_size: [8, 8]
+  min_area: 100  # Minimum pixel area for valid nail region
+
+training:
+  dataset: vpapenko/nail-segmentation-dataset
+  platform: kaggle
+  notes: Full training from scratch with CLAHE + Dice+1.5xBCE + 800px
