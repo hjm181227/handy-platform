@@ -2,27 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { cameraService } from '../../services/cameraService';
 import SelectionScreen from './SelectionScreen';
 import CameraScreen from './CameraScreen';
-import MeasurementScreen from './MeasurementScreen';
+import AIMeasurementScreen from './AIMeasurementScreen';
+import { NailMeasurementResult } from '../../services/nailMeasurement/types';
 
-type MeasurementStep = 'selection' | 'camera' | 'measurement';
+type MeasurementStep = 'selection' | 'camera' | 'ai_measurement';
+type FingerSelection = 'thumb' | 'four_fingers';
 
 interface NailMeasurementProps {
   onClose?: () => void;
   onNavigateToSizes?: () => void;
   preselectedHand?: 'left' | 'right';
-  preselectedFinger?: string;
 }
 
 const NailMeasurement: React.FC<NailMeasurementProps> = ({
   onClose,
   onNavigateToSizes,
-  preselectedHand,
-  preselectedFinger
+  preselectedHand
 }) => {
   const [currentStep, setCurrentStep] = useState<MeasurementStep>('selection');
   const [selectedHand, setSelectedHand] = useState<'left' | 'right'>(preselectedHand || 'right');
-  const [selectedFinger, setSelectedFinger] = useState<string>(preselectedFinger || '엄지');
+  const [selectedFingerType, setSelectedFingerType] = useState<FingerSelection>('thumb');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [measurementResult, setMeasurementResult] = useState<NailMeasurementResult | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -43,14 +44,16 @@ const NailMeasurement: React.FC<NailMeasurementProps> = ({
     setCurrentStep('camera');
   };
 
-  const handlePhotoTaken = (imageUri: string) => {
+  const handlePhotoTaken = (imageUri: string, result?: NailMeasurementResult) => {
     setCapturedImage(imageUri);
-    setCurrentStep('measurement');
+    setMeasurementResult(result || null);
+    setCurrentStep('ai_measurement');
   };
 
   const handleBackToSelection = () => {
     setCurrentStep('selection');
     setCapturedImage(null);
+    setMeasurementResult(null);
   };
 
   const handleBackToCamera = () => {
@@ -61,7 +64,14 @@ const NailMeasurement: React.FC<NailMeasurementProps> = ({
     // 측정 완료 후 처음으로 돌아가기
     setCurrentStep('selection');
     setCapturedImage(null);
-    // 선택한 손과 손가락은 유지 (사용자 편의)
+    setMeasurementResult(null);
+  };
+
+  // 다시 촬영
+  const handleRetake = () => {
+    setCapturedImage(null);
+    setMeasurementResult(null);
+    setCurrentStep('camera');
   };
 
   // 권한 확인 중이거나 권한이 없는 경우 selection 화면 표시
@@ -69,15 +79,14 @@ const NailMeasurement: React.FC<NailMeasurementProps> = ({
     return (
       <SelectionScreen
         selectedHand={selectedHand}
-        selectedFinger={selectedFinger}
+        selectedFingerType={selectedFingerType}
         onHandSelect={setSelectedHand}
-        onFingerSelect={setSelectedFinger}
+        onFingerTypeSelect={setSelectedFingerType}
         onStartCamera={() => {
           if (hasPermission === false) {
             // 권한 재요청
             cameraService.requestCameraPermission().then(setHasPermission);
           } else {
-            // 권한이 있으면 카메라로 이동
             handleStartCamera();
           }
         }}
@@ -92,9 +101,9 @@ const NailMeasurement: React.FC<NailMeasurementProps> = ({
       return (
         <SelectionScreen
           selectedHand={selectedHand}
-          selectedFinger={selectedFinger}
+          selectedFingerType={selectedFingerType}
           onHandSelect={setSelectedHand}
-          onFingerSelect={setSelectedFinger}
+          onFingerTypeSelect={setSelectedFingerType}
           onStartCamera={handleStartCamera}
           onClose={onClose || (() => {})}
         />
@@ -104,20 +113,24 @@ const NailMeasurement: React.FC<NailMeasurementProps> = ({
       return (
         <CameraScreen
           selectedHand={selectedHand}
-          selectedFinger={selectedFinger}
+          selectedFinger={selectedFingerType === 'thumb' ? '엄지' : '4손가락'}
+          isThumbOnly={selectedFingerType === 'thumb'}
           onPhotoTaken={handlePhotoTaken}
           onBack={handleBackToSelection}
         />
       );
 
-    case 'measurement':
+    case 'ai_measurement':
       return (
-        <MeasurementScreen
+        <AIMeasurementScreen
           selectedHand={selectedHand}
-          selectedFinger={selectedFinger}
+          selectedFinger={selectedFingerType === 'thumb' ? '엄지' : '검지'}
           imageUri={capturedImage || ''}
+          isThumbOnly={selectedFingerType === 'thumb'}
+          initialMeasurementResult={measurementResult || undefined}
           onComplete={handleMeasurementComplete}
           onBack={handleBackToCamera}
+          onRetake={handleRetake}
           onNavigateToSizes={onNavigateToSizes}
         />
       );

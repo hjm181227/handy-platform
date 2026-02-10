@@ -8,31 +8,33 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { userService } from '../services/apiService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
+import { NMColors } from '../styles/nailMeasurementTheme';
 
 interface NailSizesScreenProps {
   onClose?: () => void;
   onNavigateToCamera?: (hand?: 'left' | 'right', finger?: string) => void;
   onMeasurementUpdate?: () => void;
+  refreshKey?: number;
 }
 
 const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   onClose,
   onNavigateToCamera,
-  onMeasurementUpdate
+  onMeasurementUpdate,
+  refreshKey,
 }) => {
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 화면이 마운트될 때 데이터 로드
   useEffect(() => {
     loadNailSizeData();
-  }, []);
+  }, [refreshKey]);
 
   const loadNailSizeData = async () => {
     try {
@@ -43,7 +45,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
 
       if (response.success) {
         setNailSizeData(response.data || null);
-        // 데이터 로드 완료 시 onMeasurementUpdate 호출 (MyScreen의 최근 측정 결과 업데이트)
         if (onMeasurementUpdate) {
           onMeasurementUpdate();
         }
@@ -58,12 +59,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
     }
   };
 
-  const handleMeasureNail = (hand: 'left' | 'right', finger: string) => {
-    if (onNavigateToCamera) {
-      onNavigateToCamera(hand, finger);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
@@ -74,28 +69,30 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   };
 
-  const renderFingerRow = (hand: 'left' | 'right', finger: string, size: number) => {
-    const fingerKorean = englishToKoreanFinger(finger);
-    const isMeasured = size > 0;
+  const renderFingerGrid = (hand: 'left' | 'right', accentColor: string) => {
+    if (!nailSizeData) return null;
+    const data = hand === 'left' ? nailSizeData.leftHand : nailSizeData.rightHand;
 
     return (
-      <View key={`${hand}-${finger}`} style={styles.fingerRow}>
-        <Text style={styles.fingerName}>{fingerKorean}</Text>
-        <View style={styles.fingerValueContainer}>
-          {isMeasured ? (
-            <Text style={styles.fingerValue}>{size.toFixed(1)}mm</Text>
-          ) : (
-            <>
-              <Text style={styles.fingerValueEmpty}>-</Text>
-              <TouchableOpacity
-                style={styles.measureButton}
-                onPress={() => handleMeasureNail(hand, finger)}
-              >
-                <Text style={styles.measureButtonText}>측정하기</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+      <View style={styles.fingerGrid}>
+        {ALL_FINGERS_ENGLISH.map((finger) => {
+          const size = data[finger];
+          const isMeasured = size > 0;
+          const fingerKorean = englishToKoreanFinger(finger);
+
+          return (
+            <View key={`${hand}-${finger}`} style={styles.fingerCell}>
+              <Text style={styles.fingerCellName}>{fingerKorean}</Text>
+              {isMeasured ? (
+                <Text style={[styles.fingerCellValue, { color: accentColor }]}>
+                  {size.toFixed(1)}
+                </Text>
+              ) : (
+                <Text style={styles.fingerCellEmpty}>-</Text>
+              )}
+            </View>
+          );
+        })}
       </View>
     );
   };
@@ -103,9 +100,9 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+        <StatusBar barStyle="dark-content" backgroundColor={NMColors.white} />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={NMColors.purple} />
           <Text style={styles.loadingText}>불러오는 중...</Text>
         </View>
       </SafeAreaView>
@@ -115,9 +112,9 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+        <StatusBar barStyle="dark-content" backgroundColor={NMColors.white} />
         <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>❌ {error}</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadNailSizeData}>
             <Text style={styles.retryButtonText}>다시 시도</Text>
           </TouchableOpacity>
@@ -128,67 +125,43 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+      <StatusBar barStyle="dark-content" backgroundColor={NMColors.white} />
 
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => {
-            if (onClose) {
-              onClose();
-            }
-          }}
+          onPress={() => onClose?.()}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Icon name="arrow-left" size={20} color={NMColors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>손톱 사이즈</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={loadNailSizeData}>
-          <Text style={styles.refreshButtonText}>🔄</Text>
+          <Text style={styles.refreshButtonText}>새로고침</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* AR 측정하기 버튼 */}
-        <TouchableOpacity
-          style={styles.arMeasureButton}
-          onPress={() => {
-            if (onNavigateToCamera) {
-              onNavigateToCamera();
-            }
-          }}
-        >
-          <View style={styles.arButtonContent}>
-            <Text style={styles.arButtonIcon}>📱</Text>
-            <View style={styles.arButtonTexts}>
-              <Text style={styles.arButtonTitle}>AR 측정하기</Text>
-              <Text style={styles.arButtonSubtitle}>카메라로 정확한 측정</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {/* 측정 일시 */}
         {nailSizeData && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoLabel}>마지막 측정</Text>
-            <Text style={styles.infoValue}>{formatDate(nailSizeData.measuredAt)}</Text>
+          <View style={styles.dateRow}>
+            <Icon name="calendar" size={16} color={NMColors.textSecondary} />
+            <Text style={styles.dateText}>
+              {formatDate(nailSizeData.measuredAt)} 측정
+            </Text>
           </View>
         )}
 
         {/* 데이터가 없을 때 */}
         {!nailSizeData && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📏</Text>
+            <Text style={styles.emptyDash}>--</Text>
             <Text style={styles.emptyText}>아직 측정된 손톱 사이즈가 없습니다</Text>
             <TouchableOpacity
-              style={styles.startMeasureButton}
-              onPress={() => {
-                if (onNavigateToCamera) {
-                  onNavigateToCamera();
-                }
-              }}
+              style={styles.emptyMeasureButton}
+              onPress={() => onNavigateToCamera?.()}
             >
-              <Text style={styles.startMeasureButtonText}>측정 시작하기</Text>
+              <Text style={styles.emptyMeasureButtonText}>측정 시작하기</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -197,14 +170,12 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
         {nailSizeData && (
           <View style={styles.handSection}>
             <View style={styles.handHeader}>
-              <Text style={styles.handIcon}>🤚</Text>
+              <View style={[styles.handBadge, { backgroundColor: NMColors.purple }]}>
+                <Text style={styles.handBadgeText}>L</Text>
+              </View>
               <Text style={styles.handTitle}>왼손</Text>
             </View>
-            <View style={styles.fingersContainer}>
-              {ALL_FINGERS_ENGLISH.map((finger) =>
-                renderFingerRow('left', finger, nailSizeData.leftHand[finger])
-              )}
-            </View>
+            {renderFingerGrid('left', NMColors.purple)}
           </View>
         )}
 
@@ -212,31 +183,32 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
         {nailSizeData && (
           <View style={styles.handSection}>
             <View style={styles.handHeader}>
-              <Text style={styles.handIcon}>✋</Text>
+              <View style={[styles.handBadge, { backgroundColor: NMColors.pink }]}>
+                <Text style={styles.handBadgeText}>R</Text>
+              </View>
               <Text style={styles.handTitle}>오른손</Text>
             </View>
-            <View style={styles.fingersContainer}>
-              {ALL_FINGERS_ENGLISH.map((finger) =>
-                renderFingerRow('right', finger, nailSizeData.rightHand[finger])
-              )}
-            </View>
+            {renderFingerGrid('right', NMColors.pink)}
           </View>
         )}
-      </ScrollView>
 
-      {/* 하단 새 측정 버튼 */}
-      <View style={styles.bottomButton}>
+        {/* AR 측정 카드 */}
         <TouchableOpacity
-          style={styles.newMeasureButton}
-          onPress={() => {
-            if (onNavigateToCamera) {
-              onNavigateToCamera();
-            }
-          }}
+          style={styles.arCard}
+          onPress={() => onNavigateToCamera?.()}
         >
-          <Text style={styles.newMeasureButtonText}>📏 새로 측정하기</Text>
+          <View style={styles.arCardContent}>
+            <View style={styles.arCardIcon}>
+              <Icon name="maximize" size={20} color={NMColors.white} />
+            </View>
+            <View style={styles.arCardTexts}>
+              <Text style={styles.arCardTitle}>다시 측정하기</Text>
+              <Text style={styles.arCardSubtitle}>카메라로 정확한 측정</Text>
+            </View>
+            <Icon name="chevron-right" size={20} color="rgba(255,255,255,0.6)" />
+          </View>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -244,7 +216,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: NMColors.white,
   },
   centerContainer: {
     flex: 1,
@@ -253,226 +225,190 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   loadingText: {
-    color: '#333',
+    color: NMColors.textSecondary,
     fontSize: 16,
     marginTop: 15,
   },
   errorText: {
-    color: '#FF6B6B',
+    color: '#DC3545',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: NMColors.purple,
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 20,
   },
   retryButtonText: {
-    color: '#FFF',
+    color: NMColors.white,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    height: 56,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: NMColors.border,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#333',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   title: {
-    color: '#333',
-    fontSize: 20,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
+    color: NMColors.text,
+    fontSize: 18,
+    fontWeight: '700',
   },
   refreshButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   refreshButtonText: {
-    fontSize: 18,
+    fontSize: 14,
+    fontWeight: '500',
+    color: NMColors.purple,
   },
+  // Content
   content: {
     flex: 1,
-    paddingHorizontal: 20,
   },
-  infoBox: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 20,
-    marginBottom: 10,
+  contentContainer: {
+    padding: 24,
+    gap: 20,
+  },
+  // Date row
+  dateRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  infoLabel: {
-    color: '#999',
-    fontSize: 12,
-    marginBottom: 5,
+  dateText: {
+    fontSize: 13,
+    color: NMColors.textSecondary,
   },
-  infoValue: {
-    color: '#333',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  // Empty
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 80,
+    paddingVertical: 60,
   },
-  emptyIcon: {
-    fontSize: 60,
+  emptyDash: {
+    fontSize: 40,
+    fontWeight: '300',
+    color: NMColors.textTertiary,
     marginBottom: 20,
   },
   emptyText: {
-    color: '#999',
+    color: NMColors.textSecondary,
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 30,
   },
-  startMeasureButton: {
-    backgroundColor: '#007AFF',
+  emptyMeasureButton: {
+    backgroundColor: NMColors.purple,
     paddingVertical: 15,
     paddingHorizontal: 40,
-    borderRadius: 25,
+    borderRadius: 28,
   },
-  startMeasureButtonText: {
-    color: '#FFF',
+  emptyMeasureButtonText: {
+    color: NMColors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
+  // Hand section
   handSection: {
-    marginTop: 20,
-    marginBottom: 10,
+    gap: 12,
   },
   handHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
-  },
-  handIcon: {
-    fontSize: 24,
-    marginRight: 10,
-  },
-  handTitle: {
-    color: '#333',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  fingersContainer: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 10,
-    padding: 15,
-  },
-  fingerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  fingerName: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  fingerValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 10,
   },
-  fingerValue: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-    minWidth: 60,
-    textAlign: 'right',
-  },
-  fingerValueEmpty: {
-    color: '#666',
-    fontSize: 16,
-    minWidth: 60,
-    textAlign: 'right',
-  },
-  measureButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  measureButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  bottomButton: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    paddingTop: 10,
-  },
-  newMeasureButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 25,
+  handBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  newMeasureButtonText: {
-    color: '#FFF',
+  handBadgeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: NMColors.white,
+  },
+  handTitle: {
+    color: NMColors.text,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  arMeasureButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 15,
-    padding: 20,
-    marginTop: 20,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  // 5-column grid
+  fingerGrid: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  arButtonContent: {
+  fingerCell: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: NMColors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    gap: 6,
+  },
+  fingerCellName: {
+    fontSize: 12,
+    color: NMColors.textSecondary,
+  },
+  fingerCellValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  fingerCellEmpty: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: NMColors.textTertiary,
+  },
+  // AR Card
+  arCard: {
+    backgroundColor: NMColors.purple,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  arCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  arButtonIcon: {
-    fontSize: 40,
-    marginRight: 15,
+  arCardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: NMColors.whiteSemiTranslucent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
-  arButtonTexts: {
+  arCardTexts: {
     flex: 1,
   },
-  arButtonTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  arCardTitle: {
+    color: NMColors.white,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
   },
-  arButtonSubtitle: {
-    color: 'rgba(255,255,255,0.8)',
+  arCardSubtitle: {
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
   },
 });

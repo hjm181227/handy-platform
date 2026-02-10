@@ -9,7 +9,7 @@ export const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onClick 
     <button
       onClick={onClick}
       className="md:hidden fixed right-6 z-50 w-14 h-14 bg-[#FF073A] hover:bg-[#E0062F] text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-      style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
+      style={{ bottom: 'calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
       aria-label="채팅 열기"
     >
       <svg

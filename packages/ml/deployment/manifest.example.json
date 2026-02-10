@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2024-01-01T00:00:00Z",
+  "models": {
+    "nail_detector": {
+      "latest": "1.0.0",
+      "minimum_app_version": "1.0.0",
+      "files": {
+        "android": {
+          "url": "https://cdn.handy-platform.com/models/nail_detector/v1.0.0/model.tflite",
+          "size": 4200000,
+          "checksum": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "format": "tflite"
+        },
+        "ios": {
+          "url": "https://cdn.handy-platform.com/models/nail_detector/v1.0.0/model.mlpackage.zip",
+          "size": 4500000,
+          "checksum": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "format": "mlpackage"
+        }
+      },
+      "release_notes": "Initial release of nail detector model",
+      "deprecated_versions": []
+    }
+  }
+}
