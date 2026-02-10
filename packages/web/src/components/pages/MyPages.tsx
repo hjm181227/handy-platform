@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { purchaseApiService } from '../../services/purchaseApiService';
-import { reviewService } from '../../services/apiService';
+import { reviewService, webApiService } from '../../services/apiService';
 import type { CustomerOrder, DetailedReview } from '@handy-platform/shared';
+import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
+import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import { PageHeader } from '../layout/PageHeader';
 import { ReviewWriteModal, OrderItemForReview } from '../review/ReviewWriteModal';
+import { Ruler, RefreshCw, Camera } from 'lucide-react';
 
 // 공통 컴포넌트들
 
@@ -1132,6 +1135,202 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// 손톱 사이즈 페이지
+export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
+  const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadNailSizeData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await webApiService.user.getNailSize();
+      if (response.success) {
+        setNailSizeData(response.data || null);
+      } else {
+        throw new Error(response.error || '데이터를 불러오는데 실패했습니다.');
+      }
+    } catch (err: any) {
+      console.error('손톱 사이즈 조회 실패:', err);
+      setError(err.message || '데이터를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNailSizeData();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  };
+
+  const isWebViewEnvironment = () => !!(window as any).ReactNativeWebView;
+
+  const goToMeasurement = () => {
+    if (isWebViewEnvironment()) {
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'NAVIGATE_TO_MEASUREMENT',
+        data: { screen: 'Measurement' }
+      }));
+    } else {
+      alert('손톱 측정은 모바일 앱에서만 가능합니다.\nHANDY 앱을 다운로드해주세요.');
+    }
+  };
+
+  const renderFingerGrid = (hand: 'left' | 'right', accentColor: string) => {
+    if (!nailSizeData) return null;
+    const data = hand === 'left' ? nailSizeData.leftHand : nailSizeData.rightHand;
+
+    return (
+      <div className="flex gap-2">
+        {ALL_FINGERS_ENGLISH.map((finger) => {
+          const size = data[finger];
+          const isMeasured = size > 0;
+          return (
+            <div
+              key={`${hand}-${finger}`}
+              className="flex-1 rounded-xl border border-[#E5E0DC] py-3 px-2 text-center"
+            >
+              <div className="text-xs text-[#71717A] mb-1.5">{englishToKoreanFinger(finger)}</div>
+              {isMeasured ? (
+                <div className="text-lg font-bold" style={{ color: accentColor }}>
+                  {size.toFixed(1)}
+                </div>
+              ) : (
+                <div className="text-lg font-medium text-[#D0C9C3]">-</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const pageHeader = (
+    <PageHeader
+      title="손톱 사이즈"
+      onBack={() => onGo('/my')}
+      rightActions={[
+        {
+          icon: <RefreshCw className="w-5 h-5" />,
+          onClick: loadNailSizeData,
+          ariaLabel: '새로고침'
+        }
+      ]}
+    />
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        {pageHeader}
+        <div className="flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF4D6D] mx-auto mb-2"></div>
+            <p className="text-[#71717A]">불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white">
+        {pageHeader}
+        <div className="flex justify-center items-center min-h-64">
+          <div className="text-center space-y-4">
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={loadNailSizeData}
+              className="bg-[#FF4D6D] text-white px-6 py-2.5 rounded-full hover:bg-[#E8435F] transition-colors"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      {pageHeader}
+
+      <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
+        {/* 측정 일시 */}
+        {nailSizeData && (
+          <div className="flex items-center justify-center gap-2 text-[13px] text-[#71717A]">
+            <Ruler className="w-4 h-4" />
+            <span>{formatDate(nailSizeData.measuredAt)} 측정</span>
+          </div>
+        )}
+
+        {/* 데이터 없음 */}
+        {!nailSizeData && (
+          <div className="text-center py-16">
+            <div className="text-5xl font-light text-[#D0C9C3] mb-5">--</div>
+            <p className="text-[#71717A] mb-6">아직 측정된 손톱 사이즈가 없습니다</p>
+            <button
+              onClick={goToMeasurement}
+              className="bg-[#FF4D6D] text-white px-8 py-3.5 rounded-full text-base font-semibold hover:bg-[#E8435F] transition-colors"
+            >
+              측정 시작하기
+            </button>
+          </div>
+        )}
+
+        {/* 왼손 */}
+        {nailSizeData && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-[#FF4D6D] flex items-center justify-center text-sm font-bold text-white">
+                L
+              </div>
+              <span className="text-base font-bold text-[#131211]">왼손</span>
+            </div>
+            {renderFingerGrid('left', '#FF4D6D')}
+          </div>
+        )}
+
+        {/* 오른손 */}
+        {nailSizeData && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-[#991B1B] flex items-center justify-center text-sm font-bold text-white">
+                R
+              </div>
+              <span className="text-base font-bold text-[#131211]">오른손</span>
+            </div>
+            {renderFingerGrid('right', '#991B1B')}
+          </div>
+        )}
+
+        {/* 다시 측정하기 카드 */}
+        <button
+          onClick={goToMeasurement}
+          className="flex items-center gap-3.5 w-full rounded-2xl bg-[#FFE5EA] border-[1.5px] border-[#FF4D6D] px-5 py-4 text-left hover:bg-[#FFD6DD] transition-colors"
+        >
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#FF4D6D]">
+            <Camera className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="text-base font-bold text-[#131211]">다시 측정하기</div>
+            <div className="text-sm text-[#991B1B]">카메라로 정확한 측정</div>
+          </div>
+          <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#FF4D6D]">
+            <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
   );

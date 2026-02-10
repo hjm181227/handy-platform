@@ -44,7 +44,8 @@ import {
   ReviewsPage,
   CouponsPage,
   PointsPage,
-  PaymentsPage
+  PaymentsPage,
+  NailSizesPage
 } from './components/pages/MyPages';
 
 // Support Components
@@ -559,6 +560,13 @@ export function Router() {
     screen = (
       <RequireAuth>
         <PaymentsPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/my/nail-sizes') {
+    screen = (
+      <RequireAuth>
+        <NailSizesPage onGo={nav} />
       </RequireAuth>
     );
   }
