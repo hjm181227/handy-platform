@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Receipt, Clock, Store } from 'lucide-react';
 import { QuoteMessageData } from '../../lib/chat/types';
+import { orderService } from '../../services/apiService';
 
 interface QuoteMessageCardProps {
   quoteId: string;
@@ -15,9 +16,6 @@ const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor:
   rejected: { label: '거절됨', bgColor: 'bg-red-100', textColor: 'text-red-700' },
   expired: { label: '만료됨', bgColor: 'bg-gray-100', textColor: 'text-gray-500' }
 };
-
-// API Base URL
-const API_BASE_URL = (window as any).__VITE_API_BASE_URL__ || '';
 
 export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardProps) {
   const [data, setData] = useState<QuoteMessageData | null>(null);
@@ -35,15 +33,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
     setLoading(true);
     setError(false);
 
-    const token = localStorage.getItem('accessToken');
-
-    fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => res.json())
+    orderService.getQuoteDetail(quoteId)
       .then(res => {
         if (res.success && res.data) {
           // 백엔드 응답 구조: { quoteUuid, seller, quote, customRequest }

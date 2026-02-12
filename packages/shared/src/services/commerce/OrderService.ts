@@ -315,6 +315,13 @@ export abstract class BaseOrderService extends BaseApiService {
     );
   }
 
+  // 견적서 상세 조회
+  async getQuoteDetail(quoteUuid: string): Promise<ApiResponse<any>> {
+    return this.request<ApiResponse<any>>(
+      API_ENDPOINTS.QUOTES.DETAIL(quoteUuid)
+    );
+  }
+
   // 결제 스킵 (스테이징 환경 테스트 전용)
   async skipPayment(orderUuid: string): Promise<ApiResponse<{
     message: string;

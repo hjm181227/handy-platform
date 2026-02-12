@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Receipt, X, Clock, Calendar, TriangleAlert } from 'lucide-react';
+import { orderService } from '../../services/apiService';
 
 interface QuoteDetail {
   quoteUuid: string;
@@ -52,9 +53,6 @@ const LENGTH_LABELS: Record<string, string> = {
   LONG: '롱'
 };
 
-// API Base URL
-const API_BASE_URL = (window as any).__VITE_API_BASE_URL__ || '';
-
 export function QuoteBottomSheet({
   isOpen,
   onClose,
@@ -87,15 +85,7 @@ export function QuoteBottomSheet({
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('accessToken');
-
-      fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(res => res.json())
+      orderService.getQuoteDetail(quoteId)
         .then(res => {
           if (res.success && res.data) {
             // 백엔드 응답 구조: { quoteUuid, customRequest, seller, quote }
