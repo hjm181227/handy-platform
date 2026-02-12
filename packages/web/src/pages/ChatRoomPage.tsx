@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, Plus, Send, EllipsisVertical, Store, X } from 'lucide-react';
 import { useChat } from '../lib/chat';
 import { useAuth } from '../hooks/useAuth';
 import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCard';
@@ -249,66 +250,53 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   return (
     <div className="h-screen flex flex-col bg-[#F7F5F3]">
       {/* Header */}
-      <div className="bg-white border-b border-[#E5E0DC] flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+      <div className="bg-white flex-shrink-0">
+        <div className="h-16 flex items-center gap-3 px-4">
           <button
             onClick={() => nav('/chat')}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="flex-shrink-0"
             aria-label="뒤로가기"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
+            <ChevronLeft className="w-6 h-6 text-[#131211]" />
           </button>
 
-          {/* Profile */}
-          <div className="flex items-center gap-3 flex-1">
-            {partnerAvatar ? (
-              <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center text-[#8B7355] font-bold">
-                {roomName.charAt(0)}
-              </div>
-            )}
-            <div className="flex-1">
-              <h1 className="text-lg font-bold">{roomName}</h1>
-              {/* 연결 상태 표시 */}
-              <div className="flex items-center gap-2 text-xs">
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                <span className="text-[#A39E99]">
-                  {isConnected ? '연결됨' : '오프라인 (더미 데이터)'}
-                </span>
-              </div>
+          {/* Avatar */}
+          {partnerAvatar ? (
+            <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
+              <Store className="w-5 h-5 text-[#A39E99]" />
+            </div>
+          )}
+
+          {/* Name + Connection */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-[#131211] truncate">{roomName}</h1>
+            <div className="flex items-center gap-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-[#22C55E]' : 'bg-gray-400'}`}></span>
+              <span className={`text-[11px] font-medium ${isConnected ? 'text-[#22C55E]' : 'text-[#A39E99]'}`}>
+                {isConnected ? '연결됨' : '오프라인'}
+              </span>
             </div>
           </div>
+
+          {/* More */}
+          <button className="flex-shrink-0">
+            <EllipsisVertical className="w-6 h-6 text-[#131211]" />
+          </button>
         </div>
+        <div className="h-px bg-[#E5E0DC]" />
       </div>
 
       {/* Error Banner */}
       {error && (
         <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm text-red-700">{error}</span>
-          </div>
+          <span className="text-sm text-red-700 flex-1">{error}</span>
           <button
             onClick={clearError}
-            className="text-red-500 hover:text-red-700 text-sm font-medium"
+            className="ml-2 flex-shrink-0"
           >
-            닫기
+            <X className="w-4 h-4 text-red-500" />
           </button>
         </div>
       )}
@@ -339,7 +327,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                   {/* 날짜 구분선 */}
                   {showDateSeparator && (
                     <div className="flex justify-center my-4">
-                      <span className="text-xs text-[#A39E99]">
+                      <span className="px-3 py-1 bg-white rounded-xl text-xs font-medium text-[#A39E99]">
                         {formatDateSeparator(message.createdAt)}
                       </span>
                     </div>
@@ -358,8 +346,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         partnerAvatar ? (
                           <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center text-[#8B7355] font-bold text-sm">
-                            {roomName.charAt(0)}
+                          <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center">
+                            <Store className="w-5 h-5 text-[#A39E99]" />
                           </div>
                         )
                       ) : (
@@ -475,11 +463,9 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
               />
               <button
                 onClick={handleImageCancel}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs hover:bg-gray-900 transition-colors"
+                className="absolute -top-2 -right-2 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -496,12 +482,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="w-10 h-10 flex items-center justify-center bg-[#F7F5F3] text-[#A39E99] hover:bg-[#EDE9E5] rounded-full transition-colors disabled:opacity-50"
+              className="w-9 h-9 flex items-center justify-center bg-[#F7F5F3] hover:bg-[#EDE9E5] rounded-full transition-colors disabled:opacity-50 flex-shrink-0"
               aria-label="이미지 첨부"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
-              </svg>
+              <Plus className="w-5 h-5 text-[#A39E99]" />
             </button>
 
             <textarea
@@ -527,9 +511,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
               {isUploading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
+                <Send className="w-[18px] h-[18px]" />
               )}
             </button>
           </div>

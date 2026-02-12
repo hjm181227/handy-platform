@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, X, FileText, MessageSquare } from 'lucide-react';
 import { CustomOrderMessageData } from '../../lib/chat/types';
 import { orderService } from '../../services/apiService';
 import { QuoteFormModal } from './QuoteFormModal';
@@ -148,118 +148,120 @@ export function CustomOrderBottomSheet({
       >
         {/* 드래그 핸들 */}
         <div className="flex-shrink-0 flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          <div className="w-10 h-1 bg-[#D0C9C3] rounded-full" />
         </div>
 
         {/* 헤더 */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#E85A6B]" />
-            <h2 className="text-lg font-bold text-gray-900">커스텀 주문서</h2>
+        <div className="flex-shrink-0 flex items-center gap-3 px-5 pb-4">
+          <ClipboardList className="w-6 h-6 text-[#E85A6B] flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-[#131211]">커스텀 주문서 상세</h2>
             {data && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                {statusConfig.label}
-              </span>
+              <p className="text-xs text-[#A39E99]">
+                {data.brandName ? `${data.brandName}` : ''}
+                {data.status && ` · ${statusConfig.label}`}
+              </p>
             )}
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="w-6 h-6 flex items-center justify-center flex-shrink-0"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-6 h-6 text-[#A39E99]" />
           </button>
         </div>
+        <div className="h-px bg-[#F5F3F1]" />
 
         {/* 본문 - 스크롤 가능 */}
         <div className="flex-1 overflow-y-auto min-h-0 p-6">
           {/* 로딩 상태 */}
           {loading && (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-gray-500">주문서 정보를 불러오는 중...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+              <p className="text-[#A39E99]">주문서 정보를 불러오는 중...</p>
             </div>
           )}
 
           {/* 에러 상태 */}
           {error && !loading && (
             <div className="text-center py-12">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="w-12 h-12 bg-[#FEF3C7] rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-6 h-6 text-[#D97706]" />
               </div>
-              <p className="text-gray-500">{error}</p>
+              <p className="text-[#A39E99]">{error}</p>
             </div>
           )}
 
           {/* 데이터 표시 */}
           {data && !loading && !error ? (
             <div className="space-y-6">
-              {/* 제목 */}
-              <div className="pb-4 border-b border-gray-100">
-                <p className="text-lg font-semibold text-gray-900">{data.title}</p>
-                {data.brandName && (
-                  <p className="text-sm text-gray-500 mt-1">{data.brandName}</p>
-                )}
-              </div>
-
-              {/* 기본 정보 - 쉐입/길이 */}
+              {/* 주문 정보 */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                  기본 정보
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">쉐입</p>
-                    <p className="font-medium text-gray-900">{shapeLabel}</p>
+                <h3 className="text-[15px] font-bold text-[#131211] mb-3">주문 정보</h3>
+                <div className="space-y-3">
+                  <div className="flex">
+                    <span className="text-sm text-[#A39E99] w-20">모양</span>
+                    <span className="text-sm font-medium text-[#131211]">{shapeLabel}</span>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">길이</p>
-                    <p className="font-medium text-gray-900">{lengthLabel}</p>
+                  <div className="flex">
+                    <span className="text-sm text-[#A39E99] w-20">길이</span>
+                    <span className="text-sm font-medium text-[#131211]">{lengthLabel}</span>
                   </div>
+                  {data.title && (
+                    <div className="flex">
+                      <span className="text-sm text-[#A39E99] w-20">스타일</span>
+                      <span className="text-sm font-medium text-[#131211]">{data.title}</span>
+                    </div>
+                  )}
+                  {data.desiredColor && (
+                    <div className="flex">
+                      <span className="text-sm text-[#A39E99] w-20">컬러</span>
+                      <span className="text-sm font-medium text-[#131211]">{data.desiredColor}</span>
+                    </div>
+                  )}
+                  {data.desiredDate && (
+                    <div className="flex">
+                      <span className="text-sm text-[#A39E99] w-20">희망일</span>
+                      <span className="text-sm font-medium text-[#131211]">
+                        {new Date(data.desiredDate).toLocaleDateString('ko-KR')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
+              <div className="h-px bg-[#F5F3F1]" />
 
               {/* 양손 사이즈 */}
+              {/* 사이즈 정보 */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                  사이즈 정보
-                </h3>
-                <div className="bg-gray-50 rounded-lg overflow-hidden">
+                <h3 className="text-[15px] font-bold text-[#131211] mb-3">사이즈 정보</h3>
+                <div className="bg-[#F7F5F3] rounded-[10px] overflow-hidden">
                   {data.sizes.left ? (
                     <table className="w-full">
                       <thead>
-                        <tr className="bg-gray-100">
-                          <th className="px-2 py-2 text-xs font-medium text-gray-500 text-center w-12"></th>
+                        <tr className="bg-[#EEEBE8]">
+                          <th className="px-2 py-2 text-xs font-medium text-[#A39E99] text-center w-10"></th>
                           {Object.keys(data.sizes.left).map((finger) => (
-                            <th key={finger} className="px-2 py-2 text-xs font-medium text-gray-600 text-center">
+                            <th key={finger} className="px-2 py-2 text-xs font-medium text-[#A39E99] text-center">
                               {FINGER_LABELS[finger] || finger}
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-b border-gray-200">
-                          <td className="px-2 py-2.5 text-xs font-medium text-gray-500 text-center">왼손</td>
+                        <tr className="border-b border-[#EEEBE8]">
+                          <td className="px-2 py-2.5 text-xs font-medium text-[#A39E99] text-center">왼손</td>
                           {Object.values(data.sizes.left).map((size, idx) => (
-                            <td key={idx} className="px-2 py-2.5 text-center">
-                              <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
-                                {size}
-                              </span>
+                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-[#131211]">
+                              {size}
                             </td>
                           ))}
                         </tr>
                         <tr>
-                          <td className="px-2 py-2.5 text-xs font-medium text-gray-500 text-center">오른손</td>
+                          <td className="px-2 py-2.5 text-xs font-medium text-[#A39E99] text-center">오른손</td>
                           {Object.values(data.sizes.right).map((size, idx) => (
-                            <td key={idx} className="px-2 py-2.5 text-center">
-                              <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
-                                {size}
-                              </span>
+                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-[#131211]">
+                              {size}
                             </td>
                           ))}
                         </tr>
@@ -268,9 +270,9 @@ export function CustomOrderBottomSheet({
                   ) : (
                     <table className="w-full">
                       <thead>
-                        <tr className="bg-gray-100">
+                        <tr className="bg-[#EEEBE8]">
                           {Object.keys(data.sizes).map((finger) => (
-                            <th key={finger} className="px-2 py-2 text-xs font-medium text-gray-600 text-center">
+                            <th key={finger} className="px-2 py-2 text-xs font-medium text-[#A39E99] text-center">
                               {FINGER_LABELS[finger] || finger}
                             </th>
                           ))}
@@ -279,10 +281,8 @@ export function CustomOrderBottomSheet({
                       <tbody>
                         <tr>
                           {Object.values(data.sizes).map((size, idx) => (
-                            <td key={idx} className="px-2 py-2.5 text-center">
-                              <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
-                                {size as string}
-                              </span>
+                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-[#131211]">
+                              {String(size)}
                             </td>
                           ))}
                         </tr>
@@ -291,62 +291,40 @@ export function CustomOrderBottomSheet({
                   )}
                 </div>
               </div>
-
-              {/* 추가 요청 */}
-              {(data.desiredColor || data.desiredDate || data.designNotes) && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                    추가 요청
-                  </h3>
-                  <div className="space-y-3">
-                    {data.desiredColor && (
-                      <div className="flex items-start gap-3">
-                        <span className="text-sm text-gray-500 min-w-[80px]">원하는 색상</span>
-                        <span className="text-sm font-medium text-gray-900">{data.desiredColor}</span>
-                      </div>
-                    )}
-                    {data.desiredDate && (
-                      <div className="flex items-start gap-3">
-                        <span className="text-sm text-gray-500 min-w-[80px]">수령 희망일</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {new Date(data.desiredDate).toLocaleDateString('ko-KR')}
-                        </span>
-                      </div>
-                    )}
-                    {data.designNotes && (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-2">요청사항</p>
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                          <p className="text-sm text-gray-800 whitespace-pre-wrap">{data.designNotes}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <div className="h-px bg-[#F5F3F1]" />
 
               {/* 참고 이미지 */}
               {data.referenceImages && data.referenceImages.length > 0 && (
+                <>
+                  <div>
+                    <h3 className="text-[15px] font-bold text-[#131211] mb-3">참고 이미지</h3>
+                    <div className="flex gap-2.5">
+                      {data.referenceImages.map((url, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedImage(url)}
+                          className="w-[100px] h-[100px] rounded-xl overflow-hidden bg-[#F5F3F1] hover:opacity-90 transition-opacity flex-shrink-0"
+                        >
+                          <img
+                            src={url}
+                            alt={`참고 이미지 ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="h-px bg-[#F5F3F1]" />
+                </>
+              )}
+
+              {/* 요청사항 */}
+              {data.designNotes && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                    참고 이미지 ({data.referenceImages.length}장)
-                  </h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {data.referenceImages.map((url, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedImage(url)}
-                        className="aspect-square rounded-lg overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity"
-                      >
-                        <img
-                          src={url}
-                          alt={`참고 이미지 ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
+                  <h3 className="text-[15px] font-bold text-[#131211] mb-2.5">요청사항</h3>
+                  <div className="bg-[#FEF9E7] rounded-[10px] p-3.5 flex gap-2">
+                    <MessageSquare className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" />
+                    <p className="text-[13px] text-[#92400E] whitespace-pre-wrap">{data.designNotes}</p>
                   </div>
                 </div>
               )}
@@ -360,28 +338,21 @@ export function CustomOrderBottomSheet({
 
         {/* 푸터 */}
         <div
-          className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200 bg-gray-50"
-          style={{ paddingBottom: 'calc(1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
+          className="flex-shrink-0 px-5 pt-4 pb-8"
+          style={{ paddingBottom: 'calc(2rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
         >
           {isSeller && data && data.status === 'pending' && currentUserUuid && data.sellerUuid === currentUserUuid ? (
-            <div className="flex gap-3">
-              <button
-                onClick={handleClose}
-                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
-              >
-                닫기
-              </button>
-              <button
-                onClick={() => setShowQuoteModal(true)}
-                className="flex-1 py-3 bg-[#E85A6B] text-white rounded-xl hover:bg-[#D14A5B] transition-colors font-medium"
-              >
-                견적서 작성하기
-              </button>
-            </div>
+            <button
+              onClick={() => setShowQuoteModal(true)}
+              className="w-full h-14 bg-[#131211] text-white rounded-2xl hover:bg-[#2a2928] transition-colors font-semibold text-base flex items-center justify-center gap-2"
+            >
+              <FileText className="w-5 h-5" />
+              견적서 작성하기
+            </button>
           ) : (
             <button
               onClick={handleClose}
-              className="w-full py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-900 transition-colors font-medium"
+              className="w-full h-14 bg-[#131211] text-white rounded-2xl hover:bg-[#2a2928] transition-colors font-semibold text-base"
             >
               닫기
             </button>
@@ -399,9 +370,7 @@ export function CustomOrderBottomSheet({
             className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
             onClick={() => setSelectedImage(null)}
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-6 h-6 text-white" />
           </button>
           <img
             src={selectedImage}

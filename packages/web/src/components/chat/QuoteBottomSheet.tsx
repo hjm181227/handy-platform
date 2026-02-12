@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Receipt } from 'lucide-react';
+import { Receipt, X, Clock, Calendar, TriangleAlert } from 'lucide-react';
 
 interface QuoteDetail {
   quoteUuid: string;
@@ -195,11 +195,9 @@ export function QuoteBottomSheet({
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="w-6 h-6 flex items-center justify-center flex-shrink-0"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-6 h-6 text-[#A39E99]" />
           </button>
         </div>
 
@@ -216,12 +214,10 @@ export function QuoteBottomSheet({
           {/* 에러 상태 */}
           {error && !loading && (
             <div className="text-center py-12">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="w-12 h-12 bg-[#FEF3C7] rounded-full flex items-center justify-center mx-auto mb-4">
+                <TriangleAlert className="w-6 h-6 text-[#D97706]" />
               </div>
-              <p className="text-gray-500">{error}</p>
+              <p className="text-[#A39E99]">{error}</p>
             </div>
           )}
 
@@ -239,23 +235,19 @@ export function QuoteBottomSheet({
 
               {/* 제작 정보 */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="bg-[#F7F5F3] rounded-lg p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-sm text-gray-500">예상 제작일</span>
+                    <Clock className="w-5 h-5 text-[#A39E99]" />
+                    <span className="text-sm text-[#A39E99]">예상 제작일</span>
                   </div>
-                  <p className="text-xl font-bold text-gray-900">{data.processingDays}일</p>
+                  <p className="text-xl font-bold text-[#131211]">{data.processingDays}일</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="bg-[#F7F5F3] rounded-lg p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm text-gray-500">견적일</span>
+                    <Calendar className="w-5 h-5 text-[#A39E99]" />
+                    <span className="text-sm text-[#A39E99]">견적일</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-900">{formatDate(data.createdAt)}</p>
+                  <p className="text-sm font-medium text-[#131211]">{formatDate(data.createdAt)}</p>
                 </div>
               </div>
 
