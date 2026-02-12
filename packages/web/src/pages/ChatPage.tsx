@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { config } from '../config/environment';
 import { useAuthModal } from '../contexts/AuthModalContext';
+import { MessageCircleMore, TriangleAlert } from 'lucide-react';
 
 const CHAT_API_URL = config.chatApiUrl;
 
@@ -197,9 +198,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
         <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
           <div className="flex flex-col items-center gap-4">
             <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-              <svg className="w-9 h-9 text-[#A39E99]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-              </svg>
+              <MessageCircleMore className="w-9 h-9 text-[#A39E99]" />
             </div>
             <h2 className="text-xl font-bold text-[#131211] text-center">
               로그인이 필요합니다
@@ -272,9 +271,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
         <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
           <div className="flex flex-col items-center gap-4">
             <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-              <svg className="w-9 h-9 text-[#E85A6B]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-              </svg>
+              <TriangleAlert className="w-9 h-9 text-[#E85A6B]" />
             </div>
             <h2 className="text-xl font-bold text-[#131211] text-center">
               오류가 발생했습니다
@@ -347,9 +344,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
         <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
           <div className="flex flex-col items-center gap-4">
             <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-              <svg className="w-9 h-9 text-[#A39E99]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-              </svg>
+              <MessageCircleMore className="w-9 h-9 text-[#A39E99]" />
             </div>
             <h2 className="text-xl font-bold text-[#131211] text-center">
               아직 대화가 없습니다
@@ -361,15 +356,6 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
         </div>
       )}
 
-      {/* FAB - New Chat Button */}
-      <button
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[#E85A6B] rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(232,90,107,0.25)] hover:bg-[#D44D5E] transition-colors z-20"
-        aria-label="새 채팅"
-      >
-        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-        </svg>
-      </button>
     </div>
   );
 };
