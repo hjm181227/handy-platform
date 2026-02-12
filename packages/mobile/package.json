@@ -16,8 +16,8 @@
     "start:stage": "cross-env REACT_NATIVE_ENV=stage react-native start",
     "start:prod": "cross-env REACT_NATIVE_ENV=production react-native start",
     "clean": "react-native clean",
-    "build:android": "cd android && ./gradlew assembleRelease",
-    "build:android:bundle": "cd android && ./gradlew bundleRelease"
+    "build:android": "cross-env REACT_NATIVE_ENV=production cd android && ./gradlew assembleRelease",
+    "build:android:bundle": "cross-env REACT_NATIVE_ENV=production cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
     "@babel/runtime": "^7.20.0",

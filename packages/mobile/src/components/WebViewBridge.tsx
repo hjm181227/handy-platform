@@ -6,6 +6,8 @@ import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
 import { mobileApiService } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from '@handy-platform/shared/src/config/api';
+import { getAppEnvironment } from '../config/environment';
 
 interface WebViewBridgeProps {
   url: string;
@@ -443,8 +445,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'connect':
           // 토큰 가져오기
           const token = await AsyncStorage.getItem('@handy_platform:accessToken');
+          const chatEnv = getAppEnvironment();
           await chatService.connect({
-            serverUrl: 'http://16.176.147.141',
+            serverUrl: API_CONFIG[chatEnv]?.chatURL || API_CONFIG.stage.chatURL,
             token: token || undefined,
           });
           result = { connected: true };
