@@ -25,6 +25,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
   // 표시될 이름 상태 (브랜드명 또는 username)
   const [displayName, setDisplayName] = useState<string>(partnerUsernameFromUrl || roomId);
+  // 아바타 이미지 상태
+  const [partnerAvatar, setPartnerAvatar] = useState<string | null>(null);
 
   // useAuth 훅으로 현재 사용자 정보 가져오기
   const { currentUser } = useAuth();
@@ -44,6 +46,9 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         if (response.ok) {
           const brandData = await response.json();
           setDisplayName(brandData.brandName || roomId);
+          if (brandData.brandProfile) {
+            setPartnerAvatar(brandData.brandProfile);
+          }
         }
         // 404 등의 경우 roomId 유지 (구매자)
       } catch {
@@ -269,9 +274,13 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
           {/* Profile */}
           <div className="flex items-center gap-3 flex-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
-              {roomName.charAt(0)}
-            </div>
+            {partnerAvatar ? (
+              <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center text-[#8B7355] font-bold">
+                {roomName.charAt(0)}
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="text-lg font-bold">{roomName}</h1>
               {/* 연결 상태 표시 */}
@@ -346,9 +355,13 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                   {!isMe && (
                     <div className="flex-shrink-0">
                       {isGroupStart ? (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
-                          {roomName.charAt(0)}
-                        </div>
+                        partnerAvatar ? (
+                          <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center text-[#8B7355] font-bold text-sm">
+                            {roomName.charAt(0)}
+                          </div>
+                        )
                       ) : (
                         <div className="w-10" />
                       )}
@@ -523,6 +536,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         onClose={() => setShowOrderSheet(false)}
         customOrderId={selectedCustomOrderId}
         isSeller={isSeller}
+        currentUserUuid={currentUser?.userUuid}
         buyerUuid={roomId}
         onQuoteSent={() => {
           // 견적서 전송 후 바텀시트 닫기

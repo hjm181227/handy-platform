@@ -32,6 +32,7 @@ export interface CustomOrderMessageData {
   desiredDate?: string;
   designNotes?: string;
   referenceImages?: string[];
+  sellerUuid?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   brandName?: string;
 }

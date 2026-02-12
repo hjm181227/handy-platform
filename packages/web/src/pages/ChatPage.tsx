@@ -21,7 +21,7 @@ interface ChatPageProps {
 
 interface ChatRoomResponse {
   roomId: string;
-  partner: { id: string; username: string; displayName?: string };
+  partner: { id: string; username: string; displayName?: string; avatar?: string };
   lastMessage?: {
     text: string;
     messageType: string;
@@ -133,6 +133,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                   partner: {
                     ...room.partner,
                     displayName: brandData.brandName || room.partner.username,
+                    avatar: brandData.brandProfile || room.partner.avatar,
                   },
                 };
               }
@@ -302,9 +303,13 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
               <div className="px-4 py-4 flex items-center gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold text-lg">
-                    {(room.partner.displayName || room.partner.username)?.charAt(0)?.toUpperCase() || '?'}
-                  </div>
+                  {room.partner.avatar ? (
+                    <img src={room.partner.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[#F2EAE3] flex items-center justify-center text-[#8B7355] font-bold text-lg">
+                      {(room.partner.displayName || room.partner.username)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -325,7 +330,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 {/* Unread Badge */}
                 {room.unreadCount > 0 && (
                   <div className="flex-shrink-0">
-                    <div className="w-6 h-6 rounded-full bg-[#FF073A] flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-[#E85A6B] flex items-center justify-center">
                       <span className="text-xs text-white font-bold">
                         {room.unreadCount > 99 ? '99+' : room.unreadCount}
                       </span>

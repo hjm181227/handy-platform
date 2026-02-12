@@ -9,6 +9,7 @@ interface CustomOrderBottomSheetProps {
   customOrderId?: string | null;  // API에서 조회할 주문서 ID
   data?: CustomOrderMessageData | null;  // 직접 전달된 데이터 (폴백용)
   isSeller?: boolean;  // 현재 사용자가 판매자인지 여부
+  currentUserUuid?: string;  // 현재 사용자 UUID (견적서 권한 확인용)
   buyerUuid?: string;  // 구매자 UUID (견적서 전송용)
   onQuoteSent?: () => void;  // 견적서 전송 완료 콜백
 }
@@ -53,6 +54,7 @@ export function CustomOrderBottomSheet({
   customOrderId,
   data: initialData,
   isSeller = false,
+  currentUserUuid,
   buyerUuid,
   onQuoteSent
 }: CustomOrderBottomSheetProps) {
@@ -84,6 +86,7 @@ export function CustomOrderBottomSheet({
               desiredDate: orderDetail.specifications.desiredDate,
               designNotes: orderDetail.specifications.designNotes,
               referenceImages: orderDetail.specifications.referenceImages,
+              sellerUuid: orderDetail.sellerUuid,
               status: orderDetail.status,
             });
           } else {
@@ -359,7 +362,7 @@ export function CustomOrderBottomSheet({
           className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200 bg-gray-50"
           style={{ paddingBottom: 'calc(1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
         >
-          {isSeller && data && data.status === 'pending' ? (
+          {isSeller && data && data.status === 'pending' && currentUserUuid && data.sellerUuid === currentUserUuid ? (
             <div className="flex gap-3">
               <button
                 onClick={handleClose}
@@ -369,7 +372,7 @@ export function CustomOrderBottomSheet({
               </button>
               <button
                 onClick={() => setShowQuoteModal(true)}
-                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium"
+                className="flex-1 py-3 bg-[#E85A6B] text-white rounded-xl hover:bg-[#D14A5B] transition-colors font-medium"
               >
                 견적서 작성하기
               </button>
@@ -377,7 +380,7 @@ export function CustomOrderBottomSheet({
           ) : (
             <button
               onClick={handleClose}
-              className="w-full py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium"
+              className="w-full py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-900 transition-colors font-medium"
             >
               닫기
             </button>
