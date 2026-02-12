@@ -1986,11 +1986,20 @@ export interface CustomOrderDetail {
     shape: NailShape;
     length: NailLength;
     sizes: {
-      thumb: string;
-      index: string;
-      middle: string;
-      ring: string;
-      pinky: string;
+      left: {
+        thumb: string;
+        index: string;
+        middle: string;
+        ring: string;
+        pinky: string;
+      };
+      right: {
+        thumb: string;
+        index: string;
+        middle: string;
+        ring: string;
+        pinky: string;
+      };
     };
     desiredColor?: string;
     desiredDate?: string;

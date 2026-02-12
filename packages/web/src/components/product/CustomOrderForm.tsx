@@ -19,6 +19,11 @@ interface FingerSizes {
   pinky: string;
 }
 
+interface HandSizes {
+  left: FingerSizes;
+  right: FingerSizes;
+}
+
 // 손가락 한글명
 const FINGER_NAMES: Record<keyof FingerSizes, string> = {
   thumb: '엄지',
@@ -38,12 +43,10 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   const [shape, setShape] = useState<string>('ROUND');
   const [length, setLength] = useState<string>('MEDIUM');
   const [sizeInputMode, setSizeInputMode] = useState<'manual' | 'load'>('manual');
-  const [sizes, setSizes] = useState<FingerSizes>({
-    thumb: '',
-    index: '',
-    middle: '',
-    ring: '',
-    pinky: ''
+  const [activeHand, setActiveHand] = useState<'left' | 'right'>('left');
+  const [sizes, setSizes] = useState<HandSizes>({
+    left: { thumb: '', index: '', middle: '', ring: '', pinky: '' },
+    right: { thumb: '', index: '', middle: '', ring: '', pinky: '' }
   });
   const [request, setRequest] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -87,8 +90,11 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   };
 
   // 사이즈 입력 핸들러
-  const handleSizeChange = (finger: keyof FingerSizes, value: string) => {
-    setSizes(prev => ({ ...prev, [finger]: value }));
+  const handleSizeChange = (hand: 'left' | 'right', finger: keyof FingerSizes, value: string) => {
+    setSizes(prev => ({
+      ...prev,
+      [hand]: { ...prev[hand], [finger]: value }
+    }));
   };
 
   // 최소 선택 가능 날짜 (오늘 + 7일)
@@ -100,10 +106,11 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
 
   // 주문하기 핸들러
   const handleSubmit = async () => {
-    // 사이즈 필수 검증
-    const allSizesFilled = Object.values(sizes).every(s => s.trim() !== '');
-    if (!allSizesFilled) {
-      alert('모든 손가락 사이즈를 입력해주세요.');
+    // 사이즈 필수 검증 (양손 모두)
+    const leftFilled = Object.values(sizes.left).every(s => s.trim() !== '');
+    const rightFilled = Object.values(sizes.right).every(s => s.trim() !== '');
+    if (!leftFilled || !rightFilled) {
+      alert('양손 모든 손가락 사이즈를 입력해주세요.');
       return;
     }
 
@@ -318,21 +325,50 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
           </div>
 
           {sizeInputMode === 'manual' ? (
-            <div className="space-y-3">
-              {(Object.keys(FINGER_NAMES) as Array<keyof FingerSizes>).map((finger) => (
-                <div key={finger} className="flex items-center gap-3">
-                  <span className="w-12 text-sm text-gray-600">{FINGER_NAMES[finger]}</span>
-                  <input
-                    type="text"
-                    value={sizes[finger]}
-                    onChange={(e) => handleSizeChange(finger, e.target.value)}
-                    placeholder="예: 5"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
-                  />
-                </div>
-              ))}
-              <p className="text-xs text-gray-500 mt-2">
-                * 각 손가락의 네일 사이즈를 입력해주세요
+            <div className="space-y-4">
+              {/* 왼손/오른손 탭 */}
+              <div className="flex rounded-lg bg-gray-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveHand('left')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeHand === 'left'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  왼손 {Object.values(sizes.left).every(s => s.trim() !== '') ? '✓' : ''}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveHand('right')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeHand === 'right'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  오른손 {Object.values(sizes.right).every(s => s.trim() !== '') ? '✓' : ''}
+                </button>
+              </div>
+
+              {/* 손가락 사이즈 입력 */}
+              <div className="space-y-3">
+                {(Object.keys(FINGER_NAMES) as Array<keyof FingerSizes>).map((finger) => (
+                  <div key={finger} className="flex items-center gap-3">
+                    <span className="w-12 text-sm text-gray-600">{FINGER_NAMES[finger]}</span>
+                    <input
+                      type="text"
+                      value={sizes[activeHand][finger]}
+                      onChange={(e) => handleSizeChange(activeHand, finger, e.target.value)}
+                      placeholder="예: 5"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500">
+                * 양손 모든 손가락의 네일 사이즈를 입력해주세요
               </p>
             </div>
           ) : (

@@ -111,27 +111,39 @@ export function CustomOrderModal({ isOpen, onClose, orderDetail, loading, error 
                 </div>
               </div>
 
-              {/* 손가락별 사이즈 */}
+              {/* 양손 사이즈 */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                  손가락별 사이즈
+                  사이즈 정보
                 </h3>
                 <div className="bg-gray-50 rounded-lg overflow-hidden">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-100">
-                        {Object.keys(specs.sizes).map((finger) => (
-                          <th key={finger} className="px-3 py-2 text-xs font-medium text-gray-600 text-center">
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 text-center w-12"></th>
+                        {Object.keys(specs.sizes.left).map((finger) => (
+                          <th key={finger} className="px-2 py-2 text-xs font-medium text-gray-600 text-center">
                             {FINGER_LABELS[finger] || finger}
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
+                      <tr className="border-b border-gray-200">
+                        <td className="px-2 py-2.5 text-xs font-medium text-gray-500 text-center">왼손</td>
+                        {Object.values(specs.sizes.left).map((size, idx) => (
+                          <td key={idx} className="px-2 py-2.5 text-center">
+                            <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
+                              {size}
+                            </span>
+                          </td>
+                        ))}
+                      </tr>
                       <tr>
-                        {Object.values(specs.sizes).map((size, idx) => (
-                          <td key={idx} className="px-3 py-3 text-center">
+                        <td className="px-2 py-2.5 text-xs font-medium text-gray-500 text-center">오른손</td>
+                        {Object.values(specs.sizes.right).map((size, idx) => (
+                          <td key={idx} className="px-2 py-2.5 text-center">
                             <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
                               {size}
                             </span>

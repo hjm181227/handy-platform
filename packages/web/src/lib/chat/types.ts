@@ -13,11 +13,20 @@ export interface CustomOrderMessageData {
   shape: string;
   length: string;
   sizes: {
-    thumb: string;
-    index: string;
-    middle: string;
-    ring: string;
-    pinky: string;
+    left: {
+      thumb: string;
+      index: string;
+      middle: string;
+      ring: string;
+      pinky: string;
+    };
+    right: {
+      thumb: string;
+      index: string;
+      middle: string;
+      ring: string;
+      pinky: string;
+    };
   };
   desiredColor?: string;
   desiredDate?: string;
