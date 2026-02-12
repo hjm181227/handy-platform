@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, MessageCircleMore, Store, TriangleAlert } from 'lucide-react';
 import { config } from '../config/environment';
 import { useAuthModal } from '../contexts/AuthModalContext';
@@ -90,78 +90,90 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
     }
   };
 
-  // 채팅방 목록 조회
-  useEffect(() => {
-    const fetchRooms = async () => {
-      if (!currentUser) return;
+  // 채팅방 목록 조회 함수
+  const fetchRooms = useCallback(async () => {
+    if (!currentUser) return;
 
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setError('로그인이 필요합니다');
-        setIsLoading(false);
-        return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setError('로그인이 필요합니다');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch(`${CHAT_API_URL}/rooms?limit=50`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('채팅방 목록을 불러오는데 실패했습니다');
       }
 
-      try {
-        setIsLoading(true);
-        setError(null);
+      const data = await response.json();
+      const roomsData = data.rooms || [];
 
-        const response = await fetch(`${CHAT_API_URL}/rooms?limit=50`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('채팅방 목록을 불러오는데 실패했습니다');
-        }
-
-        const data = await response.json();
-        const roomsData = data.rooms || [];
-
-        // 각 partner에 대해 브랜드 정보 조회 (판매자인 경우 브랜드명 사용)
-        const roomsWithDisplayNames = await Promise.all(
-          roomsData.map(async (room: ChatRoomResponse) => {
-            try {
-              const brandResponse = await fetch(
-                `${config.apiBaseUrl}/api/brands/${room.partner.id}`
-              );
-              if (brandResponse.ok) {
-                const brandData = await brandResponse.json();
-                return {
-                  ...room,
-                  partner: {
-                    ...room.partner,
-                    displayName: brandData.brandName || room.partner.username,
-                    avatar: brandData.brandProfile || room.partner.avatar,
-                  },
-                };
-              }
-            } catch {
-              // 브랜드 조회 실패 시 기존 username 사용
+      // 각 partner에 대해 브랜드 정보 조회 (판매자인 경우 브랜드명 사용)
+      const roomsWithDisplayNames = await Promise.all(
+        roomsData.map(async (room: ChatRoomResponse) => {
+          try {
+            const brandResponse = await fetch(
+              `${config.apiBaseUrl}/api/brands/${room.partner.id}`
+            );
+            if (brandResponse.ok) {
+              const brandData = await brandResponse.json();
+              return {
+                ...room,
+                partner: {
+                  ...room.partner,
+                  displayName: brandData.brandName || room.partner.username,
+                  avatar: brandData.brandProfile || room.partner.avatar,
+                },
+              };
             }
-            return {
-              ...room,
-              partner: {
-                ...room.partner,
-                displayName: room.partner.username,
-              },
-            };
-          })
-        );
+          } catch {
+            // 브랜드 조회 실패 시 기존 username 사용
+          }
+          return {
+            ...room,
+            partner: {
+              ...room.partner,
+              displayName: room.partner.username,
+            },
+          };
+        })
+      );
 
-        setRooms(roomsWithDisplayNames);
-      } catch (err) {
-        console.error('[ChatPage] Error fetching rooms:', err);
-        setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
-      } finally {
-        setIsLoading(false);
+      setRooms(roomsWithDisplayNames);
+    } catch (err) {
+      console.error('[ChatPage] Error fetching rooms:', err);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser]);
+
+  // 초기 로딩
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
+
+  // 페이지 포커스 시 방 목록 갱신 (채팅방에서 돌아온 경우 unread 배지 업데이트)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && currentUser) {
+        fetchRooms();
       }
     };
-
-    fetchRooms();
-  }, [currentUser]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [currentUser, fetchRooms]);
 
   // 비로그인 상태: 회원가입 유도 UI
   if (!currentUser) {

@@ -11,6 +11,7 @@ type MessageCallback = (message: Message) => void;
 type TypingCallback = (data: TypingIndicator) => void;
 type ConnectionCallback = () => void;
 type ErrorCallback = (error: Error) => void;
+type ReadCallback = (data: { roomId: string; userId: string; readAt: string }) => void;
 
 export class ChatSocketService {
   private static instance: ChatSocketService | null = null;
@@ -21,6 +22,7 @@ export class ChatSocketService {
   private connectCallbacks: Set<ConnectionCallback> = new Set();
   private disconnectCallbacks: Set<ConnectionCallback> = new Set();
   private errorCallbacks: Set<ErrorCallback> = new Set();
+  private readCallbacks: Set<ReadCallback> = new Set();
 
   private constructor() {
     // Private constructor for singleton
@@ -134,8 +136,13 @@ export class ChatSocketService {
 
         // Presence 이벤트 (다른 사용자의 입장/퇴장)
         this.socket.on('presence', (data: { userId: string; state: 'join' | 'leave' }) => {
-          console.log('[ChatSocket] 👤 Presence update:', data);
-          // 필요 시 콜백으로 UI 업데이트 가능
+          console.log('[ChatSocket] Presence update:', data);
+        });
+
+        // message:read 이벤트
+        this.socket.on('message:read', (data: { roomId: string; userId: string; readAt: string }) => {
+          console.log('[ChatSocket] Message read event:', data);
+          this.readCallbacks.forEach(cb => cb(data));
         });
 
       } catch (error) {
@@ -325,6 +332,22 @@ export class ChatSocketService {
   }
 
   /**
+   * 읽음 이벤트 구독
+   */
+  public onMessageRead(callback: ReadCallback): () => void {
+    this.readCallbacks.add(callback);
+    return () => this.readCallbacks.delete(callback);
+  }
+
+  /**
+   * 읽음 처리 전송
+   */
+  public emitMarkAsRead(roomId: string): void {
+    if (!this.socket?.connected) return;
+    this.socket.emit('message:read', { roomId });
+  }
+
+  /**
    * 모든 리스너 정리
    */
   public cleanup(): void {
@@ -333,6 +356,7 @@ export class ChatSocketService {
     this.connectCallbacks.clear();
     this.disconnectCallbacks.clear();
     this.errorCallbacks.clear();
+    this.readCallbacks.clear();
   }
 }
 

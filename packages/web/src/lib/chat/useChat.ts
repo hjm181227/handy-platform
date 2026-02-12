@@ -62,6 +62,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   const [actualRoomId, setActualRoomId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [partnerLastReadAt, setPartnerLastReadAt] = useState<string | null>(null);
 
   const chatSocket = useRef(getChatSocket());
   const imageUploadManager = useRef(webApiService.createImageUploadManager());
@@ -132,7 +133,9 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
                 minute: '2-digit',
               }),
               createdAt: msg.createdAt, // 날짜 구분용
-              read: msg.status === 'read',
+              read: msg.senderId === currentUserId.current
+                ? false // 내 메시지의 read는 partnerLastReadAt로 나중에 계산
+                : true,  // 상대방 메시지는 내가 방에 입장했으므로 읽은 것
               // 커스텀 주문서 메시지 처리
               messageType: msg.messageType || 'text',
               metadata: msg.metadata || undefined,
@@ -158,6 +161,24 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           console.log('[useChat] Joining room:', mongoRoomId);
           await chatSocket.current.joinRoom(mongoRoomId);
           console.log('[useChat] Successfully joined room:', mongoRoomId);
+
+          // 4. 읽음 표시 — REST API로 마크 + 파트너 읽음 시간 조회
+          try {
+            const readResponse = await fetch(`${CHAT_API_URL}/rooms/${mongoRoomId}/read`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({}),
+            });
+            if (readResponse.ok) {
+              const readData = await readResponse.json();
+              setPartnerLastReadAt(readData.partnerLastReadAt || null);
+            }
+          } catch (e) {
+            console.warn('[useChat] markAsRead failed:', e);
+          }
 
           setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
           useFallback.current = false;
@@ -219,6 +240,9 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           return;
         }
 
+        // 상대방 메시지 수신 → 자동 읽음 처리 (내가 채팅방에 있으므로)
+        chatSocket.current.emitMarkAsRead(actualRoomId);
+
         // 백엔드 메시지 형식을 프론트엔드 형식으로 변환
         const now = new Date();
         const transformedMessage: Message = {
@@ -232,13 +256,20 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
             minute: '2-digit',
           }),
           createdAt: now.toISOString(), // 날짜 구분용
-          read: false,
+          read: true, // 내가 보고 있으므로 읽음 처리
           // 커스텀 주문서 메시지 처리
           messageType: (message as any).messageType || 'text',
           metadata: (message as any).metadata || undefined,
           fileUrl: (message as any).fileUrl || undefined,
         };
         setMessages(prev => [...prev, transformedMessage]);
+      }
+    });
+
+    // 소켓 message:read 이벤트 수신 시 partnerLastReadAt 업데이트
+    const unsubscribeRead = chatSocket.current.onMessageRead((data) => {
+      if (data.roomId === actualRoomId) {
+        setPartnerLastReadAt(data.readAt);
       }
     });
 
@@ -257,11 +288,25 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
 
     return () => {
       unsubscribeMessage();
+      unsubscribeRead();
       unsubscribeConnect();
       unsubscribeDisconnect();
       unsubscribeError();
     };
   }, [actualRoomId]);
+
+  /**
+   * partnerLastReadAt 변경 시 내 메시지의 read 상태 업데이트
+   */
+  useEffect(() => {
+    if (!partnerLastReadAt) return;
+    setMessages(prev => prev.map(msg => {
+      if (msg.sender !== 'me') return msg;
+      const msgTime = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+      const readTime = new Date(partnerLastReadAt).getTime();
+      return { ...msg, read: msgTime <= readTime };
+    }));
+  }, [partnerLastReadAt]);
 
   /**
    * 메시지 전송
@@ -473,6 +518,15 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   }, []);
 
   /**
+   * 읽음 처리
+   */
+  const markAsRead = useCallback(() => {
+    if (actualRoomId && !useFallback.current) {
+      chatSocket.current.emitMarkAsRead(actualRoomId);
+    }
+  }, [actualRoomId]);
+
+  /**
    * 에러 초기화
    */
   const clearError = useCallback(() => {
@@ -498,6 +552,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
     leaveRoom,
     scrollToLatest,
     clearError,
+    markAsRead,
     isUploading,
     uploadProgress,
   };

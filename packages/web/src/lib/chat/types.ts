@@ -137,6 +137,7 @@ export interface UseChatReturn {
   // Utilities
   scrollToLatest: () => void;
   clearError: () => void;
+  markAsRead: () => void;
 }
 
 // Service Configuration
