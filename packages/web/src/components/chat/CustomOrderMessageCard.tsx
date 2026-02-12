@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ClipboardList, Calendar } from 'lucide-react';
+import { ClipboardList, Calendar, ChevronDown } from 'lucide-react';
 import { CustomOrderMessageData } from '../../lib/chat/types';
 import { orderService } from '../../services/apiService';
 
@@ -80,10 +80,14 @@ export function CustomOrderMessageCard({ customOrderId, isMine, onClick }: Custo
     </div>
   );
 
+  const cardClass = `w-[280px] overflow-hidden bg-white border border-[#E5E0DC] shadow-[0_2px_8px_rgba(0,0,0,0.06)] ${
+    isMine ? 'rounded-[16px_4px_16px_16px]' : 'rounded-[4px_16px_16px_16px]'
+  }`;
+
   // 로딩 상태
   if (loading) {
     return (
-      <div className={`w-[280px] overflow-hidden ${isMine ? 'bg-[#FFE5EA] rounded-[16px_4px_16px_16px]' : 'bg-white rounded-xl border border-[#E5E0DC]'}`}>
+      <div className={cardClass}>
         {cardHeader}
         <div className="p-4 flex items-center justify-center">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
@@ -96,10 +100,7 @@ export function CustomOrderMessageCard({ customOrderId, isMine, onClick }: Custo
   // 에러 상태
   if (error || !data) {
     return (
-      <div
-        className={`w-[280px] overflow-hidden cursor-pointer ${isMine ? 'bg-[#FFE5EA] rounded-[16px_4px_16px_16px]' : 'bg-white rounded-xl border border-[#E5E0DC]'}`}
-        onClick={onClick}
-      >
+      <div className={`${cardClass} cursor-pointer`} onClick={onClick}>
         {cardHeader}
         <div className="p-4 text-center">
           <p className="text-sm text-[#A39E99]">주문서를 불러올 수 없습니다</p>
@@ -135,17 +136,11 @@ export function CustomOrderMessageCard({ customOrderId, isMine, onClick }: Custo
 
   return (
     <div
-      className={`
-        w-[280px] overflow-hidden cursor-pointer transition-all hover:scale-[1.02]
-        ${isMine
-          ? 'bg-[#FFE5EA] rounded-[16px_4px_16px_16px]'
-          : 'bg-white rounded-xl border border-[#E5E0DC] shadow-[0_1px_4px_rgba(0,0,0,0.04)]'
-        }
-      `}
+      className={`${cardClass} cursor-pointer transition-all hover:scale-[1.02]`}
       onClick={onClick}
     >
       {/* 헤더 */}
-      <div className="flex items-center gap-2 px-3.5 py-3">
+      <div className="flex items-center gap-2 px-3.5 py-3 rounded-t-2xl">
         <ClipboardList className="w-[18px] h-[18px] text-[#E85A6B]" />
         <span className="font-bold text-[#131211] text-sm">커스텀 주문서</span>
         <span className={`ml-auto px-2 py-0.5 rounded-lg text-[11px] font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
@@ -163,10 +158,10 @@ export function CustomOrderMessageCard({ customOrderId, isMine, onClick }: Custo
 
         {/* 쉐입/길이 배지 */}
         <div className="flex gap-1.5">
-          <span className="px-2 py-1 bg-[#F5F3F1] text-[#131211] rounded-md text-[11px] font-medium">
+          <span className="px-2 py-1 bg-white text-[#131211] rounded-md text-[11px] font-medium border border-[#D0C9C3]">
             {shapeLabel}
           </span>
-          <span className="px-2 py-1 bg-[#F5F3F1] text-[#131211] rounded-md text-[11px] font-medium">
+          <span className="px-2 py-1 bg-white text-[#131211] rounded-md text-[11px] font-medium border border-[#D0C9C3]">
             {lengthLabel}
           </span>
         </div>
@@ -212,13 +207,14 @@ export function CustomOrderMessageCard({ customOrderId, isMine, onClick }: Custo
 
       {/* 푸터 - 주문서 보기 버튼 */}
       <div
-        className="h-10 flex items-center justify-center border-t border-black/[0.04] bg-black/[0.03] cursor-pointer"
+        className="h-10 flex items-center justify-center gap-1 border-t border-black/[0.04] bg-white cursor-pointer"
         onClick={(e) => {
           e.stopPropagation();
           onClick();
         }}
       >
-        <span className="text-[13px] font-semibold text-[#131211]">주문서 보기</span>
+        <span className="text-[13px] font-semibold text-[#A39E99]">주문서 보기</span>
+        <ChevronDown className="w-4 h-4 text-[#A39E99]" />
       </div>
     </div>
   );
