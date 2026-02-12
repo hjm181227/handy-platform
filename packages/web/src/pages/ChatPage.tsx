@@ -165,13 +165,13 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
   // 비로그인 상태: 회원가입 유도 UI
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="bg-white border-b border-[#E5E0DC] sticky top-0 z-10 flex-shrink-0">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
             <button
               onClick={handleBack}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-[#F7F5F3] rounded-full transition-colors"
               aria-label="뒤로가기"
             >
               <svg
@@ -179,7 +179,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={2}
-                stroke="currentColor"
+                stroke="#131211"
                 className="w-6 h-6"
               >
                 <path
@@ -189,48 +189,39 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 />
               </svg>
             </button>
-            <h1 className="text-xl font-bold">채팅</h1>
+            <h1 className="text-lg font-bold text-[#131211]">채팅</h1>
           </div>
         </div>
 
         {/* 로그인 유도 UI */}
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-10 h-10 text-gray-400"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            로그인이 필요합니다
-          </h2>
-          <p className="text-gray-600 mb-8">
-            채팅 기능을 이용하려면 로그인해주세요.<br />
-            판매자와 실시간으로 소통할 수 있습니다.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
-            <button
-              onClick={openLogin}
-              className="flex-1 px-6 py-3 bg-[#FF073A] text-white font-semibold rounded-lg hover:bg-[#E0062F] transition-colors"
-            >
-              로그인
-            </button>
-            <button
-              onClick={() => nav('/register')}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              회원가입
-            </button>
+        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+              <svg className="w-9 h-9 text-[#A39E99]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#131211] text-center">
+              로그인이 필요합니다
+            </h2>
+            <p className="text-sm text-[#A39E99] text-center">
+              채팅 기능을 이용하려면 로그인해주세요.<br />
+              판매자와 실시간으로 소통할 수 있습니다.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mt-4">
+              <button
+                onClick={openLogin}
+                className="flex-1 px-6 py-3 bg-[#E85A6B] text-white font-semibold rounded-lg hover:bg-[#D44D5E] transition-colors"
+              >
+                로그인
+              </button>
+              <button
+                onClick={() => nav('/register')}
+                className="flex-1 px-6 py-3 border border-[#E5E0DC] text-[#131211] font-semibold rounded-lg hover:bg-[#F7F5F3] transition-colors"
+              >
+                회원가입
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -238,13 +229,13 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white relative flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-[#E5E0DC] sticky top-0 z-10 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={handleBack}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-[#F7F5F3] rounded-full transition-colors"
             aria-label="뒤로가기"
           >
             <svg
@@ -252,7 +243,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
-              stroke="currentColor"
+              stroke="#131211"
               className="w-6 h-6"
             >
               <path
@@ -262,32 +253,40 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
               />
             </svg>
           </button>
-          <h1 className="text-xl font-bold">채팅</h1>
+          <h1 className="text-lg font-bold text-[#131211]">채팅</h1>
         </div>
       </div>
 
       {/* 로딩 상태 */}
       {isLoading && (
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">채팅방 목록을 불러오는 중...</p>
+        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+            <p className="text-[#A39E99]">채팅방 목록을 불러오는 중...</p>
+          </div>
         </div>
       )}
 
       {/* 에러 상태 */}
       {error && !isLoading && (
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="text-6xl mb-4">😢</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            오류가 발생했습니다
-          </h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            다시 시도
-          </button>
+        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+              <svg className="w-9 h-9 text-[#E85A6B]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#131211] text-center">
+              오류가 발생했습니다
+            </h2>
+            <p className="text-sm text-[#A39E99] text-center">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D44D5E] transition-colors mt-2"
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
       )}
 
@@ -298,7 +297,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
             <div
               key={room.roomId}
               onClick={() => handleChatClick(room.partner.id, room.partner.displayName || room.partner.username)}
-              className="bg-white border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
+              className={`border-b border-[#F5F3F1] hover:bg-[#FFF8F5] cursor-pointer transition-colors ${room.unreadCount > 0 ? 'bg-[#FFF8F5]' : 'bg-white'}`}
             >
               <div className="px-4 py-4 flex items-center gap-4">
                 {/* Avatar */}
@@ -315,14 +314,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-gray-900 truncate">
+                    <h3 className="font-semibold text-[#131211] truncate">
                       {room.partner.displayName || room.partner.username || '알 수 없음'}
                     </h3>
-                    <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                    <span className="text-xs text-[#A39E99] ml-2 flex-shrink-0">
                       {room.lastMessageAt ? formatTime(room.lastMessageAt) : ''}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate">
+                  <p className="text-sm text-[#A39E99] truncate">
                     {formatLastMessage(room.lastMessage)}
                   </p>
                 </div>
@@ -330,8 +329,8 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 {/* Unread Badge */}
                 {room.unreadCount > 0 && (
                   <div className="flex-shrink-0">
-                    <div className="w-6 h-6 rounded-full bg-[#E85A6B] flex items-center justify-center">
-                      <span className="text-xs text-white font-bold">
+                    <div className="w-[22px] h-[22px] rounded-full bg-[#E85A6B] flex items-center justify-center">
+                      <span className="text-[11px] text-white font-bold leading-none">
                         {room.unreadCount > 99 ? '99+' : room.unreadCount}
                       </span>
                     </div>
@@ -345,16 +344,32 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
 
       {/* Empty State (if no chats) */}
       {!isLoading && !error && rooms.length === 0 && (
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="text-6xl mb-4">💬</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            아직 대화가 없습니다
-          </h2>
-          <p className="text-gray-600">
-            판매자나 고객센터와 대화를 시작해보세요.
-          </p>
+        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+              <svg className="w-9 h-9 text-[#A39E99]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#131211] text-center">
+              아직 대화가 없습니다
+            </h2>
+            <p className="text-sm text-[#A39E99] text-center">
+              판매자나 고객센터와 대화를 시작해보세요.
+            </p>
+          </div>
         </div>
       )}
+
+      {/* FAB - New Chat Button */}
+      <button
+        className="fixed bottom-6 right-6 w-14 h-14 bg-[#E85A6B] rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(232,90,107,0.25)] hover:bg-[#D44D5E] transition-colors z-20"
+        aria-label="새 채팅"
+      >
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+        </svg>
+      </button>
     </div>
   );
 };
