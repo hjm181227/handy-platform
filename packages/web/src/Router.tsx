@@ -242,6 +242,7 @@ export function Router() {
   const isSellerPage = pathname.startsWith('/seller');
   const isAdminPage = pathname.startsWith('/admin');
   const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
+  const isCustomOrderPage = /^\/product\/.+\/custom-order$/.test(pathname);
 
   // Route matching and screen rendering
   let screen: React.ReactNode;
@@ -874,7 +875,7 @@ export function Router() {
   }
 
   // Wrap with appropriate layout
-  if (isSellerPage || isAdminPage || isChatPage) {
+  if (isSellerPage || isAdminPage || isChatPage || isCustomOrderPage) {
     // Seller, Admin, Chat pages have their own layouts
     return <>{screen}</>;
   }

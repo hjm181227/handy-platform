@@ -34,6 +34,8 @@ import {
   classifyFingersByPosition,
   validateNailRegions,
   validateCalibration,
+  calculatePixelToMmRatio,
+  pixelsToMm,
 } from './imageProcessor';
 import {
   NailMeasurementResult,
@@ -134,13 +136,54 @@ class NailMeasurementService {
 
     // 1. 서버 API로 세그멘테이션 + 오버레이 생성
     console.log('[NailMeasurementService] Running server segmentation with overlay...');
-    const segmentationResult = await getSegmentationAPI().predictWithOverlay(imageUri);
+    const segmentationResult = await getSegmentationAPI().predictWithOverlay(imageUri, cardWidthPixels);
 
     // 2. 영역 감지 및 검증 (Stage 3)
+    // Lambda는 mask를 빈 배열로 반환하고 대신 serverRegions를 제공
     console.log('[NailMeasurementService] Processing measurements...');
-    const regions = findConnectedComponents(segmentationResult.mask);
-    const regionValidation = validateNailRegions(regions, isThumbOnly);
+    let regions: NailRegion[];
+    let measurements: FingerNailMeasurement[];
 
+    const hasMask = segmentationResult.mask && segmentationResult.mask.length > 0;
+    const hasServerRegions = segmentationResult.serverRegions && segmentationResult.serverRegions.length > 0;
+
+    if (hasMask) {
+      // Dev server (FastAPI): 2D mask array → 로컬 처리
+      console.log('[NailMeasurementService] Using local mask processing...');
+      regions = findConnectedComponents(segmentationResult.mask);
+      measurements = processNailMeasurement(
+        segmentationResult.mask,
+        cardWidthPixels,
+        isThumbOnly,
+        selectedHand
+      );
+    } else if (hasServerRegions) {
+      // Lambda: 서버에서 감지한 영역 사용
+      console.log('[NailMeasurementService] Using server-detected regions:', segmentationResult.serverRegions!.length);
+      regions = segmentationResult.serverRegions!;
+
+      // 손가락별 분류
+      const fingerRegions = classifyFingersByPosition(regions, isThumbOnly, selectedHand);
+      const pixelToMmRatio = calculatePixelToMmRatio(cardWidthPixels);
+
+      measurements = [];
+      fingerRegions.forEach((region, finger) => {
+        const widthMm = pixelsToMm(region.widthPixels, pixelToMmRatio);
+        measurements.push({
+          finger,
+          widthMm: Math.round(widthMm * 10) / 10,
+          widthPixels: region.widthPixels,
+          confidence: 0.9,
+          boundingBox: region.boundingBox,
+        });
+      });
+    } else {
+      // 영역 없음
+      regions = [];
+      measurements = [];
+    }
+
+    const regionValidation = validateNailRegions(regions, isThumbOnly);
     if (!regionValidation.isValid) {
       console.warn('[NailMeasurementService] Region validation warnings:', regionValidation.invalidReasons);
     }
@@ -152,20 +195,13 @@ class NailMeasurementService {
       console.warn('[NailMeasurementService] Calibration validation failed');
     }
 
-    // 4. 최종 측정값 계산
-    const measurements = processNailMeasurement(
-      segmentationResult.mask,
-      cardWidthPixels,
-      isThumbOnly,
-      selectedHand
-    );
-
     const processingTimeMs = Date.now() - startTime;
 
     console.log('[NailMeasurementService] Server measurement complete:', {
       fingerCount: measurements.length,
       processingTimeMs,
       hasOverlay: !!segmentationResult.maskOverlayBase64,
+      usedServerRegions: !hasMask && hasServerRegions,
       regionValidation: regionValidation.isValid ? 'PASS' : 'FAIL',
       calibrationValidation: calibrationValidation.isValid ? 'PASS' : 'FAIL',
     });

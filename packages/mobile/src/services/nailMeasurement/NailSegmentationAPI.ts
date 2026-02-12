@@ -26,6 +26,7 @@ import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
 import {
   NailSegmentationResult,
+  NailRegion,
   MODEL_INPUT_SIZE,
 } from './types';
 
@@ -34,14 +35,20 @@ import {
 // 에뮬레이터는 10.0.2.2, 실제 디바이스는 호스트 IP 사용
 const DEV_HOST_IP = '172.30.1.71';  // 현재 호스트 IP (ifconfig로 확인)
 
-const API_SERVER_URL = __DEV__
-  ? Platform.select({
-      // Android 에뮬레이터는 10.0.2.2, 실제 디바이스는 호스트 IP
-      android: `http://${DEV_HOST_IP}:8000`,  // 실제 디바이스용
-      ios: 'http://localhost:8000',            // iOS 시뮬레이터
-      default: 'http://localhost:8000',
-    })
-  : 'http://15.165.5.64:8000';  // 프로덕션 서버 (TODO: 실제 서버 URL로 변경)
+// 프로덕션: AWS Lambda Function URL (ONNX Runtime 기반 서버리스)
+// 배포 후 실제 URL로 교체 필요 (deploy_lambda.sh 실행 결과 참조)
+const PRODUCTION_URL = 'https://qhcy0cjmr5.execute-api.ap-northeast-2.amazonaws.com';
+
+// 개발/프로덕션 모두 Lambda (API Gateway) 사용
+// 로컬 서버 테스트 시 아래 주석 해제
+// const API_SERVER_URL = __DEV__
+//   ? Platform.select({
+//       android: `http://${DEV_HOST_IP}:8000`,
+//       ios: 'http://localhost:8000',
+//       default: 'http://localhost:8000',
+//     })
+//   : PRODUCTION_URL;
+const API_SERVER_URL = PRODUCTION_URL;
 
 // API 응답 타입
 interface SegmentationAPIResponse {
@@ -81,7 +88,17 @@ interface SegmentWithOverlayAPIResponse {
   success: boolean;
   cropped_image: string;  // base64 PNG
   mask_overlay: string;   // base64 PNG (transparent background)
-  mask: number[][];
+  mask_base64: string;    // base64 PNG grayscale mask (Lambda)
+  mask?: number[][];      // 2D array (FastAPI dev server)
+  regions?: Array<{       // Lambda에서 감지한 영역
+    id: number;
+    bounding_box: { x: number; y: number; width: number; height: number };
+    width_pixels: number;
+    height_pixels: number;
+    center_x: number;
+    center_y: number;
+    area: number;
+  }>;
   width: number;
   height: number;
   processing_time_ms: number;
@@ -318,7 +335,7 @@ class NailSegmentationAPI {
    * @param imageUri - 이미지 파일 URI (file:// 형식)
    * @returns 세그멘테이션 결과 + 오버레이 이미지 (base64)
    */
-  async predictWithOverlay(imageUri: string): Promise<NailSegmentationResult> {
+  async predictWithOverlay(imageUri: string, cardWidthPixels: number = 0): Promise<NailSegmentationResult> {
     const totalStartTime = Date.now();
 
     console.log('[NailSegmentationAPI] ========================================');
@@ -345,7 +362,8 @@ class NailSegmentationAPI {
       const apiStartTime = Date.now();
       console.log('[NailSegmentationAPI] Calling API:', `${this.serverUrl}/api/segment-with-overlay`);
 
-      const response = await fetch(`${this.serverUrl}/api/segment-with-overlay`, {
+      const queryParams = cardWidthPixels > 0 ? `?card_width_pixels=${cardWidthPixels}` : '';
+      const response = await fetch(`${this.serverUrl}/api/segment-with-overlay${queryParams}`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -370,14 +388,42 @@ class NailSegmentationAPI {
         throw new Error('API returned success=false');
       }
 
-      // 5. 마스크 크기 조정 (서버와 동일한 640x640 크기이면 리사이즈 생략)
+      // 5. 마스크 처리
+      // Lambda는 mask_base64 (PNG grayscale), dev server는 mask (2D array)
       const resizeStartTime = Date.now();
-      const resizedMask = this.resizeMask(data.mask, MODEL_INPUT_SIZE);
+      let resizedMask: number[][];
+      if (data.mask && Array.isArray(data.mask)) {
+        // dev server (FastAPI): 2D array
+        resizedMask = this.resizeMask(data.mask, MODEL_INPUT_SIZE);
+      } else {
+        // Lambda: mask는 base64 PNG로 전달, overlay 이미지를 직접 사용하므로 빈 마스크
+        resizedMask = [];
+      }
+
+      // 6. 서버 영역 변환 (Lambda에서 감지한 영역)
+      let serverRegions: NailRegion[] | undefined;
+      if (data.regions && data.regions.length > 0) {
+        serverRegions = data.regions.map(r => ({
+          id: r.id,
+          boundingBox: {
+            x: r.bounding_box.x,
+            y: r.bounding_box.y,
+            width: r.bounding_box.width,
+            height: r.bounding_box.height,
+          },
+          widthPixels: r.width_pixels,
+          heightPixels: r.height_pixels,
+          centerX: r.center_x,
+          centerY: r.center_y,
+          area: r.area,
+        }));
+        console.log('[NailSegmentationAPI] Server regions:', serverRegions.length);
+      }
       console.log('[NailSegmentationAPI] Resize time:', Date.now() - resizeStartTime, 'ms');
 
       const totalTime = Date.now() - totalStartTime;
 
-      // 6. 결과 로깅
+      // 7. 결과 로깅
       console.log('[NailSegmentationAPI] Mask stats:', {
         min: data.mask_stats.min.toFixed(3),
         max: data.mask_stats.max.toFixed(3),
@@ -398,6 +444,8 @@ class NailSegmentationAPI {
         // 서버에서 생성된 base64 이미지
         croppedImageBase64: data.cropped_image,
         maskOverlayBase64: data.mask_overlay,
+        // Lambda에서 감지한 영역
+        serverRegions,
       };
 
     } catch (error) {

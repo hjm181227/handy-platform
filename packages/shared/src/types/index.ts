@@ -2035,11 +2035,8 @@ export interface CreateCustomOrderRequest {
     shape: NailShape;
     length: NailLength;
     sizes: {
-      thumb: string;
-      index: string;
-      middle: string;
-      ring: string;
-      pinky: string;
+      left: { thumb: string; index: string; middle: string; ring: string; pinky: string };
+      right: { thumb: string; index: string; middle: string; ring: string; pinky: string };
     };
     desiredColor?: string;
     desiredDate?: string;  // ISO 문자열: "2025-12-25"

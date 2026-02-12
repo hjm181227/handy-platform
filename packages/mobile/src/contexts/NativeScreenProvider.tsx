@@ -78,11 +78,19 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
   const closeNailSizes = () => {
     console.log('📱 [NativeScreenProvider] Closing Nail Sizes screen');
     setShowNailSizes(false);
+    // WebView에 사이즈 갱신 알림
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(JSON.stringify({ type: 'NAIL_SIZE_UPDATED' }));
+    }
   };
 
   const closeMeasurement = () => {
     console.log('📱 [NativeScreenProvider] Closing Nail Measurement screen');
     setShowMeasurement(false);
+    // WebView에 사이즈 갱신 알림
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(JSON.stringify({ type: 'NAIL_SIZE_UPDATED' }));
+    }
   };
 
   // DeviceEventEmitter 리스너 설정
@@ -100,7 +108,7 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
 
     // 웹에서 네일 측정 화면 열기
     const openMeasurementListener = DeviceEventEmitter.addListener(
-      'openMeasurement',
+      'navigateToMeasurement',
       (data: { hand?: 'left' | 'right'; finger?: string }) => {
         console.log('🔵 [NativeScreenProvider] openMeasurement event received:', data);
         openMeasurement(data.hand, data.finger);

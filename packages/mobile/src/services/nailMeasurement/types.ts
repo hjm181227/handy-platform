@@ -4,13 +4,15 @@
 
 // 손톱 세그멘테이션 결과
 export interface NailSegmentationResult {
-  mask: number[][];  // 640x640 binary mask (0 or 1)
+  mask: number[][];  // 800x800 binary mask (0 or 1)
   confidence: number;
   processingTimeMs: number;
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
   // 서버에서 생성된 이미지 (base64 PNG)
   croppedImageBase64?: string;  // 크롭된 입력 이미지
   maskOverlayBase64?: string;   // 녹색 반투명 마스크 오버레이 (투명 배경)
+  // Lambda에서 감지한 영역 (mask가 빈 경우 사용)
+  serverRegions?: NailRegion[];
 }
 
 // 개별 손톱 영역
@@ -37,7 +39,7 @@ export interface FingerNailMeasurement {
   widthMm: number;
   widthPixels: number;
   confidence: number;
-  boundingBox: BoundingBox;  // 모델 공간(640x640)에서의 감지 영역
+  boundingBox: BoundingBox;  // 모델 공간(800x800)에서의 감지 영역
 }
 
 export type FingerType = 'thumb' | 'index' | 'middle' | 'ring' | 'little';
@@ -50,7 +52,7 @@ export interface NailMeasurementResult {
   imageWidth: number;
   imageHeight: number;
   processingTimeMs: number;
-  mask?: number[][];  // 640x640 세그멘테이션 마스크 (0-1)
+  mask?: number[][];  // 800x800 세그멘테이션 마스크 (0-1)
   croppedImageUri?: string;  // 크롭된 이미지 URI (file://)
   // 서버에서 생성된 이미지 (base64 PNG)
   croppedImageBase64?: string;  // 크롭된 입력 이미지
@@ -62,8 +64,8 @@ export const CREDIT_CARD_WIDTH_MM = 85.6;  // ISO/IEC 7810 규격
 export const CREDIT_CARD_HEIGHT_MM = 53.98;
 
 // 모델 설정
-// 서버 모델은 640x640 입력을 사용 (v2.0.0 DeepLabV3+ ResNet101)
-export const MODEL_INPUT_SIZE = 640;
+// 서버 모델은 800x800 입력을 사용 (v0.0.1 DeepLabV3+ ResNet101)
+export const MODEL_INPUT_SIZE = 800;
 export const SEGMENTATION_THRESHOLD = 0.5;
 
 // 모델 메타데이터 (서버 추론 모델 v2.0.0)
@@ -98,7 +100,7 @@ export const CARD_ASPECT_RATIO = 85.60 / 53.98; // 약 1.586
 // pixel-to-mm 비율 계산 헬퍼 (센서 기반)
 // cardGuideWidth: 화면에서 카드 가이드 폭 (고정 픽셀)
 // screenHeight: 화면 높이
-// 반환: 640px 모델 입력에서 1픽셀당 mm
+// 반환: 800px 모델 입력에서 1픽셀당 mm
 //
 // 카메라 프리뷰가 "cover" 모드로 화면 높이에 맞춰 확대될 때,
 // 실제 보이는 프리뷰 폭 = 화면 높이 * 센서 가로세로비 (3:4)

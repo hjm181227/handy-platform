@@ -205,7 +205,7 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
               <Text style={styles.arCardTitle}>다시 측정하기</Text>
               <Text style={styles.arCardSubtitle}>카메라로 정확한 측정</Text>
             </View>
-            <Icon name="chevron-right" size={20} color="rgba(255,255,255,0.6)" />
+            <Icon name="chevron-right" size={20} color={NMColors.purple} />
           </View>
         </TouchableOpacity>
       </ScrollView>
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: NMColors.purple,
+    backgroundColor: NMColors.buttonBg,
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 20,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   emptyMeasureButton: {
-    backgroundColor: NMColors.purple,
+    backgroundColor: NMColors.buttonBg,
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 28,
@@ -380,8 +380,10 @@ const styles = StyleSheet.create({
   },
   // AR Card
   arCard: {
-    backgroundColor: NMColors.purple,
+    backgroundColor: NMColors.ctaBg,
     borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: NMColors.ctaBorder,
     paddingVertical: 16,
     paddingHorizontal: 20,
   },
@@ -393,7 +395,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: NMColors.whiteSemiTranslucent,
+    backgroundColor: NMColors.purple,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -402,13 +404,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   arCardTitle: {
-    color: NMColors.white,
+    color: NMColors.ctaText,
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 2,
   },
   arCardSubtitle: {
-    color: 'rgba(255,255,255,0.7)',
+    color: NMColors.ctaSubtext,
     fontSize: 14,
   },
 });

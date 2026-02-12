@@ -1,6 +1,6 @@
 import { NAIL_LENGTHS, NAIL_LENGTH_NAME, NailLength } from '@handy-platform/shared';
 import { OrderStepLayout, OrderStepButton, NailLengthBar } from '../common';
-import { FaCheck } from 'react-icons/fa';
+import { FaCheck, FaLock } from 'react-icons/fa';
 
 // 길이별 설명 (네일 업계 용어)
 const LENGTH_DESCRIPTIONS: Record<NailLength, string> = {
@@ -23,6 +23,7 @@ interface LengthStepProps {
   onBack: () => void;
   stepIndex: number;
   totalSteps: number;
+  fixed?: boolean;
 }
 
 export function LengthStep({
@@ -32,6 +33,7 @@ export function LengthStep({
   onBack,
   stepIndex,
   totalSteps,
+  fixed,
 }: LengthStepProps) {
   return (
     <OrderStepLayout
@@ -39,22 +41,36 @@ export function LengthStep({
       totalSteps={totalSteps}
       onBack={onBack}
       title="길이는 어느 정도로 할까요?"
-      subtitle="선호하는 네일 길이를 선택해주세요"
+      subtitle={fixed ? '이 상품은 길이가 고정되어 있어요' : '선호하는 네일 길이를 선택해주세요'}
     >
+      {/* 고정 길이 안내 */}
+      {fixed && (
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 flex items-center gap-3">
+          <FaLock className="text-gray-400 w-4 h-4 flex-shrink-0" />
+          <p className="text-sm text-gray-600">
+            이 상품은 <span className="font-semibold text-gray-900">{NAIL_LENGTH_NAME[length]}</span> 길이로만 주문 가능합니다
+          </p>
+        </div>
+      )}
+
       {/* 길이 선택 카드 */}
       <div className="space-y-3 flex-1">
         {NAIL_LENGTHS.map((l) => {
           const isSelected = length === l;
+          const isDisabled = fixed && !isSelected;
           return (
             <button
               key={l}
               type="button"
-              onClick={() => onSelect(l)}
+              onClick={() => !fixed && onSelect(l)}
+              disabled={isDisabled}
               className={`
                 relative w-full p-4 rounded-2xl border-2 text-left transition-all
                 ${isSelected
                   ? 'border-pink-500 bg-pink-50'
-                  : 'border-gray-200 bg-white hover:border-pink-200'
+                  : isDisabled
+                    ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-40'
+                    : 'border-gray-200 bg-white hover:border-pink-200'
                 }
               `}
             >

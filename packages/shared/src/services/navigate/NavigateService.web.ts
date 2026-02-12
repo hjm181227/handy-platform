@@ -53,8 +53,7 @@ class NavigateServiceWeb implements INavigateService {
       );
 
       if (shouldDownload) {
-        // TODO: 실제 앱 스토어 링크로 변경
-        window.location.href = 'https://handy-app.com/download';
+        window.open('https://play.google.com/store/apps/details?id=com.handyapp', '_blank');
       }
     }
   }
@@ -82,8 +81,7 @@ class NavigateServiceWeb implements INavigateService {
       );
 
       if (shouldDownload) {
-        // TODO: 실제 앱 스토어 링크로 변경
-        window.location.href = 'https://handy-app.com/download';
+        window.open('https://play.google.com/store/apps/details?id=com.handyapp', '_blank');
       }
     }
   }

@@ -240,7 +240,7 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
         console.warn('Measurement validation warnings:', validation.warnings);
       }
 
-      if (result.mask) {
+      if (result.mask && result.mask.length > 0) {
         const regions = findConnectedComponents(result.mask);
         setDetectedRegions(regions);
         const regionValidation = validateNailRegions(regions, isThumbOnly);
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: NMColors.purple,
+    backgroundColor: NMColors.buttonBg,
     height: 56,
     borderRadius: 28,
     flexDirection: 'row',
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: NMColors.purple,
+    backgroundColor: NMColors.buttonBg,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 20,

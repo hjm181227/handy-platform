@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   startButton: {
-    backgroundColor: NMColors.purple,
+    backgroundColor: NMColors.buttonBg,
     height: 56,
     borderRadius: 28,
     flexDirection: 'row',

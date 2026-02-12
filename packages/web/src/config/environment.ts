@@ -6,7 +6,7 @@ export const config = {
   enableDebug: import.meta.env.VITE_ENABLE_DEBUG === 'true',
   // Chat API: production에서는 백엔드 API 서버를 통해 프록시, 개발에서는 직접 접속
   chatApiUrl: import.meta.env.VITE_CHAT_API_URL ||
-    (import.meta.env.PROD ? `${apiBaseUrl}/chat-api` : 'http://16.176.147.141'),
+    (import.meta.env.PROD ? `${apiBaseUrl}/chat-api` : 'http://54.180.52.81'),
 };
 
 export const apiEndpoints = {

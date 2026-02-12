@@ -1,6 +1,6 @@
 import { NAIL_SHAPES, NAIL_SHAPE_NAME, NailShape } from '@handy-platform/shared';
 import { OrderStepLayout, OrderStepButton, NailShapeIcon } from '../common';
-import { FaCheck } from 'react-icons/fa';
+import { FaCheck, FaLock } from 'react-icons/fa';
 
 // 쉐입별 설명 (네일 업계 용어)
 const SHAPE_DESCRIPTIONS: Record<NailShape, string> = {
@@ -21,6 +21,7 @@ interface ShapeStepProps {
   onBack: () => void;
   stepIndex: number;
   totalSteps: number;
+  fixed?: boolean;
 }
 
 export function ShapeStep({
@@ -30,6 +31,7 @@ export function ShapeStep({
   onBack,
   stepIndex,
   totalSteps,
+  fixed,
 }: ShapeStepProps) {
   return (
     <OrderStepLayout
@@ -37,22 +39,36 @@ export function ShapeStep({
       totalSteps={totalSteps}
       onBack={onBack}
       title="어떤 모양을 원하세요?"
-      subtitle="원하는 네일 쉐입을 선택해주세요"
+      subtitle={fixed ? '이 상품은 쉐입이 고정되어 있어요' : '원하는 네일 쉐입을 선택해주세요'}
     >
+      {/* 고정 쉐입 안내 */}
+      {fixed && (
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 flex items-center gap-3">
+          <FaLock className="text-gray-400 w-4 h-4 flex-shrink-0" />
+          <p className="text-sm text-gray-600">
+            이 상품은 <span className="font-semibold text-gray-900">{NAIL_SHAPE_NAME[shape]}</span> 쉐입으로만 주문 가능합니다
+          </p>
+        </div>
+      )}
+
       {/* 쉐입 선택 그리드 */}
       <div className="grid grid-cols-2 gap-3 flex-1">
         {NAIL_SHAPES.map((s) => {
           const isSelected = shape === s;
+          const isDisabled = fixed && !isSelected;
           return (
             <button
               key={s}
               type="button"
-              onClick={() => onSelect(s)}
+              onClick={() => !fixed && onSelect(s)}
+              disabled={isDisabled}
               className={`
                 relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all
                 ${isSelected
                   ? 'border-pink-500 bg-pink-500 text-white'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-pink-200 hover:bg-pink-50'
+                  : isDisabled
+                    ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed opacity-40'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-pink-200 hover:bg-pink-50'
                 }
               `}
             >
