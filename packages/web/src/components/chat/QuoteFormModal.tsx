@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Receipt } from 'lucide-react';
 import { sellerService } from '../../services/apiService';
 import { sendQuoteToChat } from '../../lib/chat/orderChatService';
 
@@ -142,7 +143,7 @@ export function QuoteFormModal({
           {/* 헤더 */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <span className="text-xl">💰</span>
+              <Receipt className="w-5 h-5 text-[#E85A6B]" />
               <h2 className="text-lg font-bold text-gray-900">견적서 작성</h2>
             </div>
             <button

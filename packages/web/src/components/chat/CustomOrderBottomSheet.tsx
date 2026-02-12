@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ClipboardList } from 'lucide-react';
 import { CustomOrderMessageData } from '../../lib/chat/types';
 import { orderService } from '../../services/apiService';
 import { QuoteFormModal } from './QuoteFormModal';
@@ -153,7 +154,7 @@ export function CustomOrderBottomSheet({
         {/* 헤더 */}
         <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <span className="text-xl">📋</span>
+            <ClipboardList className="w-5 h-5 text-[#E85A6B]" />
             <h2 className="text-lg font-bold text-gray-900">커스텀 주문서</h2>
             {data && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>

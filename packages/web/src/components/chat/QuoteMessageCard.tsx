@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Receipt } from 'lucide-react';
 import { QuoteMessageData } from '../../lib/chat/types';
 
 interface QuoteMessageCardProps {
@@ -80,7 +81,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       >
         <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
           <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
+            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
             <span className="font-semibold text-gray-900 text-sm">견적서</span>
           </div>
         </div>
@@ -104,7 +105,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       >
         <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
           <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
+            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
             <span className="font-semibold text-gray-900 text-sm">견적서</span>
           </div>
         </div>
@@ -139,7 +140,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
+            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
             <span className="font-semibold text-gray-900 text-sm">견적서</span>
           </div>
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>

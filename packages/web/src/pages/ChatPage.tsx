@@ -58,9 +58,9 @@ const formatLastMessage = (lastMessage?: ChatRoomResponse['lastMessage']): strin
   if (!lastMessage) return '';
 
   if (lastMessage.messageType === 'custom_order') {
-    return '📋 커스텀 주문서';
+    return '커스텀 주문서';
   } else if (lastMessage.messageType === 'quote') {
-    return '💰 견적서';
+    return '견적서';
   }
 
   return lastMessage.text || '';
