@@ -44,18 +44,19 @@ from pydantic import BaseModel
 # v2.0.0: Kaggle-trained ResNet101 model
 DEFAULT_MODEL_PATH = os.environ.get(
     "NAIL_SEG_MODEL_PATH",
-    str(Path(__file__).parent.parent / "models/nail_segmentation/v0.0.0/best_model.pth")
+    str(Path(__file__).parent.parent / "models/nail_segmentation/v0.0.1/best_model.pth")
 )
 
 # Default config path
 DEFAULT_CONFIG_PATH = os.environ.get(
     "NAIL_SEG_CONFIG_PATH",
-    str(Path(__file__).parent.parent / "models/nail_segmentation/v0.0.0/config.yaml")
+    str(Path(__file__).parent.parent / "models/nail_segmentation/v0.0.1/config.yaml")
 )
 
 # Credit card dimensions (ISO/IEC 7810)
 CREDIT_CARD_WIDTH_MM = 85.6
 CREDIT_CARD_HEIGHT_MM = 53.98
+CARD_ASPECT_RATIO = CREDIT_CARD_WIDTH_MM / CREDIT_CARD_HEIGHT_MM  # ~1.586
 
 
 # ============================================
@@ -224,7 +225,7 @@ class NailSegmentationModel:
         return tensor.to(self.device)
 
     def predict(self, image: np.ndarray) -> Tuple[np.ndarray, float]:
-        """Run segmentation inference."""
+        """Run segmentation inference with post-processing."""
         if self.model is None:
             raise RuntimeError("Model not loaded")
 
@@ -238,8 +239,11 @@ class NailSegmentationModel:
             output = self.model(input_tensor)
             output = torch.sigmoid(output)  # Apply sigmoid to raw logits
 
-        # Post-process
+        # Post-process: probability map
         mask = output.squeeze().cpu().numpy()  # Remove batch and channel dims
+
+        # Smooth: GaussianBlur + morphological open/close for cleaner edges
+        mask = cv2.GaussianBlur(mask, (5, 5), 0)
 
         processing_time_ms = (time.time() - start_time) * 1000
 
@@ -253,6 +257,11 @@ class NailSegmentationModel:
 def find_connected_components(mask: np.ndarray, threshold: float = 0.5) -> List[dict]:
     """Find connected components (nail regions) in the mask."""
     binary_mask = (mask > threshold).astype(np.uint8)
+
+    # Morphological open/close for cleaner contours
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    binary_mask = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel)
+    binary_mask = cv2.morphologyEx(binary_mask, cv2.MORPH_CLOSE, kernel)
 
     # Find contours
     contours, _ = cv2.findContours(
@@ -287,6 +296,70 @@ def find_connected_components(mask: np.ndarray, threshold: float = 0.5) -> List[
     regions.sort(key=lambda r: r["center_x"])
 
     return regions
+
+
+def mask_card_guide_region(
+    mask: np.ndarray,
+    card_width_pixels: float,
+    margin_ratio: float = 0.15,
+) -> np.ndarray:
+    """Zero out mask pixels outside the card guide area.
+
+    Card guide is centered in model space after center crop + resize.
+    Returns a new mask with only the card guide region preserved.
+    """
+    h, w = mask.shape
+    card_height = card_width_pixels / CARD_ASPECT_RATIO
+
+    cx, cy = w / 2, h / 2
+    mx = card_width_pixels * margin_ratio
+    my = card_height * margin_ratio
+
+    x1 = max(0, int(cx - card_width_pixels / 2 - mx))
+    x2 = min(w, int(cx + card_width_pixels / 2 + mx))
+    y1 = max(0, int(cy - card_height / 2 - my))
+    y2 = min(h, int(cy + card_height / 2 + my))
+
+    filtered = np.zeros_like(mask)
+    filtered[y1:y2, x1:x2] = mask[y1:y2, x1:x2]
+
+    print(f"[Server] Mask card guide crop: [{x1}:{x2}, {y1}:{y2}] in {w}x{h}")
+    return filtered
+
+
+def filter_regions_by_card_guide(
+    regions: List[dict],
+    card_width_pixels: float,
+    model_input_size: int = 800,
+    margin_ratio: float = 0.15,
+) -> List[dict]:
+    """Filter regions to only those inside the card guide area.
+
+    Card guide is centered in model space after center crop + resize.
+    margin_ratio allows some tolerance beyond the card edge.
+    """
+    card_height = card_width_pixels / CARD_ASPECT_RATIO
+
+    center_x = model_input_size / 2
+    center_y = model_input_size / 2
+
+    margin_x = card_width_pixels * margin_ratio
+    margin_y = card_height * margin_ratio
+
+    x_min = center_x - card_width_pixels / 2 - margin_x
+    x_max = center_x + card_width_pixels / 2 + margin_x
+    y_min = center_y - card_height / 2 - margin_y
+    y_max = center_y + card_height / 2 + margin_y
+
+    filtered = [
+        r for r in regions
+        if x_min <= r["center_x"] <= x_max and y_min <= r["center_y"] <= y_max
+    ]
+
+    print(f"[Server] Card guide filter: {len(regions)} regions → {len(filtered)} "
+          f"(card bounds: x[{x_min:.0f}-{x_max:.0f}], y[{y_min:.0f}-{y_max:.0f}])")
+
+    return filtered
 
 
 def classify_fingers(regions: List[dict], is_thumb_only: bool = True) -> List[dict]:
@@ -440,6 +513,7 @@ async def segment_image(
 @app.post("/api/segment-with-overlay", response_model=SegmentWithOverlayResponse)
 async def segment_with_overlay(
     image: UploadFile = File(...),
+    card_width_pixels: float = 0,  # >0 to filter mask to card guide area
 ):
     """
     Segment nail regions and return overlay image for mobile display.
@@ -468,6 +542,10 @@ async def segment_with_overlay(
 
         # Run inference
         mask, inference_time = model_manager.predict(img_rgb)
+
+        # Filter mask to card guide area
+        if card_width_pixels > 0:
+            mask = mask_card_guide_region(mask, card_width_pixels)
 
         # Get mask dimensions (same as model input size)
         height, width = mask.shape
@@ -567,6 +645,11 @@ async def measure_nails(
 
         # Find connected components
         regions = find_connected_components(mask, threshold=model_manager.threshold)
+
+        # Filter to card guide area only
+        regions = filter_regions_by_card_guide(
+            regions, card_width_pixels, model_manager.input_size
+        )
 
         # Classify fingers
         classified_regions = classify_fingers(regions, is_thumb_only)

@@ -91,7 +91,28 @@ print("="*50)
 print("경로 확인")
 print("="*50)
 print(f"Dataset exists: {DATASET_PATH.exists()}")
-print(f"Checkpoint exists: {Path(CHECKPOINT_FILE).exists()}")
+_ckpt_path = Path(CHECKPOINT_FILE)
+print(f"Checkpoint exists: {_ckpt_path.is_file()}")
+
+# 체크포인트 정보 출력
+if _ckpt_path.is_file():
+    _ckpt = torch.load(CHECKPOINT_FILE, map_location='cpu')
+    if isinstance(_ckpt, dict) and 'epoch' in _ckpt:
+        print(f"\n★ Checkpoint info:")
+        print(f"  epoch: {_ckpt['epoch']} | best_iou: {_ckpt.get('best_iou', 'N/A')}")
+        print(f"  val_iou: {_ckpt.get('val_iou', 'N/A')}")
+        print(f"  → 이어서 학습 시 epoch {_ckpt['epoch'] + 1}부터 시작됩니다")
+        if 'best_checkpoint' in CHECKPOINT_FILE:
+            print(f"  ⚠️ best_checkpoint 사용 중! last_checkpoint.pth를 권장합니다")
+    else:
+        print(f"\n★ Checkpoint: state_dict only (epoch/IoU 정보 없음)")
+    del _ckpt
+elif _ckpt_path.is_dir():
+    print(f"\n⚠️ 경로가 디렉토리입니다 (파일명 누락): {CHECKPOINT_FILE}")
+    _files = [f.name for f in _ckpt_path.glob('*.pth')]
+    if _files:
+        print(f"  사용 가능한 파일: {_files}")
+        print(f"  → CHECKPOINT_FILE 경로 끝에 파일명을 추가하세요")
 ```
 
 ---
@@ -463,32 +484,44 @@ print("\n★ 다운로드: /kaggle/working/models/best_model.pth")
 
 ## 이어서 학습하기 (다음 세션)
 
-### 1. 체크포인트 저장
-학습 완료 후 Output에서 **`best_checkpoint.pth`** 선택 > "Create Model" 클릭
+> **중요**: `best_model.pth`가 아닌 **`last_checkpoint.pth`**를 사용하세요!
+> - `last_checkpoint.pth`: 마지막 에포크 상태 → optimizer/scheduler 포함, 이어서 학습에 적합
+> - `best_checkpoint.pth`: best IoU 시점 → 이후 에포크의 학습이 날아감
+>
+> `last_checkpoint.pth`에도 `best_iou` 필드가 포함되어 있어 best 기준이 유지됩니다.
 
-> ⚠️ `best_model.pth`가 아닌 **`best_checkpoint.pth`**를 저장해야 optimizer 상태가 유지됩니다.
+### 방법 A: 이전 노트북 Output 직접 참조 (권장)
 
-### 2. 모델 업로드 설정
-| 항목 | 값 |
-|------|-----|
-| Model Name | `nail-segmentation-checkpoint-v3` |
-| Framework | PyTorch |
-| License | Apache 2.0 |
-| Visibility | Private |
+다운로드/업로드 없이 이전 노트북의 output을 바로 input으로 연결합니다.
 
-### 3. 새 노트북에서 Input 추가
-- `nail-segmentation-dataset` (데이터셋)
-- `nail-segmentation-checkpoint-v3` (새 체크포인트)
+**1. 이전 노트북 "Save Version" 실행**
+- 학습 완료(또는 세션 종료) 후 노트북 상단 **Save Version** 클릭
+- output 파일이 확정됨
 
-### 4. Cell 2 수정
+**2. 새 노트북에서 이전 노트북 Output 추가**
+- 새 노트북 사이드바 **+ Add Input** 클릭
+- 검색창에 이전 노트북 이름 입력 → 선택 (NOTEBOOKS 섹션에 추가됨)
+
+**3. Cell 2의 CHECKPOINT_FILE 수정**
 ```python
-# ★ best_checkpoint.pth 경로로 변경 (best_model.pth 아님!)
-CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v3/pytorch/default/1/best_checkpoint.pth'
-
-# start_epoch과 previous_best_iou는 체크포인트에서 자동으로 로드됨
+CHECKPOINT_FILE = '/kaggle/input/{이전-노트북-slug}/models/last_checkpoint.pth'
 ```
 
-### 5. 세션 관리 팁
+> 경로 형식: `/kaggle/input/{노트북-slug}/{output-내-경로}`
+
+### 방법 B: Kaggle Models 업로드 (대안)
+
+노트북 삭제 예정이거나 영구 보관이 필요한 경우:
+
+1. Output에서 `last_checkpoint.pth` 다운로드
+2. [Kaggle Models](https://www.kaggle.com/models) > **New Model** > `nail-segmentation-checkpoint-v3` > PyTorch > 업로드
+3. 새 노트북 **+ Add Input** > **Models** 탭에서 추가
+4. Cell 2 수정:
+   ```python
+   CHECKPOINT_FILE = '/kaggle/input/nail-segmentation-checkpoint-v3/pytorch/default/1/last_checkpoint.pth'
+   ```
+
+### 세션 관리 팁
 - **30 에포크 = 약 3-4시간** (데이터셋 크기에 따라 다름)
 - 12시간 제한 내에 안전하게 완료 가능
 - 총 100 에포크 학습 시 **4번의 세션**으로 나눠서 진행

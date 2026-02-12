@@ -34,6 +34,7 @@
 | `nail-segmentation-dataset` | 기존 Train + Validation Set (5,000+장) |
 | `thumb-nail-training-data` | 엄지 데이터 (18장) |
 | `roboflow-nail-detection` | Roboflow 손톱 데이터 (266장) |
+| `credit-card-negative` | 신용카드 negative sample (529장, all-black mask) |
 
 ### 2. GPU 설정
 Settings > Accelerator > GPU T4 x2
@@ -82,22 +83,58 @@ CONFIG = {
     'version': VERSION,
     'encoder': 'resnet101',
     'input_size': 800,                 # 측정 정밀도 향상 (1px ≈ 0.107mm)
-    'epochs': 50,                      # 충분한 상한 (early stopping + 12h 세션 내)
+    'epochs': 30,                      # ★ 이번 세션 학습할 에포크 수
     'batch_size': 4,                   # 800px T4 메모리 고려
     'learning_rate': 0.0001,           # 처음부터 학습: 1e-4
     'weight_decay': 0.0005,
-    'patience': 12,                    # LR 스케줄 dip 회복 여유
+    'patience': 10,                    # LR 스케줄 dip 회복 여유
     'freeze_encoder_layers': 0,        # Freeze 없음
     'thumb_repeat': 15,
     'original_sample': None,           # 전체 사용
     'roboflow_sample': None,           # 전체 사용
     'dice_weight': 1.0,
     'bce_weight': 1.5,
+    'previous_best_iou': 0.0,         # ★ 이전 best IoU (체크포인트에서 자동 로드)
+    'start_epoch': 0,                  # ★ 이전 에포크 (체크포인트에서 자동 로드)
 }
+
+# ★ 체크포인트 경로 (이어서 학습 시 수정)
+# ⚠️ best_checkpoint.pth가 아닌 last_checkpoint.pth를 사용해야 마지막 에포크부터 이어서 학습됩니다.
+#    best_checkpoint.pth를 사용하면 best IoU 시점으로 되돌아가서 이후 학습이 날아갑니다.
+# 방법 A: 이전 노트북 output 직접 참조 (Add Input > 노트북 이름 검색 > 추가)
+#   CHECKPOINT_FILE = '/kaggle/input/notebooks/heojmin/advanced-nail-segmentation/models/last_checkpoint.pth'
+# 방법 B: Kaggle Models 업로드 후 참조
+#   CHECKPOINT_FILE = '/kaggle/input/nail-mixed-checkpoint-v1/pytorch/default/1/last_checkpoint.pth'
+CHECKPOINT_FILE = '/kaggle/input/models/heojmin/nail-checkpoint/pytorch/default/1/last_checkpoint.pth'
+
+# 체크포인트 경로 확인 & 정보 출력
+if CHECKPOINT_FILE:
+    _ckpt_path = Path(CHECKPOINT_FILE)
+    if _ckpt_path.is_file():
+        print(f"★ Checkpoint found: {CHECKPOINT_FILE}")
+        _ckpt = torch.load(CHECKPOINT_FILE, map_location='cpu')
+        if isinstance(_ckpt, dict) and 'epoch' in _ckpt:
+            print(f"  epoch: {_ckpt['epoch']} | best_iou: {_ckpt.get('best_iou', 'N/A')}")
+            print(f"  val_iou: {_ckpt.get('val_iou', 'N/A')}")
+            print(f"  → 이어서 학습 시 epoch {_ckpt['epoch'] + 1}부터 시작됩니다")
+            if 'best_checkpoint' in CHECKPOINT_FILE:
+                print(f"  ⚠️ best_checkpoint 사용 중! last_checkpoint.pth를 권장합니다")
+        else:
+            print(f"  (state_dict only — epoch/IoU 정보 없음)")
+        del _ckpt
+    elif _ckpt_path.is_dir():
+        print(f"⚠️ 경로가 디렉토리입니다 (파일명 누락): {CHECKPOINT_FILE}")
+        _files = [f.name for f in _ckpt_path.glob('*.pth')]
+        if _files:
+            print(f"  사용 가능한 파일: {_files}")
+            print(f"  → CHECKPOINT_FILE 경로 끝에 파일명을 추가하세요")
+    else:
+        print(f"⚠️ Checkpoint NOT FOUND: {CHECKPOINT_FILE}")
 
 THUMB_DATA_DIR = Path('/kaggle/input/thumb-nail-training-data/thumb_train')
 ORIGINAL_TRAIN_DIR = Path('/kaggle/input/nail-segmentation-dataset/NailSegmentationDatasetV2/train')
 ROBOFLOW_DATA_DIR = Path('/kaggle/input/roboflow-nail-detection/roboflow_nail_masks')
+CARD_DATA_DIR = Path('/kaggle/input/datasets/heojmin/credit-cards/credit_card_negative')
 VAL_DATA_DIR = Path('/kaggle/input/nail-segmentation-dataset/NailSegmentationDatasetV2/val')
 OUTPUT_DIR = Path('/kaggle/working/models')
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -106,17 +143,19 @@ print("=" * 60)
 print("Full Training: CLAHE + Dice+1.5xBCE")
 print("=" * 60)
 for label, path in [('Thumb', THUMB_DATA_DIR), ('Original', ORIGINAL_TRAIN_DIR),
-                     ('Roboflow', ROBOFLOW_DATA_DIR), ('Val', VAL_DATA_DIR)]:
+                     ('Roboflow', ROBOFLOW_DATA_DIR), ('Card', CARD_DATA_DIR), ('Val', VAL_DATA_DIR)]:
     print(f"  {label}: {'OK' if path.exists() else 'NOT FOUND'} — {path}")
 
 thumb_count = len(list((THUMB_DATA_DIR / 'images').glob('*.jpg')))
 original_count = len(list((ORIGINAL_TRAIN_DIR / 'images').glob('*')))
 roboflow_count = len(list((ROBOFLOW_DATA_DIR / 'images').glob('*.jpg')))
+card_count = len(list((CARD_DATA_DIR / 'images').glob('*.jpg')))
 
-total = thumb_count * CONFIG['thumb_repeat'] + original_count + roboflow_count
+total = thumb_count * CONFIG['thumb_repeat'] + original_count + roboflow_count + card_count
 print(f"\nThumb: {thumb_count} x{CONFIG['thumb_repeat']} = {thumb_count * CONFIG['thumb_repeat']}")
 print(f"Original: {original_count} (전체)")
 print(f"Roboflow: {roboflow_count} (전체)")
+print(f"Card (negative): {card_count} (전체)")
 print(f"★ Total: {total} images")
 ```
 
@@ -203,6 +242,30 @@ model = model.to(device)
 
 total_params = sum(p.numel() for p in model.parameters())
 print(f"Parameters: {total_params:,} (all trainable)")
+
+# ★ 체크포인트 로드 (이어서 학습 시)
+checkpoint_data = None
+if CHECKPOINT_FILE and Path(CHECKPOINT_FILE).exists():
+    print(f"\n★ Loading checkpoint: {CHECKPOINT_FILE}")
+    checkpoint_data = torch.load(CHECKPOINT_FILE, map_location=device)
+
+    if isinstance(checkpoint_data, dict) and 'model_state_dict' in checkpoint_data:
+        model.load_state_dict(checkpoint_data['model_state_dict'])
+        CONFIG['start_epoch'] = checkpoint_data.get('epoch', 0) + 1
+        CONFIG['previous_best_iou'] = checkpoint_data.get('best_iou', 0.0)
+        print(f"★ Resuming from epoch {CONFIG['start_epoch']}, best IoU: {CONFIG['previous_best_iou']:.4f}")
+    else:
+        model.load_state_dict(checkpoint_data)
+        checkpoint_data = None
+        print("★ Loaded state_dict only (no optimizer state)")
+elif CHECKPOINT_FILE:
+    print(f"\n⚠️ CHECKPOINT_FILE 설정됨, 파일을 찾을 수 없음: {CHECKPOINT_FILE}")
+    print("⚠️ ImageNet weights로 처음부터 학습합니다. 경로를 확인하세요.")
+    if 'best_checkpoint' in CHECKPOINT_FILE:
+        print("⚠️ best_checkpoint.pth 대신 last_checkpoint.pth를 사용하세요!")
+        print("   best는 best IoU 시점으로 되돌아가서 이후 에포크가 날아갑니다.")
+else:
+    print("Training from scratch with ImageNet weights")
 ```
 
 ---
@@ -241,14 +304,18 @@ else:
     roboflow_images = [roboflow_images_all[i] for i in indices]
     roboflow_masks = [roboflow_masks_all[i] for i in indices]
 
+# === Credit Card (negative sample, all-black masks) ===
+card_images = sorted((CARD_DATA_DIR / 'images').glob('*.jpg'))
+card_masks = sorted((CARD_DATA_DIR / 'masks').glob('*.png'))
+
 # === 병합 & 셔플 ===
-all_images = thumb_images_repeated + original_images + roboflow_images
-all_masks = thumb_masks_repeated + original_masks + roboflow_masks
+all_images = thumb_images_repeated + original_images + roboflow_images + list(card_images)
+all_masks = thumb_masks_repeated + original_masks + roboflow_masks + list(card_masks)
 combined = list(zip(all_images, all_masks))
 random.shuffle(combined)
 all_images, all_masks = zip(*combined)
 
-print(f"Train: Thumb {len(thumb_images_repeated)} + Original {len(original_images)} + Roboflow {len(roboflow_images)} = {len(all_images)}")
+print(f"Train: Thumb {len(thumb_images_repeated)} + Original {len(original_images)} + Roboflow {len(roboflow_images)} + Card {len(card_images)} = {len(all_images)}")
 
 train_dataset = NailDataset(list(all_images), list(all_masks), get_train_transform(CONFIG['input_size']), CONFIG['input_size'])
 
@@ -257,7 +324,7 @@ val_images = sorted((VAL_DATA_DIR / 'images').glob('*'))
 val_masks = sorted((VAL_DATA_DIR / 'masks').glob('*'))
 val_dataset = NailDataset(val_images, val_masks, get_val_transform(CONFIG['input_size']), CONFIG['input_size'])
 
-train_loader = DataLoader(train_dataset, batch_size=CONFIG['batch_size'], shuffle=True, num_workers=2, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=CONFIG['batch_size'], shuffle=True, num_workers=2, pin_memory=True, drop_last=True)
 val_loader = DataLoader(val_dataset, batch_size=CONFIG['batch_size'], shuffle=False, num_workers=2, pin_memory=True)
 
 print(f"Train: {len(train_loader)} batches | Val: {len(val_loader)} batches")
@@ -278,9 +345,18 @@ def criterion(pred, target):
 optimizer = torch.optim.AdamW(model.parameters(), lr=CONFIG['learning_rate'], weight_decay=CONFIG['weight_decay'])
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=2, eta_min=1e-7)
 
+# ★ 체크포인트에서 optimizer/scheduler 복원
+if checkpoint_data is not None and 'optimizer_state_dict' in checkpoint_data:
+    optimizer.load_state_dict(checkpoint_data['optimizer_state_dict'])
+    print("★ Optimizer state restored")
+if checkpoint_data is not None and 'scheduler_state_dict' in checkpoint_data:
+    scheduler.load_state_dict(checkpoint_data['scheduler_state_dict'])
+    print("★ Scheduler state restored")
+
 print(f"Loss: Dice({CONFIG['dice_weight']}) + BCE({CONFIG['bce_weight']}) from logits")
 print(f"Optimizer: AdamW lr={CONFIG['learning_rate']}")
 print(f"Scheduler: CosineAnnealingWarmRestarts T_0=5, T_mult=2")
+print(f"Start epoch: {CONFIG['start_epoch']}")
 ```
 
 ---
@@ -342,18 +418,22 @@ def validate(model, loader, criterion, device):
 ## Cell 9: 학습
 
 ```python
+best_iou = CONFIG['previous_best_iou']
+start_epoch = CONFIG['start_epoch']
+end_epoch = start_epoch + CONFIG['epochs']
+
 print("=" * 60)
 print(f"Full Training: CLAHE + Dice({CONFIG['dice_weight']})+BCE({CONFIG['bce_weight']})")
 print(f"  {len(train_dataset)} images | batch {CONFIG['batch_size']} | max {CONFIG['epochs']} epochs | patience {CONFIG['patience']}")
+print(f"  Epochs: {start_epoch} → {end_epoch} | Previous best IoU: {best_iou:.4f}")
 print("=" * 60)
 
-best_iou = 0.0
 patience_counter = 0
 history = {'train_loss': [], 'train_iou': [], 'val_loss': [], 'val_iou': [], 'lr': []}
 
-for epoch in range(CONFIG['epochs']):
+for epoch in range(start_epoch, end_epoch):
     current_lr = optimizer.param_groups[0]['lr']
-    print(f"\nEpoch {epoch + 1}/{CONFIG['epochs']} | LR: {current_lr:.8f}")
+    print(f"\nEpoch {epoch + 1}/{end_epoch} (global) | LR: {current_lr:.8f}")
 
     train_loss, train_iou = train_one_epoch(model, train_loader, criterion, optimizer, device)
     val_loss, val_iou = validate(model, val_loader, criterion, device)
@@ -396,7 +476,9 @@ for epoch in range(CONFIG['epochs']):
         break
 
 print(f"\n{'=' * 60}")
-print(f"Training Complete — Best Val IoU: {best_iou:.4f} (epoch {epoch + 1})")
+print(f"Training Complete!")
+print(f"  Epochs: {start_epoch} → {epoch + 1}")
+print(f"  Best Val IoU: {best_iou:.4f}")
 print(f"{'=' * 60}")
 ```
 
@@ -548,7 +630,8 @@ for f in sorted(OUTPUT_DIR.glob('*')):
 
 print("\n★ 다운로드:")
 print("  - best_model.pth (추론용)")
-print("  - best_checkpoint.pth (이어서 학습용)")
+print("  - last_checkpoint.pth (이어서 학습용 — 마지막 에포크 상태)")
+print("  - best_checkpoint.pth (best IoU 시점 백업)")
 print("  - threshold_optimization.json (최적 threshold)")
 ```
 
@@ -570,3 +653,61 @@ curl http://localhost:8000/health | jq '.'
 curl -X POST http://localhost:8000/api/segment-with-overlay \
   -F "image=@test.jpg" | jq '.mask_stats'
 ```
+
+---
+
+## 이어서 학습하기 (다음 세션)
+
+Kaggle 12시간 세션 제한으로 학습이 중단된 경우, 체크포인트에서 이어서 학습할 수 있습니다.
+
+> **중요**: `best_checkpoint.pth`가 아닌 **`last_checkpoint.pth`**를 사용하세요!
+> - `last_checkpoint.pth`: 마지막 에포크 상태 → 이어서 학습에 적합
+> - `best_checkpoint.pth`: best IoU 시점 → 이후 에포크의 학습이 날아감
+>
+> 예: epoch 7에서 best IoU, epoch 19까지 학습한 경우
+> - `last_checkpoint.pth` → epoch 20부터 이어서 학습
+> - `best_checkpoint.pth` → epoch 8부터 다시 학습 (epoch 8~19 손실)
+>
+> `last_checkpoint.pth`에도 `best_iou` 필드가 포함되어 있어 best 기준이 유지됩니다.
+
+### 방법 A: 이전 노트북 Output 직접 참조 (권장)
+
+다운로드/업로드 없이 이전 노트북의 output을 바로 input으로 연결합니다.
+
+**1. 이전 노트북 "Save Version" 실행**
+- 학습 완료(또는 세션 종료) 후 노트북 상단 **Save Version** 클릭
+- "Save & Run All" 또는 "Quick Save" 선택 → output 파일이 확정됨
+
+**2. 새 노트북에서 이전 노트북 Output 추가**
+- 새 노트북 (또는 동일 노트북 새 세션) 열기
+- 사이드바 **+ Add Input** 클릭
+- 검색창에 이전 노트북 이름 입력 (예: "Advanced Nail Segmentation")
+- 검색 결과에서 해당 노트북 선택 → **NOTEBOOKS** 섹션에 추가됨
+
+**3. Cell 2의 CHECKPOINT_FILE 경로 수정**
+
+```python
+# 이전 노트북 output에서 직접 로드 (last_checkpoint 사용!)
+CHECKPOINT_FILE = '/kaggle/input/notebooks/heojmin/advanced-nail-segmentation/models/last_checkpoint.pth'
+```
+
+> 경로 형식: `/kaggle/input/notebooks/{username}/{노트북-slug}/models/last_checkpoint.pth`
+
+**4. 실행**
+- 나머지 셀은 수정 없이 순서대로 실행
+- Cell 5에서 체크포인트 로드 확인:
+  ```
+  ★ Resuming from epoch XX, best IoU: 0.XXXX
+  ```
+
+### 방법 B: Kaggle Models 업로드 (대안)
+
+노트북을 삭제할 예정이거나 영구 보관이 필요한 경우 사용합니다.
+
+1. 노트북 Output에서 `last_checkpoint.pth` 다운로드
+2. [Kaggle Models](https://www.kaggle.com/models) > **New Model** > 이름: `nail-mixed-checkpoint-v1` > PyTorch > 업로드
+3. 새 노트북 **+ Add Input** > **Models** 탭에서 추가
+4. Cell 2 수정:
+   ```python
+   CHECKPOINT_FILE = '/kaggle/input/nail-mixed-checkpoint-v1/pytorch/default/1/last_checkpoint.pth'
+   ```
