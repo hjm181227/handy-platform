@@ -92,6 +92,12 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
 
           setOrder(order);
 
+          // 견적서 체크아웃 캐시 정리
+          const referrer = document.referrer || '';
+          const refUrl = new URL(referrer, window.location.origin);
+          const qUuid = refUrl.searchParams.get('quoteUuid');
+          if (qUuid) sessionStorage.removeItem(`quote_checkout_${qUuid}`);
+
           // 성공 알림
           await alert('결제가 완료되었습니다!', {
             variant: 'success',

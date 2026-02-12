@@ -465,6 +465,13 @@ export const API_ENDPOINTS = {
     CREATE: '/api/custom-orders',               // POST - 커스텀 주문서 생성
     DETAIL: (uuid: string) => `/api/custom-orders/${uuid}`, // GET - 커스텀 주문서 상세 조회
   },
+
+  // 견적서
+  QUOTES: {
+    DETAIL: (quoteUuid: string) => `/api/quotes/${quoteUuid}`,       // GET - 견적서 상세 조회
+    ACCEPT: (quoteUuid: string) => `/api/quotes/${quoteUuid}/accept`, // POST - 견적서 수락
+    REJECT: (quoteUuid: string) => `/api/quotes/${quoteUuid}/reject`, // POST - 견적서 거절
+  },
 };
 
 // 환경별 디버그 설정

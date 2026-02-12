@@ -163,22 +163,52 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           }
           break;
 
-        case 'custom':
+        case 'custom': {
           // 견적서 기반 주문: URL 파라미터에서 quoteUuid 읽기
-          try {
-            const quoteUuid = new URLSearchParams(window.location.search).get('quoteUuid');
-            if (quoteUuid) {
-              requestBody = { quoteUuid };
-              console.log('📦 [CheckoutPage] Quote-based checkout:', quoteUuid);
-            } else {
-              console.error('❌ [CheckoutPage] No quoteUuid found in URL for custom mode');
-              throw new Error('견적서 정보를 찾을 수 없습니다.');
-            }
-          } catch (err) {
-            console.error('❌ [CheckoutPage] Failed to load quote data:', err);
-            throw err;
+          const quoteUuid = new URLSearchParams(window.location.search).get('quoteUuid');
+          if (!quoteUuid) {
+            throw new Error('견적서 정보를 찾을 수 없습니다.');
           }
+
+          // 이전에 생성된 세션이 있으면 재사용 (이탈 후 재진입 대응)
+          const cachedSessionStr = sessionStorage.getItem(`quote_checkout_${quoteUuid}`);
+          if (cachedSessionStr) {
+            try {
+              const cachedData = JSON.parse(cachedSessionStr);
+              console.log('♻️ [CheckoutPage] Resuming cached checkout session for quote:', quoteUuid);
+              setCart({ sessionId: cachedData.sessionId, ...cachedData } as any);
+              const tempOrder: Order = {
+                id: `temp_${Date.now()}`,
+                orderNumber: `ORDER_${Date.now()}`,
+                status: 'pending',
+                paymentStatus: 'pending',
+                totalAmount: cachedData.totals.finalTotal,
+                items: cachedData.items || [],
+                shipping: {
+                  id: `shipping_${Date.now()}`,
+                  status: 'preparing',
+                  trackingNumber: undefined,
+                  estimatedDelivery: cachedData.estimatedDeliveryDateRange?.earliest,
+                  carrier: { name: 'Standard', code: 'STD' }
+                } as ShippingDetails,
+                createdAt: new Date().toISOString(),
+                totalPrice: cachedData.totals.subtotal,
+                shippingCost: cachedData.totals.shippingCost,
+                totalDiscount: cachedData.totals.discount,
+                finalPrice: cachedData.totals.grandTotal
+              };
+              setOrder(tempOrder);
+              await loadAddresses();
+              return;
+            } catch {
+              sessionStorage.removeItem(`quote_checkout_${quoteUuid}`);
+            }
+          }
+
+          requestBody = { quoteUuid };
+          console.log('📦 [CheckoutPage] Quote-based checkout:', quoteUuid);
           break;
+        }
 
         default:
           console.warn('⚠️ [CheckoutPage] Unknown checkout mode:', checkoutMode);
@@ -195,6 +225,15 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       if (result.success && result.data) {
         // ✅ Initialize 성공 - sessionStorage 정리 (다음 주문에 영향 방지)
         sessionStorage.removeItem('checkoutData');
+
+        // 견적서 기반 체크아웃인 경우 세션 캐시 (이탈 후 재진입 대비)
+        if (checkoutMode === 'custom') {
+          const qUuid = new URLSearchParams(window.location.search).get('quoteUuid');
+          if (qUuid) {
+            sessionStorage.setItem(`quote_checkout_${qUuid}`, JSON.stringify(result.data));
+          }
+        }
+
         console.log('🗑️ [CheckoutPage] Cleared checkoutData from sessionStorage');
 
         // ✅ CheckoutData를 cart로 저장 (sessionId 포함)
@@ -560,6 +599,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
       if (skipResponse.success) {
         console.log('✅ [CheckoutPage] Test payment completed:', skipResponse.data);
+        // 견적서 체크아웃 캐시 정리
+        const qParam = new URLSearchParams(window.location.search).get('quoteUuid');
+        if (qParam) sessionStorage.removeItem(`quote_checkout_${qParam}`);
         // 주문 완료 페이지로 이동
         onGo(`/order-complete?orderId=${orderId}`);
       } else {

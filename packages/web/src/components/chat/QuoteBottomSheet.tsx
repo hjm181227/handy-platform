@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Receipt, X, Clock, Calendar, TriangleAlert } from 'lucide-react';
+import { Receipt, X, ClipboardList, MessageSquare, Store, ShoppingCart, TriangleAlert } from 'lucide-react';
+import { orderService } from '../../services/apiService';
 
 interface QuoteDetail {
   quoteUuid: string;
@@ -12,6 +13,7 @@ interface QuoteDetail {
   sellerName?: string;
   buyerUuid: string;
   createdAt: string;
+  expiresAt?: string;
   customOrder?: {
     title: string;
     shape: string;
@@ -23,16 +25,16 @@ interface QuoteBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   quoteId?: string | null;
-  isSeller: boolean;
+  currentUserUuid?: string;
   onPurchase?: (quoteId: string) => void;
 }
 
 // 상태 설정
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-  pending: { label: '대기중', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' },
+  pending:  { label: '대기중', bgColor: 'bg-[#FEF3C7]', textColor: 'text-[#D97706]' },
   accepted: { label: '수락됨', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-  rejected: { label: '거절됨', bgColor: 'bg-red-100', textColor: 'text-red-700' },
-  expired: { label: '만료됨', bgColor: 'bg-gray-100', textColor: 'text-gray-500' }
+  rejected: { label: '거절됨', bgColor: 'bg-red-100',   textColor: 'text-red-700' },
+  expired:  { label: '만료됨', bgColor: 'bg-gray-100',  textColor: 'text-gray-500' }
 };
 
 // 쉐입 한글 변환
@@ -52,14 +54,11 @@ const LENGTH_LABELS: Record<string, string> = {
   LONG: '롱'
 };
 
-// API Base URL
-const API_BASE_URL = (window as any).__VITE_API_BASE_URL__ || '';
-
 export function QuoteBottomSheet({
   isOpen,
   onClose,
   quoteId,
-  isSeller,
+  currentUserUuid,
   onPurchase
 }: QuoteBottomSheetProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -81,21 +80,22 @@ export function QuoteBottomSheet({
     });
   };
 
+  // 짧은 날짜 포맷 (유효기간용)
+  const formatShortDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\. /g, '.').replace(/\.$/, '');
+  };
+
   // quoteId가 있으면 API에서 조회
   useEffect(() => {
     if (isOpen && quoteId) {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('accessToken');
-
-      fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(res => res.json())
+      orderService.getQuoteDetail(quoteId)
         .then(res => {
           if (res.success && res.data) {
             // 백엔드 응답 구조: { quoteUuid, customRequest, seller, quote }
@@ -111,6 +111,7 @@ export function QuoteBottomSheet({
               sellerName: seller?.brandName,
               buyerUuid: '',
               createdAt: quote?.issuedAt || '',
+              expiresAt: quote?.expiresAt,
               customOrder: customRequest ? {
                 title: customRequest.title || '',
                 shape: customRequest.specifications?.shape || '',
@@ -179,18 +180,18 @@ export function QuoteBottomSheet({
       >
         {/* 드래그 핸들 */}
         <div className="flex-shrink-0 flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          <div className="w-10 h-1 bg-[#D0C9C3] rounded-full" />
         </div>
 
         {/* 헤더 */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-[#E85A6B]" />
-            <h2 className="text-lg font-bold text-gray-900">견적서</h2>
+        <div className="flex-shrink-0 flex items-center gap-3 px-5 pb-4">
+          <Receipt className="w-6 h-6 text-green-500 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-[#131211]">견적서 상세</h2>
             {data && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                {statusConfig.label}
-              </span>
+              <p className="text-xs text-[#A39E99]">
+                {data.sellerName || ''}{data.createdAt ? ` · ${formatShortDate(data.createdAt)} 발행` : ''}
+              </p>
             )}
           </div>
           <button
@@ -200,14 +201,15 @@ export function QuoteBottomSheet({
             <X className="w-6 h-6 text-[#A39E99]" />
           </button>
         </div>
+        <div className="h-px bg-[#F5F3F1]" />
 
         {/* 본문 - 스크롤 가능 */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-6">
+        <div className="flex-1 overflow-y-auto min-h-0 p-5">
           {/* 로딩 상태 */}
           {loading && (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-              <p className="text-gray-500">견적서 정보를 불러오는 중...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+              <p className="text-[#A39E99]">견적서 정보를 불러오는 중...</p>
             </div>
           )}
 
@@ -224,111 +226,118 @@ export function QuoteBottomSheet({
           {/* 데이터 표시 */}
           {data && !loading && !error ? (
             <div className="space-y-6">
-              {/* 가격 - 강조 표시 */}
-              <div className="bg-emerald-50 rounded-2xl p-6 text-center">
-                <p className="text-sm text-emerald-600 mb-2">견적 금액</p>
-                <p className="text-3xl font-bold text-emerald-600">
-                  {formatPrice(data.price)}
-                  <span className="text-lg font-normal text-gray-500">원</span>
-                </p>
+              {/* 가격 섹션 */}
+              <div className="flex items-end justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-[#A39E99]">견적 금액</p>
+                  <p className="text-[32px] font-bold text-[#131211] leading-tight">
+                    {formatPrice(data.price)}원
+                  </p>
+                </div>
+                <span className={`px-2 py-[3px] rounded-md text-[11px] font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                  {statusConfig.label}
+                </span>
               </div>
 
-              {/* 제작 정보 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#F7F5F3] rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Clock className="w-5 h-5 text-[#A39E99]" />
-                    <span className="text-sm text-[#A39E99]">예상 제작일</span>
-                  </div>
-                  <p className="text-xl font-bold text-[#131211]">{data.processingDays}일</p>
+              {/* 정보 그리드 */}
+              <div className="space-y-2.5">
+                <div className="flex">
+                  <span className="text-[13px] text-[#A39E99] flex-1">예상 제작일</span>
+                  <span className="text-[13px] font-semibold text-[#131211] flex-1">{data.processingDays}일</span>
                 </div>
-                <div className="bg-[#F7F5F3] rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Calendar className="w-5 h-5 text-[#A39E99]" />
-                    <span className="text-sm text-[#A39E99]">견적일</span>
+                {data.expiresAt && (
+                  <div className="flex">
+                    <span className="text-[13px] text-[#A39E99] flex-1">유효기간</span>
+                    <span className="text-[13px] font-semibold text-[#131211] flex-1">{formatShortDate(data.expiresAt)}까지</span>
                   </div>
-                  <p className="text-sm font-medium text-[#131211]">{formatDate(data.createdAt)}</p>
-                </div>
+                )}
+                {data.createdAt && (
+                  <div className="flex">
+                    <span className="text-[13px] text-[#A39E99] flex-1">발행일</span>
+                    <span className="text-[13px] font-semibold text-[#131211] flex-1">{formatDate(data.createdAt)}</span>
+                  </div>
+                )}
               </div>
+              <div className="h-px bg-[#F5F3F1]" />
 
-              {/* 연결된 주문서 정보 */}
+              {/* 연결된 주문서 */}
               {data.customOrder && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                    연결된 주문서
-                  </h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="font-medium text-gray-900 mb-2">{data.customOrder.title}</p>
-                    <div className="flex gap-2">
-                      <span className="px-2 py-1 bg-white text-gray-600 rounded-md text-xs font-medium border border-gray-200">
-                        {shapeLabel}
-                      </span>
-                      <span className="px-2 py-1 bg-white text-gray-600 rounded-md text-xs font-medium border border-gray-200">
-                        {lengthLabel}
-                      </span>
+                <>
+                  <div>
+                    <h3 className="text-[15px] font-bold text-[#131211] mb-2.5">연결된 주문서</h3>
+                    <div className="bg-[#F7F5F3] rounded-[10px] p-3.5 space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        <ClipboardList className="w-4 h-4 text-[#A39E99]" />
+                        <span className="text-[13px] font-semibold text-[#131211]">{data.customOrder.title}</span>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <span className="px-2 py-0.5 bg-[#EEEBE8] rounded-md text-[11px] font-medium text-[#131211]">
+                          {shapeLabel}
+                        </span>
+                        <span className="px-2 py-0.5 bg-[#EEEBE8] rounded-md text-[11px] font-medium text-[#131211]">
+                          {lengthLabel}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                  <div className="h-px bg-[#F5F3F1]" />
+                </>
               )}
 
               {/* 판매자 메모 */}
               {data.sellerNotes && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                    판매자 메모
-                  </h3>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{data.sellerNotes}</p>
+                <>
+                  <div>
+                    <h3 className="text-[15px] font-bold text-[#131211] mb-2.5">판매자 메모</h3>
+                    <div className="bg-[#FEF9E7] rounded-[10px] px-3.5 py-3 flex gap-2">
+                      <MessageSquare className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" />
+                      <p className="text-[13px] text-[#92400E] whitespace-pre-wrap">{data.sellerNotes}</p>
+                    </div>
                   </div>
-                </div>
+                  <div className="h-px bg-[#F5F3F1]" />
+                </>
               )}
 
               {/* 판매자 정보 */}
               {data.sellerName && (
-                <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
-                    {data.sellerName.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{data.sellerName}</p>
-                    <p className="text-xs text-gray-500">판매자</p>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#131211] mb-2.5">판매자 정보</h3>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
+                      <Store className="w-5 h-5 text-[#A39E99]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#131211]">{data.sellerName}</p>
+                      <p className="text-xs text-[#A39E99]">판매자</p>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           ) : !loading && !error && (
             <div className="text-center py-12">
-              <p className="text-gray-500">견적서 정보가 없습니다.</p>
+              <p className="text-[#A39E99]">견적서 정보가 없습니다.</p>
             </div>
           )}
         </div>
 
         {/* 푸터 */}
         <div
-          className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200 bg-gray-50"
-          style={{ paddingBottom: 'calc(1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
+          className="flex-shrink-0 px-5 pt-4 pb-8"
+          style={{ paddingBottom: 'calc(2rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))' }}
         >
-          {!isSeller && data && data.status === 'pending' ? (
-            <div className="flex gap-3">
-              <button
-                onClick={handleClose}
-                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
-              >
-                닫기
-              </button>
-              <button
-                onClick={handlePurchase}
-                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium"
-              >
-                구매하기
-              </button>
-            </div>
+          {data && (data.status === 'pending' || data.status === 'accepted') && currentUserUuid && currentUserUuid !== data.sellerUuid ? (
+            <button
+              onClick={handlePurchase}
+              className="w-full h-14 bg-[#131211] text-white rounded-2xl hover:bg-[#2a2928] transition-colors font-semibold text-base flex items-center justify-center gap-2"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              구매하기
+            </button>
           ) : (
             <button
               onClick={handleClose}
-              className="w-full py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium"
+              className="w-full h-14 bg-[#131211] text-white rounded-2xl hover:bg-[#2a2928] transition-colors font-semibold text-base"
             >
               닫기
             </button>
