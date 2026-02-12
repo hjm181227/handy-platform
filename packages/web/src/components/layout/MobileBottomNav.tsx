@@ -1,16 +1,5 @@
 import React from 'react';
-import {
-  IoGridOutline,
-  IoGrid,
-  IoCameraOutline,
-  IoCamera,
-  IoHomeOutline,
-  IoHome,
-  IoHeartOutline,
-  IoHeart,
-  IoPersonOutline,
-  IoPerson
-} from 'react-icons/io5';
+import { LayoutGrid, Camera, House, Heart, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 
@@ -36,33 +25,33 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
     {
       label: '카테고리',
       path: '/category',
-      icon: IoGridOutline,
-      activeIcon: IoGrid
+      icon: LayoutGrid as any,
+      activeIcon: LayoutGrid as any
     },
     {
       label: '스냅',
       path: '/snap',
-      icon: IoCameraOutline,
-      activeIcon: IoCamera
+      icon: Camera as any,
+      activeIcon: Camera as any
     },
     {
       label: '홈',
       path: '/',
-      icon: IoHomeOutline,
-      activeIcon: IoHome
+      icon: House as any,
+      activeIcon: House as any
     },
     {
       label: '좋아요',
       path: '/likes',
-      icon: IoHeartOutline,
-      activeIcon: IoHeart,
+      icon: Heart as any,
+      activeIcon: Heart as any,
       requiresAuth: true
     },
     {
       label: '마이',
       path: '/my',
-      icon: IoPersonOutline,
-      activeIcon: IoPerson,
+      icon: User as any,
+      activeIcon: User as any,
       requiresAuth: true
     },
   ];
@@ -83,34 +72,34 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white z-40"
       style={{
-        boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)',
+        borderTop: '1px solid #E5E0DC',
         paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))'
       }}
       role="navigation"
       aria-label="하단 네비게이션"
     >
-      <div className="flex justify-around items-center h-16">
+      <div className="flex justify-around items-center" style={{ paddingTop: 8, paddingBottom: 8 }}>
         {tabs.map((tab) => {
           const active = isActive(tab.path);
           const Icon = active ? tab.activeIcon : tab.icon;
-          const textColor = active ? 'text-gray-900' : 'text-gray-400';
+          const color = active ? '#E85A6B' : '#A39E99';
 
           return (
             <button
               key={tab.label}
               onClick={() => handleTabClick(tab)}
-              className="flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200 active:bg-gray-50"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className="flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200"
+              style={{ WebkitTapHighlightColor: 'transparent', gap: 4 }}
               aria-label={`${tab.label}로 이동`}
               aria-current={active ? 'page' : undefined}
             >
               <Icon
                 size={24}
-                className={textColor}
+                style={{ color }}
               />
-              <span className={`text-[10px] font-semibold mt-1 ${textColor}`}>
+              <span style={{ color, fontSize: 10, fontWeight: active ? 600 : 500 }}>
                 {tab.label}
               </span>
             </button>
