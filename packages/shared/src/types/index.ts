@@ -788,7 +788,7 @@ export interface PushNotification {
 export interface PresignedUrlRequest {
   filename: string;
   contentType: string;  // 다시 필수 필드로 복원
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message';
 }
 
 export interface PresignedUrlResponse {

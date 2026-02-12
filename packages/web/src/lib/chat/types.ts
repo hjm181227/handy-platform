@@ -4,7 +4,7 @@
  */
 
 // 메시지 타입 열거
-export type MessageType = 'text' | 'custom_order' | 'quote' | 'system';
+export type MessageType = 'text' | 'custom_order' | 'quote' | 'system' | 'image';
 
 // 커스텀 주문 메시지 데이터
 export interface CustomOrderMessageData {
@@ -62,6 +62,7 @@ export interface Message {
   clientMessageId?: string;
   messageType?: MessageType;  // 메시지 타입 (기본: text)
   metadata?: MessageMetadata; // 추가 메타데이터
+  fileUrl?: string; // 이미지 메시지용 URL
 }
 
 export interface ChatRoom {
@@ -112,7 +113,12 @@ export interface UseChatReturn {
 
   // Message operations
   sendMessage: (text: string) => Promise<void>;
+  sendImage: (file: File) => Promise<void>;
   setInputText: (text: string) => void;
+
+  // Image upload state
+  isUploading: boolean;
+  uploadProgress: number;
 
   // Room operations
   joinRoom: (roomId: string) => Promise<void>;

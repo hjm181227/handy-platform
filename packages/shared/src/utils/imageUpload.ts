@@ -3,7 +3,7 @@ import { ApiError } from './apiHelpers';
 
 export interface ImageUploadOptions {
   file: File | Blob;
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message';
   filename?: string;
   onProgress?: (progress: number) => void;
 }

@@ -5,6 +5,7 @@ import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCar
 import { CustomOrderBottomSheet } from '../components/chat/CustomOrderBottomSheet';
 import { QuoteMessageCard } from '../components/chat/QuoteMessageCard';
 import { QuoteBottomSheet } from '../components/chat/QuoteBottomSheet';
+import { ImageMessageBubble } from '../components/chat/ImageMessageBubble';
 import { config } from '../config/environment';
 import type { Message } from '../lib/chat/types';
 
@@ -82,10 +83,13 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     inputText,
     setInputText,
     sendMessage,
+    sendImage,
     isLoading,
     isConnected,
     error,
     clearError,
+    isUploading,
+    uploadProgress,
   } = useChat(roomId, token, partnerUsernameFromUrl);
 
   // 자동 스크롤을 위한 ref
@@ -98,6 +102,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 견적서 바텀 시트 상태
   const [showQuoteSheet, setShowQuoteSheet] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+
+  // 이미지 첨부 상태
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<{ file: File; previewUrl: string } | null>(null);
 
   // 주문서 카드 클릭 핸들러
   const handleOrderCardClick = (customOrderId: string) => {
@@ -117,13 +125,58 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     nav(`/checkout?mode=custom&quoteUuid=${quoteId}`);
   };
 
+  // 이미지 파일 선택 핸들러
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 10MB 제한
+    if (file.size > 10 * 1024 * 1024) {
+      alert('이미지 크기는 10MB 이하만 가능합니다.');
+      return;
+    }
+
+    // 이미지 타입 검증
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert('JPG, PNG, WebP 이미지만 지원합니다.');
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedImage({ file, previewUrl });
+
+    // input 초기화 (같은 파일 재선택 가능)
+    e.target.value = '';
+  };
+
+  // 이미지 전송 핸들러
+  const handleImageSend = async () => {
+    if (!selectedImage) return;
+    const { file, previewUrl } = selectedImage;
+    setSelectedImage(null);
+    URL.revokeObjectURL(previewUrl);
+    await sendImage(file);
+  };
+
+  // 이미지 선택 취소
+  const handleImageCancel = () => {
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage.previewUrl);
+      setSelectedImage(null);
+    }
+  };
+
   // 메시지 변경 시 자동 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = () => {
-    sendMessage(inputText);
+    if (selectedImage) {
+      handleImageSend();
+    } else {
+      sendMessage(inputText);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -323,8 +376,16 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         </div>
                       )}
 
-                      {/* 커스텀 주문서 메시지 */}
-                      {message.messageType === 'custom_order' && message.metadata?.customOrderId && message.metadata?.type !== 'quote' ? (
+                      {/* 이미지 메시지 */}
+                      {message.messageType === 'image' && message.fileUrl ? (
+                        <ImageMessageBubble
+                          fileUrl={message.fileUrl}
+                          isMe={isMe}
+                          isUploading={isUploading && !!message.clientMessageId?.startsWith('img-')}
+                          uploadProgress={uploadProgress}
+                        />
+                      ) : /* 커스텀 주문서 메시지 */
+                      message.messageType === 'custom_order' && message.metadata?.customOrderId && message.metadata?.type !== 'quote' ? (
                         <CustomOrderMessageCard
                           customOrderId={message.metadata.customOrderId as string}
                           isMine={isMe}
@@ -391,27 +452,66 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
       {/* Input */}
       <div className="bg-white border-t border-gray-200 flex-shrink-0">
         <div className="max-w-4xl mx-auto px-4 py-4">
+          {/* 이미지 미리보기 */}
+          {selectedImage && (
+            <div className="mb-3 relative inline-block">
+              <img
+                src={selectedImage.previewUrl}
+                alt="첨부 이미지 미리보기"
+                className="max-w-[200px] max-h-[150px] object-cover rounded-lg border border-gray-200"
+              />
+              <button
+                onClick={handleImageCancel}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs hover:bg-gray-900 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           <div className="flex items-end gap-2">
+            {/* 파일 첨부 버튼 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              aria-label="이미지 첨부"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+              </svg>
+            </button>
+
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="메시지를 입력하세요..."
+              placeholder={selectedImage ? '이미지를 전송합니다...' : '메시지를 입력하세요...'}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
               rows={1}
+              disabled={!!selectedImage}
             />
             <button
               onClick={handleSend}
-              disabled={!inputText.trim()}
+              disabled={(!inputText.trim() && !selectedImage) || isUploading}
               className={`
                 px-6 py-3 rounded-lg font-medium transition-colors
-                ${inputText.trim()
+                ${(inputText.trim() || selectedImage) && !isUploading
                   ? 'bg-[#FF073A] text-white hover:bg-[#E0062F]'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }
               `}
             >
-              전송
+              {isUploading ? '전송 중...' : '전송'}
             </button>
           </div>
         </div>

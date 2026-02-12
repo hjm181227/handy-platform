@@ -5,7 +5,7 @@
 
 import { io, Socket } from 'socket.io-client';
 import type { Message, ChatRoom, TypingIndicator, ChatServiceConfig } from './types';
-import { config } from '../../config/environment';
+import { config as envConfig } from '../../config/environment';
 
 type MessageCallback = (message: Message) => void;
 type TypingCallback = (data: TypingIndicator) => void;
@@ -49,7 +49,7 @@ export class ChatSocketService {
           return;
         }
 
-        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || config.chatApiUrl;
+        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || envConfig.chatApiUrl;
 
         console.log('[ChatSocket] 🔍 VITE_SOCKET_URL:', import.meta.env.VITE_SOCKET_URL);
         console.log('[ChatSocket] 🎯 Final serverUrl:', serverUrl);
@@ -230,6 +230,34 @@ export class ChatSocketService {
       this.socket!.emit('message', {
         roomId,
         text,
+        clientMessageId,
+      }, (response: any) => {
+        if (response?.error) {
+          reject(new Error(response.error));
+        } else if (response?.message) {
+          resolve(response.message);
+        } else {
+          reject(new Error('Invalid response from server'));
+        }
+      });
+    });
+  }
+
+  /**
+   * 이미지 메시지 전송
+   */
+  public async sendImageMessage(roomId: string, fileUrl: string): Promise<Message> {
+    if (!this.socket?.connected) {
+      throw new Error('Socket not connected');
+    }
+
+    return new Promise((resolve, reject) => {
+      const clientMessageId = `${Date.now()}-${Math.random()}`;
+
+      this.socket!.emit('message', {
+        roomId,
+        fileUrl,
+        messageType: 'image',
         clientMessageId,
       }, (response: any) => {
         if (response?.error) {

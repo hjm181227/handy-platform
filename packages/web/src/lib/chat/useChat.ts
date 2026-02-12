@@ -6,6 +6,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getChatSocket } from './ChatSocketService';
 import { config } from '../../config/environment';
+import { webApiService } from '../../services/api';
+import { createImagePreview, revokeImagePreview } from '@handy-platform/shared/src/utils/imageUpload';
 import type { Message, UseChatReturn, ChatRoom } from './types';
 
 // Dummy data as fallback (일반 텍스트 메시지만 - 커스텀 주문서는 API 연동)
@@ -58,8 +60,11 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   const [error, setError] = useState<string | null>(null);
   const [currentRoom, setCurrentRoom] = useState<ChatRoom | null>(null);
   const [actualRoomId, setActualRoomId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const chatSocket = useRef(getChatSocket());
+  const imageUploadManager = useRef(webApiService.createImageUploadManager());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const useFallback = useRef(false);
   const currentUserId = useRef<string | null>(token ? getUserIdFromToken(token) : null);
@@ -131,6 +136,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
               // 커스텀 주문서 메시지 처리
               messageType: msg.messageType || 'text',
               metadata: msg.metadata || undefined,
+              fileUrl: msg.fileUrl || undefined,
             }));
 
             // createdAt 기준 오름차순 정렬 (오래된 메시지가 위로)
@@ -230,6 +236,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           // 커스텀 주문서 메시지 처리
           messageType: (message as any).messageType || 'text',
           metadata: (message as any).metadata || undefined,
+          fileUrl: (message as any).fileUrl || undefined,
         };
         setMessages(prev => [...prev, transformedMessage]);
       }
@@ -338,6 +345,80 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   }, [actualRoomId, roomId]);
 
   /**
+   * 이미지 메시지 전송
+   */
+  const sendImage = useCallback(async (file: File) => {
+    if (!actualRoomId || useFallback.current) {
+      setError('이미지 전송은 서버 연결 상태에서만 가능합니다');
+      return;
+    }
+
+    const previewUrl = createImagePreview(file);
+    const clientMessageId = `img-${Date.now()}-${Math.random()}`;
+    const now = new Date();
+
+    // Optimistic UI: 미리보기 이미지로 즉시 표시
+    const optimisticMessage: Message = {
+      id: clientMessageId,
+      roomId: actualRoomId,
+      sender: 'me',
+      senderId: currentUserId.current || 'me',
+      text: '',
+      timestamp: now.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      createdAt: now.toISOString(),
+      read: false,
+      clientMessageId,
+      messageType: 'image',
+      fileUrl: previewUrl,
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // S3 업로드
+      const result = await imageUploadManager.current.uploadImage({
+        file,
+        uploadType: 'chat-message',
+        onProgress: (progress) => setUploadProgress(progress),
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || '이미지 업로드에 실패했습니다');
+      }
+
+      // 소켓으로 이미지 메시지 전송
+      const sentMessage = await chatSocket.current.sendImageMessage(actualRoomId, result.imageUrl);
+
+      // 성공: optimistic 메시지를 서버 응답으로 교체
+      setMessages(prev => prev.map(msg =>
+        msg.clientMessageId === clientMessageId
+          ? {
+              ...msg,
+              id: sentMessage.id || msg.id,
+              fileUrl: result.imageUrl,
+              senderId: sentMessage.senderId || msg.senderId,
+            }
+          : msg
+      ));
+    } catch (err) {
+      console.error('[useChat] Image send failed:', err);
+      setError(err instanceof Error ? err.message : '이미지 전송에 실패했습니다');
+
+      // 실패한 메시지 제거
+      setMessages(prev => prev.filter(msg => msg.clientMessageId !== clientMessageId));
+    } finally {
+      revokeImagePreview(previewUrl);
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  }, [actualRoomId]);
+
+  /**
    * 방 입장
    */
   const joinRoom = useCallback(async (newRoomId: string) => {
@@ -411,10 +492,13 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
     error,
     currentRoom,
     sendMessage,
+    sendImage,
     setInputText,
     joinRoom,
     leaveRoom,
     scrollToLatest,
     clearError,
+    isUploading,
+    uploadProgress,
   };
 }
