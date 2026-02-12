@@ -74,7 +74,7 @@ export function OrderStepLayout({
         )}
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col px-5 pb-6">
+        <div className="flex-1 flex flex-col px-5">
           {children}
         </div>
       </div>

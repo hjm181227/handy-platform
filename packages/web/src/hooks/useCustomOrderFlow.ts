@@ -15,11 +15,17 @@ export interface FingerSizes {
   pinky: string;
 }
 
+// 양손 사이즈
+export interface HandSizes {
+  left: FingerSizes;
+  right: FingerSizes;
+}
+
 // 커스텀 주문 폼 데이터
 export interface CustomOrderFormData {
   shape: NailShape;
   length: NailLength;
-  sizes: FingerSizes;
+  sizes: HandSizes;
   desiredColor: string;
   request: string;
   attachments: File[];
@@ -46,16 +52,21 @@ interface CustomOrderFlowState {
 const STEP_ORDER: CustomOrderStep[] = ['shape', 'length', 'size', 'details', 'date', 'confirm', 'complete'];
 const VISIBLE_STEPS = STEP_ORDER.length - 1; // complete 단계는 프로그레스에서 제외
 
+const emptyFingerSizes: FingerSizes = {
+  thumb: '',
+  index: '',
+  middle: '',
+  ring: '',
+  pinky: '',
+};
+
 // 초기 데이터
 const initialData: CustomOrderFormData = {
   shape: 'ROUND',
   length: 'MEDIUM',
   sizes: {
-    thumb: '',
-    index: '',
-    middle: '',
-    ring: '',
-    pinky: '',
+    left: { ...emptyFingerSizes },
+    right: { ...emptyFingerSizes },
   },
   desiredColor: '',
   request: '',
@@ -93,24 +104,42 @@ export function useCustomOrderFlow(productId: string) {
 
         let initialSizes = initialData.sizes;
 
-        // 사용자 네일 사이즈가 있으면 초기값으로 설정 (왼손 기준)
+        // 사용자 네일 사이즈가 있으면 초기값으로 설정 (양손)
         if (nailSizeResponse.success && nailSizeResponse.data) {
           const nailSize = nailSizeResponse.data;
           initialSizes = {
-            thumb: nailSize.leftHand.thumb?.toString() || '',
-            index: nailSize.leftHand.index?.toString() || '',
-            middle: nailSize.leftHand.middle?.toString() || '',
-            ring: nailSize.leftHand.ring?.toString() || '',
-            pinky: nailSize.leftHand.little?.toString() || '', // little → pinky 매핑
+            left: {
+              thumb: nailSize.leftHand.thumb?.toString() || '',
+              index: nailSize.leftHand.index?.toString() || '',
+              middle: nailSize.leftHand.middle?.toString() || '',
+              ring: nailSize.leftHand.ring?.toString() || '',
+              pinky: nailSize.leftHand.little?.toString() || '',
+            },
+            right: {
+              thumb: nailSize.rightHand.thumb?.toString() || '',
+              index: nailSize.rightHand.index?.toString() || '',
+              middle: nailSize.rightHand.middle?.toString() || '',
+              ring: nailSize.rightHand.ring?.toString() || '',
+              pinky: nailSize.rightHand.little?.toString() || '',
+            },
           };
         }
 
+        // 상품의 쉐입/길이가 고정이면 해당 값으로 초기화
+        const prod = productResponse.data;
+        const initialShape = prod?.nailOptions?.shapeCustomizable === false && prod?.nailShape
+          ? prod.nailShape : prev.data.shape;
+        const initialLength = prod?.nailOptions?.lengthCustomizable === false && prod?.nailLength
+          ? prod.nailLength : prev.data.length;
+
         setState(prev => ({
           ...prev,
-          product: productResponse.data,
+          product: prod,
           userNailSize: nailSizeResponse.data || null,
           data: {
             ...prev.data,
+            shape: initialShape,
+            length: initialLength,
             sizes: initialSizes,
           },
           loading: false,
@@ -196,17 +225,53 @@ export function useCustomOrderFlow(productId: string) {
   }, []);
 
   // 사이즈 업데이트
-  const updateSize = useCallback((finger: keyof FingerSizes, value: string) => {
+  const updateSize = useCallback((hand: 'left' | 'right', finger: keyof FingerSizes, value: string) => {
     setState(prev => ({
       ...prev,
       data: {
         ...prev.data,
         sizes: {
           ...prev.data.sizes,
-          [finger]: value,
+          [hand]: {
+            ...prev.data.sizes[hand],
+            [finger]: value,
+          },
         },
       },
     }));
+  }, []);
+
+  // 네일 사이즈 다시 로드
+  const refreshNailSize = useCallback(async () => {
+    try {
+      const response = await userService.getNailSize();
+      if (response.success && response.data) {
+        const nailSize = response.data;
+        const newSizes = {
+          left: {
+            thumb: nailSize.leftHand.thumb?.toString() || '',
+            index: nailSize.leftHand.index?.toString() || '',
+            middle: nailSize.leftHand.middle?.toString() || '',
+            ring: nailSize.leftHand.ring?.toString() || '',
+            pinky: nailSize.leftHand.little?.toString() || '',
+          },
+          right: {
+            thumb: nailSize.rightHand.thumb?.toString() || '',
+            index: nailSize.rightHand.index?.toString() || '',
+            middle: nailSize.rightHand.middle?.toString() || '',
+            ring: nailSize.rightHand.ring?.toString() || '',
+            pinky: nailSize.rightHand.little?.toString() || '',
+          },
+        };
+        setState(prev => ({
+          ...prev,
+          userNailSize: nailSize,
+          data: { ...prev.data, sizes: newSizes },
+        }));
+      }
+    } catch {
+      // 조용히 실패 (UX 방해하지 않음)
+    }
   }, []);
 
   // 에러 설정
@@ -222,10 +287,11 @@ export function useCustomOrderFlow(productId: string) {
       return { success: false, error: '판매자 정보를 찾을 수 없습니다.' };
     }
 
-    // 사이즈 필수 검증
-    const allSizesFilled = Object.values(data.sizes).every(s => s.trim() !== '');
-    if (!allSizesFilled) {
-      return { success: false, error: '모든 손가락 사이즈를 입력해주세요.' };
+    // 사이즈 필수 검증 (양손)
+    const leftFilled = Object.values(data.sizes.left).every(s => s.trim() !== '');
+    const rightFilled = Object.values(data.sizes.right).every(s => s.trim() !== '');
+    if (!leftFilled || !rightFilled) {
+      return { success: false, error: '양손 모든 손가락 사이즈를 입력해주세요.' };
     }
 
     setState(prev => ({ ...prev, submitting: true, error: null }));
@@ -341,9 +407,11 @@ export function useCustomOrderFlow(productId: string) {
     return state.userNailSize !== null;
   }, [state.userNailSize]);
 
-  // 사이즈가 모두 입력되었는지 확인
+  // 사이즈가 모두 입력되었는지 확인 (양손)
   const isSizesComplete = useCallback(() => {
-    return Object.values(state.data.sizes).every(s => s.trim() !== '');
+    const leftComplete = Object.values(state.data.sizes.left).every(s => s.trim() !== '');
+    const rightComplete = Object.values(state.data.sizes.right).every(s => s.trim() !== '');
+    return leftComplete && rightComplete;
   }, [state.data.sizes]);
 
   return {
@@ -372,6 +440,7 @@ export function useCustomOrderFlow(productId: string) {
     addAttachments,
     removeAttachment,
     setError,
+    refreshNailSize,
 
     // API
     submitOrder,

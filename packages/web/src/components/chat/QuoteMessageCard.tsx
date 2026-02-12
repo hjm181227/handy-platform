@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Receipt, Clock, Store } from 'lucide-react';
 import { QuoteMessageData } from '../../lib/chat/types';
 
 interface QuoteMessageCardProps {
@@ -74,13 +75,13 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
     return (
       <div
         className={`
-          w-[280px] rounded-2xl overflow-hidden shadow-md
+          w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md
           ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
         `}
       >
         <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
           <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
+            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
             <span className="font-semibold text-gray-900 text-sm">견적서</span>
           </div>
         </div>
@@ -97,14 +98,14 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
     return (
       <div
         className={`
-          w-[280px] rounded-2xl overflow-hidden shadow-md cursor-pointer
+          w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md cursor-pointer
           ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
         `}
         onClick={onClick}
       >
         <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
           <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
+            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
             <span className="font-semibold text-gray-900 text-sm">견적서</span>
           </div>
         </div>
@@ -129,7 +130,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
   return (
     <div
       className={`
-        w-[280px] rounded-2xl overflow-hidden shadow-md cursor-pointer
+        w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md cursor-pointer
         transition-all hover:shadow-lg hover:scale-[1.02]
         ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
       `}
@@ -139,7 +140,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
+            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
             <span className="font-semibold text-gray-900 text-sm">견적서</span>
           </div>
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
@@ -160,18 +161,16 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
         </div>
 
         {/* 제작 기간 */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>예상 제작일: <strong className="text-gray-900">{data.processingDays}일</strong></span>
+        <div className="flex items-center gap-2 text-sm text-[#A39E99]">
+          <Clock className="w-4 h-4" />
+          <span>예상 제작일: <strong className="text-[#131211]">{data.processingDays}일</strong></span>
         </div>
 
         {/* 판매자 정보 */}
         {data.sellerName && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-              {data.sellerName.charAt(0)}
+          <div className="flex items-center gap-2 text-sm text-[#A39E99]">
+            <div className="w-5 h-5 bg-[#F2EAE3] rounded-full flex items-center justify-center">
+              <Store className="w-3 h-3 text-[#A39E99]" />
             </div>
             <span>{data.sellerName}</span>
           </div>

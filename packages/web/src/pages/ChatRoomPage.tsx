@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, Plus, Send, EllipsisVertical, Store, X } from 'lucide-react';
 import { useChat } from '../lib/chat';
 import { useAuth } from '../hooks/useAuth';
 import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCard';
 import { CustomOrderBottomSheet } from '../components/chat/CustomOrderBottomSheet';
 import { QuoteMessageCard } from '../components/chat/QuoteMessageCard';
 import { QuoteBottomSheet } from '../components/chat/QuoteBottomSheet';
+import { ImageMessageBubble } from '../components/chat/ImageMessageBubble';
 import { config } from '../config/environment';
 import type { Message } from '../lib/chat/types';
 
@@ -24,6 +26,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
   // 표시될 이름 상태 (브랜드명 또는 username)
   const [displayName, setDisplayName] = useState<string>(partnerUsernameFromUrl || roomId);
+  // 아바타 이미지 상태
+  const [partnerAvatar, setPartnerAvatar] = useState<string | null>(null);
 
   // useAuth 훅으로 현재 사용자 정보 가져오기
   const { currentUser } = useAuth();
@@ -43,6 +47,9 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         if (response.ok) {
           const brandData = await response.json();
           setDisplayName(brandData.brandName || roomId);
+          if (brandData.brandProfile) {
+            setPartnerAvatar(brandData.brandProfile);
+          }
         }
         // 404 등의 경우 roomId 유지 (구매자)
       } catch {
@@ -67,10 +74,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 토큰 없으면 로딩 화면 표시 (리다이렉트 중)
   if (!token) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
+      <div className="h-screen flex items-center justify-center bg-[#F7F5F3]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">로그인 페이지로 이동 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+          <p className="text-[#A39E99]">로그인 페이지로 이동 중...</p>
         </div>
       </div>
     );
@@ -82,10 +89,13 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     inputText,
     setInputText,
     sendMessage,
+    sendImage,
     isLoading,
     isConnected,
     error,
     clearError,
+    isUploading,
+    uploadProgress,
   } = useChat(roomId, token, partnerUsernameFromUrl);
 
   // 자동 스크롤을 위한 ref
@@ -98,6 +108,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 견적서 바텀 시트 상태
   const [showQuoteSheet, setShowQuoteSheet] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+
+  // 이미지 첨부 상태
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<{ file: File; previewUrl: string } | null>(null);
 
   // 주문서 카드 클릭 핸들러
   const handleOrderCardClick = (customOrderId: string) => {
@@ -117,13 +131,58 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     nav(`/checkout?mode=custom&quoteUuid=${quoteId}`);
   };
 
+  // 이미지 파일 선택 핸들러
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 10MB 제한
+    if (file.size > 10 * 1024 * 1024) {
+      alert('이미지 크기는 10MB 이하만 가능합니다.');
+      return;
+    }
+
+    // 이미지 타입 검증
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert('JPG, PNG, WebP 이미지만 지원합니다.');
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedImage({ file, previewUrl });
+
+    // input 초기화 (같은 파일 재선택 가능)
+    e.target.value = '';
+  };
+
+  // 이미지 전송 핸들러
+  const handleImageSend = async () => {
+    if (!selectedImage) return;
+    const { file, previewUrl } = selectedImage;
+    setSelectedImage(null);
+    URL.revokeObjectURL(previewUrl);
+    await sendImage(file);
+  };
+
+  // 이미지 선택 취소
+  const handleImageCancel = () => {
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage.previewUrl);
+      setSelectedImage(null);
+    }
+  };
+
   // 메시지 변경 시 자동 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = () => {
-    sendMessage(inputText);
+    if (selectedImage) {
+      handleImageSend();
+    } else {
+      sendMessage(inputText);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -136,10 +195,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 로딩 상태
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
+      <div className="h-screen flex items-center justify-center bg-[#F7F5F3]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">채팅방 로딩 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+          <p className="text-[#A39E99]">채팅방 로딩 중...</p>
         </div>
       </div>
     );
@@ -189,75 +248,66 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-[#F7F5F3]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+      <div className="bg-white flex-shrink-0">
+        <div className="h-16 flex items-center gap-3 px-4">
           <button
             onClick={() => nav('/chat')}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="flex-shrink-0"
             aria-label="뒤로가기"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
+            <ChevronLeft className="w-6 h-6 text-[#131211]" />
           </button>
 
-          {/* Profile */}
-          <div className="flex items-center gap-3 flex-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
-              {roomName.charAt(0)}
+          {/* Avatar */}
+          {partnerAvatar ? (
+            <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
+              <Store className="w-5 h-5 text-[#A39E99]" />
             </div>
-            <div className="flex-1">
-              <h1 className="text-lg font-bold">{roomName}</h1>
-              {/* 연결 상태 표시 */}
-              <div className="flex items-center gap-2 text-xs">
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                <span className="text-gray-500">
-                  {isConnected ? '연결됨' : '오프라인 (더미 데이터)'}
-                </span>
-              </div>
+          )}
+
+          {/* Name + Connection */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-[#131211] truncate">{roomName}</h1>
+            <div className="flex items-center gap-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-[#22C55E]' : 'bg-gray-400'}`}></span>
+              <span className={`text-[11px] font-medium ${isConnected ? 'text-[#22C55E]' : 'text-[#A39E99]'}`}>
+                {isConnected ? '연결됨' : '오프라인'}
+              </span>
             </div>
           </div>
+
+          {/* More */}
+          <button className="flex-shrink-0">
+            <EllipsisVertical className="w-6 h-6 text-[#131211]" />
+          </button>
         </div>
+        <div className="h-px bg-[#E5E0DC]" />
       </div>
 
       {/* Error Banner */}
       {error && (
         <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm text-red-700">{error}</span>
-          </div>
+          <span className="text-sm text-red-700 flex-1">{error}</span>
           <button
             onClick={clearError}
-            className="text-red-500 hover:text-red-700 text-sm font-medium"
+            className="ml-2 flex-shrink-0"
           >
-            닫기
+            <X className="w-4 h-4 text-red-500" />
           </button>
         </div>
       )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           {messages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">아직 메시지가 없습니다.</p>
-              <p className="text-gray-400 text-sm mt-2">첫 메시지를 보내보세요!</p>
+              <p className="text-[#A39E99]">아직 메시지가 없습니다.</p>
+              <p className="text-[#A39E99] text-sm mt-2">첫 메시지를 보내보세요!</p>
             </div>
           ) : (
             messages.map((message, index) => {
@@ -277,54 +327,64 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                   {/* 날짜 구분선 */}
                   {showDateSeparator && (
                     <div className="flex justify-center my-4">
-                      <div className="bg-gray-300 text-gray-600 text-xs px-3 py-1 rounded-full">
+                      <span className="px-3 py-1 bg-white rounded-xl text-xs font-medium text-[#A39E99]">
                         {formatDateSeparator(message.createdAt)}
-                      </div>
+                      </span>
                     </div>
                   )}
 
                   {/* 메시지 */}
                   <div
                     className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'} ${
-                      isGroupStart ? 'mt-6' : 'mt-1'
+                      isGroupStart ? 'mt-4' : 'mt-1'
                     }`}
                   >
                   {/* 상대방 아바타 (그룹 시작시에만) */}
                   {!isMe && (
                     <div className="flex-shrink-0">
                       {isGroupStart ? (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
-                          {roomName.charAt(0)}
-                        </div>
+                        partnerAvatar ? (
+                          <img src={partnerAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-[#F2EAE3] flex items-center justify-center">
+                            <Store className="w-4 h-4 text-[#A39E99]" />
+                          </div>
+                        )
                       ) : (
-                        <div className="w-10" />
+                        <div className="w-8" />
                       )}
                     </div>
                   )}
 
                   {/* 메시지 버블 */}
-                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%] min-w-0`}>
                     {/* 발신자 이름 (상대방 메시지, 그룹 시작시에만) */}
                     {!isMe && isGroupStart && (
-                      <span className="text-xs text-gray-600 mb-1 px-2">{roomName}</span>
+                      <span className="text-xs font-medium text-[#A39E99] mb-1">{roomName}</span>
                     )}
 
                     {/* 메시지 버블 + 타임스탬프 */}
-                    <div className="flex items-end gap-2">
+                    <div className="flex items-end gap-1.5">
                       {/* 내 메시지: 읽음 표시 + 타임스탬프 (왼쪽) */}
                       {isMe && isGroupEnd && (
-                        <div className="flex flex-col items-end gap-0.5 text-xs text-gray-500">
-                          {message.read ? (
-                            <span className="text-blue-500">✓✓</span>
-                          ) : (
-                            <span className="text-gray-400">✓</span>
+                        <div className="flex flex-col items-end gap-1 text-[11px]">
+                          {!message.read && (
+                            <span className="text-[#E85A6B] font-semibold">1</span>
                           )}
-                          <span>{message.timestamp}</span>
+                          <span className="text-[#A39E99]">{message.timestamp}</span>
                         </div>
                       )}
 
-                      {/* 커스텀 주문서 메시지 */}
-                      {message.messageType === 'custom_order' && message.metadata?.customOrderId && message.metadata?.type !== 'quote' ? (
+                      {/* 이미지 메시지 */}
+                      {message.messageType === 'image' && message.fileUrl ? (
+                        <ImageMessageBubble
+                          fileUrl={message.fileUrl}
+                          isMe={isMe}
+                          isUploading={isUploading && !!message.clientMessageId?.startsWith('img-')}
+                          uploadProgress={uploadProgress}
+                        />
+                      ) : /* 커스텀 주문서 메시지 */
+                      message.messageType === 'custom_order' && message.metadata?.customOrderId && message.metadata?.type !== 'quote' ? (
                         <CustomOrderMessageCard
                           customOrderId={message.metadata.customOrderId as string}
                           isMine={isMe}
@@ -341,10 +401,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         /* 일반 텍스트 메시지 버블 */
                         <div
                           className={`
-                            px-4 py-2.5 rounded-2xl transition-all
+                            px-3.5 py-2.5 transition-all max-w-[280px]
                             ${isMe
-                              ? 'bg-blue-600 text-white rounded-br-sm shadow-md hover:shadow-lg'
-                              : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                              ? 'bg-[#FFE5EA] text-[#131211] rounded-[16px_4px_16px_16px]'
+                              : 'bg-white text-[#131211] rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'
                             }
                           `}
                         >
@@ -356,7 +416,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
                       {/* 상대방 메시지: 타임스탬프 (오른쪽) */}
                       {!isMe && isGroupEnd && (
-                        <span className="text-xs text-gray-500 self-end mb-0.5">
+                        <span className="text-xs text-[#A39E99] self-end mb-0.5">
                           {message.timestamp}
                         </span>
                       )}
@@ -389,29 +449,68 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 flex-shrink-0">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-end gap-2">
+      <div className="bg-white flex-shrink-0" style={{ borderTop: '1px solid #E5E0DC' }}>
+        <div className="max-w-4xl mx-auto px-4 pt-2.5 pb-8">
+          {/* 이미지 미리보기 */}
+          {selectedImage && (
+            <div className="mb-3 relative inline-block">
+              <img
+                src={selectedImage.previewUrl}
+                alt="첨부 이미지 미리보기"
+                className="max-w-[200px] max-h-[150px] object-cover rounded-lg border border-gray-200"
+              />
+              <button
+                onClick={handleImageCancel}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2.5">
+            {/* 파일 첨부 버튼 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-9 h-9 flex items-center justify-center bg-[#F7F5F3] hover:bg-[#EDE9E5] rounded-full transition-colors disabled:opacity-50 flex-shrink-0"
+              aria-label="이미지 첨부"
+            >
+              <Plus className="w-5 h-5 text-[#A39E99]" />
+            </button>
+
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="메시지를 입력하세요..."
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
+              placeholder={selectedImage ? '이미지를 전송합니다...' : '메시지 입력...'}
+              className="flex-1 h-10 px-4 py-2.5 bg-[#F7F5F3] rounded-[20px] resize-none focus:outline-none text-sm text-[#131211] placeholder:text-[#A39E99]"
               rows={1}
+              disabled={!!selectedImage}
             />
             <button
               onClick={handleSend}
-              disabled={!inputText.trim()}
+              disabled={(!inputText.trim() && !selectedImage) || isUploading}
               className={`
-                px-6 py-3 rounded-lg font-medium transition-colors
-                ${inputText.trim()
-                  ? 'bg-[#FF073A] text-white hover:bg-[#E0062F]'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0
+                ${(inputText.trim() || selectedImage) && !isUploading
+                  ? 'bg-[#E85A6B] text-white hover:bg-[#D44D5E]'
+                  : 'bg-[#F7F5F3] text-[#A39E99] cursor-not-allowed'
                 }
               `}
             >
-              전송
+              {isUploading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="w-[18px] h-[18px]" />
+              )}
             </button>
           </div>
         </div>
@@ -423,6 +522,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         onClose={() => setShowOrderSheet(false)}
         customOrderId={selectedCustomOrderId}
         isSeller={isSeller}
+        currentUserUuid={currentUser?.userUuid}
         buyerUuid={roomId}
         onQuoteSent={() => {
           // 견적서 전송 후 바텀시트 닫기

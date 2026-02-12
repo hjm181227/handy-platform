@@ -22,7 +22,7 @@ export function OrderStepButton({
     primary: `
       bg-black text-white
       hover:bg-gray-800
-      disabled:bg-gray-300 disabled:text-gray-500
+      disabled:opacity-40
     `,
     secondary: `
       bg-gray-100 text-gray-800

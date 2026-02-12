@@ -44,7 +44,8 @@ import {
   ReviewsPage,
   CouponsPage,
   PointsPage,
-  PaymentsPage
+  PaymentsPage,
+  NailSizesPage
 } from './components/pages/MyPages';
 
 // Support Components
@@ -241,6 +242,7 @@ export function Router() {
   const isSellerPage = pathname.startsWith('/seller');
   const isAdminPage = pathname.startsWith('/admin');
   const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
+  const isCustomOrderPage = /^\/product\/.+\/custom-order$/.test(pathname);
 
   // Route matching and screen rendering
   let screen: React.ReactNode;
@@ -562,6 +564,13 @@ export function Router() {
       </RequireAuth>
     );
   }
+  else if (pathname === '/my/nail-sizes') {
+    screen = (
+      <RequireAuth>
+        <NailSizesPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
   else if (pathname === '/my/notifications') {
     screen = (
       <RequireAuth>
@@ -866,7 +875,7 @@ export function Router() {
   }
 
   // Wrap with appropriate layout
-  if (isSellerPage || isAdminPage || isChatPage) {
+  if (isSellerPage || isAdminPage || isChatPage || isCustomOrderPage) {
     // Seller, Admin, Chat pages have their own layouts
     return <>{screen}</>;
   }

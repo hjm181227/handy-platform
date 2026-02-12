@@ -1,11 +1,11 @@
 buildscript {
     ext {
         buildToolsVersion = "34.0.0"
-        minSdkVersion = 21
+        minSdkVersion = 23  // React Native 0.74+ requires minSdk 23
         compileSdkVersion = 35
         targetSdkVersion = 35
         ndkVersion = "26.1.10909125"  // NDK r26c - 16KB 페이지 크기 완전 지원
-        kotlinVersion = "1.9.0"
+        kotlinVersion = "1.9.22"
     }
     repositories {
         google()
@@ -24,14 +24,25 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        
+
         // JSC from node_modules for proper dependency resolution
         maven {
             // Local JSC package repository
             url("$rootDir/../../node_modules/jsc-android/dist")
         }
-        
+
         // React Native repositories
         maven { url 'https://www.jitpack.io' }
+    }
+}
+
+// Force kotlinx-coroutines to 1.8.1 for Kotlin 1.9.x compatibility
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            force 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'
+            force 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+            force 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1'
+        }
     }
 }

@@ -44,7 +44,10 @@ export async function sendCustomOrderToChat(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ partnerId: sellerUuid }),
+      body: JSON.stringify({
+        partnerId: sellerUuid,
+        partnerUsername: orderData.brandName,
+      }),
     });
 
     if (!ensureResponse.ok) {

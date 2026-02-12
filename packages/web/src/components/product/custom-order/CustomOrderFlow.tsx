@@ -1,4 +1,4 @@
-import { useCustomOrderFlow, FingerSizes } from '../../../hooks/useCustomOrderFlow';
+import { useCustomOrderFlow } from '../../../hooks/useCustomOrderFlow';
 import { NailShape, NailLength } from '@handy-platform/shared';
 import { getChatRoomPath } from '../../../lib/chat/orderChatService';
 import {
@@ -38,6 +38,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
     removeAttachment,
     setError,
     submitOrder,
+    refreshNailSize,
   } = useCustomOrderFlow(productId);
 
   // 뒤로가기 핸들러
@@ -119,6 +120,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
             onBack={handleBack}
             stepIndex={stepIndex + 1}
             totalSteps={totalSteps}
+            fixed={product.nailOptions?.shapeCustomizable === false}
           />
         );
 
@@ -131,6 +133,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
             onBack={handleBack}
             stepIndex={stepIndex + 1}
             totalSteps={totalSteps}
+            fixed={product.nailOptions?.lengthCustomizable === false}
           />
         );
 
@@ -140,6 +143,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
             sizes={data.sizes}
             userNailSize={userNailSize}
             onUpdateSize={updateSize}
+            onRefreshNailSize={refreshNailSize}
             onNext={nextStep}
             onBack={handleBack}
             stepIndex={stepIndex + 1}

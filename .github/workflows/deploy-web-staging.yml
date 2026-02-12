@@ -8,6 +8,7 @@ on:
       - 'packages/web/**'
       - 'packages/shared/**'
       - '.github/workflows/deploy-web-staging.yml'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:

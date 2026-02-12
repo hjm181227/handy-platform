@@ -51,6 +51,12 @@ export interface ToastOptions extends BaseAlertOptions {
   position?: 'top' | 'bottom' | 'center'; // default: 'bottom'
 }
 
+export interface ToastState {
+  id: string;
+  message: string;
+  options: ToastOptions;
+}
+
 export interface AlertState {
   id: string;
   type: AlertType;

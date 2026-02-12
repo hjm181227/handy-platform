@@ -86,7 +86,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
       className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"
       style={{
         boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+        paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))'
       }}
       role="navigation"
       aria-label="하단 네비게이션"

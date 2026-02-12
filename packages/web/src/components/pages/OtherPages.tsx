@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import { products } from '../../data';
 import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
+import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import { ProductCard } from '../product/ProductCard';
+import { Ruler, Hand, LogOut, ChevronRight } from 'lucide-react';
 
 // 좋아요 페이지
 export function LikesPage({
@@ -206,15 +208,21 @@ export function LikesPage({
 
 export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
   const [user, setUser] = useState<User | null>(null);
+  const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 사용자 정보 로드
   useEffect(() => {
-    const loadUserProfile = async () => {
+    const loadData = async () => {
       try {
-        const response = await webApiService.getCurrentUserProfile();
-        if (response.user) {
-          setUser(response.user);
+        const [profileRes, nailRes] = await Promise.all([
+          webApiService.getCurrentUserProfile(),
+          webApiService.user.getNailSize().catch(() => ({ success: false, data: null })),
+        ]);
+        if (profileRes.user) {
+          setUser(profileRes.user);
+        }
+        if (nailRes.success && nailRes.data) {
+          setNailSizeData(nailRes.data);
         }
       } catch (error) {
         console.error('Failed to load user profile:', error);
@@ -222,27 +230,23 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
         setLoading(false);
       }
     };
-
-    loadUserProfile();
+    loadData();
   }, []);
 
-  // 샘플 데이터 (API에서 제공되지 않는 정보들)
   const stats = {
-    points: 2300,
     coupons: 2,
     ordersWaiting: 0,
     shipping: 0,
-    cs: 0,
     likes: 23,
   };
 
-  // 로딩 상태일 때
+  // 로딩 스켈레톤
   if (loading) {
     return (
-      <div className="handy-page-content max-w-5xl">
-        <div className="rounded-lg border bg-white p-4">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+      <div className="min-h-screen bg-[#F4F4F5]">
+        <div className="max-w-lg mx-auto px-5 py-4">
+          <div className="rounded-2xl bg-white p-5 animate-pulse">
+            <div className="h-3 bg-gray-200 rounded w-16 mb-3"></div>
             <div className="h-6 bg-gray-200 rounded w-40"></div>
           </div>
         </div>
@@ -250,281 +254,213 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     );
   }
 
-  // 작은 유틸
-  const Right = () => (
-    <svg viewBox="0 0 24 24" className="h-4 w-4">
-      <path
-        d="M9 6l6 6-6 6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-
-  // 사용자 역할에 따른 라벨 반환
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'seller':
-        return '판매자';
-      case 'admin':
-        return '관리자';
-      case 'user':
-      default:
-        return '';
+      case 'seller': return '판매자';
+      case 'admin': return '관리자';
+      default: return '';
     }
   };
 
-  const Stat = ({
-    label,
-    value,
-    to,
-  }: {
-    label: string;
-    value: string;
-    to: string;
-  }) => (
-    <a
-      href={to}
-      onClick={(e) => {
-        e.preventDefault();
-        onGo(to);
-      }}
-      className="flex-1 rounded-lg border bg-white p-3 text-left hover:bg-gray-50"
-    >
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className="mt-1 text-base font-semibold">{value}</div>
-    </a>
-  );
+  const isWebViewEnvironment = () => !!(window as any).ReactNativeWebView;
 
-  const LinkRow = ({
-    title,
-    to,
-    note,
-  }: {
-    title: string;
-    to: string;
-    note?: string;
-  }) => (
-    <a
-      href={to}
-      onClick={(e) => {
-        e.preventDefault();
-        onGo(to);
-      }}
-      className="flex items-center justify-between border-b py-3 text-sm hover:bg-gray-50"
-    >
-      <div className="flex items-center gap-2">
-        <span>{title}</span>
-        {note ? (
-          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-            {note}
-          </span>
-        ) : null}
-      </div>
-      <Right />
-    </a>
-  );
-
-  const Section = ({
-    title,
-    children,
-  }: {
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <section className="mt-6 rounded-lg border bg-white">
-      <div className="border-b px-4 py-3 text-[15px] font-semibold">
-        {title}
-      </div>
-      <div className="px-4">{children}</div>
-    </section>
-  );
-
-  // WebView 환경인지 확인
-  const isWebViewEnvironment = () => {
-    return !!(window as any).ReactNativeWebView;
-  };
-
-  // 손톱 사이즈 목록 화면으로 이동 (WebView 브리지 사용)
   const goToNailSizes = () => {
-    console.log('🔵 [WEB] 사이즈 목록 버튼 클릭됨');
-
     if (isWebViewEnvironment()) {
-      // WebView 환경: 네이티브 화면 열기
-      console.log('🔵 [WEB] WebView 환경 - 네이티브 손톱 사이즈 화면 요청');
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'NAVIGATE_TO_SIZES',
         data: { screen: 'NailSizes' }
       }));
     } else {
-      // 일반 브라우저: 앱 다운로드 안내
-      console.log('🔵 [WEB] 일반 브라우저 - 앱 다운로드 안내');
-      alert('손톱 사이즈 관리는 모바일 앱에서만 사용할 수 있습니다.\nHANDY 앱을 다운로드해주세요.');
+      onGo('/my/nail-sizes');
     }
   };
 
-  // 로그아웃 처리
   const handleLogout = async () => {
     try {
-      console.log('🔵 [WEB] 로그아웃 시작');
-
       if (isWebViewEnvironment()) {
-        // WebView 환경: 네이티브 로그아웃 사용 (네이티브가 모든 것을 처리)
-        console.log('🔵 [WEB] WebView 환경 - 네이티브 로그아웃 호출');
         (window as any).ReactNativeWebView.auth('logout');
-
-        // 네이티브가 localStorage 클리어 + 홈으로 리다이렉트를 자동으로 처리
-        // 추가 처리 불필요
-        console.log('✅ [WEB] 네이티브에게 로그아웃 요청 전송 완료 (네이티브가 나머지 처리)');
       } else {
-        // 일반 웹 환경: 웹 로그아웃 사용
-        console.log('🔵 [WEB] 웹 브라우저 환경 - 웹 로그아웃 호출');
         await webApiService.logoutAndClearToken();
-
-        // 인증 상태 변경 이벤트 발생
         window.dispatchEvent(new CustomEvent('authStateChanged'));
-
-        // 로그인 페이지로 이동
-        console.log('🔵 [WEB] 로그인 페이지로 이동');
         onGo('/login');
-        console.log('✅ [WEB] 웹 로그아웃 성공');
       }
     } catch (error) {
-      console.error('🔴 [WEB] 로그아웃 실패:', error);
-
+      console.error('Logout failed:', error);
       if (!isWebViewEnvironment()) {
-        // 웹 환경에서만 에러 처리
         window.dispatchEvent(new CustomEvent('authStateChanged'));
         onGo('/login');
       }
     }
   };
 
-  return (
-    <div className="handy-page-content max-w-5xl">
-      {/* 사이즈 목록 버튼 (WebView에서만 표시) */}
-      {isWebViewEnvironment() && (
-        <div className="mb-4">
-          <button
-            onClick={goToNailSizes}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-          >
-            <span>📏</span>
-            <span>내 손톱 사이즈</span>
-          </button>
-        </div>
-      )}
+  const ChevronIcon = ({ className = "text-[#D0C9C3]" }: { className?: string }) => (
+    <ChevronRight className={`h-[18px] w-[18px] ${className}`} />
+  );
 
-      {/* 상단 요약 바 */}
-      <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm text-gray-600">내 정보</div>
-            <div className="mt-1 text-lg font-semibold">
-              {user?.nickname || user?.name || '사용자'} <span className="text-gray-400">/</span>{" "}
+  const LinkRow = ({ title, to, badge }: { title: string; to: string; badge?: string }) => (
+    <a
+      href={to}
+      onClick={(e) => { e.preventDefault(); onGo(to); }}
+      className="flex items-center justify-between py-3 px-1 hover:bg-gray-50 transition-colors"
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-[#131211]">{title}</span>
+        {badge && (
+          <span className="rounded-[10px] border border-[#E5E0DC] px-2 py-0.5 text-xs text-[#71717A]">
+            {badge}
+          </span>
+        )}
+      </div>
+      <ChevronIcon />
+    </a>
+  );
+
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="rounded-2xl bg-white overflow-hidden border border-[#E5E0DC]">
+      <div className="px-4 pt-4 pb-2">
+        <span className="text-[15px] font-bold text-[#131211]">{title}</span>
+      </div>
+      <div className="px-4 pb-4">
+        {children}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#F4F4F5]">
+      <div className="max-w-lg mx-auto">
+        {/* Content */}
+        <div className="flex flex-col gap-3 px-5 py-4">
+
+          {/* Profile Card */}
+          <div className="rounded-2xl bg-white p-5 flex flex-col gap-4 border border-[#E5E0DC]">
+            {/* Header Row */}
+            <div className="flex items-center justify-between">
+              <div className="text-[13px] text-[#71717A] font-medium">내 정보</div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onGo('/my/settings')}
+                  className="rounded-lg border border-[#E5E0DC] px-2.5 py-1.5 text-xs font-medium text-[#131211] hover:bg-gray-50 transition-colors"
+                >
+                  회원정보 수정
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-md border border-[#E5E0DC] p-1.5 text-[#71717A] hover:bg-gray-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Profile Name */}
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-[#131211]">
+                {user?.nickname || user?.name || '사용자'}
+              </span>
               {getRoleLabel(user?.role || 'user') && (
-                <span className="text-blue-600">{getRoleLabel(user?.role || 'user')}</span>
+                <>
+                  <span className="text-xl text-[#D0C9C3]">/</span>
+                  <span className="text-xl font-bold text-[#FF4D6D]">
+                    {getRoleLabel(user?.role || 'user')}
+                  </span>
+                </>
               )}
             </div>
-          </div>
-          <div className="flex gap-2">
-            <a
-              href="/my/settings"
-              onClick={(e) => {
-                e.preventDefault();
-                onGo("/my/settings");
-              }}
-              className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
-            >
-              회원정보 수정
-            </a>
+
+            {/* Size Status */}
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                handleLogout();
-              }}
-              className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
+              onClick={goToNailSizes}
+              className="flex items-center gap-3 rounded-xl bg-[#FFE5EA] px-4 py-3 w-full text-left hover:bg-[#FFD6DD] transition-colors"
             >
-              로그아웃
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#FF4D6D]">
+                <Ruler className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-semibold text-[#991B1B]">내 손톱 사이즈</div>
+                {nailSizeData ? (
+                  <div className="text-sm font-medium text-[#131211]">측정 완료 · 왼손/오른손</div>
+                ) : (
+                  <div className="text-sm font-medium text-[#71717A]">아직 측정 기록이 없어요 · 측정하기</div>
+                )}
+              </div>
+              <ChevronIcon className="text-[#FF4D6D]" />
             </button>
           </div>
-        </div>
 
-        {/* 요약 통계 3분할 */}
-        <div className="mt-3 flex gap-2">
-          <Stat label="주문/배송" value={`${stats.ordersWaiting}건`} to="/my/orders" />
-          <Stat label="배송중" value={`${stats.shipping}건`} to="/my/shipping" />
-          <Stat label="쿠폰" value={`${stats.coupons}장`} to="/my/coupons" />
-        </div>
-
-        {/* 프로모션 배너 */}
-        <a
-          href="/promo/plus"
-          onClick={(e) => {
-            e.preventDefault();
-            onGo("/promo/plus");
-          }}
-          className="mt-4 block rounded-lg bg-black px-4 py-3 text-white hover:text-white"
-        >
-          <div className="text-sm opacity-90">핸디플러스 멤버</div>
-          <div className="text-[15px] font-semibold">
-            멤버십 최대 10% 적립 혜택
+          {/* Stats Row */}
+          <div className="flex gap-2">
+            {[
+              { label: '주문/배송', value: `${stats.ordersWaiting}건`, to: '/my/orders' },
+              { label: '배송중', value: `${stats.shipping}건`, to: '/my/shipping' },
+              { label: '쿠폰', value: `${stats.coupons}장`, to: '/my/coupons' },
+            ].map((stat) => (
+              <a
+                key={stat.to}
+                href={stat.to}
+                onClick={(e) => { e.preventDefault(); onGo(stat.to); }}
+                className="flex-1 rounded-xl border border-[#E5E0DC] bg-white px-3 py-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="text-xs font-medium text-[#71717A]">{stat.label}</div>
+                <div className="mt-2 text-lg font-bold text-[#131211]">{stat.value}</div>
+              </a>
+            ))}
           </div>
-        </a>
+
+          {/* Size Card (CTA) */}
+          <button
+            onClick={goToNailSizes}
+            className="flex items-center gap-3 rounded-xl bg-[#FFE5EA] border-[1.5px] border-[#FF4D6D] px-5 py-4 w-full text-left hover:bg-[#FFD6DD] transition-colors"
+          >
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#FF4D6D]">
+              <Hand className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-[15px] font-semibold text-[#131211]">내 손톱 사이즈 확인하기</div>
+              <div className="text-xs text-[#991B1B]">정확한 사이즈로 딱 맞는 네일 팁 구매</div>
+            </div>
+            <ChevronIcon className="text-[#FF4D6D]" />
+          </button>
+
+          {/* Menu Section 1 */}
+          <Section title="주문·배송 / 반품·교환">
+            <LinkRow title="주문 내역" to="/my/orders" />
+            <LinkRow title="배송지 관리" to="/my/shipping-address" />
+            <LinkRow title="반품/교환 내역" to="/my/claims" />
+            <LinkRow title="취소 내역" to="/my/cancel" />
+          </Section>
+
+          {/* Menu Section 2 */}
+          <Section title="리뷰·좋아요">
+            <LinkRow title="내 리뷰 관리" to="/my/reviews" />
+            <LinkRow title="좋아요(위시리스트)" to="/likes" badge={`${stats.likes}`} />
+          </Section>
+
+          {/* Menu Section 3 */}
+          <Section title="혜택 / 결제">
+            <LinkRow title="쿠폰" to="/my/coupons" badge={`${stats.coupons}장`} />
+            <LinkRow title="포인트" to="/my/points" />
+            <LinkRow title="결제수단 관리" to="/my/payments" />
+          </Section>
+
+          {/* Menu Section 4 */}
+          <Section title="판매자 서비스">
+            {user?.role === 'seller' ? (
+              <LinkRow title="판매자 센터로 이동" to="/seller" />
+            ) : (
+              <LinkRow title="판매자 신청하기" to="/seller/apply" />
+            )}
+          </Section>
+
+          {/* Menu Section 5 */}
+          <Section title="고객센터 / 설정">
+            <LinkRow title="1:1 문의" to="/support/contact" />
+            <LinkRow title="FAQ" to="/support/faq" />
+            <LinkRow title="알림/푸시 설정" to="/my/notifications" />
+            <LinkRow title="회원정보 수정" to="/my/settings" />
+          </Section>
+        </div>
       </div>
-
-      {/* 주문/반품/리뷰 등 주요 메뉴 */}
-      <Section title="주문·배송 / 반품·교환">
-        <div className="divide-y">
-          <LinkRow title="주문 내역" to="/my/orders" />
-          <LinkRow title="배송지 관리" to="/my/shipping-address" />
-          <LinkRow title="반품/교환 내역" to="/my/claims" />
-          <LinkRow title="취소 내역" to="/my/cancel" />
-        </div>
-      </Section>
-
-      <Section title="리뷰·좋아요">
-        <div className="divide-y">
-          <LinkRow title="내 리뷰 관리" to="/my/reviews" />
-          <LinkRow title="좋아요(위시리스트)" to="/likes" note={`${stats.likes}`} />
-        </div>
-      </Section>
-
-      <Section title="혜택 / 결제">
-        <div className="divide-y">
-          <LinkRow title="쿠폰" to="/my/coupons" note={`${stats.coupons}장`} />
-          <LinkRow title="포인트" to="/my/points" note={`${stats.points.toLocaleString()}P`} />
-          <LinkRow title="결제수단 관리" to="/my/payments" />
-        </div>
-      </Section>
-
-      <Section title="판매자 서비스">
-        <div className="divide-y">
-          {user?.role === 'seller' ? (
-            <LinkRow title="판매자 센터로 이동" to="/seller" />
-          ) : (
-            <LinkRow title="판매자 신청하기" to="/seller/apply" />
-          )}
-          <div className="py-3 text-xs text-gray-500">
-            {user?.role === 'seller'
-              ? '판매자 센터에서 상품과 주문을 관리해보세요!'
-              : '네일아트 상품을 판매하여 수익을 창출해보세요!'
-            }
-          </div>
-        </div>
-      </Section>
-
-      <Section title="고객센터 / 설정">
-        <div className="divide-y">
-          <LinkRow title="1:1 문의" to="/support/contact" />
-          <LinkRow title="FAQ" to="/support/faq" />
-          <LinkRow title="알림/푸시 설정" to="/my/notifications" />
-          <LinkRow title="회원정보 수정" to="/my/settings" />
-        </div>
-      </Section>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   ErrorOptions,
   PromptOptions,
   ToastOptions,
+  ToastState,
   AlertState,
   AlertResult,
   ProcessedError
@@ -117,6 +118,7 @@ export class AlertService implements IAlertService {
   private listeners: Set<(alerts: AlertState[]) => void> = new Set();
   private retryCounters: Map<string, number> = new Map(); // 재시도 카운터
   private readonly maxManualRetries = 2; // 최대 수동 재시도 횟수
+  private toastListenerStack: Array<(toast: ToastState) => void> = [];
 
   /**
    * 상태 변경 알림
@@ -141,6 +143,17 @@ export class AlertService implements IAlertService {
     
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  /**
+   * Toast 리스너 등록 (스택 기반 — 최상위 리스너에만 전달)
+   */
+  public subscribeToast(listener: (toast: ToastState) => void): () => void {
+    this.toastListenerStack.push(listener);
+    return () => {
+      const idx = this.toastListenerStack.indexOf(listener);
+      if (idx >= 0) this.toastListenerStack.splice(idx, 1);
     };
   }
 
@@ -274,36 +287,34 @@ export class AlertService implements IAlertService {
 
   /**
    * 토스트 메시지 (논블로킹, 자동 사라짐)
-   * 환경에 따라 다르게 동작:
-   * - React Native: ToastAndroid (Android) 사용
-   * - Web: autoClose 옵션을 가진 alert 사용
+   * Toast listener stack이 있으면 최상위 리스너에 전달,
+   * 없으면 환경별 폴백 사용
    */
   public toast(message: string, options: ToastOptions = {}): void {
     const duration = options.duration || 3000;
     const variant = options.variant || 'default';
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // React Native 환경 감지
+    const toastState: ToastState = { id, message, options: { ...options, duration, variant } };
+
+    if (this.toastListenerStack.length > 0) {
+      this.toastListenerStack[this.toastListenerStack.length - 1](toastState);
+      return;
+    }
+
+    // 기존 폴백
     const isReactNative = typeof window === 'undefined' || (typeof navigator !== 'undefined' && navigator.product === 'ReactNative');
 
     if (isReactNative) {
-      // React Native 환경: 콘솔에만 출력
-      // 실제 React Native 앱에서는 native alert 컴포넌트를 사용해야 함
       console.log('[Toast]', message);
-
-      // React Native에서 toast를 사용하려면:
-      // 1. react-native-toast-message 같은 라이브러리 사용
-      // 2. 또는 네이티브 모듈에서 직접 처리
     } else {
-      // Web 환경: 기존 alert 시스템 활용하여 자동으로 닫히는 알림 생성
       this.createAlert<void>('toast', message, {
         variant,
         autoClose: duration,
         closeOnBackdrop: true,
         closeOnEsc: true,
         ...options
-      }).catch(() => {
-        // 토스트는 비동기적으로 처리되므로 에러 무시
-      });
+      }).catch(() => {});
     }
   }
 

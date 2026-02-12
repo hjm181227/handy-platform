@@ -105,15 +105,33 @@ export function ConfirmStep({
               <FaEdit className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(data.sizes).map(([finger, size]) => (
-              <span
-                key={finger}
-                className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm"
-              >
-                {FINGER_NAMES[finger as keyof FingerSizes]}: {size}mm
-              </span>
-            ))}
+          <div className="space-y-2.5">
+            <div>
+              <p className="text-xs text-gray-500 mb-1.5">왼손</p>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(data.sizes.left).map(([finger, size]) => (
+                  <span
+                    key={finger}
+                    className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm"
+                  >
+                    {FINGER_NAMES[finger as keyof FingerSizes]}: {size}mm
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1.5">오른손</p>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(data.sizes.right).map(([finger, size]) => (
+                  <span
+                    key={finger}
+                    className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm"
+                  >
+                    {FINGER_NAMES[finger as keyof FingerSizes]}: {size}mm
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

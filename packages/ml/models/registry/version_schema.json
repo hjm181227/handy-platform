@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Model Version Metadata",
+  "description": "Schema for individual model version metadata",
+  "type": "object",
+  "required": ["version", "created_at", "dataset_version", "metrics", "status", "files"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dataset_version": {
+      "type": "string",
+      "description": "Dataset version used for training"
+    },
+    "base_model": {
+      "type": "string",
+      "description": "Base model architecture (e.g., yolov8n, yolov8s)"
+    },
+    "training_config": {
+      "type": "string",
+      "description": "Path to training config file used"
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "mAP50": { "type": "number" },
+        "mAP50_95": { "type": "number" },
+        "precision": { "type": "number" },
+        "recall": { "type": "number" },
+        "inference_time_ms": {
+          "type": "object",
+          "properties": {
+            "android": { "type": "number" },
+            "ios": { "type": "number" }
+          }
+        },
+        "nail_width_error_mm": {
+          "type": "object",
+          "description": "Nail width measurement error statistics",
+          "properties": {
+            "mean": { "type": "number" },
+            "std": { "type": "number" },
+            "p95": { "type": "number" }
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["development", "staging", "production", "deprecated", "archived"]
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "pytorch": {
+          "type": "object",
+          "properties": {
+            "filename": { "type": "string" },
+            "size_bytes": { "type": "integer" },
+            "sha256": { "type": "string" }
+          }
+        },
+        "onnx": {
+          "type": "object",
+          "properties": {
+            "filename": { "type": "string" },
+            "size_bytes": { "type": "integer" },
+            "sha256": { "type": "string" }
+          }
+        },
+        "tflite": {
+          "type": "object",
+          "properties": {
+            "filename": { "type": "string" },
+            "size_bytes": { "type": "integer" },
+            "sha256": { "type": "string" }
+          }
+        },
+        "coreml": {
+          "type": "object",
+          "properties": {
+            "filename": { "type": "string" },
+            "size_bytes": { "type": "integer" },
+            "sha256": { "type": "string" }
+          }
+        }
+      }
+    },
+    "changelog": {
+      "type": "string"
+    },
+    "mlflow_run_id": {
+      "type": "string"
+    }
+  }
+}

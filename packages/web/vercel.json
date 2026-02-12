@@ -33,10 +33,6 @@
   ],
   "rewrites": [
     {
-      "source": "/chat-api/:path*",
-      "destination": "http://16.176.147.141/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

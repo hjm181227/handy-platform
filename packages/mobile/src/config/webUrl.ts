@@ -10,8 +10,8 @@ export const getWebURL = (): string => {
 
   // 개발 환경: 로컬 개발 서버 사용
   if (env === 'development') {
-    // 실물 디바이스용 - PC 네트워크 IP 사용 (웹 서버: 포트 3002)
-    return 'http://192.168.45.57:3002';
+    // 실물 디바이스용 - PC 네트워크 IP 사용 (웹 서버: 포트 3001)
+    return 'http://172.30.1.71:3001';
 
     // Android 에뮬레이터용 (필요시 아래 주석 해제하고 위 라인 주석 처리)
     // const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';

@@ -5,12 +5,13 @@
 
 import { io, Socket } from 'socket.io-client';
 import type { Message, ChatRoom, TypingIndicator, ChatServiceConfig } from './types';
-import { config } from '../../config/environment';
+import { config as envConfig } from '../../config/environment';
 
 type MessageCallback = (message: Message) => void;
 type TypingCallback = (data: TypingIndicator) => void;
 type ConnectionCallback = () => void;
 type ErrorCallback = (error: Error) => void;
+type ReadCallback = (data: { roomId: string; userId: string; readAt: string }) => void;
 
 export class ChatSocketService {
   private static instance: ChatSocketService | null = null;
@@ -21,6 +22,7 @@ export class ChatSocketService {
   private connectCallbacks: Set<ConnectionCallback> = new Set();
   private disconnectCallbacks: Set<ConnectionCallback> = new Set();
   private errorCallbacks: Set<ErrorCallback> = new Set();
+  private readCallbacks: Set<ReadCallback> = new Set();
 
   private constructor() {
     // Private constructor for singleton
@@ -49,7 +51,7 @@ export class ChatSocketService {
           return;
         }
 
-        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || config.chatApiUrl;
+        const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || envConfig.chatApiUrl;
 
         console.log('[ChatSocket] 🔍 VITE_SOCKET_URL:', import.meta.env.VITE_SOCKET_URL);
         console.log('[ChatSocket] 🎯 Final serverUrl:', serverUrl);
@@ -134,8 +136,13 @@ export class ChatSocketService {
 
         // Presence 이벤트 (다른 사용자의 입장/퇴장)
         this.socket.on('presence', (data: { userId: string; state: 'join' | 'leave' }) => {
-          console.log('[ChatSocket] 👤 Presence update:', data);
-          // 필요 시 콜백으로 UI 업데이트 가능
+          console.log('[ChatSocket] Presence update:', data);
+        });
+
+        // message:read 이벤트
+        this.socket.on('message:read', (data: { roomId: string; userId: string; readAt: string }) => {
+          console.log('[ChatSocket] Message read event:', data);
+          this.readCallbacks.forEach(cb => cb(data));
         });
 
       } catch (error) {
@@ -244,6 +251,34 @@ export class ChatSocketService {
   }
 
   /**
+   * 이미지 메시지 전송
+   */
+  public async sendImageMessage(roomId: string, fileUrl: string): Promise<Message> {
+    if (!this.socket?.connected) {
+      throw new Error('Socket not connected');
+    }
+
+    return new Promise((resolve, reject) => {
+      const clientMessageId = `${Date.now()}-${Math.random()}`;
+
+      this.socket!.emit('message', {
+        roomId,
+        fileUrl,
+        messageType: 'image',
+        clientMessageId,
+      }, (response: any) => {
+        if (response?.error) {
+          reject(new Error(response.error));
+        } else if (response?.message) {
+          resolve(response.message);
+        } else {
+          reject(new Error('Invalid response from server'));
+        }
+      });
+    });
+  }
+
+  /**
    * 타이핑 상태 전송
    */
   public sendTyping(roomId: string, isTyping: boolean): void {
@@ -297,6 +332,22 @@ export class ChatSocketService {
   }
 
   /**
+   * 읽음 이벤트 구독
+   */
+  public onMessageRead(callback: ReadCallback): () => void {
+    this.readCallbacks.add(callback);
+    return () => this.readCallbacks.delete(callback);
+  }
+
+  /**
+   * 읽음 처리 전송
+   */
+  public emitMarkAsRead(roomId: string): void {
+    if (!this.socket?.connected) return;
+    this.socket.emit('message:read', { roomId });
+  }
+
+  /**
    * 모든 리스너 정리
    */
   public cleanup(): void {
@@ -305,6 +356,7 @@ export class ChatSocketService {
     this.connectCallbacks.clear();
     this.disconnectCallbacks.clear();
     this.errorCallbacks.clear();
+    this.readCallbacks.clear();
   }
 }
 
