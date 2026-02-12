@@ -169,28 +169,15 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
         <div className="bg-white border-b border-[#E5E0DC] sticky top-0 z-10 flex-shrink-0">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+          <div className="h-14 px-4 flex items-center gap-3">
             <button
               onClick={handleBack}
-              className="p-2 hover:bg-[#F7F5F3] rounded-full transition-colors"
+              className="flex-shrink-0"
               aria-label="뒤로가기"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="#131211"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5L8.25 12l7.5-7.5"
-                />
-              </svg>
+              <ChevronLeft className="w-6 h-6 text-[#131211]" />
             </button>
-            <h1 className="text-lg font-bold text-[#131211]">채팅</h1>
+            <h1 className="text-base font-bold text-[#131211]">채팅</h1>
           </div>
         </div>
 
@@ -231,15 +218,15 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
     <div className="min-h-screen bg-white relative flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-[#E5E0DC] sticky top-0 z-10 flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+        <div className="h-14 px-4 flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="p-2 hover:bg-[#F7F5F3] rounded-full transition-colors"
+            className="flex-shrink-0"
             aria-label="뒤로가기"
           >
             <ChevronLeft className="w-6 h-6 text-[#131211]" />
           </button>
-          <h1 className="text-lg font-bold text-[#131211]">채팅</h1>
+          <h1 className="text-base font-bold text-[#131211]">채팅</h1>
         </div>
       </div>
 
@@ -276,7 +263,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
 
       {/* Chat List */}
       {!isLoading && !error && (
-        <div className="max-w-7xl mx-auto">
+        <div>
           {rooms.map((room) => (
             <div
               key={room.roomId}
