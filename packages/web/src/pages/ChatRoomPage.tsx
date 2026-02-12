@@ -357,7 +357,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                   )}
 
                   {/* 메시지 버블 */}
-                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%] min-w-0`}>
                     {/* 발신자 이름 (상대방 메시지, 그룹 시작시에만) */}
                     {!isMe && isGroupStart && (
                       <span className="text-xs font-medium text-[#A39E99] mb-1">{roomName}</span>
@@ -401,7 +401,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         /* 일반 텍스트 메시지 버블 */
                         <div
                           className={`
-                            px-3.5 py-2.5 transition-all
+                            px-3.5 py-2.5 transition-all max-w-[280px]
                             ${isMe
                               ? 'bg-[#FFE5EA] text-[#131211] rounded-[16px_4px_16px_16px]'
                               : 'bg-white text-[#131211] rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'

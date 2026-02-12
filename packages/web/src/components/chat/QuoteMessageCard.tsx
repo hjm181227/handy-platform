@@ -75,7 +75,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
     return (
       <div
         className={`
-          w-[280px] rounded-2xl overflow-hidden shadow-md
+          w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md
           ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
         `}
       >
@@ -98,7 +98,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
     return (
       <div
         className={`
-          w-[280px] rounded-2xl overflow-hidden shadow-md cursor-pointer
+          w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md cursor-pointer
           ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
         `}
         onClick={onClick}
@@ -130,7 +130,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
   return (
     <div
       className={`
-        w-[280px] rounded-2xl overflow-hidden shadow-md cursor-pointer
+        w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md cursor-pointer
         transition-all hover:shadow-lg hover:scale-[1.02]
         ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
       `}

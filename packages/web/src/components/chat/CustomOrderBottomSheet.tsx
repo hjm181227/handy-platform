@@ -43,10 +43,13 @@ const FINGER_LABELS: Record<string, string> = {
 
 // 상태 설정
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-  pending: { label: '검토중', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' },
-  accepted: { label: '승인됨', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-  rejected: { label: '거절됨', bgColor: 'bg-red-100', textColor: 'text-red-700' },
-  completed: { label: '완료', bgColor: 'bg-blue-100', textColor: 'text-blue-700' }
+  pending:       { label: '상담중',   bgColor: 'bg-[#FEF3C7]',  textColor: 'text-[#D97706]' },
+  quoted:        { label: '견적완료', bgColor: 'bg-purple-100',  textColor: 'text-purple-700' },
+  approved:      { label: '결제대기', bgColor: 'bg-green-100',   textColor: 'text-green-700' },
+  in_production: { label: '제작중',   bgColor: 'bg-blue-100',    textColor: 'text-blue-700' },
+  completed:     { label: '완료',     bgColor: 'bg-emerald-100', textColor: 'text-emerald-700' },
+  rejected:      { label: '거절됨',   bgColor: 'bg-red-100',     textColor: 'text-red-700' },
+  cancelled:     { label: '취소됨',   bgColor: 'bg-gray-100',    textColor: 'text-gray-500' },
 };
 
 export function CustomOrderBottomSheet({

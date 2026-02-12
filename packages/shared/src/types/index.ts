@@ -1967,7 +1967,7 @@ export interface CustomOrderRequest {
   nailShape?: NailShape;         // 요청 네일 쉐입
   nailLength?: NailLength;       // 요청 네일 길이
   attachments?: string[];        // 첨부 이미지 URL 목록
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  status: 'pending' | 'quoted' | 'approved' | 'in_production' | 'completed' | 'rejected' | 'cancelled';
   createdAt: string;             // 생성일시
   updatedAt?: string;            // 수정일시
   isRegisteredAsProduct?: boolean; // 이미 상품으로 등록됐는지 여부
@@ -1981,7 +1981,7 @@ export interface CustomOrderDetail {
   title: string;                 // 주문서 제목
   baseProductUuid?: string;      // 기반 상품 UUID
   baseProductType?: 'original' | 'custom';
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  status: 'pending' | 'quoted' | 'approved' | 'in_production' | 'completed' | 'rejected' | 'cancelled';
   specifications: {
     shape: NailShape;
     length: NailLength;
@@ -2062,6 +2062,6 @@ export interface CreateCustomOrderResponse {
   brandName?: string;
   title: string;
   specifications: CreateCustomOrderRequest['specifications'];
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  status: 'pending' | 'quoted' | 'approved' | 'in_production' | 'completed' | 'rejected' | 'cancelled';
   createdAt: string;
 }
