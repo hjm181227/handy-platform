@@ -535,7 +535,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         isOpen={showQuoteSheet}
         onClose={() => setShowQuoteSheet(false)}
         quoteId={selectedQuoteId}
-        isSeller={isSeller}
+        currentUserUuid={currentUser?.userUuid}
         onPurchase={handlePurchase}
       />
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Receipt, Clock, Store } from 'lucide-react';
+import { Receipt, Timer, Store, MessageSquare, ChevronDown } from 'lucide-react';
 import { QuoteMessageData } from '../../lib/chat/types';
 import { orderService } from '../../services/apiService';
 
@@ -11,10 +11,10 @@ interface QuoteMessageCardProps {
 
 // 상태 설정
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-  pending: { label: '대기중', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' },
+  pending:  { label: '대기중', bgColor: 'bg-[#FEF3C7]', textColor: 'text-[#D97706]' },
   accepted: { label: '수락됨', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-  rejected: { label: '거절됨', bgColor: 'bg-red-100', textColor: 'text-red-700' },
-  expired: { label: '만료됨', bgColor: 'bg-gray-100', textColor: 'text-gray-500' }
+  rejected: { label: '거절됨', bgColor: 'bg-red-100',   textColor: 'text-red-700' },
+  expired:  { label: '만료됨', bgColor: 'bg-gray-100',  textColor: 'text-gray-500' }
 };
 
 export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardProps) {
@@ -60,24 +60,25 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       });
   }, [quoteId]);
 
+  const cardClass = `w-[280px] max-w-full overflow-hidden bg-white border border-[#E5E0DC] ${
+    isMine ? 'rounded-[16px_4px_16px_16px]' : 'rounded-[4px_16px_16px_16px]'
+  }`;
+
+  const cardHeader = (
+    <div className="flex items-center gap-2 px-3.5 py-3">
+      <Receipt className="w-[18px] h-[18px] text-green-500" />
+      <span className="font-bold text-[#131211] text-sm">견적서</span>
+    </div>
+  );
+
   // 로딩 상태
   if (loading) {
     return (
-      <div
-        className={`
-          w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md
-          ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
-        `}
-      >
-        <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
-          <div className="flex items-center gap-2">
-            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
-            <span className="font-semibold text-gray-900 text-sm">견적서</span>
-          </div>
-        </div>
+      <div className={cardClass}>
+        {cardHeader}
         <div className="p-4 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-          <span className="ml-2 text-sm text-gray-500">로딩 중...</span>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+          <span className="ml-2 text-sm text-[#A39E99]">로딩 중...</span>
         </div>
       </div>
     );
@@ -86,23 +87,12 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
   // 에러 상태
   if (error || !data) {
     return (
-      <div
-        className={`
-          w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md cursor-pointer
-          ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
-        `}
-        onClick={onClick}
-      >
-        <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
-          <div className="flex items-center gap-2">
-            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
-            <span className="font-semibold text-gray-900 text-sm">견적서</span>
-          </div>
-        </div>
+      <div className={`${cardClass} cursor-pointer`} onClick={onClick}>
+        {cardHeader}
         <div className="p-4 text-center">
-          <p className="text-sm text-gray-500">견적서를 불러올 수 없습니다</p>
+          <p className="text-sm text-[#A39E99]">견적서를 불러올 수 없습니다</p>
           <button
-            className="mt-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+            className="mt-2 text-sm text-[#E85A6B] hover:text-[#D44D5E] font-medium"
             onClick={(e) => {
               e.stopPropagation();
               onClick();
@@ -117,80 +107,71 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
 
   const statusConfig = STATUS_CONFIG[data.status] || STATUS_CONFIG.pending;
 
+  // 메모 미리보기 (최대 40자)
+  const memoPreview = data.sellerNotes
+    ? data.sellerNotes.length > 40
+      ? data.sellerNotes.substring(0, 40) + '...'
+      : data.sellerNotes
+    : null;
+
   return (
     <div
-      className={`
-        w-[280px] max-w-full rounded-2xl overflow-hidden shadow-md cursor-pointer
-        transition-all hover:shadow-lg hover:scale-[1.02]
-        ${isMine ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'}
-      `}
+      className={`${cardClass} cursor-pointer transition-all hover:scale-[1.02]`}
       onClick={onClick}
     >
       {/* 헤더 */}
-      <div className={`px-4 py-3 ${isMine ? 'bg-blue-100' : 'bg-emerald-50'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-[18px] h-[18px] text-[#E85A6B]" />
-            <span className="font-semibold text-gray-900 text-sm">견적서</span>
-          </div>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-            {statusConfig.label}
-          </span>
-        </div>
+      <div className="flex items-center gap-2 px-3.5 py-3">
+        <Receipt className="w-[18px] h-[18px] text-green-500" />
+        <span className="font-bold text-[#131211] text-sm">견적서</span>
+        <span className={`ml-auto px-2 py-[3px] rounded-lg text-[11px] font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+          {statusConfig.label}
+        </span>
       </div>
 
       {/* 본문 */}
-      <div className="p-4 space-y-3">
-        {/* 가격 - 강조 */}
-        <div className="bg-emerald-50 rounded-xl p-3 text-center">
-          <p className="text-xs text-emerald-600 mb-1">견적 금액</p>
-          <p className="text-2xl font-bold text-emerald-600">
-            {formatPrice(data.price)}
-            <span className="text-sm font-normal text-gray-500">원</span>
+      <div className="px-3.5 pb-3.5 space-y-2.5">
+        {/* 가격 박스 */}
+        <div className="bg-[#F0FDF4] rounded-[10px] px-3.5 py-3 space-y-1">
+          <p className="text-[11px] font-medium text-[#16A34A]">견적 금액</p>
+          <p className="text-[22px] font-bold text-[#131211] leading-tight">
+            {formatPrice(data.price)}원
           </p>
         </div>
 
-        {/* 제작 기간 */}
-        <div className="flex items-center gap-2 text-sm text-[#A39E99]">
-          <Clock className="w-4 h-4" />
-          <span>예상 제작일: <strong className="text-[#131211]">{data.processingDays}일</strong></span>
+        {/* 예상 제작일 */}
+        <div className="flex items-center gap-1.5 text-xs text-[#A39E99]">
+          <Timer className="w-3.5 h-3.5" />
+          <span className="font-medium">예상 제작일: {data.processingDays}일</span>
         </div>
 
         {/* 판매자 정보 */}
         {data.sellerName && (
-          <div className="flex items-center gap-2 text-sm text-[#A39E99]">
-            <div className="w-5 h-5 bg-[#F2EAE3] rounded-full flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
               <Store className="w-3 h-3 text-[#A39E99]" />
             </div>
-            <span>{data.sellerName}</span>
+            <span className="text-xs font-medium text-[#131211]">{data.sellerName}</span>
           </div>
         )}
 
         {/* 메모 미리보기 */}
-        {data.sellerNotes && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-            <p className="text-xs text-gray-700 line-clamp-2">{data.sellerNotes}</p>
+        {memoPreview && (
+          <div className="bg-[#FEF9E7] rounded-lg px-2.5 py-2 flex gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-[#D97706] flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-[#92400E] line-clamp-2">{memoPreview}</p>
           </div>
         )}
       </div>
 
-      {/* 푸터 - 견적서 보기 버튼 */}
-      <div className="px-4 pb-4">
-        <button
-          className={`
-            w-full py-2 rounded-lg text-sm font-medium transition-colors
-            ${isMine
-              ? 'bg-blue-500 text-white hover:bg-blue-600'
-              : 'bg-emerald-500 text-white hover:bg-emerald-600'
-            }
-          `}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-        >
-          견적서 보기
-        </button>
+      {/* 푸터 - 견적서 보기 */}
+      <div
+        className="h-10 flex items-center justify-center gap-1 border-t border-[#E5E0DC] bg-[#F7F5F3] cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+      >
+        <span className="text-[13px] font-semibold text-[#131211]">견적서 보기</span>
       </div>
     </div>
   );
