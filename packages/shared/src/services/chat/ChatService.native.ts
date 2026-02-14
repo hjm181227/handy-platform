@@ -6,6 +6,7 @@
 import { io, Socket } from 'socket.io-client';
 import { BaseChatService } from './BaseChatService';
 import type { Message, TypingIndicator, ChatServiceConfig } from './types';
+import { API_CONFIG, getCurrentEnvironment } from '../../config/api';
 
 // React Native 모듈 - 이 파일은 React Native 환경에서만 import됨
 // 웹 빌드에서는 tree-shaking으로 제거되므로 안전
@@ -69,7 +70,8 @@ export class ChatServiceNative extends BaseChatService {
         }
 
         // React Native 환경에서 서버 URL 결정
-        let serverUrl = config?.serverUrl || 'http://16.176.147.141';
+        const chatEnv = getCurrentEnvironment();
+        let serverUrl = config?.serverUrl || API_CONFIG[chatEnv]?.chatURL || API_CONFIG.stage.chatURL;
 
         // Android Emulator는 localhost 대신 10.0.2.2 사용
         if (Platform.OS === 'android' && __DEV__) {

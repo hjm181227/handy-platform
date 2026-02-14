@@ -1,6 +1,7 @@
 // API 환경 설정
 export interface ApiConfig {
   baseURL: string;
+  chatURL: string;
   timeout: number;
   retryAttempts: number;
   retryDelay: number;
@@ -10,24 +11,28 @@ export interface ApiConfig {
 export const API_CONFIG: Record<string, ApiConfig> = {
   local: {
     baseURL: 'http://localhost:11000',
+    chatURL: 'http://localhost:11000',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   development: {
     baseURL: 'http://localhost:11000',
+    chatURL: 'http://localhost:11000',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   stage: {
     baseURL: 'https://api.stage-handy.com',
+    chatURL: 'https://chat.stage-handy.com',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   production: {
     baseURL: 'https://api.h-andy.com',
+    chatURL: 'https://chat.h-andy.com',
     timeout: 15000,
     retryAttempts: 5,
     retryDelay: 2000,

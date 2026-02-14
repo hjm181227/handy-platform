@@ -248,7 +248,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-red-50 text-[#E85A5A]'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
@@ -262,14 +262,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
         <div className="flex flex-1 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12 w-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A5A]"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12 w-full">
               <p className="text-red-600 mb-4">{error}</p>
               <button
                 onClick={loadCategories}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-[#E85A5A] text-white rounded-lg hover:bg-[#d64a4a] transition-colors"
               >
                 다시 시도
               </button>
@@ -277,40 +277,42 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
           ) : activeTab === 'category' ? (
             categoryData ? (
               <>
-                {/* 왼쪽 사이드바 - 카테고리 타입 목록 */}
-                <div className="w-32 border-r border-gray-200 overflow-y-auto bg-gray-50 flex-shrink-0">
-                  {categoryData.types.map((type) => {
-                    const typeLabels: { [key: string]: string } = {
-                      style: '스타일',
-                      color: '컬러',
-                      texture: '텍스쳐',
-                      shape: '모양',
-                      length: '길이',
-                      tpo: 'TPO',
-                      nation: '국가별'
-                    };
+                {/* 왼쪽 사이드바 - 카테고리 타입 목록 (w:80, py:16, gap:4) */}
+                <div className="w-[80px] border-r border-gray-200 overflow-y-auto flex-shrink-0">
+                  <div className="py-4 flex flex-col gap-1">
+                    {categoryData.types.map((type) => {
+                      const typeLabels: { [key: string]: string } = {
+                        style: '스타일',
+                        color: '컬러',
+                        texture: '텍스쳐',
+                        shape: '모양',
+                        length: '길이',
+                        tpo: 'TPO',
+                        nation: '국가별'
+                      };
 
-                    const categories = categoryData.categories[type];
-                    if (!categories || categories.length === 0) return null;
+                      const categories = categoryData.categories[type];
+                      if (!categories || categories.length === 0) return null;
 
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedType(type)}
-                        className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${
-                          selectedType === type
-                            ? 'bg-white text-blue-600'
-                            : 'text-gray-700 hover:bg-white hover:text-gray-900'
-                        }`}
-                      >
-                        {typeLabels[type] || type}
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedType(type)}
+                          className={`w-full h-9 flex items-center justify-center text-[13px] transition-colors ${
+                            selectedType === type
+                              ? 'text-[#E85A5A] font-semibold'
+                              : 'text-[#666666]'
+                          }`}
+                        >
+                          {typeLabels[type] || type}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* 오른쪽 콘텐츠 - 선택된 타입의 카테고리 아이템들 */}
-                <div className="flex-1 overflow-y-auto p-3">
+                {/* 오른쪽 콘텐츠 (padding: 16px 12px, gap:16) */}
+                <div className="flex-1 overflow-y-auto px-3 py-4">
                   {(() => {
                     const categories = categoryData.categories[selectedType];
                     if (!categories || categories.length === 0) {
@@ -332,35 +334,35 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     };
 
                     return (
-                      <div>
-                        {/* 타입 헤더 */}
-                        <div className="flex items-center gap-2 mb-4">
-                          <span className="w-1 h-5 bg-blue-600 rounded"></span>
-                          <h3 className="text-lg font-bold text-gray-900">
+                      <div className="flex flex-col gap-4">
+                        {/* 섹션 헤더 (gap:6) */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-[3px] h-[18px] bg-[#E85A5A] rounded-sm"></span>
+                          <h3 className="text-base font-bold text-[#333333]">
                             {typeLabels[selectedType] || selectedType}
                           </h3>
                         </div>
 
-                        {/* 카테고리 그리드 - 3컬럼 */}
-                        <div className="grid grid-cols-3 gap-2">
+                        {/* 카테고리 그리드 - 3컬럼 (gap:12) */}
+                        <div className="grid grid-cols-3 gap-3">
                           {categories.map((category: CategoryItem) => (
                             <button
                               key={category.value}
                               onClick={() => handleCategoryClick(selectedType, category.value)}
-                              className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-blue-600 hover:shadow-md transition-all group bg-white"
+                              className="flex flex-col items-center gap-1.5 transition-all"
                             >
                               {category.iconUrl ? (
                                 <img
                                   src={category.iconUrl}
                                   alt={category.name}
-                                  className="w-12 h-12 mb-2 object-contain"
+                                  className="w-[80px] h-[80px] rounded-full object-cover border border-[#E0E0E0]"
                                 />
                               ) : (
-                                <div className="w-12 h-12 mb-2 rounded-full bg-gray-100 flex items-center justify-center">
+                                <div className="w-[80px] h-[80px] rounded-full bg-gray-100 border border-[#E0E0E0] flex items-center justify-center">
                                   <span className="text-2xl text-gray-400">#</span>
                                 </div>
                               )}
-                              <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 text-center">
+                              <span className="text-xs font-medium text-[#333333] text-center">
                                 {category.name}
                               </span>
                             </button>
@@ -505,7 +507,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-blue-50 text-blue-600'
+                  ? 'bg-red-50 text-[#E85A5A]'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
@@ -515,17 +517,17 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
         </div>
 
         {/* 콘텐츠 - 무신사 스타일 레이아웃 */}
-        <div className="flex overflow-hidden md:max-h-[calc(80vh-180px)] max-md:flex-1">
+        <div className="flex overflow-hidden md:max-h-[calc(80vh-180px)] md:min-h-[420px] max-md:flex-1">
           {loading ? (
             <div className="flex items-center justify-center py-12 w-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A5A]"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12 w-full">
               <p className="text-red-600 mb-4">{error}</p>
               <button
                 onClick={loadCategories}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-[#E85A5A] text-white rounded-lg hover:bg-[#d64a4a] transition-colors"
               >
                 다시 시도
               </button>
@@ -533,40 +535,42 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
           ) : activeTab === 'category' ? (
             categoryData ? (
               <>
-                {/* 왼쪽 사이드바 - 카테고리 타입 목록 */}
-                <div className="w-32 md:w-48 border-r border-gray-200 overflow-y-auto bg-gray-50 flex-shrink-0">
-                  {categoryData.types.map((type) => {
-                    const typeLabels: { [key: string]: string } = {
-                      style: '스타일',
-                      color: '컬러',
-                      texture: '텍스쳐',
-                      shape: '모양',
-                      length: '길이',
-                      tpo: 'TPO',
-                      nation: '국가별'
-                    };
+                {/* 왼쪽 사이드바 - 카테고리 타입 목록 (w:80, py:16, gap:4) */}
+                <div className="w-[80px] border-r border-gray-200 overflow-y-auto flex-shrink-0">
+                  <div className="py-4 flex flex-col gap-1">
+                    {categoryData.types.map((type) => {
+                      const typeLabels: { [key: string]: string } = {
+                        style: '스타일',
+                        color: '컬러',
+                        texture: '텍스쳐',
+                        shape: '모양',
+                        length: '길이',
+                        tpo: 'TPO',
+                        nation: '국가별'
+                      };
 
-                    const categories = categoryData.categories[type];
-                    if (!categories || categories.length === 0) return null;
+                      const categories = categoryData.categories[type];
+                      if (!categories || categories.length === 0) return null;
 
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedType(type)}
-                        className={`w-full text-left px-6 py-3 text-sm font-medium transition-colors ${
-                          selectedType === type
-                            ? 'bg-white text-blue-600'
-                            : 'text-gray-700 hover:bg-white hover:text-gray-900'
-                        }`}
-                      >
-                        {typeLabels[type] || type}
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedType(type)}
+                          className={`w-full h-9 flex items-center justify-center text-[13px] transition-colors ${
+                            selectedType === type
+                              ? 'text-[#E85A5A] font-semibold'
+                              : 'text-[#666666]'
+                          }`}
+                        >
+                          {typeLabels[type] || type}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* 오른쪽 콘텐츠 - 선택된 타입의 카테고리 아이템들 */}
-                <div className="flex-1 overflow-y-auto p-3 md:p-6">
+                {/* 오른쪽 콘텐츠 (padding: 16px 12px, gap:16) */}
+                <div className="flex-1 overflow-y-auto px-3 py-4">
                   {(() => {
                     const categories = categoryData.categories[selectedType];
                     if (!categories || categories.length === 0) {
@@ -588,35 +592,35 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     };
 
                     return (
-                      <div>
-                        {/* 타입 헤더 */}
-                        <div className="flex items-center gap-2 mb-6">
-                          <span className="w-1 h-5 bg-blue-600 rounded"></span>
-                          <h3 className="text-lg font-bold text-gray-900">
+                      <div className="flex flex-col gap-4">
+                        {/* 섹션 헤더 (gap:6) */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-[3px] h-[18px] bg-[#E85A5A] rounded-sm"></span>
+                          <h3 className="text-base font-bold text-[#333333]">
                             {typeLabels[selectedType] || selectedType}
                           </h3>
                         </div>
 
-                        {/* 카테고리 그리드 - 3컬럼 */}
-                        <div className="grid grid-cols-3 gap-2 md:gap-3">
+                        {/* 카테고리 그리드 - 3컬럼 (gap:12) */}
+                        <div className="grid grid-cols-3 gap-3">
                           {categories.map((category: CategoryItem) => (
                             <button
                               key={category.value}
                               onClick={() => handleCategoryClick(selectedType, category.value)}
-                              className="flex flex-col items-center justify-center p-3 md:p-6 rounded-lg border border-gray-200 hover:border-blue-600 hover:shadow-md transition-all group bg-white"
+                              className="flex flex-col items-center gap-1.5 transition-all"
                             >
                               {category.iconUrl ? (
                                 <img
                                   src={category.iconUrl}
                                   alt={category.name}
-                                  className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 object-contain"
+                                  className="w-[80px] h-[80px] rounded-full object-cover border border-[#E0E0E0]"
                                 />
                               ) : (
-                                <div className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 rounded-full bg-gray-100 flex items-center justify-center">
-                                  <span className="text-2xl md:text-3xl text-gray-400">#</span>
+                                <div className="w-[80px] h-[80px] rounded-full bg-gray-100 border border-[#E0E0E0] flex items-center justify-center">
+                                  <span className="text-2xl text-gray-400">#</span>
                                 </div>
                               )}
-                              <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 text-center">
+                              <span className="text-xs font-medium text-[#333333] text-center">
                                 {category.name}
                               </span>
                             </button>

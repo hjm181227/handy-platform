@@ -7,9 +7,11 @@ import {
 } from '@handy-platform/shared';
 import { API_CONFIG } from '@handy-platform/shared/src/config/api';
 import { alertService } from '@handy-platform/shared/src/services/utils/AlertService';
+import { getAppEnvironment } from '../config/environment';
 
-// 모바일 앱은 스테이지 서버 사용 (localhost는 React Native에서 작동하지 않음)
-const MOBILE_API_BASE_URL = API_CONFIG.stage.baseURL;
+// 환경에 따라 API URL을 동적으로 결정
+const mobileEnv = getAppEnvironment();
+const MOBILE_API_BASE_URL = API_CONFIG[mobileEnv]?.baseURL || API_CONFIG.stage.baseURL;
 
 // 모바일 전용 토큰 관리
 class MobileTokenManager {
