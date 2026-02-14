@@ -21,20 +21,31 @@ export const categoryOptions = {
     { value: 'new', name: '신상' },
     { value: 'simple', name: '심플' },
     { value: 'fancy', name: '화려' },
+    { value: 'art', name: '아트' },
+    { value: 'trendy', name: '트렌디' },
     { value: 'classic', name: '클래식' },
+    { value: 'season', name: '시즌' },
+    { value: 'theme', name: '테마' },
     { value: 'kitsch', name: '키치' },
-    { value: 'natural', name: '내추럴' }
+    { value: 'natural', name: '네츄럴' }
   ],
   color: [
-    { value: 'red', name: '레드 계열' },
-    { value: 'pink', name: '핑크 계열' },
-    { value: 'neutral', name: '뉴트럴' },
-    { value: 'black-white', name: '블랙/화이트' }
+    { value: 'red', name: '레드' },
+    { value: 'pink', name: '핑크' },
+    { value: 'blue', name: '블루' },
+    { value: 'green', name: '그린' },
+    { value: 'black-white', name: '블랙/화이트' },
+    { value: 'brown', name: '브라운' },
+    { value: 'yellow', name: '옐로우' },
+    { value: 'neutral', name: '뉴트럴' }
   ],
   texture: [
-    { value: 'gel', name: '젤' },
+    { value: 'glitter', name: '글리터' },
+    { value: 'metal', name: '메탈' },
     { value: 'matte', name: '매트' },
-    { value: 'glitter', name: '글리터' }
+    { value: 'velvet', name: '벨벳' },
+    { value: 'gel', name: '젤' },
+    { value: 'magnet', name: '자석' }
   ],
   tpo: [
     { value: 'daily', name: '데일리' },
