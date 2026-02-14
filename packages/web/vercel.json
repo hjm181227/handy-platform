@@ -1,5 +1,6 @@
 {
   "framework": "vite",
+  "installCommand": "echo 'Install skipped - already built in GitHub Actions'",
   "buildCommand": "echo 'Build skipped - already built in GitHub Actions'",
   "outputDirectory": "dist",
   "headers": [
