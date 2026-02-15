@@ -31,7 +31,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       console.log('🟢 [BRIDGE] 메시지 수신:', event.nativeEvent.data);
       const message: WebViewMessage = JSON.parse(event.nativeEvent.data);
       console.log('🟢 [BRIDGE] 파싱된 메시지:', message);
-      
+
       switch (message.type) {
         case 'API_CALL':
           await handleApiCall(message.data);
@@ -821,7 +821,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     };
     
     // 네이티브 postMessage를 바인딩하여 저장 (this 컨텍스트 보존)
-    const nativePostMessage = window.ReactNativeWebView.postMessage.bind(window.ReactNativeWebView);
+    var nativePostMessage = window.ReactNativeWebView.postMessage.bind(window.ReactNativeWebView);
 
     // 기존 객체에 헬퍼 메서드 추가 (네이티브 객체를 덮어쓰지 않음)
     window.ReactNativeWebView.callAPI = function(endpoint, data = {}, requestId = Date.now()) {
@@ -896,7 +896,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     });
     
     ${additionalJavaScript}
-    
+
     true;
   `;
 
