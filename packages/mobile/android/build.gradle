@@ -4,8 +4,8 @@ buildscript {
         minSdkVersion = 23  // React Native 0.74+ requires minSdk 23
         compileSdkVersion = 35
         targetSdkVersion = 35
-        ndkVersion = "26.1.10909125"  // NDK r26c - 16KB 페이지 크기 완전 지원
-        kotlinVersion = "1.9.22"
+        ndkVersion = "27.3.13750724"  // NDK r27c - 16KB 페이지 크기 지원
+        kotlinVersion = "2.0.21"
     }
     repositories {
         google()
@@ -37,7 +37,31 @@ allprojects {
 }
 
 // Force kotlinx-coroutines to 1.8.1 for Kotlin 1.9.x compatibility
-subprojects {
+// Inject 16KB page size CMake flag into all subprojects with Android plugin
+subprojects { sub ->
+    sub.pluginManager.withPlugin('com.android.library') {
+        sub.android {
+            defaultConfig {
+                externalNativeBuild {
+                    cmake {
+                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                    }
+                }
+            }
+        }
+    }
+    sub.pluginManager.withPlugin('com.android.application') {
+        sub.android {
+            defaultConfig {
+                externalNativeBuild {
+                    cmake {
+                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                    }
+                }
+            }
+        }
+    }
+
     configurations.all {
         resolutionStrategy {
             force 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'

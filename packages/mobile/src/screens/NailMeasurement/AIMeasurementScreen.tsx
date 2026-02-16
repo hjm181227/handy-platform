@@ -22,6 +22,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {
@@ -197,8 +198,6 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
       console.log('[AIMeasurementScreen] isThumbOnly:', isThumbOnly);
 
       const service = getNailMeasurementService();
-      const initSuccess = await service.initialize();
-      console.log('[AIMeasurementScreen] Model initialized:', initSuccess);
 
       const isTablet = SCREEN_WIDTH >= TABLET_BREAKPOINT;
       const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
@@ -252,7 +251,10 @@ const AIMeasurementScreen: React.FC<AIMeasurementScreenProps> = ({
     } catch (err: any) {
       console.error('[AIMeasurementScreen] AI 분석 실패:', err);
       console.error('[AIMeasurementScreen] Error stack:', err.stack);
-      setError(err.message || 'AI 분석에 실패했습니다.');
+      const errorMsg = err.message || 'AI 분석에 실패했습니다.';
+      setError(errorMsg);
+      // Release 빌드에서도 에러 확인 가능하도록 Alert 표시
+      Alert.alert('분석 오류', errorMsg);
     } finally {
       setIsAnalyzing(false);
     }

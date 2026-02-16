@@ -171,13 +171,11 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
           refreshKey={nailSizesRefreshKey}
           onNavigateToCamera={(hand, finger) => {
             console.log(`🎯 [NativeScreenProvider] onNavigateToCamera called with hand: ${hand}, finger: ${finger}`);
-            if (hand && finger) {
-              // 개별 손가락 측정: 파라미터 사용
-              setSelectedHand(hand);
-              setSelectedFinger(englishToKoreanFinger(finger));
-            }
-            // else: AR 측정하기: 기본값 유지 (right, 엄지)
-            openMeasurement(hand, finger);
+            // iOS에서는 Modal을 동시에 2개 표시할 수 없으므로 NailSizes를 먼저 닫음
+            closeNailSizes();
+            setTimeout(() => {
+              openMeasurement(hand, finger);
+            }, 300);
           }}
         />
       </Modal>

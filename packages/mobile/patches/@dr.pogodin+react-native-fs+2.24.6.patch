@@ -1,0 +1,13 @@
+diff --git a/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsModule.kt b/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsModule.kt
+index 1234567..abcdefg 100644
+--- a/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsModule.kt
++++ b/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsModule.kt
+@@ -173,7 +173,7 @@
+             // If the queue has drained, it is success, we are done.
+             if (queue.isEmpty()) return promise.resolve(null)
+
+-            val next = queue.removeLast()
++            val next = queue.removeAt(queue.lastIndex)
+             currentFrom = next.first
+             currentInto = next.second
+           }

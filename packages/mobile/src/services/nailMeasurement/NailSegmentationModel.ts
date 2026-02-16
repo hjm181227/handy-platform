@@ -31,7 +31,7 @@ import {
   CARD_GUIDE_WIDTH_TABLET,
   TABLET_BREAKPOINT,
 } from './types';
-import RNFS from 'react-native-fs';
+import RNFS from '@dr.pogodin/react-native-fs';
 import ImageResizer from 'react-native-image-resizer';
 import { Dimensions } from 'react-native';
 

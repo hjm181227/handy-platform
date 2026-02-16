@@ -51,5 +51,15 @@ target 'HandyTemp' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # Fix react-native-worklets-core missing ReactCommon headers
+    installer.pods_project.targets.each do |target|
+      if target.name == 'react-native-worklets-core'
+        target.build_configurations.each do |config|
+          config.build_settings['HEADER_SEARCH_PATHS'] ||= '$(inherited)'
+          config.build_settings['HEADER_SEARCH_PATHS'] += ' "${PODS_ROOT}/Headers/Public/React-NativeModulesApple" "${PODS_ROOT}/Headers/Public/ReactCommon" "${PODS_ROOT}/Headers/Public/React-callinvoker" "${PODS_ROOT}/Headers/Public/React-cxxreact" "${PODS_ROOT}/Headers/Public/React-jsi"'
+        end
+      end
+    end
   end
 end
