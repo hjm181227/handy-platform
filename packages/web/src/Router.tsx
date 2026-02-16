@@ -74,6 +74,7 @@ import { PaymentTest } from './components/pages/PaymentTest';
 // OAuth Callback Components
 import { NaverCallbackPage } from './components/pages/NaverCallbackPage';
 import { KakaoCallbackPage } from './components/pages/KakaoCallbackPage';
+import { GoogleCallbackPage } from './components/pages/GoogleCallbackPage';
 
 // Footer Components
 import {
@@ -850,6 +851,9 @@ export function Router() {
   }
   else if (pathname === '/auth/kakao/callback') {
     screen = <KakaoCallbackPage onGo={nav} />;
+  }
+  else if (pathname === '/auth/google/callback') {
+    screen = <GoogleCallbackPage onGo={nav} />;
   }
   else if (pathname.startsWith('/auth/social/signup')) {
     screen = <SocialSignupPage onGo={nav} />;

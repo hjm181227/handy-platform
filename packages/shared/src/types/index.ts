@@ -677,6 +677,7 @@ export type WebViewMessageType =
   | 'CAMERA'
   | 'PAYMENT'
   | 'PERMISSIONS'
+  | 'OAUTH'                          // OAuth 시스템 브라우저 요청 (Google 등)
   | 'API_RESPONSE'
   | 'AUTH_RESPONSE'
   | 'CART_RESPONSE'

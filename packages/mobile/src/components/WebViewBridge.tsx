@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Alert, Platform, PermissionsAndroid, Linking, DeviceEventEmitter } from 'react-native';
+import InAppBrowser from 'react-native-inappbrowser-reborn';
 import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cameraService } from '../services/cameraService';
@@ -77,6 +78,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'NAVIGATE_BACK':
           handleNavigateBack();
+          break;
+        case 'OAUTH':
+          await handleOAuth(message.data);
           break;
         case 'CHAT':
           await handleChat(message.data);
@@ -286,6 +290,72 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   const handleNavigateBack = () => {
     console.log('🔵 [BRIDGE] Navigate back');
     DeviceEventEmitter.emit('navigateBack');
+  };
+
+  /**
+   * OAuth 처리 - InAppBrowser로 OAuth 실행
+   * Google은 WebView 내 OAuth를 차단하므로 Chrome Custom Tabs / ASWebAuthenticationSession 사용
+   *
+   * Android: InAppBrowser.open() + preferredBrowserPackage로 Chrome 강제 지정
+   *          콜백은 App.tsx의 Deep Link 리스너가 처리
+   * iOS: InAppBrowser.openAuth()로 ASWebAuthenticationSession 사용
+   */
+  const handleOAuth = async (data: any) => {
+    const { provider, url: interceptedUrl } = data;
+    if (provider === 'google') {
+      // 가로챈 URL이 있으면 사용, 없으면 API_CONFIG에서 생성
+      const googleLoginUrl = interceptedUrl
+        || (() => {
+          const env = getAppEnvironment();
+          const apiBaseUrl = API_CONFIG[env]?.baseURL || API_CONFIG.stage.baseURL;
+          return `${apiBaseUrl}/api/auth/oauth/google/login?source=app`;
+        })();
+      const redirectUrl = 'handyapp://oauth-callback';
+
+      console.log('🔵 [BRIDGE] Opening InAppBrowser for Google OAuth:', googleLoginUrl);
+
+      try {
+        if (await InAppBrowser.isAvailable()) {
+          if (Platform.OS === 'android') {
+            // Android: Chrome Custom Tab을 Chrome으로 강제 지정
+            // 콜백은 App.tsx Deep Link 리스너가 handyapp://oauth-callback을 캐치
+            await InAppBrowser.open(googleLoginUrl, {
+              preferredBrowserPackage: 'com.android.chrome',
+              showTitle: true,
+              enableUrlBarHiding: false,
+              enableDefaultShare: false,
+              forceCloseOnRedirection: false,
+            });
+          } else {
+            // iOS: ASWebAuthenticationSession 사용
+            const result = await InAppBrowser.openAuth(googleLoginUrl, redirectUrl, {
+              ephemeralWebSession: false,
+              showTitle: false,
+              enableUrlBarHiding: true,
+              enableDefaultShare: false,
+            });
+
+            if (result.type === 'success' && result.url) {
+              const queryString = result.url.split('?')[1] || '';
+              const stateId = queryString.split('&').reduce((acc: string | null, pair: string) => {
+                const [key, value] = pair.split('=');
+                return key === 'stateId' ? decodeURIComponent(value) : acc;
+              }, null as string | null);
+              if (stateId) {
+                DeviceEventEmitter.emit('navigateToUrl', {
+                  url: `/auth/google/callback?stateId=${stateId}`
+                });
+              }
+            }
+          }
+        } else {
+          Linking.openURL(googleLoginUrl);
+        }
+      } catch (error) {
+        console.error('🔴 [BRIDGE] OAuth error:', error);
+        Linking.openURL(googleLoginUrl);
+      }
+    }
   };
 
   const handleCart = async (data: any) => {
@@ -906,6 +976,17 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       source={{ uri: url }}
       onMessage={handleMessage}
       injectedJavaScript={injectedJavaScript}
+      onShouldStartLoadWithRequest={(request) => {
+        // Google OAuth URL을 가로채서 InAppBrowser로 열기
+        if (request.url.includes('/api/auth/oauth/google/login')) {
+          console.log('🔵 [WEBVIEW] Intercepting Google OAuth URL:', request.url);
+          // 원본 URL에 source=app 파라미터를 추가하여 InAppBrowser로 열기
+          const separator = request.url.includes('?') ? '&' : '?';
+          handleOAuth({ provider: 'google', url: `${request.url}${separator}source=app` });
+          return false; // WebView 내 로딩 차단
+        }
+        return true;
+      }}
       onNavigationStateChange={(navState) => {
         // 특별한 URL 감지
         if (navState.url.includes('action=goToNative')) {

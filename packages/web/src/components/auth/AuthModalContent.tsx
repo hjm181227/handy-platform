@@ -85,15 +85,6 @@ export function AuthModalContent() {
     setError('');
 
     try {
-      // React Native WebView 환경인 경우
-      if ((window as any).ReactNativeWebView) {
-        (window as any).ReactNativeWebView.postMessage(
-          JSON.stringify({ type: 'oauth', provider })
-        );
-        setLoading(false);
-        return;
-      }
-
       if (provider === 'kakao') {
         await handleKakaoLogin();
       } else if (provider === 'google') {
@@ -127,6 +118,17 @@ export function AuthModalContent() {
   };
 
   const handleGoogleLogin = async () => {
+    // WebView 환경에서는 네이티브 브릿지를 통해 시스템 브라우저로 Google OAuth 실행
+    // (Google은 WebView 내 OAuth를 차단하므로 시스템 브라우저 사용 필수)
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'google' }
+      }));
+      return;
+    }
+
     try {
       // Google 로그인 실행 (팝업)
       const accessToken = await executeGoogleLogin();

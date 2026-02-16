@@ -1151,6 +1151,8 @@ PODS:
     - React-Core
     - React-RCTImage
     - TOCropViewController (~> 2.8.0)
+  - RNInAppBrowser (3.7.0):
+    - React-Core
   - RNPermissions (4.1.5):
     - React-Core
   - RNScreens (3.35.0):
@@ -1270,6 +1272,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
   - RNImageCropPicker (from `../../../node_modules/react-native-image-crop-picker`)
+  - RNInAppBrowser (from `../../../node_modules/react-native-inappbrowser-reborn`)
   - RNPermissions (from `../../../node_modules/react-native-permissions`)
   - RNScreens (from `../../node_modules/react-native-screens`)
   - RNSVG (from `../../node_modules/react-native-svg`)
@@ -1410,6 +1413,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-async-storage/async-storage"
   RNImageCropPicker:
     :path: "../../../node_modules/react-native-image-crop-picker"
+  RNInAppBrowser:
+    :path: "../../../node_modules/react-native-inappbrowser-reborn"
   RNPermissions:
     :path: "../../../node_modules/react-native-permissions"
   RNScreens:
@@ -1494,6 +1499,7 @@ SPEC CHECKSUMS:
   ReactCommon: 2e5492a3e3a8e72d635c266405e49d12627e5bf0
   RNCAsyncStorage: b6410dead2732b5c72a7fdb1ecb5651bbcf4674b
   RNImageCropPicker: e2af973019fc2e23e54d2a91a5deb0db73b05c3b
+  RNInAppBrowser: 6d3eb68d471b9834335c664704719b8be1bfdb20
   RNPermissions: 4f7b81b0d457c8ec4e892cc36ef2376734a4b22c
   RNScreens: 30e365555fd36db9d8ede5542127e3d25e8f904e
   RNSVG: 043f603fc70d48d289bc3f2ceedbb05ce2636f5c

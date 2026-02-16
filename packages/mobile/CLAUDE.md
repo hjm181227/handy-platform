@@ -5,6 +5,8 @@
 
 React Native 모바일 앱 관련 가이드입니다.
 
+> **중요**: `package.json`에 의존성을 추가/변경하면 반드시 루트 `package-lock.json`도 함께 커밋할 것. 누락 시 GitHub Actions CI(`npm ci`)가 실패합니다.
+
 ## 모바일 앱 실행
 
 ```bash

@@ -152,6 +152,7 @@ export const API_ENDPOINTS = {
     KAKAO: '/api/auth/oauth/kakao',
     KAKAO_AUTH_DATA: (stateId: string) => `/api/auth/oauth/kakao/auth-data/${stateId}`,  // 카카오 OAuth 인증 데이터 조회 (일회용)
     GOOGLE: '/api/auth/oauth/google',
+    GOOGLE_AUTH_DATA: (stateId: string) => `/api/auth/oauth/google/auth-data/${stateId}`,
     APPLE: '/api/auth/oauth/apple',
     NAVER: '/api/auth/oauth/naver',
     NAVER_AUTH_DATA: (stateId: string) => `/api/auth/oauth/naver/auth-data/${stateId}`,  // 네이버 OAuth 인증 데이터 조회 (일회용)
