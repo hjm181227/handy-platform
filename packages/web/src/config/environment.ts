@@ -1,11 +1,13 @@
+import { getApiConfig } from '@handy-platform/shared/src/config/api';
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
 
 export const config = {
   apiBaseUrl,
   environment: import.meta.env.VITE_ENVIRONMENT || 'development',
   enableDebug: import.meta.env.VITE_ENABLE_DEBUG === 'true',
-  // Chat API: VITE_CHAT_API_URL 환경변수 사용 (Vercel/로컬 .env에서 설정)
-  chatApiUrl: import.meta.env.VITE_CHAT_API_URL || 'https://chat.stage-handy.com',
+  // Chat API: VITE_CHAT_API_URL 환경변수 우선, 없으면 hostname 기반 환경 감지로 결정
+  chatApiUrl: import.meta.env.VITE_CHAT_API_URL || getApiConfig().chatURL,
 };
 
 export const apiEndpoints = {
