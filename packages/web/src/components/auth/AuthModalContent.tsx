@@ -26,6 +26,25 @@ export function AuthModalContent() {
     setError('');
   }, [currentView]);
 
+  // 네이티브 브리지로부터 OAuth 취소 메시지 수신
+  useEffect(() => {
+    const handleNativeMessage = (event: Event) => {
+      try {
+        const customEvent = event as CustomEvent;
+        const message = customEvent.detail;
+        if (message?.type === 'OAUTH_CANCELLED') {
+          console.log('OAuth cancelled by user:', message.data?.provider);
+          setLoading(false);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('nativeMessage', handleNativeMessage);
+    return () => window.removeEventListener('nativeMessage', handleNativeMessage);
+  }, []);
+
   // 소셜 로그인 SDK 초기화
   useEffect(() => {
     const initSdks = async () => {
@@ -85,15 +104,6 @@ export function AuthModalContent() {
     setError('');
 
     try {
-      // React Native WebView 환경인 경우
-      if ((window as any).ReactNativeWebView) {
-        (window as any).ReactNativeWebView.postMessage(
-          JSON.stringify({ type: 'oauth', provider })
-        );
-        setLoading(false);
-        return;
-      }
-
       if (provider === 'kakao') {
         await handleKakaoLogin();
       } else if (provider === 'google') {
@@ -101,8 +111,7 @@ export function AuthModalContent() {
       } else if (provider === 'naver') {
         await handleNaverLogin();
       } else if (provider === 'apple') {
-        setError('Apple 로그인은 iOS 앱에서만 사용 가능합니다.');
-        setLoading(false);
+        await handleAppleLogin();
       }
     } catch (error: any) {
       // 사용자가 취소한 경우 - 에러 표시 없이 종료
@@ -117,16 +126,34 @@ export function AuthModalContent() {
   };
 
   const handleKakaoLogin = () => {
-    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
-    // 백엔드가 토큰 교환 후 /auth/kakao/callback으로 리다이렉트함
-    setLoading(false);
+    // WebView 환경에서는 네이티브 브릿지를 통해 InAppBrowser로 OAuth 실행
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'kakao' }
+      }));
+      return;
+    }
 
-    // API 베이스 URL에서 백엔드 주소 가져오기
+    // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    setLoading(false);
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
     window.location.href = `${apiBaseUrl}/api/auth/oauth/kakao/login`;
   };
 
   const handleGoogleLogin = async () => {
+    // WebView 환경에서는 네이티브 브릿지를 통해 시스템 브라우저로 Google OAuth 실행
+    // (Google은 WebView 내 OAuth를 차단하므로 시스템 브라우저 사용 필수)
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'google' }
+      }));
+      return;
+    }
+
     try {
       // Google 로그인 실행 (팝업)
       const accessToken = await executeGoogleLogin();
@@ -162,11 +189,36 @@ export function AuthModalContent() {
   };
 
   const handleNaverLogin = () => {
-    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
-    // 백엔드가 토큰 교환 후 /auth/naver/callback으로 리다이렉트함
-    // 리다이렉트 전에 loading 해제 (페이지를 떠나므로)
+    // WebView 환경에서는 네이티브 브릿지를 통해 InAppBrowser로 OAuth 실행
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'naver' }
+      }));
+      return;
+    }
+
+    // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     setLoading(false);
     executeNaverLogin();
+  };
+
+  const handleAppleLogin = () => {
+    // WebView 환경에서는 네이티브 브릿지를 통해 InAppBrowser로 OAuth 실행
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'apple' }
+      }));
+      return;
+    }
+
+    // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    setLoading(false);
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
+    window.location.href = `${apiBaseUrl}/api/auth/oauth/apple/login`;
   };
 
   // 회원가입 완료 핸들러
@@ -411,17 +463,15 @@ export function AuthModalContent() {
 
       {/* 소셜 로그인 버튼 */}
       <div className="space-y-3">
-        {/* Apple 로그인 - iOS 앱에서만 표시 (WebView 감지) */}
-        {(window as any).ReactNativeWebView && (
-          <button
-            onClick={() => handleSocialLogin('apple')}
-            disabled={loading}
-            className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
-          >
-            <AppleIcon />
-            Apple로 계속하기
-          </button>
-        )}
+        {/* Apple 로그인 */}
+        <button
+          onClick={() => handleSocialLogin('apple')}
+          disabled={loading}
+          className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
+        >
+          <AppleIcon />
+          Apple로 계속하기
+        </button>
 
         {/* 카카오 로그인 */}
         <button

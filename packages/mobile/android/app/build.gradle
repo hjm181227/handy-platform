@@ -101,8 +101,8 @@ android {
         applicationId "com.handyapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 11
-        versionName "1.8.2"
+        versionCode 13
+        versionName "1.8.4"
 
         // NDK ABI 필터 설정 (16KB 페이지 크기 지원)
         ndk {
@@ -138,8 +138,8 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
 
-            // 환경 변수에서 APP_ENV 읽기 (기본값: stage)
-            def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "stage"
+            // 환경 변수에서 APP_ENV 읽기 (기본값: production)
+            def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "production"
             buildConfigField "String", "APP_ENV", "\"${appEnv}\""
         }
     }
@@ -148,6 +148,13 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        // react-native-inappbrowser-reborn pulls alpha version requiring compileSdk 36
+        force 'androidx.browser:browser:1.8.0'
     }
 }
 
