@@ -678,6 +678,7 @@ export type WebViewMessageType =
   | 'PAYMENT'
   | 'PERMISSIONS'
   | 'OAUTH'                          // OAuth 시스템 브라우저 요청 (Google 등)
+  | 'OAUTH_CANCELLED'                 // OAuth 취소/실패 알림 (InAppBrowser에서 취소)
   | 'API_RESPONSE'
   | 'AUTH_RESPONSE'
   | 'CART_RESPONSE'

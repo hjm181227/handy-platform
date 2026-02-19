@@ -26,6 +26,25 @@ export function AuthModalContent() {
     setError('');
   }, [currentView]);
 
+  // 네이티브 브리지로부터 OAuth 취소 메시지 수신
+  useEffect(() => {
+    const handleNativeMessage = (event: Event) => {
+      try {
+        const customEvent = event as CustomEvent;
+        const message = customEvent.detail;
+        if (message?.type === 'OAUTH_CANCELLED') {
+          console.log('OAuth cancelled by user:', message.data?.provider);
+          setLoading(false);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('nativeMessage', handleNativeMessage);
+    return () => window.removeEventListener('nativeMessage', handleNativeMessage);
+  }, []);
+
   // 소셜 로그인 SDK 초기화
   useEffect(() => {
     const initSdks = async () => {
@@ -108,11 +127,18 @@ export function AuthModalContent() {
   };
 
   const handleKakaoLogin = () => {
-    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
-    // 백엔드가 토큰 교환 후 /auth/kakao/callback으로 리다이렉트함
-    setLoading(false);
+    // WebView 환경에서는 네이티브 브릿지를 통해 InAppBrowser로 OAuth 실행
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'kakao' }
+      }));
+      return;
+    }
 
-    // API 베이스 URL에서 백엔드 주소 가져오기
+    // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    setLoading(false);
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
     window.location.href = `${apiBaseUrl}/api/auth/oauth/kakao/login`;
   };
@@ -164,9 +190,17 @@ export function AuthModalContent() {
   };
 
   const handleNaverLogin = () => {
-    // 백엔드 주도 방식: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
-    // 백엔드가 토큰 교환 후 /auth/naver/callback으로 리다이렉트함
-    // 리다이렉트 전에 loading 해제 (페이지를 떠나므로)
+    // WebView 환경에서는 네이티브 브릿지를 통해 InAppBrowser로 OAuth 실행
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'naver' }
+      }));
+      return;
+    }
+
+    // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     setLoading(false);
     executeNaverLogin();
   };

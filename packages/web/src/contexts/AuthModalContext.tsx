@@ -71,22 +71,6 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
     }
   }, [close]);
 
-  // 뒤로가기 버튼 처리 (히스토리 조작 없이)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handlePopState = () => {
-      // 모달이 열려있을 때 뒤로가기하면 모달 닫기
-      close();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isOpen, close]);
-
   // ESC 키로 닫기
   useEffect(() => {
     if (!isOpen) return;

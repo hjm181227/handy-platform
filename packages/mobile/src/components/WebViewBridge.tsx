@@ -302,59 +302,76 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
    */
   const handleOAuth = async (data: any) => {
     const { provider, url: interceptedUrl } = data;
-    if (provider === 'google') {
-      // 가로챈 URL이 있으면 사용, 없으면 API_CONFIG에서 생성
-      const googleLoginUrl = interceptedUrl
-        || (() => {
-          const env = getAppEnvironment();
-          const apiBaseUrl = API_CONFIG[env]?.baseURL || API_CONFIG.stage.baseURL;
-          return `${apiBaseUrl}/api/auth/oauth/google/login?source=app`;
-        })();
-      const redirectUrl = 'handyapp://oauth-callback';
+    // 가로챈 URL이 있으면 사용, 없으면 API_CONFIG에서 생성
+    const oauthUrl = interceptedUrl
+      || (() => {
+        const env = getAppEnvironment();
+        const apiBaseUrl = API_CONFIG[env]?.baseURL || API_CONFIG.stage.baseURL;
+        return `${apiBaseUrl}/api/auth/oauth/${provider}/login?source=app`;
+      })();
+    const redirectUrl = 'handyapp://oauth-callback';
 
-      console.log('🔵 [BRIDGE] Opening InAppBrowser for Google OAuth:', googleLoginUrl);
+    console.log(`🔵 [BRIDGE] Opening InAppBrowser for ${provider} OAuth:`, oauthUrl);
 
-      try {
-        if (await InAppBrowser.isAvailable()) {
-          if (Platform.OS === 'android') {
-            // Android: Chrome Custom Tab을 Chrome으로 강제 지정
-            // 콜백은 App.tsx Deep Link 리스너가 handyapp://oauth-callback을 캐치
-            await InAppBrowser.open(googleLoginUrl, {
-              preferredBrowserPackage: 'com.android.chrome',
-              showTitle: true,
-              enableUrlBarHiding: false,
-              enableDefaultShare: false,
-              forceCloseOnRedirection: false,
-            });
-          } else {
-            // iOS: ASWebAuthenticationSession 사용
-            const result = await InAppBrowser.openAuth(googleLoginUrl, redirectUrl, {
-              ephemeralWebSession: false,
-              showTitle: false,
-              enableUrlBarHiding: true,
-              enableDefaultShare: false,
-            });
-
-            if (result.type === 'success' && result.url) {
-              const queryString = result.url.split('?')[1] || '';
-              const stateId = queryString.split('&').reduce((acc: string | null, pair: string) => {
-                const [key, value] = pair.split('=');
-                return key === 'stateId' ? decodeURIComponent(value) : acc;
-              }, null as string | null);
-              if (stateId) {
-                DeviceEventEmitter.emit('navigateToUrl', {
-                  url: `/auth/google/callback?stateId=${stateId}`
-                });
-              }
-            }
-          }
+    try {
+      if (await InAppBrowser.isAvailable()) {
+        if (Platform.OS === 'android') {
+          // Android: Chrome Custom Tab을 Chrome으로 강제 지정
+          // 콜백은 App.tsx Deep Link 리스너가 handyapp://oauth-callback을 캐치
+          await InAppBrowser.open(oauthUrl, {
+            preferredBrowserPackage: 'com.android.chrome',
+            showTitle: true,
+            enableUrlBarHiding: false,
+            enableDefaultShare: false,
+            forceCloseOnRedirection: false,
+          });
+          // Android: InAppBrowser.open()은 브라우저가 닫힌 후 resolve됨
+          // 성공 콜백은 App.tsx Deep Link 리스너가 처리하므로
+          // 여기서는 취소(뒤로가기)된 경우를 처리
+          console.log(`🟡 [BRIDGE] ${provider} Android InAppBrowser closed`);
+          sendMessageToWebView({
+            type: 'OAUTH_CANCELLED',
+            data: { provider },
+          });
         } else {
-          Linking.openURL(googleLoginUrl);
+          // iOS: ASWebAuthenticationSession 사용
+          const result = await InAppBrowser.openAuth(oauthUrl, redirectUrl, {
+            ephemeralWebSession: false,
+            showTitle: false,
+            enableUrlBarHiding: true,
+            enableDefaultShare: false,
+          });
+
+          if (result.type === 'success' && result.url) {
+            // 성공: stateId 추출 후 콜백 페이지로 이동
+            const queryString = result.url.split('?')[1] || '';
+            const stateId = queryString.split('&').reduce((acc: string | null, pair: string) => {
+              const [key, value] = pair.split('=');
+              return key === 'stateId' ? decodeURIComponent(value) : acc;
+            }, null as string | null);
+            if (stateId) {
+              DeviceEventEmitter.emit('navigateToUrl', {
+                url: `/auth/${provider}/callback?stateId=${stateId}`
+              });
+            }
+          } else {
+            // 취소/실패: 웹에 취소 알림
+            console.log(`🟡 [BRIDGE] ${provider} OAuth cancelled/dismissed`);
+            sendMessageToWebView({
+              type: 'OAUTH_CANCELLED',
+              data: { provider },
+            });
+          }
         }
-      } catch (error) {
-        console.error('🔴 [BRIDGE] OAuth error:', error);
-        Linking.openURL(googleLoginUrl);
+      } else {
+        Linking.openURL(oauthUrl);
       }
+    } catch (error) {
+      console.error(`🔴 [BRIDGE] ${provider} OAuth error:`, error);
+      sendMessageToWebView({
+        type: 'OAUTH_CANCELLED',
+        data: { provider, error: 'InAppBrowser error' },
+      });
     }
   };
 
@@ -977,13 +994,14 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       onMessage={handleMessage}
       injectedJavaScript={injectedJavaScript}
       onShouldStartLoadWithRequest={(request) => {
-        // Google OAuth URL을 가로채서 InAppBrowser로 열기
-        if (request.url.includes('/api/auth/oauth/google/login')) {
-          console.log('🔵 [WEBVIEW] Intercepting Google OAuth URL:', request.url);
-          // 원본 URL에 source=app 파라미터를 추가하여 InAppBrowser로 열기
+        // 모든 백엔드 OAuth 로그인 URL을 인터셉트하여 InAppBrowser로 열기
+        const oauthMatch = request.url.match(/\/api\/auth\/oauth\/(google|kakao|naver)\/login/);
+        if (oauthMatch) {
+          const provider = oauthMatch[1];
+          console.log(`🔵 [WEBVIEW] Intercepting ${provider} OAuth URL:`, request.url);
           const separator = request.url.includes('?') ? '&' : '?';
-          handleOAuth({ provider: 'google', url: `${request.url}${separator}source=app` });
-          return false; // WebView 내 로딩 차단
+          handleOAuth({ provider, url: `${request.url}${separator}source=app` });
+          return false;
         }
         return true;
       }}
