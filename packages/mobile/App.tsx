@@ -17,14 +17,17 @@ const App: React.FC = () => {
       if (url.startsWith('handyapp://oauth-callback')) {
         try {
           const queryString = url.split('?')[1] || '';
-          const stateId = queryString.split('&').reduce((acc: string | null, pair: string) => {
+          const params = queryString.split('&').reduce((acc: Record<string, string>, pair: string) => {
             const [key, value] = pair.split('=');
-            return key === 'stateId' ? decodeURIComponent(value) : acc;
-          }, null as string | null);
+            if (key && value) acc[key] = decodeURIComponent(value);
+            return acc;
+          }, {} as Record<string, string>);
+          const stateId = params.stateId;
+          const provider = params.provider || 'google';
           if (stateId) {
-            console.log('🔗 [APP] OAuth callback stateId:', stateId);
+            console.log('🔗 [APP] OAuth callback stateId:', stateId, 'provider:', provider);
             DeviceEventEmitter.emit('navigateToUrl', {
-              url: `/auth/google/callback?stateId=${stateId}`
+              url: `/auth/${provider}/callback?stateId=${stateId}`
             });
           }
         } catch (e) {

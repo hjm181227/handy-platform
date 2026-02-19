@@ -995,7 +995,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       injectedJavaScript={injectedJavaScript}
       onShouldStartLoadWithRequest={(request) => {
         // 모든 백엔드 OAuth 로그인 URL을 인터셉트하여 InAppBrowser로 열기
-        const oauthMatch = request.url.match(/\/api\/auth\/oauth\/(google|kakao|naver)\/login/);
+        const oauthMatch = request.url.match(/\/api\/auth\/oauth\/(google|kakao|naver|apple)\/login/);
         if (oauthMatch) {
           const provider = oauthMatch[1];
           console.log(`🔵 [WEBVIEW] Intercepting ${provider} OAuth URL:`, request.url);

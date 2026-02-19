@@ -154,6 +154,7 @@ export const API_ENDPOINTS = {
     GOOGLE: '/api/auth/oauth/google',
     GOOGLE_AUTH_DATA: (stateId: string) => `/api/auth/oauth/google/auth-data/${stateId}`,
     APPLE: '/api/auth/oauth/apple',
+    APPLE_AUTH_DATA: (stateId: string) => `/api/auth/oauth/apple/auth-data/${stateId}`,
     NAVER: '/api/auth/oauth/naver',
     NAVER_AUTH_DATA: (stateId: string) => `/api/auth/oauth/naver/auth-data/${stateId}`,  // 네이버 OAuth 인증 데이터 조회 (일회용)
     COMPLETE_SIGNUP: '/api/auth/oauth/social/complete-signup',  // 소셜 회원가입 완료 (약관 동의 후)

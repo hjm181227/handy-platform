@@ -111,8 +111,7 @@ export function AuthModalContent() {
       } else if (provider === 'naver') {
         await handleNaverLogin();
       } else if (provider === 'apple') {
-        setError('Apple 로그인은 iOS 앱에서만 사용 가능합니다.');
-        setLoading(false);
+        await handleAppleLogin();
       }
     } catch (error: any) {
       // 사용자가 취소한 경우 - 에러 표시 없이 종료
@@ -203,6 +202,23 @@ export function AuthModalContent() {
     // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     setLoading(false);
     executeNaverLogin();
+  };
+
+  const handleAppleLogin = () => {
+    // WebView 환경에서는 네이티브 브릿지를 통해 InAppBrowser로 OAuth 실행
+    if ((window as any).ReactNativeWebView) {
+      setLoading(false);
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'OAUTH',
+        data: { provider: 'apple' }
+      }));
+      return;
+    }
+
+    // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
+    setLoading(false);
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
+    window.location.href = `${apiBaseUrl}/api/auth/oauth/apple/login`;
   };
 
   // 회원가입 완료 핸들러
@@ -447,17 +463,15 @@ export function AuthModalContent() {
 
       {/* 소셜 로그인 버튼 */}
       <div className="space-y-3">
-        {/* Apple 로그인 - iOS 앱에서만 표시 (WebView 감지) */}
-        {(window as any).ReactNativeWebView && (
-          <button
-            onClick={() => handleSocialLogin('apple')}
-            disabled={loading}
-            className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
-          >
-            <AppleIcon />
-            Apple로 계속하기
-          </button>
-        )}
+        {/* Apple 로그인 */}
+        <button
+          onClick={() => handleSocialLogin('apple')}
+          disabled={loading}
+          className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
+        >
+          <AppleIcon />
+          Apple로 계속하기
+        </button>
 
         {/* 카카오 로그인 */}
         <button

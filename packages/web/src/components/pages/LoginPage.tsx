@@ -78,7 +78,8 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       } else if (provider === "google") {
         setError("Google 로그인은 준비 중입니다.");
       } else if (provider === "apple") {
-        setError("Apple 로그인은 iOS 앱에서만 사용 가능합니다.");
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
+        window.location.href = `${apiBaseUrl}/api/auth/oauth/apple/login`;
       }
     } catch (error: any) {
       console.error(`${provider} 로그인 실패:`, error);
@@ -276,17 +277,15 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
 
       {/* 소셜 로그인 버튼 */}
       <div className="space-y-3">
-        {/* Apple 로그인 - iOS 앱에서만 표시 (WebView 감지) */}
-        {(window as any).ReactNativeWebView && (
-          <button
-            onClick={() => handleSocialLogin("apple")}
-            disabled={loading}
-            className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
-          >
-            <AppleIcon />
-            Apple로 계속하기
-          </button>
-        )}
+        {/* Apple 로그인 */}
+        <button
+          onClick={() => handleSocialLogin("apple")}
+          disabled={loading}
+          className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
+        >
+          <AppleIcon />
+          Apple로 계속하기
+        </button>
 
         {/* 카카오 로그인 */}
         <button
