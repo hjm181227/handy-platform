@@ -7,7 +7,8 @@ import type { NailSizeData } from '@handy-platform/shared/src/services/user/User
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import { PageHeader } from '../layout/PageHeader';
 import { ReviewWriteModal, OrderItemForReview } from '../review/ReviewWriteModal';
-import { Ruler, RefreshCw, Camera } from 'lucide-react';
+import { Ruler, RefreshCw, Camera, Download } from 'lucide-react';
+import { renderNailSizeChart, downloadNailSizeChart } from '../../utils/nailSizeChartExport';
 
 // 공통 컴포넌트들
 
@@ -1145,6 +1146,7 @@ export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const loadNailSizeData = async () => {
     try {
@@ -1171,6 +1173,20 @@ export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  };
+
+  const handleExportChart = async (format: 'png' | 'jpeg') => {
+    if (!nailSizeData || exporting) return;
+    try {
+      setExporting(true);
+      const blob = await renderNailSizeChart(nailSizeData, { format });
+      await downloadNailSizeChart(blob, format);
+    } catch (err) {
+      console.error('이미지 내보내기 실패:', err);
+      alert('이미지 내보내기에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const isWebViewEnvironment = () => !!(window as any).ReactNativeWebView;
@@ -1272,6 +1288,28 @@ export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
           <div className="flex items-center justify-center gap-2 text-[13px] text-[#71717A]">
             <Ruler className="w-4 h-4" />
             <span>{formatDate(nailSizeData.measuredAt)} 측정</span>
+          </div>
+        )}
+
+        {/* 이미지 내보내기 버튼 */}
+        {nailSizeData && (
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => handleExportChart('png')}
+              disabled={exporting}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#E5E0DC] text-sm font-medium text-[#131211] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              PNG 저장
+            </button>
+            <button
+              onClick={() => handleExportChart('jpeg')}
+              disabled={exporting}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#E5E0DC] text-sm font-medium text-[#131211] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              JPG 저장
+            </button>
           </div>
         )}
 
