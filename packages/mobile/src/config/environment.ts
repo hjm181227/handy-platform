@@ -17,16 +17,22 @@ export const getAppEnvironment = (): string => {
       }
     }
 
-    // iOS의 경우 Info.plist에서 읽을 수 있도록 확장 가능
-    // TODO: iOS 환경 변수 설정 추가 시 여기에 구현
+    // iOS: __DEV__ 플래그로 개발 환경 감지 (Metro 연결 시 true)
+    if (Platform.OS === 'ios') {
+      if (__DEV__) {
+        console.log('🟢 [ENV] iOS __DEV__ mode: development');
+        return 'development';
+      }
+      // iOS release 빌드는 production으로 fallback (App Store 배포용)
+    }
 
   } catch (error) {
     console.warn('🔴 [ENV] Failed to read BuildConfig:', error);
   }
 
-  // Fallback: 기본값은 stage 환경
-  console.log('🟡 [ENV] Using fallback environment: stage');
-  return 'stage';
+  // Fallback: 기본값은 production 환경 (App Store release)
+  console.log('🟡 [ENV] Using fallback environment: production');
+  return 'production';
 };
 
 /**
