@@ -395,6 +395,19 @@ export interface SellerApplication {
   rejectionReason?: string;
   rejectedAt?: string;
   approvedAt?: string;
+  businessAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  bankAccount?: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+  };
+  verificationDocuments?: string[];
 }
 
 // 판매자별 배송 정보
@@ -685,6 +698,8 @@ export type WebViewMessageType =
   | 'CAMERA_RESPONSE'
   | 'PAYMENT_RESPONSE'
   | 'PERMISSIONS_RESPONSE'
+  | 'SAVE_IMAGE'                // 이미지를 갤러리에 저장 요청
+  | 'SAVE_IMAGE_RESPONSE'       // 이미지 저장 응답
   | 'NAVIGATE_TO_MEASUREMENT'   // 손톱 사이즈 측정 화면으로 이동
   | 'NAVIGATE_TO_SIZES'         // 손톱 사이즈 목록 화면으로 이동
   | 'NAVIGATE_BACK';            // 뒤로가기

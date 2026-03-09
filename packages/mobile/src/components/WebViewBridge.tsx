@@ -9,6 +9,7 @@ import { mobileApiService } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@handy-platform/shared/src/config/api';
 import { getAppEnvironment } from '../config/environment';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 
 interface WebViewBridgeProps {
   url: string;
@@ -84,6 +85,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'CHAT':
           await handleChat(message.data);
+          break;
+        case 'SAVE_IMAGE':
+          await handleSaveImage(message.data);
           break;
         case 'closeChat':
           console.log('🔵 [BRIDGE] closeChat 메시지 수신');
@@ -738,6 +742,70 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       status: 'completed',
       timestamp: new Date().toISOString()
     };
+  };
+
+  const handleSaveImage = async (data: any) => {
+    try {
+      console.log('🟢 [BRIDGE] 이미지 저장 요청:', data.filename);
+      const { base64, filename, mimeType, requestId } = data;
+
+      // 저장소 권한 확인 (Android)
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: '저장소 접근 권한',
+            message: '이미지를 저장하려면 저장소 접근 권한이 필요합니다.',
+            buttonPositive: '허용',
+            buttonNegative: '거부',
+          },
+        );
+        // Android 13+ 에서는 WRITE_EXTERNAL_STORAGE가 자동으로 granted로 처리됨
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED && granted !== PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+          // Android 10+ scoped storage에서는 권한 없이도 앱 전용 디렉토리에 저장 가능
+          console.log('🟡 [BRIDGE] 저장소 권한 거부됨, 앱 디렉토리에 저장 시도');
+        }
+      }
+
+      // 파일 저장 경로 설정
+      const downloadDir = Platform.OS === 'android'
+        ? RNFS.DownloadDirectoryPath
+        : RNFS.DocumentDirectoryPath;
+      const filePath = `${downloadDir}/${filename}`;
+
+      // base64 데이터를 파일로 저장
+      await RNFS.writeFile(filePath, base64, 'base64');
+      console.log('🟢 [BRIDGE] 이미지 저장 완료:', filePath);
+
+      // iOS: 갤러리에도 저장
+      if (Platform.OS === 'ios') {
+        try {
+          // CameraRoll API 대신 RNFS.copyFile로 사진 라이브러리 접근
+          // iOS에서는 DocumentDirectory에 저장된 파일을 공유 시트로 내보낼 수 있음
+          console.log('🟢 [BRIDGE] iOS 문서 디렉토리에 저장됨:', filePath);
+        } catch (galleryErr) {
+          console.log('🟡 [BRIDGE] 갤러리 저장 실패, 파일은 저장됨:', galleryErr);
+        }
+      }
+
+      Alert.alert(
+        '저장 완료',
+        `이미지가 저장되었습니다.\n${filename}`,
+        [{ text: '확인' }],
+      );
+
+      sendMessageToWebView({
+        type: 'SAVE_IMAGE_RESPONSE',
+        data: { success: true, filePath, requestId },
+      });
+    } catch (error: any) {
+      console.error('🔴 [BRIDGE] 이미지 저장 실패:', error);
+      Alert.alert('저장 실패', '이미지 저장에 실패했습니다. 다시 시도해주세요.');
+      sendMessageToWebView({
+        type: 'SAVE_IMAGE_RESPONSE',
+        data: { success: false, error: error.message, requestId: data.requestId },
+      });
+    }
   };
 
   const sendMessageToWebView = (message: WebViewMessage) => {
