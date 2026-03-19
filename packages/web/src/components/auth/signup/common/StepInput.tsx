@@ -28,7 +28,7 @@ export const StepInput = forwardRef<HTMLInputElement, StepInputProps>(
               transition-colors duration-200
               ${error
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                : 'border-gray-200 focus:border-blue-600 focus:ring-blue-600'
+                : 'border-gray-200 focus:border-[#E85A6B] focus:ring-[#E85A6B]'
               }
               focus:outline-none focus:ring-2 focus:ring-opacity-20
               placeholder:text-gray-400

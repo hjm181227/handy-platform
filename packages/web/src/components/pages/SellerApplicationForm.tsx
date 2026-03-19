@@ -171,7 +171,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
           <p className="text-gray-600">신청 상태를 확인하고 있습니다...</p>
         </div>
       </div>
@@ -257,7 +257,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                       verificationDocuments: application.verificationDocuments || []
                     });
                   }}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B] transition-colors"
                 >
                   수정하기
                 </button>
@@ -272,7 +272,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                       brandName: application.brandName || '',
                     });
                   }}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B] transition-colors"
                 >
                   재신청하기
                 </button>
@@ -318,7 +318,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="brandName"
                     value={formData.brandName}
                     onChange={(e) => handleInputChange('brandName', '', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['brandName'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="홍길동 네일"
@@ -337,7 +337,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="representativeName"
                     value={formData.representativeName}
                     onChange={(e) => handleInputChange('representativeName', '', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
                     placeholder="홍길동"
                   />
                 </div>
@@ -362,7 +362,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessNumber"
                     value={formData.businessNumber}
                     onChange={(e) => handleInputChange('businessNumber', '', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['businessNumber'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="123-45-67890"
@@ -380,7 +380,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessType"
                     value={formData.businessType}
                     onChange={(e) => handleInputChange('businessType', '', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
                   >
                     <option value="개인사업자">개인사업자</option>
                     <option value="법인사업자">법인사업자</option>
@@ -397,7 +397,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   id="businessCategory"
                   value={formData.businessCategory}
                   onChange={(e) => handleInputChange('businessCategory', '', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
                   placeholder="전자상거래 소매업"
                 />
               </div>
@@ -411,7 +411,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   id="businessSector"
                   value={formData.businessSector}
                   onChange={(e) => handleInputChange('businessSector', '', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
                   placeholder="예: 도소매업"
                 />
               </div>
@@ -430,7 +430,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="contactEmail"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange('contactEmail', '', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['contactEmail'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="contact@example.com"
@@ -449,7 +449,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="contactPhone"
                     value={formData.contactPhone}
                     onChange={(e) => handleInputChange('contactPhone', '', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['contactPhone'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="010-1234-5678"
@@ -475,7 +475,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessAddress.street"
                     value={formData.businessAddress?.street || ''}
                     onChange={(e) => handleInputChange('businessAddress', 'street', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['businessAddress.street'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="강남대로 456번길 78"
@@ -494,7 +494,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessAddress.city"
                     value={formData.businessAddress?.city || ''}
                     onChange={(e) => handleInputChange('businessAddress', 'city', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['businessAddress.city'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="강남구"
@@ -513,7 +513,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessAddress.state"
                     value={formData.businessAddress?.state || ''}
                     onChange={(e) => handleInputChange('businessAddress', 'state', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['businessAddress.state'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="서울특별시"
@@ -532,7 +532,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessAddress.zipCode"
                     value={formData.businessAddress?.zipCode || ''}
                     onChange={(e) => handleInputChange('businessAddress', 'zipCode', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['businessAddress.zipCode'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="06124"
@@ -551,7 +551,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="businessAddress.country"
                     value={formData.businessAddress?.country || ''}
                     onChange={(e) => handleInputChange('businessAddress', 'country', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
                     placeholder="대한민국"
                   />
                 </div>
@@ -571,7 +571,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="bankAccount.bankName"
                     value={formData.bankAccount.bankName}
                     onChange={(e) => handleInputChange('bankAccount', 'bankName', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['bankAccount.bankName'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="KB국민은행"
@@ -590,7 +590,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="bankAccount.accountHolder"
                     value={formData.bankAccount.accountHolder}
                     onChange={(e) => handleInputChange('bankAccount', 'accountHolder', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['bankAccount.accountHolder'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="홍길동"
@@ -609,7 +609,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     id="bankAccount.accountNumber"
                     value={formData.bankAccount.accountNumber}
                     onChange={(e) => handleInputChange('bankAccount', 'accountNumber', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['bankAccount.accountNumber'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="123456-78-901234"
@@ -622,12 +622,12 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
             </div>
 
             {/* 안내 사항 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-md p-4">
               <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                <span className="w-2 h-2 bg-[#E85A6B] rounded-full"></span>
                 안내 사항
               </h4>
-              <ul className="text-sm text-blue-800 space-y-1">
+              <ul className="text-sm text-[#D14A5B] space-y-1">
                 <li>• 신청서 제출 후 1-3 영업일 내에 검토 결과를 연락드립니다.</li>
                 <li>• 추가 서류가 필요한 경우 별도로 안내해드립니다.</li>
                 <li>• 허위 정보 기재 시 신청이 거부될 수 있습니다.</li>
@@ -647,7 +647,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
               <button
                 type="submit"
                 disabled={submitLoading}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-4 py-3 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {submitLoading ? (
                   <div className="flex items-center justify-center">

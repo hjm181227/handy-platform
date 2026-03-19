@@ -218,10 +218,12 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
                   } sm:opacity-100`}
                 >
                   <a
-                    href={banner.redirectUrl || '#'}
+                    href={`/event/${banner._id || banner.bannerId || banner.bannerUuid}`}
                     onClick={(e) => {
                       e.preventDefault();
-                      if (banner.redirectUrl) onGo(banner.redirectUrl);
+                      const bid = banner._id || banner.bannerId || banner.bannerUuid;
+
+                      if (bid) onGo(`/event/${bid}`);
                     }}
                     className="relative block overflow-hidden bg-gray-100 transition-shadow duration-300"
                     style={{
@@ -277,10 +279,11 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
           {banners.map((banner, i) => (
             <a
               key={banner._id || i}
-              href={banner.redirectUrl || '#'}
+              href={`/event/${banner._id || banner.bannerId || banner.bannerUuid}`}
               onClick={(e) => {
                 e.preventDefault();
-                if (banner.redirectUrl) onGo(banner.redirectUrl);
+                const bid = banner._id || banner.bannerId || banner.bannerUuid;
+                if (bid) onGo(`/event/${bid}`);
               }}
               className="relative block group overflow-hidden bg-gray-100 transition-shadow duration-300"
               style={{

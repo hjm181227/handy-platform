@@ -5,24 +5,8 @@ import { LikesProvider } from './contexts/LikesContext';
 import { AuthModalProvider } from './contexts/AuthModalContext';
 import { AlertProvider } from './components/common';
 import { ToastNotification } from './components/common/ToastNotification';
-import { FloatingChatButton } from './components/common/FloatingChatButton';
 import { AuthModal } from './components/auth/AuthModal';
 import { Router } from './Router';
-import { useMiniRouter } from './utils';
-
-/**
- * 플로팅 버튼 컨테이너
- * Router 외부에서 nav 함수에 접근하기 위한 래퍼
- */
-function FloatingButtonsContainer() {
-  const { nav } = useMiniRouter();
-
-  const handleChatButtonClick = () => {
-    nav('/chat');
-  };
-
-  return <FloatingChatButton onClick={handleChatButtonClick} />;
-}
 
 /**
  * 메인 앱 컴포넌트
@@ -36,7 +20,6 @@ function FloatingButtonsContainer() {
  * - AlertProvider: 알림 다이얼로그 관리
  * - Router: 라우팅 및 화면 렌더링
  * - ToastNotification: 전역 토스트 UI
- * - FloatingChatButton: 플로팅 채팅 버튼
  */
 export default function App() {
   return (
@@ -48,7 +31,6 @@ export default function App() {
               <AlertProvider>
                 <Router />
                 <ToastNotification />
-                <FloatingButtonsContainer />
                 <AuthModal />
               </AlertProvider>
             </LikesProvider>

@@ -11,7 +11,6 @@ import { FooterMega } from '../components/layout/Footer';
 import { CartDrawer } from '../components/layout/Drawers';
 import { MobileBottomNav } from '../components/layout/MobileBottomNav';
 import { CategoryModal } from '../components/common/CategoryModal';
-import { FloatingChatButton } from '../components/common/FloatingChatButton';
 import { ToastNotification } from '../components/common/ToastNotification';
 
 interface MainLayoutProps {
@@ -69,13 +68,13 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
     if (pathname.startsWith('/snap')) {
       return {
         title: 'SNAP',
+        showChat: true,
         showNotification: true,
         showSearch: true,
-        showProfile: true,
+        searchPlaceholder: '스냅 검색',
         cartCount,
+        onChat: handleChatButtonClick,
         onNotification: () => nav('/my/notifications'),
-        onSearch: () => {},
-        onProfile: () => nav('/my'),
         onGo: nav
       };
     }
@@ -83,10 +82,10 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
     if (pathname.startsWith('/likes')) {
       return {
         title: '찜한 목록',
-        showSearch: true,
+        showChat: true,
         showCart: true,
         cartCount,
-        onSearch: () => {},
+        onChat: handleChatButtonClick,
         onCart: handleCartClick,
         onGo: nav
       };
@@ -95,11 +94,11 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
     if (pathname === '/my') {
       return {
         title: '마이페이지',
-        showSearch: true,
+        showChat: true,
         showSettings: true,
         showCart: true,
         cartCount,
-        onSearch: () => {},
+        onChat: handleChatButtonClick,
         onSettings: () => nav('/my/settings'),
         onCart: handleCartClick,
         onGo: nav
@@ -110,11 +109,13 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
       return {
         showBack: true,
         showHome: true,
+        showChat: true,
         showSearch: true,
         showCart: true,
         cartCount,
         onBack: () => history.back(),
         onHome: () => nav('/'),
+        onChat: handleChatButtonClick,
         onSearch: () => {},
         onCart: handleCartClick,
         onGo: nav
@@ -126,9 +127,47 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
         title: '장바구니',
         showBack: true,
         showHome: true,
+        showChat: true,
         cartCount,
         onBack: () => history.back(),
         onHome: () => nav('/'),
+        onChat: handleChatButtonClick,
+        onGo: nav
+      };
+    }
+    // 랭킹 페이지
+    if (pathname.startsWith('/ranking')) {
+      return {
+        title: '랭킹',
+        showBack: true,
+        onBack: () => nav('/'),
+        onGo: nav
+      };
+    }
+    // 브랜드 페이지
+    if (pathname.startsWith('/brands')) {
+      return {
+        title: '브랜드',
+        showBack: true,
+        onBack: () => nav('/'),
+        onGo: nav
+      };
+    }
+    // 신상품 페이지
+    if (pathname.startsWith('/new')) {
+      return {
+        title: '신상품',
+        showBack: true,
+        onBack: () => nav('/'),
+        onGo: nav
+      };
+    }
+    // 추천 페이지
+    if (pathname.startsWith('/recommend')) {
+      return {
+        title: '추천',
+        showBack: true,
+        onBack: () => nav('/'),
         onGo: nav
       };
     }
@@ -169,6 +208,7 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
                   onAuthStateChange={setUser}
                   authLoading={authLoading}
                   onCategoryOpen={openCategoryModal}
+                  onChat={handleChatButtonClick}
                 />
               </div>
             )}
@@ -211,9 +251,6 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
 
       {/* Toast Notification */}
       <ToastNotification />
-
-      {/* Floating Chat Button */}
-      <FloatingChatButton onClick={handleChatButtonClick} />
     </AlertProvider>
   );
 }

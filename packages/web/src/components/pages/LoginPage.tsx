@@ -189,7 +189,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError(""); }}
             placeholder="이메일 주소"
-            className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-blue-600 transition-colors"
+            className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-[#E85A6B] transition-colors"
             disabled={loading}
           />
 
@@ -199,7 +199,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
               placeholder="비밀번호"
-              className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-blue-600 transition-colors"
+              className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-[#E85A6B] transition-colors"
               disabled={loading}
             />
             <button
@@ -234,7 +234,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-blue-600 py-4 text-base font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
+            className="w-full rounded-xl bg-[#E85A6B] py-4 text-base font-semibold text-white hover:bg-[#D14A5B] disabled:bg-gray-300 transition-colors"
           >
             {loading ? "로그인 중..." : "로그인"}
           </button>
@@ -246,7 +246,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             <span className="text-gray-500 text-sm">계정이 없으신가요? </span>
             <button
               onClick={() => onGo("/signup")}
-              className="text-blue-600 text-sm font-medium hover:underline"
+              className="text-[#E85A6B] text-sm font-medium hover:underline"
             >
               회원가입
             </button>
@@ -332,7 +332,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
         <button
           onClick={() => setShowEmailLogin(true)}
-          className="text-blue-600 text-sm font-medium hover:underline"
+          className="text-[#E85A6B] text-sm font-medium hover:underline"
         >
           로그인
         </button>

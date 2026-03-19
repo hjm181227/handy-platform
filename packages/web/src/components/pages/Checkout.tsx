@@ -222,7 +222,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto"></div>
           <p className="mt-4 text-gray-600">주문 정보를 준비하는 중...</p>
         </div>
       </div>
@@ -263,7 +263,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                         currentStep === index
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-[#E85A6B] text-white'
                           : step.completed
                           ? 'bg-green-500 text-white'
                           : 'bg-gray-200 text-gray-600'
@@ -339,7 +339,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
               {currentStep < steps.length - 1 ? (
                 <button
                   onClick={handleNextStep}
-                  className="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-8 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
                 >
                   다음
                 </button>
@@ -412,7 +412,7 @@ function ShippingAddressStep({
         <h2 className="text-xl font-semibold text-gray-900">배송지 선택</h2>
         <button
           onClick={onAddAddress}
-          className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
+          className="px-4 py-2 text-[#E85A6B] border border-[#E85A6B] rounded-lg hover:bg-[#FFF1F2]"
         >
           새 주소 추가
         </button>
@@ -424,7 +424,7 @@ function ShippingAddressStep({
             key={address.id}
             className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
               selectedAddress?.id === address.id
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-[#E85A6B] bg-[#FFF1F2]'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => onSelectAddress(address)}
@@ -447,7 +447,7 @@ function ShippingAddressStep({
               </div>
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                 selectedAddress?.id === address.id
-                  ? 'border-blue-500 bg-blue-500'
+                  ? 'border-[#E85A6B] bg-[#E85A6B]'
                   : 'border-gray-300'
               }`}>
                 {selectedAddress?.id === address.id && (
@@ -465,7 +465,7 @@ function ShippingAddressStep({
             <p className="text-gray-600 mb-4">등록된 배송지가 없습니다.</p>
             <button
               onClick={onAddAddress}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
             >
               배송지 추가하기
             </button>
@@ -496,7 +496,7 @@ function PaymentMethodStep({
         <h2 className="text-xl font-semibold text-gray-900">결제 수단 선택</h2>
         <button
           onClick={onAddMethod}
-          className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
+          className="px-4 py-2 text-[#E85A6B] border border-[#E85A6B] rounded-lg hover:bg-[#FFF1F2]"
         >
           새 카드 추가
         </button>
@@ -508,7 +508,7 @@ function PaymentMethodStep({
             key={method.id}
             className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
               selectedMethod?.id === method.id
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-[#E85A6B] bg-[#FFF1F2]'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => onSelectMethod(method)}
@@ -534,7 +534,7 @@ function PaymentMethodStep({
               </div>
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                 selectedMethod?.id === method.id
-                  ? 'border-blue-500 bg-blue-500'
+                  ? 'border-[#E85A6B] bg-[#E85A6B]'
                   : 'border-gray-300'
               }`}>
                 {selectedMethod?.id === method.id && (
@@ -552,7 +552,7 @@ function PaymentMethodStep({
             <p className="text-gray-600 mb-4">등록된 결제 수단이 없습니다.</p>
             <button
               onClick={onAddMethod}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
             >
               결제 수단 추가하기
             </button>
@@ -798,7 +798,7 @@ function AddAddressModal({
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="집, 회사 등"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -808,7 +808,7 @@ function AddAddressModal({
                 type="text"
                 value={formData.recipient}
                 onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -819,7 +819,7 @@ function AddAddressModal({
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="010-1234-5678"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -830,7 +830,7 @@ function AddAddressModal({
                 value={formData.zipCode}
                 onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
                 placeholder="12345"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -840,7 +840,7 @@ function AddAddressModal({
                 type="text"
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -851,7 +851,7 @@ function AddAddressModal({
                 value={formData.detailAddress}
                 onChange={(e) => setFormData(prev => ({ ...prev, detailAddress: e.target.value }))}
                 placeholder="동, 호수 등"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -861,7 +861,7 @@ function AddAddressModal({
                 id="isDefault"
                 checked={formData.isDefault}
                 onChange={(e) => setFormData(prev => ({ ...prev, isDefault: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-[#E85A6B] border-gray-300 rounded focus:ring-[#E85A6B]"
               />
               <label htmlFor="isDefault" className="ml-2 text-sm text-gray-700">
                 기본 배송지로 설정
@@ -880,7 +880,7 @@ function AddAddressModal({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B] disabled:opacity-50"
             >
               {saving ? '저장 중...' : '저장'}
             </button>
@@ -974,7 +974,7 @@ function AddPaymentMethodModal({
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="신한카드"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -985,7 +985,7 @@ function AddPaymentMethodModal({
                 value={formData.cardNumber}
                 onChange={(e) => setFormData(prev => ({ ...prev, cardNumber: e.target.value }))}
                 placeholder="1234-5678-9012-3456"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -996,7 +996,7 @@ function AddPaymentMethodModal({
                 value={formData.expiryDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
                 placeholder="MM/YY"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
@@ -1006,7 +1006,7 @@ function AddPaymentMethodModal({
                 id="isDefaultPayment"
                 checked={formData.isDefault}
                 onChange={(e) => setFormData(prev => ({ ...prev, isDefault: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-[#E85A6B] border-gray-300 rounded focus:ring-[#E85A6B]"
               />
               <label htmlFor="isDefaultPayment" className="ml-2 text-sm text-gray-700">
                 기본 결제 수단으로 설정
@@ -1025,7 +1025,7 @@ function AddPaymentMethodModal({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B] disabled:opacity-50"
             >
               {saving ? '저장 중...' : '저장'}
             </button>

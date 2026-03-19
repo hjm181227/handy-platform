@@ -88,7 +88,7 @@ export function ProductCard({
                 onGo(`/brands?search=${encodeURIComponent(p.brand!)}`);
               }
             }}
-            className="text-[11px] text-gray-500 hover:text-blue-600 hover:underline text-left"
+            className="text-[11px] text-gray-500 hover:text-[#E85A6B] hover:underline text-left"
           >
             {p.brand}
           </button>

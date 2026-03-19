@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { adminService } from '../../services/apiService';
-import type { AdminBanner } from '@handy-platform/shared';
-import { ImageUploadManager, createImagePreview, revokeImagePreview } from '@handy-platform/shared';
+import type { AdminBanner, BannerDetailImage } from '@handy-platform/shared';
+import { ImageUploadManager, createImagePreview, revokeImagePreview, resizeImage } from '@handy-platform/shared';
 import { API_BASE_URL } from '@handy-platform/shared';
 
 interface BannerFormData {
@@ -11,6 +11,14 @@ interface BannerFormData {
   redirectUrl: string;
   startDate: string;
   endDate: string;
+  detailImages: Array<{ imageUrl: string; imageS3Key?: string; displayOrder: number }>;
+}
+
+interface DetailImagePreview {
+  imageUrl: string;
+  imageS3Key?: string;
+  displayOrder: number;
+  isUploading?: boolean;
 }
 
 const BannerManagement: React.FC = () => {
@@ -35,6 +43,7 @@ const BannerManagement: React.FC = () => {
     redirectUrl: '',
     startDate: '',
     endDate: '',
+    detailImages: [],
   });
 
   // 이미지 업로드 상태
@@ -43,6 +52,10 @@ const BannerManagement: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 상세 이미지 상태
+  const [detailImagePreviews, setDetailImagePreviews] = useState<DetailImagePreview[]>([]);
+  const detailFileInputRef = useRef<HTMLInputElement>(null);
 
   // ImageUploadManager 인스턴스
   const imageUploadManager = new ImageUploadManager(
@@ -155,6 +168,123 @@ const BannerManagement: React.FC = () => {
     }
   };
 
+  // 상세 이미지 선택 및 즉시 업로드
+  const handleDetailImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const currentCount = detailImagePreviews.length;
+    const maxImages = 10;
+    const remaining = maxImages - currentCount;
+
+    if (remaining <= 0) {
+      alert('상세 이미지는 최대 10장까지 추가할 수 있습니다.');
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, remaining);
+
+    for (const file of filesToUpload) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`${file.name}: 파일 크기는 10MB를 초과할 수 없습니다.`);
+        continue;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name}: 이미지 파일만 업로드 가능합니다.`);
+        continue;
+      }
+
+      // 미리보기 + 업로드 중 표시
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const tempPreview: DetailImagePreview = {
+          imageUrl: reader.result as string,
+          displayOrder: detailImagePreviews.length,
+          isUploading: true,
+        };
+        setDetailImagePreviews(prev => [...prev, tempPreview]);
+      };
+      reader.readAsDataURL(file);
+
+      // 1080px 초과 시 자동 리사이즈
+      let fileToUpload: File | Blob = file;
+      if (file instanceof File) {
+        fileToUpload = await resizeImage(file, 1080, 4000, 0.85);
+      }
+
+      // 업로드 실행
+      try {
+        const result = await imageUploadManager.uploadImage({
+          file: fileToUpload,
+          uploadType: 'banner' as any,
+        });
+
+        if (result.success && result.imageUrl) {
+          setDetailImagePreviews(prev => {
+            const updated = [...prev];
+            // 마지막으로 추가된 uploading 상태인 항목 찾기
+            const idx = updated.findIndex(img => img.isUploading);
+            if (idx !== -1) {
+              updated[idx] = {
+                imageUrl: result.imageUrl,
+                displayOrder: idx,
+                isUploading: false,
+              };
+            }
+            return updated;
+          });
+        } else {
+          // 업로드 실패 시 제거
+          setDetailImagePreviews(prev => prev.filter(img => !img.isUploading));
+          alert(`이미지 업로드 실패: ${result.error || '알 수 없는 오류'}`);
+        }
+      } catch (error: any) {
+        setDetailImagePreviews(prev => prev.filter(img => !img.isUploading));
+        alert(`이미지 업로드 실패: ${error.message}`);
+      }
+    }
+
+    // input 초기화
+    if (detailFileInputRef.current) {
+      detailFileInputRef.current.value = '';
+    }
+  };
+
+  const handleDetailImageRemove = (index: number) => {
+    setDetailImagePreviews(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      return updated.map((img, i) => ({ ...img, displayOrder: i }));
+    });
+  };
+
+  const handleDetailImageMoveUp = (index: number) => {
+    if (index === 0) return;
+    setDetailImagePreviews(prev => {
+      const updated = [...prev];
+      [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+      return updated.map((img, i) => ({ ...img, displayOrder: i }));
+    });
+  };
+
+  const handleDetailImageMoveDown = (index: number) => {
+    setDetailImagePreviews(prev => {
+      if (index >= prev.length - 1) return prev;
+      const updated = [...prev];
+      [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+      return updated.map((img, i) => ({ ...img, displayOrder: i }));
+    });
+  };
+
+  const getDetailImagesForSubmit = (): Array<{ imageUrl: string; imageS3Key?: string; displayOrder: number }> => {
+    return detailImagePreviews
+      .filter(img => !img.isUploading)
+      .map((img, i) => ({
+        imageUrl: img.imageUrl,
+        imageS3Key: img.imageS3Key,
+        displayOrder: i,
+      }));
+  };
+
   const openCreateModal = () => {
     setFormData({
       title: '',
@@ -163,9 +293,11 @@ const BannerManagement: React.FC = () => {
       redirectUrl: '',
       startDate: '',
       endDate: '',
+      detailImages: [],
     });
     setImageFile(null);
     setImagePreview(null);
+    setDetailImagePreviews([]);
     setShowCreateModal(true);
   };
 
@@ -178,9 +310,18 @@ const BannerManagement: React.FC = () => {
       redirectUrl: banner.redirectUrl || '',
       startDate: banner.startDate ? banner.startDate.split('T')[0] : '',
       endDate: banner.endDate ? banner.endDate.split('T')[0] : '',
+      detailImages: banner.detailImages || [],
     });
     setImageFile(null);
     setImagePreview(banner.imageUrl);
+    setDetailImagePreviews(
+      (banner.detailImages || []).map((img, i) => ({
+        imageUrl: img.imageUrl,
+        imageS3Key: img.imageS3Key,
+        displayOrder: i,
+        isUploading: false,
+      }))
+    );
     setShowEditModal(true);
   };
 
@@ -212,6 +353,7 @@ const BannerManagement: React.FC = () => {
     }
 
     try {
+      const detailImages = getDetailImagesForSubmit();
       const response = await adminService.createBanner({
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
@@ -219,6 +361,7 @@ const BannerManagement: React.FC = () => {
         redirectUrl: formData.redirectUrl.trim() || undefined,
         startDate: formData.startDate || undefined,
         endDate: formData.endDate || undefined,
+        detailImages: detailImages.length > 0 ? detailImages : undefined,
       });
 
       if (response.success) {
@@ -254,6 +397,7 @@ const BannerManagement: React.FC = () => {
     }
 
     try {
+      const detailImages = getDetailImagesForSubmit();
       const response = await adminService.updateBanner(selectedBanner._id, {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
@@ -261,6 +405,7 @@ const BannerManagement: React.FC = () => {
         redirectUrl: formData.redirectUrl.trim() || undefined,
         startDate: formData.startDate || undefined,
         endDate: formData.endDate || undefined,
+        detailImages,
       });
 
       if (response.success) {
@@ -492,7 +637,7 @@ const BannerManagement: React.FC = () => {
       {/* 생성 모달 */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">배너 추가</h2>
             <div className="space-y-4">
               <div>
@@ -550,6 +695,63 @@ const BannerManagement: React.FC = () => {
                 )}
               </div>
 
+              {/* 상세 이미지 섹션 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  상세 이미지 (이벤트 페이지)
+                  <span className="text-xs text-gray-400 ml-1">최대 10장</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-2">배너 클릭 시 보여질 상세 페이지 이미지입니다. 권장: 너비 1080px, 장당 2MB 이하 (1080px 초과 시 자동 축소)</p>
+                <input
+                  ref={detailFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleDetailImageSelect}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+                {detailImagePreviews.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {detailImagePreviews.map((img, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
+                        <span className="text-xs text-gray-500 font-medium w-6 text-center">{index + 1}</span>
+                        <img
+                          src={img.imageUrl}
+                          alt={`상세 ${index + 1}`}
+                          className="h-16 w-24 object-cover rounded border"
+                        />
+                        <div className="flex-1" />
+                        {img.isUploading && (
+                          <span className="text-xs text-blue-500">업로드 중...</span>
+                        )}
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            onClick={() => handleDetailImageMoveUp(index)}
+                            disabled={index === 0}
+                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleDetailImageMoveDown(index)}
+                            disabled={index === detailImagePreviews.length - 1}
+                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleDetailImageRemove(index)}
+                          className="text-red-500 hover:text-red-700 text-xs px-2 py-1"
+                        >
+                          제거
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">링크 URL</label>
                 <input
@@ -591,7 +793,7 @@ const BannerManagement: React.FC = () => {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={isUploading}
+                disabled={isUploading || detailImagePreviews.some(img => img.isUploading)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {isUploading ? '업로드 중...' : '생성'}
@@ -604,7 +806,7 @@ const BannerManagement: React.FC = () => {
       {/* 수정 모달 */}
       {showEditModal && selectedBanner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">배너 수정</h2>
             <div className="space-y-4">
               <div>
@@ -662,6 +864,63 @@ const BannerManagement: React.FC = () => {
                 )}
               </div>
 
+              {/* 상세 이미지 섹션 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  상세 이미지 (이벤트 페이지)
+                  <span className="text-xs text-gray-400 ml-1">최대 10장</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-2">배너 클릭 시 보여질 상세 페이지 이미지입니다. 권장: 너비 1080px, 장당 2MB 이하 (1080px 초과 시 자동 축소)</p>
+                <input
+                  ref={detailFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleDetailImageSelect}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+                {detailImagePreviews.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {detailImagePreviews.map((img, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
+                        <span className="text-xs text-gray-500 font-medium w-6 text-center">{index + 1}</span>
+                        <img
+                          src={img.imageUrl}
+                          alt={`상세 ${index + 1}`}
+                          className="h-16 w-24 object-cover rounded border"
+                        />
+                        <div className="flex-1" />
+                        {img.isUploading && (
+                          <span className="text-xs text-blue-500">업로드 중...</span>
+                        )}
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            onClick={() => handleDetailImageMoveUp(index)}
+                            disabled={index === 0}
+                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleDetailImageMoveDown(index)}
+                            disabled={index === detailImagePreviews.length - 1}
+                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleDetailImageRemove(index)}
+                          className="text-red-500 hover:text-red-700 text-xs px-2 py-1"
+                        >
+                          제거
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">링크 URL</label>
                 <input
@@ -702,7 +961,7 @@ const BannerManagement: React.FC = () => {
               </button>
               <button
                 onClick={handleUpdate}
-                disabled={isUploading}
+                disabled={isUploading || detailImagePreviews.some(img => img.isUploading)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {isUploading ? '업로드 중...' : '저장'}

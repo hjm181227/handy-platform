@@ -125,7 +125,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">주문 정보를 불러오고 있습니다...</p>
           <p className="text-gray-500 text-sm mt-2">잠시만 기다려주세요</p>
         </div>
@@ -143,7 +143,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           <div className="space-y-3">
             <button
               onClick={() => onGo('/cart')}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+              className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
             >
               장바구니로 돌아가기
             </button>
@@ -168,7 +168,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           <p className="text-gray-600 mb-6">주문 정보를 찾을 수 없습니다.</p>
           <button
             onClick={() => onGo('/')}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+            className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
           >
             홈으로 이동
           </button>
@@ -220,7 +220,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">결제금액</span>
-                  <span className="font-bold text-blue-600">
+                  <span className="font-bold text-[#E85A6B]">
                     {money(order.totalAmount || 0)}
                   </span>
                 </div>
@@ -267,7 +267,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                         <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
                         <p className="text-sm font-medium">{money(item.price || 0)}</p>
                         {item.subtotal && item.subtotal !== item.price && (
-                          <p className="text-sm font-semibold text-blue-600">소계: {money(item.subtotal)}</p>
+                          <p className="text-sm font-semibold text-[#E85A6B]">소계: {money(item.subtotal)}</p>
                         )}
                       </div>
                     </div>
@@ -297,7 +297,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             onClick={() => onGo(`/orders/${order.id}`)}
-            className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 font-medium"
+            className="bg-[#E85A6B] text-white py-3 px-6 rounded-lg hover:bg-[#D14A5B] font-medium"
           >
             주문 상세보기
           </button>

@@ -34,6 +34,14 @@ import { CartContent } from './components/cart/CartContent';
 import { CategoryModal } from './components/common/CategoryModal';
 import { CategoryPage } from './components/pages/CategoryPage';
 import { NewProductsPage } from './components/pages/NewProductsPage';
+import { BannerDetailPage } from './components/event/BannerDetailPage';
+import { EventListPage } from './components/event/EventListPage';
+
+// Community Components
+import SnapFeed from './components/snap/SnapFeed';
+import UserProfilePage from './components/profile/UserProfilePage';
+import DiscoverPage from './components/discover/DiscoverPage';
+import { COMMUNITY_NAV_ENABLED } from './config/navigationConfig';
 
 // MyPage Components
 import {
@@ -125,6 +133,7 @@ import SellerApplicationManagement from './components/admin/SellerApplicationMan
 import CategoryManagement from './components/admin/CategoryManagement';
 import BannerManagement from './components/admin/BannerManagement';
 import AdminCouponManagement from './components/admin/AdminCouponManagement';
+import SnapManagement from './components/admin/SnapManagement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 /**
@@ -278,6 +287,21 @@ export function Router() {
       />
     );
   }
+  // ==================== Event Banner Routes ====================
+  else if (pathname === '/event') {
+    screen = (
+      <EventListPage onGo={nav} />
+    );
+  }
+  else if (pathname.match(/^\/event\/(.+)$/)) {
+    const mEvent = pathname.match(/^\/event\/(.+)$/)!;
+    screen = (
+      <BannerDetailPage
+        bannerId={decodeURIComponent(mEvent[1])}
+        onGo={nav}
+      />
+    );
+  }
   // ==================== Brand Routes ====================
   else if (pathname.startsWith('/brand/') && pathname.split('/').length === 3) {
     const sellerUuid = pathname.split('/')[2];
@@ -305,7 +329,39 @@ export function Router() {
       />
     );
   }
+  // ==================== Community Routes ====================
+  else if (pathname.match(/^\/user\/(.+)$/)) {
+    const mUser = pathname.match(/^\/user\/(.+)$/)!;
+    screen = (
+      <UserProfilePage
+        userUuid={decodeURIComponent(mUser[1])}
+        onGo={nav}
+        onOpen={openProduct}
+      />
+    );
+  }
+  else if (pathname === '/discover') {
+    screen = <DiscoverPage onGo={nav} onOpen={openProduct} />;
+  }
+  else if (pathname === '/shop') {
+    screen = (
+      <HomeContent
+        nav={nav}
+        openProduct={openProduct}
+        addProduct={addProduct}
+        handleLike={handleLike}
+        likedProducts={likedProducts}
+        newProducts={newProducts}
+        loadingNewProducts={loadingNewProducts}
+        brands={brands}
+        loadingBrands={loadingBrands}
+      />
+    );
+  }
   // ==================== Browse Routes ====================
+  else if (pathname === '/snap/new') {
+    screen = <SnapPage onGo={nav} onOpen={openProduct} initialUpload />;
+  }
   else if (pathname.startsWith('/snap')) {
     screen = <SnapPage onGo={nav} onOpen={openProduct} />;
   }
@@ -816,6 +872,12 @@ export function Router() {
           <AdminCouponManagement />
         </AdminLayout>
       );
+    } else if (pathname === '/admin/snaps') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <SnapManagement />
+        </AdminLayout>
+      );
     } else {
       // Admin 404
       screen = (
@@ -825,7 +887,7 @@ export function Router() {
             <p className="text-gray-600 mb-4">요청하신 관리자 페이지를 찾을 수 없습니다.</p>
             <button
               onClick={() => nav('/admin')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B]"
             >
               관리자 대시보드로 돌아가기
             </button>
@@ -866,6 +928,14 @@ export function Router() {
     screen = <AuthRedirect nav={nav} openModal={openSignup} />;
   }
   // ==================== Home ====================
+  else if (COMMUNITY_NAV_ENABLED) {
+    screen = (
+      <CommunityHome
+        nav={nav}
+        openProduct={openProduct}
+      />
+    );
+  }
   else {
     screen = (
       <HomeContent
@@ -981,6 +1051,25 @@ function HomeContent({
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * 커뮤니티 홈 컨텐츠 (COMMUNITY_NAV_ENABLED=true 일 때 홈)
+ */
+interface CommunityHomeProps {
+  nav: (to: string) => void;
+  openProduct: (id: string) => void;
+}
+
+function CommunityHome({ nav, openProduct }: CommunityHomeProps) {
+  return (
+    <div className="handy-page-content max-w-7xl">
+      <SnapFeed
+        onCreatorClick={(uuid) => nav(`/user/${uuid}`)}
+        onProductClick={(uuid) => openProduct(uuid)}
+      />
+    </div>
   );
 }
 

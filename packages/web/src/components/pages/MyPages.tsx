@@ -25,7 +25,7 @@ const EmptyState = ({ title, description, actionText, onAction }: {
     {actionText && onAction && (
       <button
         onClick={onAction}
-        className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+        className="rounded-lg bg-[#E85A6B] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#D14A5B]"
       >
         {actionText}
       </button>
@@ -185,7 +185,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
   const getStatusColor = (status: string) => {
     switch(status) {
       case "pending": return "bg-yellow-100 text-yellow-700";
-      case "confirmed": return "bg-blue-100 text-blue-700";
+      case "confirmed": return "bg-[#FFF1F2] text-[#E85A6B]";
       case "processing": return "bg-purple-100 text-purple-700";
       case "shipped": return "bg-orange-100 text-orange-700";
       case "delivered": return "bg-green-100 text-green-700";
@@ -233,7 +233,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
         {orderHeader}
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B] mx-auto mb-2"></div>
             <p className="text-gray-500">주문 내역을 불러오는 중...</p>
           </div>
         </div>
@@ -252,7 +252,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
             <p className="text-red-600">{error}</p>
             <button
               onClick={() => loadOrders(currentPage, filters)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-[#E85A6B] text-white px-6 py-2.5 rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
               다시 시도
             </button>
@@ -294,7 +294,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                   className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                     (status.value === '' && filters.status.length === 0) || 
                     (status.value !== '' && filters.status.includes(status.value))
-                      ? 'bg-blue-100 border-blue-200 text-blue-700'
+                      ? 'bg-[#FFF1F2] border-[#E85A6B]/20 text-[#E85A6B]'
                       : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                   }`}
                 >
@@ -324,17 +324,17 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="p-4 space-y-4">
         {/* 필터 적용 상태 표시 */}
         {(filters.status.length > 0 || filters.sortOrder !== 'desc') && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-blue-700">
+              <div className="flex items-center gap-2 text-sm text-[#E85A6B]">
                 <span>필터 적용:</span>
                 {filters.status.length > 0 && (
-                  <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+                  <span className="bg-[#FFF1F2] px-2 py-1 rounded text-xs">
                     상태: {filters.status.map(s => getStatusText(s)).join(', ')}
                   </span>
                 )}
                 {filters.sortOrder !== 'desc' && (
-                  <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+                  <span className="bg-[#FFF1F2] px-2 py-1 rounded text-xs">
                     정렬: 오래된순
                   </span>
                 )}
@@ -345,7 +345,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                   sortBy: 'createdAt',
                   sortOrder: 'desc'
                 })}
-                className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                className="text-xs text-[#E85A6B] hover:text-[#E85A6B] hover:underline"
               >
                 초기화
               </button>
@@ -383,7 +383,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => onGo('/')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="bg-[#E85A6B] text-white px-6 py-3 rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
               >
                 상품 둘러보기
               </button>
@@ -477,7 +477,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                   )}
                 </div>
 
-                <div className="font-semibold text-lg text-blue-600">
+                <div className="font-semibold text-lg text-[#E85A6B]">
                   {order.totalAmount?.toLocaleString() || 0}원
                 </div>
               </div>
@@ -492,7 +492,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                 {order.status === 'shipped' && (
                   <button
                     onClick={() => onGo(`/orders/${order.id}/track`)}
-                    className="flex-1 py-2 px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 py-2 px-4 text-sm bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
                   >
                     배송조회
                   </button>
@@ -533,7 +533,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                     onClick={() => loadOrders(page, filters)}
                     className={`px-3 py-2 text-sm border rounded-lg ${
                       page === currentPage
-                        ? 'bg-blue-600 text-white border-blue-600'
+                        ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
                         : 'hover:bg-gray-50'
                     }`}
                   >
@@ -576,7 +576,7 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="취소 사유를 입력해주세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent resize-none"
                 rows={4}
               />
             </div>
@@ -654,11 +654,11 @@ export function ShippingPage({ onGo }: { onGo: (to: string) => void }) {
                 <div className="text-sm text-gray-600 mb-2">
                   {order.courier} | {order.trackingNumber}
                 </div>
-                <div className="text-sm text-blue-600">
+                <div className="text-sm text-[#E85A6B]">
                   예상 도착일: {order.estimatedDelivery}
                 </div>
               </div>
-              <button className="w-full py-2 px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button className="w-full py-2 px-4 text-sm bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]">
                 실시간 배송조회
               </button>
             </div>
@@ -894,7 +894,7 @@ export function ReviewsPage({ onGo }: { onGo: (to: string) => void }) {
             </p>
             <button
               onClick={() => onGo('/my/orders')}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              className="bg-[#E85A6B] text-white px-6 py-3 rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
             >
               주문 내역 보기
             </button>
@@ -1068,10 +1068,10 @@ export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
       <PageHeader title="쿠폰함" onBack={() => onGo("/my")} />
       <div className="p-4 space-y-3">
         {coupons.map(coupon => (
-          <div key={coupon.id} className={`bg-white rounded-lg border-2 ${coupon.used ? 'border-gray-200 opacity-50' : 'border-blue-200'} p-4`}>
+          <div key={coupon.id} className={`bg-white rounded-lg border-2 ${coupon.used ? 'border-gray-200 opacity-50' : 'border-[#E85A6B]/20'} p-4`}>
             <div className="flex items-center justify-between mb-2">
               <div className="font-medium">{coupon.name}</div>
-              <div className={`text-lg font-bold ${coupon.used ? 'text-gray-400' : 'text-blue-600'}`}>
+              <div className={`text-lg font-bold ${coupon.used ? 'text-gray-400' : 'text-[#E85A6B]'}`}>
                 {coupon.type === 'percent' ? `${coupon.discount}%` : `${coupon.discount.toLocaleString()}원`}
               </div>
             </div>
@@ -1079,11 +1079,11 @@ export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
               {coupon.minOrder.toLocaleString()}원 이상 구매 시 • {coupon.expiry}까지
             </div>
             <div className="flex justify-between items-center">
-              <span className={`text-xs px-2 py-1 rounded ${coupon.used ? 'bg-gray-100 text-gray-500' : 'bg-blue-100 text-blue-700'}`}>
+              <span className={`text-xs px-2 py-1 rounded ${coupon.used ? 'bg-gray-100 text-gray-500' : 'bg-[#FFF1F2] text-[#E85A6B]'}`}>
                 {coupon.used ? '사용완료' : '사용가능'}
               </span>
               {!coupon.used && (
-                <button className="text-xs text-blue-600 hover:underline">바로사용</button>
+                <button className="text-xs text-[#E85A6B] hover:underline">바로사용</button>
               )}
             </div>
           </div>
@@ -1110,8 +1110,8 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="bg-white border-b p-6">
         <div className="text-center">
           <div className="text-sm text-gray-500 mb-1">보유 포인트</div>
-          <div className="text-3xl font-bold text-blue-600 mb-4">{currentPoints.toLocaleString()}P</div>
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-700">
+          <div className="text-3xl font-bold text-[#E85A6B] mb-4">{currentPoints.toLocaleString()}P</div>
+          <button className="bg-[#E85A6B] text-white px-6 py-2 rounded-lg text-sm hover:bg-[#D14A5B]">
             포인트 사용하기
           </button>
         </div>
@@ -1130,7 +1130,7 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
                   <div className="text-xs text-gray-400">주문번호: {history.orderId}</div>
                 )}
               </div>
-              <div className={`font-semibold ${history.type === '적립' ? 'text-blue-600' : 'text-red-600'}`}>
+              <div className={`font-semibold ${history.type === '적립' ? 'text-blue-600' : 'text-red-700'}`}>
                 {history.type === '적립' ? '+' : ''}{history.amount.toLocaleString()}P
               </div>
             </div>
@@ -1362,8 +1362,8 @@ export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
             <Camera className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <div className="text-base font-bold text-[#131211]">다시 측정하기</div>
-            <div className="text-sm text-[#991B1B]">카메라로 정확한 측정</div>
+            <div className="text-base font-bold text-[#131211]">사이즈 측정하기</div>
+            <div className="text-sm text-[#991B1B]">신용카드를 준비해주세요</div>
           </div>
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#FF4D6D]">
             <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1387,7 +1387,7 @@ export function PaymentsPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="p-4">
         <div className="mb-4 flex justify-between items-center">
           <h3 className="font-medium">등록된 카드</h3>
-          <button className="text-sm text-blue-600 hover:underline">+ 카드 추가</button>
+          <button className="text-sm text-[#E85A6B] hover:underline">+ 카드 추가</button>
         </div>
 
         <div className="space-y-3">
@@ -1396,7 +1396,7 @@ export function PaymentsPage({ onGo }: { onGo: (to: string) => void }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="font-medium">{card.name}</div>
                 {card.isDefault && (
-                  <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">기본</span>
+                  <span className="bg-[#FFF1F2] text-[#E85A6B] text-xs px-2 py-1 rounded-full">기본</span>
                 )}
               </div>
               <div className="text-sm text-gray-600 mb-3">{card.number}</div>
@@ -1404,7 +1404,7 @@ export function PaymentsPage({ onGo }: { onGo: (to: string) => void }) {
                 <button className="px-3 py-1.5 text-xs border rounded hover:bg-gray-50">수정</button>
                 <button className="px-3 py-1.5 text-xs border rounded hover:bg-gray-50 text-red-600">삭제</button>
                 {!card.isDefault && (
-                  <button className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">기본으로 설정</button>
+                  <button className="px-3 py-1.5 text-xs bg-[#E85A6B] text-white rounded hover:bg-[#D14A5B]">기본으로 설정</button>
                 )}
               </div>
             </div>

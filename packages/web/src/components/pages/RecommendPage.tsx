@@ -1,9 +1,8 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { products } from '../../data';
 import { ProductCard } from '../product/ProductCard';
 import { RecommendationEngine, getUserActivity, addToRecentViews } from '../../utils/recommendationEngine';
 import type { User } from '@handy-platform/shared';
-import { FaArrowUp } from 'react-icons/fa';
 
 // 추천 섹션 컴포넌트
 const RecommendationSection = ({
@@ -30,13 +29,16 @@ const RecommendationSection = ({
   return (
     <section className="mb-8">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold mb-1">{title}</h2>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-base font-bold">{title}</h2>
+          <span className="text-xs font-medium text-[#E85A6B] cursor-pointer">더보기 &gt;</span>
+        </div>
         {reason && (
-          <p className="text-sm text-gray-600">{reason}</p>
+          <p className="text-xs text-gray-500">{reason}</p>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
+      <div className="grid grid-cols-2 gap-3 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
         {sectionProducts.map((product, index) => {
           const productId = product.id || product.productUuid;
           return (
@@ -129,8 +131,8 @@ export function RecommendPage({
 
   return (
     <div className="relative">
-      {/* 페이지 헤더 */}
-      <div className="mx-auto max-w-7xl px-4 py-4 border-b">
+      {/* 페이지 헤더 (데스크톱) */}
+      <div className="mx-auto max-w-7xl px-4 py-4 border-b hidden md:block">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">{pageInfo.title}</h1>
@@ -146,8 +148,8 @@ export function RecommendPage({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-blue-600">카테고리별 추천</span>
+                <div className="w-2 h-2 bg-[#E85A6B] rounded-full"></div>
+                <span className="text-[#E85A6B]">카테고리별 추천</span>
               </div>
             )}
           </div>
@@ -156,17 +158,14 @@ export function RecommendPage({
 
       {/* 로그인 안내 (비로그인 사용자용) */}
       {!isLoggedIn && (
-        <div className="mx-auto max-w-7xl px-4 py-3 bg-blue-50 border-b">
+        <div className="mx-auto max-w-7xl px-4 py-3 bg-[#FFF1F2] border-b">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs md:text-sm text-blue-800 min-w-0">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-              <span className="truncate">로그인하시면 개인 취향에 맞는 상품을 추천받을 수 있어요</span>
-            </div>
+            <span className="text-xs md:text-sm text-[#D14A5B] font-medium truncate">
+              로그인하면 맞춤 추천을 받을 수 있어요
+            </span>
             <button
               onClick={() => onGo('/login')}
-              className="text-xs md:text-sm text-blue-600 hover:underline font-medium whitespace-nowrap flex-shrink-0"
+              className="px-3.5 py-1.5 bg-[#E85A6B] text-white text-xs font-semibold rounded-xl whitespace-nowrap flex-shrink-0 hover:bg-[#D14A5B]"
             >
               로그인
             </button>
@@ -198,34 +197,34 @@ export function RecommendPage({
 
         {/* 추가 정보 섹션 */}
         {recommendations.length > 0 && (
-          <div className="mt-12 p-6 bg-gray-50 rounded-lg">
+          <div className="mt-8 p-5 bg-gray-100 rounded-2xl">
             <div className="text-center">
-              <h3 className="font-medium text-gray-900 mb-2">
+              <h3 className="text-sm font-semibold text-gray-800 mb-1">
                 {isLoggedIn ? '더 정확한 추천을 원하시나요?' : '더 많은 상품을 둘러보세요'}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-xs text-gray-500 mb-4">
                 {isLoggedIn
                   ? '상품을 더 많이 둘러보고 좋아요를 누르시면 취향에 맞는 추천이 개선됩니다'
                   : '다양한 카테고리의 상품들을 확인해보세요'
                 }
               </p>
-              <div className="flex items-center justify-center gap-2 flex-wrap">
+              <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={() => onGo('/brands')}
-                  className="px-3 py-2 bg-white border rounded-lg text-xs md:text-sm hover:bg-gray-50 whitespace-nowrap"
+                  className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-gray-50"
                 >
                   브랜드
                 </button>
                 <button
                   onClick={() => onGo('/ranking')}
-                  className="px-3 py-2 bg-white border rounded-lg text-xs md:text-sm hover:bg-gray-50 whitespace-nowrap"
+                  className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-gray-50"
                 >
                   인기상품
                 </button>
                 {!isLoggedIn && (
                   <button
                     onClick={() => onGo('/login')}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap"
+                    className="px-3.5 py-2 bg-[#E85A6B] text-white rounded-xl text-xs font-medium hover:bg-[#D14A5B]"
                   >
                     로그인
                   </button>
@@ -237,12 +236,12 @@ export function RecommendPage({
       </div>
 
       {/* 우측 플로팅 버튼 */}
-      <div className="fixed right-6 bottom-6 flex flex-col items-center gap-3">
+      <div className="fixed right-6 bottom-24 flex flex-col items-center gap-3">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="h-12 w-12 rounded-full bg-white border shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
+          className="h-12 w-12 rounded-full bg-white border text-xl leading-none shadow-lg hover:shadow-xl transition-shadow"
         >
-          <FaArrowUp className="text-lg" />
+          ⬆
         </button>
       </div>
     </div>

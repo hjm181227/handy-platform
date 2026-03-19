@@ -184,7 +184,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setShowSearchSuggestions(true)}
                     placeholder="검색어를 입력하세요"
-                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-gray-700"
+                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
                   />
                   <button
                     type="submit"
@@ -391,7 +391,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       onChange={(e) => setBrandSearchQuery(e.target.value)}
                       onFocus={() => setBrandSearchFocused(true)}
                       placeholder="브랜드 검색"
-                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm"
                     />
                     <button
                       type="submit"
@@ -404,7 +404,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       type="button"
                       onClick={handleBrandSearchCancel}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                      className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium whitespace-nowrap"
                     >
                       취소
                     </button>
@@ -414,14 +414,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
 
               {brandsLoading ? (
                 <div className="flex items-center justify-center py-12 w-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B]"></div>
                 </div>
               ) : brandsError ? (
                 <div className="text-center py-12 w-full">
                   <p className="text-red-600 mb-4">{brandsError}</p>
                   <button
                     onClick={() => loadBrands()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
                   >
                     다시 시도
                   </button>
@@ -436,7 +436,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       key={brand.sellerUuid}
                       onClick={() => handleBrandClick(brand.sellerUuid)}
-                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-blue-600 hover:shadow-md transition-all group bg-white"
+                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-[#E85A6B] hover:shadow-md transition-all group bg-white"
                     >
                       {brand.brandProfile ? (
                         <img
@@ -451,7 +451,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                           </span>
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 text-center line-clamp-1">
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-[#E85A6B] text-center line-clamp-1">
                         {brand.brandName}
                       </span>
                     </button>
@@ -649,7 +649,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       onChange={(e) => setBrandSearchQuery(e.target.value)}
                       onFocus={() => setBrandSearchFocused(true)}
                       placeholder="브랜드 검색"
-                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm"
                     />
                     <button
                       type="submit"
@@ -662,7 +662,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       type="button"
                       onClick={handleBrandSearchCancel}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                      className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium whitespace-nowrap"
                     >
                       취소
                     </button>
@@ -672,14 +672,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
 
               {brandsLoading ? (
                 <div className="flex items-center justify-center py-12 w-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B]"></div>
                 </div>
               ) : brandsError ? (
                 <div className="text-center py-12 w-full">
                   <p className="text-red-600 mb-4">{brandsError}</p>
                   <button
                     onClick={() => loadBrands()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
                   >
                     다시 시도
                   </button>
@@ -694,7 +694,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       key={brand.sellerUuid}
                       onClick={() => handleBrandClick(brand.sellerUuid)}
-                      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-lg border border-gray-200 hover:border-blue-600 hover:shadow-md transition-all group bg-white"
+                      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-lg border border-gray-200 hover:border-[#E85A6B] hover:shadow-md transition-all group bg-white"
                     >
                       {brand.brandProfile ? (
                         <img
@@ -709,7 +709,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                           </span>
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 text-center line-clamp-1">
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-[#E85A6B] text-center line-clamp-1">
                         {brand.brandName}
                       </span>
                     </button>

@@ -20,8 +20,8 @@ export function StepButton({
 
   const variantStyles = {
     primary: `
-      bg-blue-600 text-white
-      hover:bg-blue-700
+      bg-[#E85A6B] text-white
+      hover:bg-[#D14A5B]
       disabled:bg-gray-300 disabled:text-gray-500
     `,
     secondary: `
@@ -30,8 +30,8 @@ export function StepButton({
       disabled:bg-gray-100 disabled:text-gray-400
     `,
     outline: `
-      bg-white text-blue-600 border-2 border-blue-600
-      hover:bg-blue-50
+      bg-white text-[#E85A6B] border-2 border-[#E85A6B]
+      hover:bg-[#FFF1F2]
       disabled:border-gray-300 disabled:text-gray-400
     `,
   };

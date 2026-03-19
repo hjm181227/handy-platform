@@ -46,7 +46,7 @@ const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor:
   pending:       { label: '상담중',   bgColor: 'bg-[#FEF3C7]',  textColor: 'text-[#D97706]' },
   quoted:        { label: '견적완료', bgColor: 'bg-purple-100',  textColor: 'text-purple-700' },
   approved:      { label: '결제대기', bgColor: 'bg-green-100',   textColor: 'text-green-700' },
-  in_production: { label: '제작중',   bgColor: 'bg-blue-100',    textColor: 'text-blue-700' },
+  in_production: { label: '제작중',   bgColor: 'bg-[#FFF1F2]',    textColor: 'text-[#E85A6B]' },
   completed:     { label: '완료',     bgColor: 'bg-emerald-100', textColor: 'text-emerald-700' },
   rejected:      { label: '거절됨',   bgColor: 'bg-red-100',     textColor: 'text-red-700' },
   cancelled:     { label: '취소됨',   bgColor: 'bg-gray-100',    textColor: 'text-gray-500' },

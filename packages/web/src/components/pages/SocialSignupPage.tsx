@@ -151,7 +151,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
               <div className="mt-2 text-sm text-gray-600">3초 후 로그인 페이지로 이동합니다</div>
               <button
                 onClick={() => onGo('/login')}
-                className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                className="mt-4 rounded-lg bg-[#E85A6B] px-4 py-2 text-white hover:bg-[#D14A5B]"
               >
                 지금 이동하기
               </button>
@@ -190,7 +190,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
             value={additionalInfo.phone}
             onChange={(e) => setAdditionalInfo(prev => ({ ...prev, phone: e.target.value }))}
             placeholder="휴대폰 번호 (선택)"
-            className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-blue-500"
+            className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-[#E85A6B]"
             disabled={loading}
           />
         </div>

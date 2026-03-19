@@ -64,9 +64,9 @@ export function DateStep({
     >
       <div className="flex-1">
         {/* 안내 메시지 */}
-        <div className="bg-blue-50 rounded-xl p-4 mb-6 flex items-start gap-3">
-          <FaInfoCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-blue-800">
+        <div className="bg-[#FFF1F2] rounded-xl p-4 mb-6 flex items-start gap-3">
+          <FaInfoCircle className="w-5 h-5 text-[#E85A6B] flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-[#D14A5B]">
             제작 기간을 고려하여 <strong>최소 7일 이후</strong> 날짜부터 선택 가능해요.
             정확한 일정은 판매자와 채팅으로 조율됩니다.
           </p>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/apiService';
 import { useMiniRouter } from '../../utils';
 import type { User } from '@handy-platform/shared';
-import { MdDashboard, MdInventory, MdStore, MdAssignment, MdViewCarousel } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdStore, MdAssignment, MdViewCarousel, MdCameraAlt } from 'react-icons/md';
 import { FaUsers, FaClipboardList, FaHome, FaSignOutAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { FiGrid } from 'react-icons/fi';
 import { RiCoupon2Line } from 'react-icons/ri';
@@ -121,6 +121,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
       name: '배너 관리',
       href: '/admin/banners',
       icon: MdViewCarousel
+    },
+    {
+      name: '스냅 관리',
+      href: '/admin/snaps',
+      icon: MdCameraAlt
     },
   ];
 

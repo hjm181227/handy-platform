@@ -137,8 +137,8 @@ export function NewProductsPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 페이지 헤더 */}
-      <div className="bg-white border-b">
+      {/* 페이지 헤더 (데스크톱) */}
+      <div className="bg-white border-b hidden md:block">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <h1 className="text-xl font-semibold">신상품</h1>
           <p className="text-sm text-gray-600 mt-1">방금 등록된 따끈따끈한 새 상품</p>
@@ -150,22 +150,26 @@ export function NewProductsPage({
         <div className="mx-auto max-w-7xl px-4 py-3">
           <div className="flex items-center justify-between">
             {/* 상품 수 */}
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-500 font-medium">
               {totalItems > 0 ? `${totalItems.toLocaleString()}개 상품` : ''}
             </span>
 
-            {/* 정렬 드롭다운 */}
-            <select
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            {/* 필터 칩 */}
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
               {sortOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+                <button
+                  key={option.value}
+                  onClick={() => handleSortChange(option.value)}
+                  className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    sortBy === option.value
+                      ? 'bg-[#E85A6B] text-white'
+                      : 'bg-white border hover:bg-gray-50'
+                  }`}
+                >
                   {option.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
         </div>
       </div>
@@ -191,7 +195,7 @@ export function NewProductsPage({
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => fetchProducts(1, false)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
               다시 시도
             </button>
@@ -207,7 +211,7 @@ export function NewProductsPage({
             <p className="text-gray-500 mb-2">아직 신상품이 없습니다.</p>
             <button
               onClick={() => onGo('/')}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-[#E85A6B] hover:underline text-sm"
             >
               홈으로 가기
             </button>
@@ -237,7 +241,7 @@ export function NewProductsPage({
             <div ref={observerRef} className="h-20 flex items-center justify-center">
               {loadingMore && (
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-[#E85A6B]/20 border-t-[#E85A6B] rounded-full animate-spin" />
                   <span className="text-sm text-gray-500">불러오는 중...</span>
                 </div>
               )}

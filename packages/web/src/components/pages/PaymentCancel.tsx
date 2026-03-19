@@ -73,7 +73,7 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
           )}
 
           <div className="flex items-center justify-center gap-2 text-gray-500">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#E85A6B]"></div>
             <p className="text-sm">체크아웃 페이지로 이동 중...</p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
         <div className="space-y-3">
           <button
             onClick={() => onGo('/checkout')}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+            className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
           >
             결제 다시 시도
           </button>

@@ -1,6 +1,6 @@
 import { BaseApiService } from '../base/BaseApiService';
 import { API_ENDPOINTS } from '../../config/api';
-import { EventBannerListResponse } from '../../types';
+import { EventBannerListResponse, EventBannerDetailResponse } from '../../types';
 
 export abstract class BaseBannerService extends BaseApiService {
 
@@ -21,6 +21,15 @@ export abstract class BaseBannerService extends BaseApiService {
       : API_ENDPOINTS.EVENT_BANNERS;
 
     return this.request<EventBannerListResponse>(url);
+  }
+
+  /**
+   * 공개 이벤트 배너 상세 조회
+   * @param id - 배너 ID
+   * @returns 배너 상세 정보
+   */
+  async getBannerDetail(id: string): Promise<EventBannerDetailResponse> {
+    return this.request<EventBannerDetailResponse>(API_ENDPOINTS.EVENT_BANNER_DETAIL(id));
   }
 }
 
