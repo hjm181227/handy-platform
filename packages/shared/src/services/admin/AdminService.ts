@@ -1,10 +1,11 @@
 import { BaseApiService } from '../base/BaseApiService';
-import { ApiResponse, SellerApplication } from '../../types';
+import { ApiResponse, SellerApplication, DesignToolAccess } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
 // 어드민 전용 사용자 타입
 export interface AdminUser {
   userUuid: string;
+  id: string;
   email: string;
   name: string;
   phone?: string;
@@ -12,6 +13,7 @@ export interface AdminUser {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  designToolAccess?: DesignToolAccess;
 }
 
 // 사용자 목록 응답

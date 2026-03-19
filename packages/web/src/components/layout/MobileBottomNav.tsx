@@ -52,15 +52,25 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
         {BOTTOM_TABS.map((tab) => {
           const Icon = ICON_MAP[tab.iconName];
 
-          // + 버튼 (스냅 업로드) 특별 렌더링
+          // + 버튼: 현재 탭에 따라 동적 경로 분기
+          // 스냅 탭 활성 → /snap/new, 그 외(쇼핑) → /custom-order/new
           if (tab.isSpecial) {
+            const isSnapActive = currentPath.startsWith('/snap');
+            const specialPath = isSnapActive ? '/snap/new' : '/custom-order/new';
+            const specialLabel = isSnapActive ? '스냅 업로드' : '커스텀 주문서 작성';
             return (
               <button
                 key="special-plus"
-                onClick={() => handleTabClick(tab)}
+                onClick={() => {
+                  if (tab.requiresAuth && !currentUser) {
+                    openLogin();
+                    return;
+                  }
+                  onGo(specialPath);
+                }}
                 className="flex items-center justify-center flex-1"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
-                aria-label="스냅 업로드"
+                aria-label={specialLabel}
               >
                 <div className="w-11 h-11 bg-[#E85A6B] rounded-full flex items-center justify-center shadow-md -mt-2">
                   <Plus size={24} style={{ color: '#fff' }} />

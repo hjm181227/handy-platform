@@ -12,7 +12,11 @@ import {
   PayMethod,
   CreateCustomOrderRequest,
   CreateCustomOrderResponse,
-  CustomOrderDetail
+  CustomOrderDetail,
+  CustomOrderListResponse,
+  UpdateCustomOrderRequest,
+  CustomOrderQuotesResponse,
+  PublicCustomOrderListResponse,
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
@@ -312,6 +316,41 @@ export abstract class BaseOrderService extends BaseApiService {
   async getCustomOrderDetail(uuid: string): Promise<ApiResponse<CustomOrderDetail>> {
     return this.request<ApiResponse<CustomOrderDetail>>(
       API_ENDPOINTS.CUSTOM_ORDER.DETAIL(uuid)
+    );
+  }
+
+  // 내 커스텀 주문서 목록 조회
+  async getMyCustomOrders(params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<CustomOrderListResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const query = queryParams.toString();
+    const url = query ? `${API_ENDPOINTS.CUSTOM_ORDER.LIST}?${query}` : API_ENDPOINTS.CUSTOM_ORDER.LIST;
+
+    return this.request<CustomOrderListResponse>(url);
+  }
+
+  // 커스텀 주문서 수정
+  async updateCustomOrder(uuid: string, data: UpdateCustomOrderRequest): Promise<ApiResponse<CustomOrderDetail>> {
+    return this.request<ApiResponse<CustomOrderDetail>>(
+      API_ENDPOINTS.CUSTOM_ORDER.UPDATE(uuid),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  // 주문서별 견적 목록 조회
+  async getCustomOrderQuotes(uuid: string): Promise<CustomOrderQuotesResponse> {
+    return this.request<CustomOrderQuotesResponse>(
+      API_ENDPOINTS.CUSTOM_ORDER.QUOTES(uuid)
     );
   }
 

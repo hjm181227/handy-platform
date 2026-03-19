@@ -49,8 +49,9 @@ export function MainHeader({
   // 활성화 상태 판단 함수
   const isActive = (menuPath: string) => {
     if (!currentPath) return false;
-    if (menuPath === '/') return currentPath === '/';
-    return currentPath.startsWith(menuPath);
+    const basePath = menuPath.split('?')[0];
+    if (basePath === '/') return currentPath === '/';
+    return currentPath.startsWith(basePath);
   };
 
   // 링크 클래스명 생성 함수

@@ -24,6 +24,7 @@ import {
   SellerOrderPagination,
   CustomOrderRequest,
   CustomOrderDetail,
+  PublicCustomOrderListResponse,
   PrefillProductResponse,
   PaginationInfo,
   SellerCoupon,
@@ -671,6 +672,23 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<CustomOrderRequest[]>>(
       API_ENDPOINTS.SELLER.CUSTOM_ORDERS
     );
+  }
+
+  // GET /seller/custom-orders/public - 공개 커스텀 주문서 목록 조회
+  async getPublicCustomOrders(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<PublicCustomOrderListResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const query = queryParams.toString();
+    const url = query
+      ? `${API_ENDPOINTS.SELLER.CUSTOM_ORDERS_PUBLIC}?${query}`
+      : API_ENDPOINTS.SELLER.CUSTOM_ORDERS_PUBLIC;
+
+    return this.request<PublicCustomOrderListResponse>(url);
   }
 
   // GET /seller/custom-orders/:requestUuid - 커스텀 주문서 상세 조회

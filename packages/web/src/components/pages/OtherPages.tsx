@@ -423,33 +423,53 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           </div>
 
           {/* Menu Section 1 */}
+          <Section title="판매자 서비스">
+            {user?.role === 'seller' ? (
+              <>
+                <LinkRow title="판매자 센터로 이동" to="/seller" />
+                <a
+                  href="/seller/custom-orders/public"
+                  onClick={(e) => { e.preventDefault(); onGo('/seller/custom-orders/public'); }}
+                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-[#FF4D6D]">실시간 고객 주문 확인</span>
+                    <span className="rounded-full bg-[#FF4D6D] text-white text-[10px] px-1.5 py-0.5 font-bold">NEW</span>
+                  </div>
+                  <ChevronIcon className="text-[#FF4D6D]" />
+                </a>
+              </>
+            ) : (
+              <LinkRow title="판매자 신청하기" to="/seller/apply" />
+            )}
+          </Section>
+
+          {/* 디자인 툴 */}
+          <Section title="디자인 툴">
+            <LinkRow title="디자인 툴 열기" to="/design-tool" />
+            <LinkRow title="구독 관리" to="/design-tool/subscription" />
+          </Section>
+
+          {/* Menu Section 2 */}
           <Section title="주문·배송 / 반품·교환">
             <LinkRow title="주문 내역" to="/my/orders" />
+            <LinkRow title="커스텀 주문 관리" to="/my/custom-orders" />
             <LinkRow title="배송지 관리" to="/my/shipping-address" />
             <LinkRow title="반품/교환 내역" to="/my/claims" />
             <LinkRow title="취소 내역" to="/my/cancel" />
           </Section>
 
-          {/* Menu Section 2 */}
+          {/* Menu Section 3 */}
           <Section title="리뷰·좋아요">
             <LinkRow title="내 리뷰 관리" to="/my/reviews" />
             <LinkRow title="좋아요(위시리스트)" to="/likes" badge={`${stats.likes}`} />
           </Section>
 
-          {/* Menu Section 3 */}
+          {/* Menu Section 4 */}
           <Section title="혜택 / 결제">
             <LinkRow title="쿠폰" to="/my/coupons" badge={`${stats.coupons}장`} />
             <LinkRow title="포인트" to="/my/points" />
             <LinkRow title="결제수단 관리" to="/my/payments" />
-          </Section>
-
-          {/* Menu Section 4 */}
-          <Section title="판매자 서비스">
-            {user?.role === 'seller' ? (
-              <LinkRow title="판매자 센터로 이동" to="/seller" />
-            ) : (
-              <LinkRow title="판매자 신청하기" to="/seller/apply" />
-            )}
           </Section>
 
           {/* Menu Section 5 */}
