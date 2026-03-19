@@ -81,7 +81,7 @@ export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void 
                   onClick={() => setInquiryType(type.value)}
                   className={`p-2 text-xs rounded-lg border transition-colors ${
                     inquiryType === type.value
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
                       : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                   }`}
                 >
@@ -98,7 +98,7 @@ export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
               placeholder="답변 받을 이메일을 입력하세요"
               required
             />
@@ -111,7 +111,7 @@ export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void 
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
               placeholder="문의 제목을 간단히 입력하세요"
               required
             />
@@ -123,7 +123,7 @@ export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void 
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-40 resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent h-40 resize-none"
               placeholder="문의 내용을 자세히 작성해주세요. 상품명, 주문번호 등을 함께 작성하시면 더 빠른 답변이 가능합니다."
               required
             />
@@ -149,14 +149,14 @@ export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void 
           {/* 제출 버튼 */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="w-full bg-[#E85A6B] text-white py-4 rounded-lg font-medium hover:bg-[#D14A5B] transition-colors"
           >
             문의 접수하기
           </button>
         </form>
 
         {/* 연락처 정보 */}
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-8 p-4 bg-[#FFF1F2] rounded-lg">
           <h3 className="font-medium mb-2">다른 연락 방법</h3>
           <div className="text-sm text-gray-600 space-y-2">
             <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="궁금한 내용을 검색해보세요"
-              className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               🔍
@@ -281,7 +281,7 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#E85A6B] text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -309,7 +309,7 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-medium flex items-center justify-center">
+                      <span className="flex-shrink-0 w-6 h-6 bg-[#FFF1F2] text-[#E85A6B] rounded-full text-xs font-medium flex items-center justify-center">
                         Q
                       </span>
                       <span className="font-medium pr-4">{faq.question}</span>
@@ -338,14 +338,14 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 추가 도움말 */}
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="bg-[#FFF1F2] rounded-lg p-4">
           <h3 className="font-medium mb-2">찾으시는 답변이 없으신가요?</h3>
           <p className="text-sm text-gray-600 mb-3">
             더 자세한 도움이 필요하시면 고객센터로 문의해 주세요.
           </p>
           <button
             onClick={() => onGo('/contact-inquiry')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#D14A5B] transition-colors"
           >
             1:1 문의하기
           </button>
@@ -386,11 +386,11 @@ export function AboutCompanyPageSimple({ onGo }: { onGo: (to: string) => void })
           <h3 className="font-semibold mb-3">회사 연혁</h3>
           <div className="space-y-3">
             <div className="flex gap-4">
-              <div className="text-sm font-medium text-blue-600 min-w-[80px]">2024</div>
+              <div className="text-sm font-medium text-[#E85A6B] min-w-[80px]">2024</div>
               <div className="text-sm">핸디 브랜드 론칭, 첫 제품 출시</div>
             </div>
             <div className="flex gap-4">
-              <div className="text-sm font-medium text-blue-600 min-w-[80px]">2023</div>
+              <div className="text-sm font-medium text-[#E85A6B] min-w-[80px]">2023</div>
               <div className="text-sm">에르모세아르 설립</div>
             </div>
           </div>
@@ -441,7 +441,7 @@ export function AboutNewsroomPageSimple({ onGo }: { onGo: (to: string) => void }
         {news.map((item, index) => (
           <div key={index} className="bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{item.category}</span>
+              <span className="text-xs bg-[#FFF1F2] text-[#E85A6B] px-2 py-1 rounded">{item.category}</span>
               <span className="text-xs text-gray-500">{item.date}</span>
             </div>
             <h3 className="font-medium">{item.title}</h3>

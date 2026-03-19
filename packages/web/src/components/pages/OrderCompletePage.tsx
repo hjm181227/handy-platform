@@ -74,7 +74,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
           <p className="text-gray-600 mb-6">{error || '올바르지 않은 주문 번호입니다.'}</p>
           <button
             onClick={() => onGo('/')}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+            className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
           >
             홈으로 돌아가기
           </button>
@@ -109,7 +109,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             
             <div className="flex justify-between items-center pb-2 border-b">
               <span className="text-gray-600">결제금액</span>
-              <span className="text-lg font-bold text-blue-600">{money(order.totalAmount)}</span>
+              <span className="text-lg font-bold text-[#E85A6B]">{money(order.totalAmount)}</span>
             </div>
             
             <div className="flex justify-between items-center pb-2 border-b">
@@ -123,7 +123,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             
             <div className="flex justify-between items-center">
               <span className="text-gray-600">주문상태</span>
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+              <span className="px-2 py-1 bg-[#FFF1F2] text-[#D14A5B] text-sm font-medium rounded-full">
                 {order.status === 'pending' && '결제대기'}
                 {order.status === 'confirmed' && '결제완료'}
                 {order.status === 'processing' && '제작중'}
@@ -192,9 +192,9 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
         )}
 
         {/* 안내 메시지 */}
-        <div className="bg-blue-50 rounded-lg border border-blue-200 p-4 mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">📦 배송 안내</h3>
-          <ul className="text-sm text-blue-700 space-y-1">
+        <div className="bg-[#FFF1F2] rounded-lg border border-[#E85A6B]/20 p-4 mb-6">
+          <h3 className="font-semibold text-[#D14A5B] mb-2">📦 배송 안내</h3>
+          <ul className="text-sm text-[#E85A6B] space-y-1">
             <li>• 네일팁은 주문 후 평균 3-5일 내에 제작됩니다.</li>
             <li>• 제작 완료 후 1-2일 내에 배송이 시작됩니다.</li>
             <li>• 배송 정보는 SMS와 이메일로 안내드립니다.</li>
@@ -212,7 +212,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
           </button>
           <button
             onClick={() => onGo('/')}
-            className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+            className="flex-1 bg-[#E85A6B] text-white py-3 px-6 rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
           >
             쇼핑 계속하기
           </button>
@@ -225,7 +225,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             고객센터 
             <button 
               onClick={() => alert('고객센터 연결 기능은 추후 구현됩니다.')}
-              className="text-blue-500 hover:underline ml-1"
+              className="text-[#E85A6B] hover:underline ml-1"
             >
               1588-0000
             </button>

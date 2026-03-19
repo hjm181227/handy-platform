@@ -143,6 +143,8 @@ class WebApiService {
   get category() { return this.apiService.category; }
   get banner() { return this.apiService.banner; }
   get user() { return this.apiService.user; }
+  get snap() { return this.apiService.snap; }
+  get follow() { return this.apiService.follow; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -293,6 +295,7 @@ export const {
   category: categoryService,
   banner: bannerService,
   user: userService,
+  follow: followService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들

@@ -501,7 +501,7 @@ export function BrandDetailPage({
     return (
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="text-center py-20">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
         </div>
       </div>
@@ -695,8 +695,8 @@ export function BrandDetailPage({
         <div className="bg-white rounded-b-2xl -mt-4 relative z-10 p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center group cursor-pointer">
-              <div className="w-12 h-12 mx-auto mb-3 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 mx-auto mb-3 bg-[#FFF1F2] rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </div>
@@ -774,7 +774,7 @@ export function BrandDetailPage({
               {productTypeFilter === 'original' ? '오리지널 상품' :
                productTypeFilter === 'custom' ? '커스텀 상품' : '전체 상품'}
             </h2>
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+            <span className="px-3 py-1 bg-[#FFF1F2] text-[#E85A6B] rounded-full text-sm font-medium">
               {sortedProducts.length}개
             </span>
           </div>
@@ -800,7 +800,7 @@ export function BrandDetailPage({
                 onClick={() => setSortBy('popular')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   sortBy === 'popular'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#E85A6B] text-white'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >
@@ -810,7 +810,7 @@ export function BrandDetailPage({
                 onClick={() => setSortBy('price')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   sortBy === 'price'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#E85A6B] text-white'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >
@@ -820,7 +820,7 @@ export function BrandDetailPage({
                 onClick={() => setSortBy('latest')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   sortBy === 'latest'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#E85A6B] text-white'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >
@@ -842,7 +842,7 @@ export function BrandDetailPage({
                     onClick={() => setCategoryFilter(null)}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !categoryFilter
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -854,7 +854,7 @@ export function BrandDetailPage({
                       onClick={() => setCategoryFilter(category)}
                       className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                         categoryFilter === category
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-[#FFF1F2] text-[#E85A6B]'
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                       }`}
                     >
@@ -872,7 +872,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter(null)}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !priceFilter
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -882,7 +882,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter({ min: 0, max: 50000 })}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 0 && priceFilter?.max === 50000
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -892,7 +892,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter({ min: 50000, max: 100000 })}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 50000 && priceFilter?.max === 100000
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -902,7 +902,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter({ min: 100000, max: Infinity })}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 100000 && priceFilter?.max === Infinity
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -919,7 +919,7 @@ export function BrandDetailPage({
                     onClick={() => setProductTypeFilter(null)}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !productTypeFilter
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -929,7 +929,7 @@ export function BrandDetailPage({
                     onClick={() => setProductTypeFilter('original')}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       productTypeFilter === 'original'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -939,7 +939,7 @@ export function BrandDetailPage({
                     onClick={() => setProductTypeFilter('custom')}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       productTypeFilter === 'custom'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -970,7 +970,7 @@ export function BrandDetailPage({
       <div className="mb-8">
         {productsLoading ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">상품 목록을 불러오는 중...</p>
           </div>
         ) : productsError ? (
@@ -982,7 +982,7 @@ export function BrandDetailPage({
             <p className="text-gray-600 mb-4">{productsError}</p>
             <button
               onClick={() => window.location.reload()}
-              className="rounded-lg bg-blue-600 text-white px-6 py-2 hover:bg-blue-700"
+              className="rounded-lg bg-[#E85A6B] text-white px-6 py-2 hover:bg-[#D14A5B]"
             >
               다시 시도
             </button>

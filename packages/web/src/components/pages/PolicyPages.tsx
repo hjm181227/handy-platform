@@ -812,8 +812,8 @@ export function PersonalDataConsent({ onClose }: { onClose: () => void }) {
         </section>
 
         <section>
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
+          <div className="bg-[#FFF1F2] p-4 rounded-lg border border-[#E85A6B]/20">
+            <p className="text-sm text-[#D14A5B]">
               <strong>※ 동의 거부 권리 안내</strong><br/>
               위 개인정보 수집·이용에 대한 동의를 거부할 권리가 있으나, 동의 거부 시 서비스 이용에 제한이 있을 수 있습니다.
             </p>

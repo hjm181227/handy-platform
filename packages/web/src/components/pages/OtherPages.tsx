@@ -5,7 +5,12 @@ import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import { ProductCard } from '../product/ProductCard';
-import { Ruler, Hand, LogOut, ChevronRight } from 'lucide-react';
+import { Ruler, LogOut, ChevronRight } from 'lucide-react';
+import SnapUploadModal, {
+  NAIL_STYLES, NAIL_COLORS, NAIL_TEXTURES, NAIL_TPOS,
+  NAIL_NATIONS, NAIL_SHAPES, NAIL_LENGTHS,
+} from '../snap/SnapUploadModal';
+import SnapDetailModal from '../snap/SnapDetailModal';
 
 // 좋아요 페이지
 export function LikesPage({
@@ -19,7 +24,7 @@ export function LikesPage({
   onAdd: (id: string) => void;
   onLike: (id: string) => void;
 }) {
-  const [selectedTab, setSelectedTab] = useState<TargetType>('product');
+  const [selectedTab, setSelectedTab] = useState<TargetType>('post');
   const [likedItems, setLikedItems] = useState<LikeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +85,7 @@ export function LikesPage({
       <p className="text-red-600 mb-4">{error}</p>
       <button
         onClick={() => loadLikes(selectedTab)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        className="px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B]"
       >
         다시 시도
       </button>
@@ -93,13 +98,13 @@ export function LikesPage({
       <p className="mb-4">
         {selectedTab === 'product' && '찜한 상품이 없습니다.'}
         {selectedTab === 'brand' && '찜한 브랜드가 없습니다.'}
-        {selectedTab === 'post' && '찜한 게시물이 없습니다.'}
+        {selectedTab === 'post' && '찜한 스냅이 없습니다.'}
       </p>
       <button
-        onClick={() => onGo("/")}
+        onClick={() => selectedTab === 'post' ? onGo("/snap") : onGo("/")}
         className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
       >
-        쇼핑하러 가기
+        {selectedTab === 'post' ? '스냅 둘러보러 가기' : '쇼핑하러 가기'}
       </button>
     </div>
   );
@@ -149,6 +154,16 @@ export function LikesPage({
       {/* Segment Selector - iOS Style */}
       <div className="inline-flex p-1 bg-gray-100 rounded-lg mb-6">
         <button
+          onClick={() => setSelectedTab('post')}
+          className={`px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            selectedTab === 'post'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          snap
+        </button>
+        <button
           onClick={() => setSelectedTab('product')}
           className={`px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
             selectedTab === 'product'
@@ -167,16 +182,6 @@ export function LikesPage({
           }`}
         >
           브랜드
-        </button>
-        <button
-          onClick={() => setSelectedTab('post')}
-          className={`px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-            selectedTab === 'post'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          게시물
         </button>
       </div>
 
@@ -378,9 +383,19 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
               </div>
               <div className="flex-1">
                 <div className="text-xs font-semibold text-[#991B1B]">내 손톱 사이즈</div>
-                {nailSizeData ? (
-                  <div className="text-sm font-medium text-[#131211]">측정 완료 · 왼손/오른손</div>
-                ) : (
+                {nailSizeData ? (() => {
+                  const allFingers = [
+                    ...Object.values(nailSizeData.leftHand),
+                    ...Object.values(nailSizeData.rightHand),
+                  ];
+                  const measuredCount = allFingers.filter(v => v > 0).length;
+                  const isComplete = measuredCount === 10;
+                  return isComplete ? (
+                    <div className="text-sm font-medium text-[#131211]">측정 완료 · 왼손/오른손</div>
+                  ) : (
+                    <div className="text-sm font-medium text-[#FF4D6D]">측정 미완료 · {measuredCount}/10</div>
+                  );
+                })() : (
                   <div className="text-sm font-medium text-[#71717A]">아직 측정 기록이 없어요 · 측정하기</div>
                 )}
               </div>
@@ -406,21 +421,6 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
               </a>
             ))}
           </div>
-
-          {/* Size Card (CTA) */}
-          <button
-            onClick={goToNailSizes}
-            className="flex items-center gap-3 rounded-xl bg-[#FFE5EA] border-[1.5px] border-[#FF4D6D] px-5 py-4 w-full text-left hover:bg-[#FFD6DD] transition-colors"
-          >
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#FF4D6D]">
-              <Hand className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-[15px] font-semibold text-[#131211]">내 손톱 사이즈 확인하기</div>
-              <div className="text-xs text-[#991B1B]">정확한 사이즈로 딱 맞는 네일 팁 구매</div>
-            </div>
-            <ChevronIcon className="text-[#FF4D6D]" />
-          </button>
 
           {/* Menu Section 1 */}
           <Section title="주문·배송 / 반품·교환">
@@ -465,30 +465,125 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   );
 }
 
-export function SnapPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
+export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: string) => void; onOpen: (id: string) => void; initialUpload?: boolean }) {
   const [snaps, setSnaps] = useState<any[]>([]);
   const [selectedSnap, setSelectedSnap] = useState<any | null>(null);
-  const [likedSnaps, setLikedSnaps] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [popularTags, setPopularTags] = useState<Array<{ tag: string; count: number }>>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showUploadModal, setShowUploadModal] = useState(initialUpload);
+
+  // 카테고리 필터 상태
+  const [selectedStyle, setSelectedStyle] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedTexture, setSelectedTexture] = useState<string>('');
+  const [selectedTpo, setSelectedTpo] = useState<string>('');
+  const [selectedNation, setSelectedNation] = useState<string>('');
+  const [selectedShape, setSelectedShape] = useState<string>('');
+  const [selectedLength, setSelectedLength] = useState<string>('');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // initialUpload prop 변경 시 모달 열기 (이미 /snap에 있을 때 /snap/new 클릭 대응)
+  useEffect(() => {
+    if (initialUpload) {
+      setShowUploadModal(true);
+    }
+  }, [initialUpload]);
 
   // 스냅 데이터 로드
+  const fetchSnaps = async (resetPage = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const currentPage = resetPage ? 1 : page;
+      if (resetPage) setPage(1);
+
+      const response = await webApiService.snap.getSnaps({
+        page: currentPage,
+        limit: 20,
+        sort: sortBy,
+        tag: activeTag || undefined,
+        style: selectedStyle || undefined,
+        color: selectedColor || undefined,
+        texture: selectedTexture || undefined,
+        tpo: selectedTpo || undefined,
+        nation: selectedNation || undefined,
+        shape: selectedShape || undefined,
+        length: selectedLength || undefined,
+      });
+
+      if (response.success) {
+        if (currentPage === 1) {
+          setSnaps(response.data.snaps);
+        } else {
+          setSnaps(prev => [...prev, ...response.data.snaps]);
+        }
+        setTotalPages(response.data.pagination.totalPages);
+      }
+    } catch (err: any) {
+      console.error('Snap fetch error:', err);
+      setError('스냅을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 인기 태그 로드
   useEffect(() => {
-    import('../../data').then((module) => {
-      setSnaps(module.snaps || []);
-    });
+    webApiService.snap.getPopularTags().then(res => {
+      if (res.success) setPopularTags(res.data.slice(0, 10));
+    }).catch(() => {});
   }, []);
 
-  // 좋아요 토글
-  const handleLike = (snapId: string, e: React.MouseEvent) => {
+  // 정렬/태그/카테고리 변경 시 재로드
+  useEffect(() => {
+    fetchSnaps(true);
+  }, [sortBy, activeTag, selectedStyle, selectedColor, selectedTexture, selectedTpo, selectedNation, selectedShape, selectedLength]);
+
+  // 더 보기
+  useEffect(() => {
+    if (page > 1) fetchSnaps();
+  }, [page]);
+
+  // 좋아요 토글 (낙관적 업데이트)
+  const handleLike = async (snapId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setLikedSnaps(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(snapId)) {
-        newSet.delete(snapId);
+    const snap = snaps.find(s => s.id === snapId);
+    if (!snap) return;
+
+    const wasLiked = snap.isLiked;
+
+    // 낙관적 업데이트
+    setSnaps(prev => prev.map(s =>
+      s.id === snapId
+        ? { ...s, isLiked: !wasLiked, likesCount: s.likesCount + (wasLiked ? -1 : 1) }
+        : s
+    ));
+    if (selectedSnap?.id === snapId) {
+      setSelectedSnap((prev: any) => prev ? { ...prev, isLiked: !wasLiked, likesCount: prev.likesCount + (wasLiked ? -1 : 1) } : prev);
+    }
+
+    try {
+      if (wasLiked) {
+        await likesService.unlike('snap', snapId);
       } else {
-        newSet.add(snapId);
+        await likesService.like('snap', snapId);
       }
-      return newSet;
-    });
+    } catch {
+      // 롤백
+      setSnaps(prev => prev.map(s =>
+        s.id === snapId
+          ? { ...s, isLiked: wasLiked, likesCount: s.likesCount + (wasLiked ? 1 : -1) }
+          : s
+      ));
+      if (selectedSnap?.id === snapId) {
+        setSelectedSnap((prev: any) => prev ? { ...prev, isLiked: wasLiked, likesCount: prev.likesCount + (wasLiked ? 1 : -1) } : prev);
+      }
+    }
   };
 
   // 스냅 클릭 - 모달 열기
@@ -504,9 +599,7 @@ export function SnapPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen:
   // ESC 키로 모달 닫기
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleCloseModal();
-      }
+      if (e.key === 'Escape') handleCloseModal();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
@@ -515,199 +608,251 @@ export function SnapPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen:
   return (
     <>
       <div className="handy-page-content max-w-7xl">
-        {/* 헤더 */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">SNAP</h1>
-          <p className="mt-2 text-gray-600">네일 아트 갤러리 - 실제 고객들의 네일 디자인을 만나보세요</p>
-          <div className="mt-4 border-t-2 border-gray-900"></div>
+        {/* 데스크톱 업로드 버튼 */}
+        <div className="hidden md:flex justify-end mb-6">
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#E85A6B] text-white text-sm font-medium rounded-full hover:bg-[#D14A5B] transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            스냅 올리기
+          </button>
         </div>
 
-        {/* 그리드 - 반응형 */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {snaps.map((snap) => (
-            <button
-              key={snap.id}
-              onClick={() => handleSnapClick(snap)}
-              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {/* 이미지 */}
-              <img
-                src={snap.imageUrl}
-                className="w-full h-full object-cover"
-                alt={snap.title || 'Nail snap'}
-              />
+        {/* 필터 바 */}
+        <div className="mb-5 md:mb-6 space-y-3">
+          {/* 정렬 + 카테고리 한 줄 */}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setSortBy('newest')}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all ${sortBy === 'newest' ? 'bg-gray-900 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+              >
+                최신순
+              </button>
+              <button
+                onClick={() => setSortBy('popular')}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all ${sortBy === 'popular' ? 'bg-gray-900 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+              >
+                인기순
+              </button>
+            </div>
 
-              {/* 호버 오버레이 */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {/* 하단 정보 */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  {snap.title && (
-                    <h3 className="font-semibold text-sm line-clamp-1">{snap.title}</h3>
-                  )}
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2 text-xs">
-                      {snap.creator.avatar && (
+            <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
+
+            {/* 카테고리 드롭다운 필터 (스크롤 영역) */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide min-w-0">
+            {([
+              { key: 'style', label: '스타일', value: selectedStyle, setter: setSelectedStyle, options: NAIL_STYLES },
+              { key: 'color', label: '컬러', value: selectedColor, setter: setSelectedColor, options: NAIL_COLORS },
+              { key: 'texture', label: '텍스처', value: selectedTexture, setter: setSelectedTexture, options: NAIL_TEXTURES },
+              { key: 'tpo', label: 'TPO', value: selectedTpo, setter: setSelectedTpo, options: NAIL_TPOS },
+              { key: 'nation', label: '국가', value: selectedNation, setter: setSelectedNation, options: NAIL_NATIONS },
+              { key: 'shape', label: '모양', value: selectedShape, setter: setSelectedShape, options: NAIL_SHAPES },
+              { key: 'length', label: '길이', value: selectedLength, setter: setSelectedLength, options: NAIL_LENGTHS },
+            ] as const).map((filter) => (
+              <div key={filter.key} className="relative flex-shrink-0">
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === filter.key ? null : filter.key)}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-full border transition-all whitespace-nowrap ${
+                    filter.value
+                      ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B] font-medium'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  {filter.value
+                    ? filter.options.find(o => o.value === filter.value)?.label || filter.label
+                    : filter.label}
+                  <svg className={`w-3 h-3 transition-transform ${openDropdown === filter.key ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {openDropdown === filter.key && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setOpenDropdown(null)} />
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 min-w-[120px] py-1 max-h-60 overflow-y-auto">
+                      <button
+                        onClick={() => { filter.setter(''); setOpenDropdown(null); }}
+                        className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${!filter.value ? 'text-[#E85A6B] font-medium' : 'text-gray-600'}`}
+                      >
+                        전체
+                      </button>
+                      {filter.options.map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => { filter.setter(opt.value); setOpenDropdown(null); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${filter.value === opt.value ? 'text-[#E85A6B] font-medium' : 'text-gray-600'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+            </div>
+          </div>
+
+          {/* 태그 필터 */}
+          {popularTags.length > 0 && (
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => setActiveTag(null)}
+                className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${!activeTag ? 'bg-[#E85A6B] text-white shadow-sm' : 'border border-[#E85A6B] text-[#E85A6B] bg-white hover:bg-[#FFF1F2]'}`}
+              >
+                전체
+              </button>
+              {popularTags.map(t => (
+                <button
+                  key={t.tag}
+                  onClick={() => setActiveTag(t.tag)}
+                  className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${activeTag === t.tag ? 'bg-[#E85A6B] text-white shadow-sm' : 'border border-[#E85A6B] text-[#E85A6B] bg-white hover:bg-[#FFF1F2]'}`}
+                >
+                  #{t.tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 에러 */}
+        {error && (
+          <div className="text-center py-16">
+            <div className="text-4xl mb-3">:(</div>
+            <p className="text-gray-500 mb-4 text-sm">{error}</p>
+            <button onClick={() => fetchSnaps(true)} className="px-5 py-2 bg-gray-900 text-white rounded-full text-sm hover:bg-gray-800 transition-colors">
+              다시 시도
+            </button>
+          </div>
+        )}
+
+        {/* 로딩 스켈레톤 */}
+        {loading && snaps.length === 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {/* 그리드 */}
+        {snaps.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {snaps.map((snap) => (
+              <div
+                key={snap.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleSnapClick(snap)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSnapClick(snap); }}
+                className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer"
+              >
+                <img
+                  src={snap.imageUrl}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  alt={snap.title || 'Nail snap'}
+                  loading="lazy"
+                />
+
+                {/* 하단 그라데이션 (항상 표시) */}
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+
+                {/* 하단 정보 (항상 표시) */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {snap.creator?.avatar ? (
                         <img
                           src={snap.creator.avatar}
-                          className="w-5 h-5 rounded-full border border-white/50"
-                          alt={snap.creator.name}
+                          className="w-5 h-5 rounded-full border border-white/30 flex-shrink-0"
+                          alt=""
                         />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-white/20 flex-shrink-0" />
                       )}
-                      <span className="opacity-90">{snap.creator.name}</span>
+                      <span className="text-xs opacity-90 truncate">{snap.creator?.nickname || snap.creator?.name || ''}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs">
-                      <span className="opacity-90">{snap.likesCount}</span>
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-1 text-xs flex-shrink-0">
+                      <svg className="w-3.5 h-3.5 fill-current opacity-80" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                       </svg>
+                      <span className="opacity-80">{snap.likesCount || 0}</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* 좋아요 버튼 */}
-              <button
-                onClick={(e) => handleLike(snap.id, e)}
-                className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-              >
-                <svg
-                  className={`w-5 h-5 transition-colors ${likedSnaps.has(snap.id) ? 'fill-red-500 text-red-500' : 'fill-none text-gray-700'}`}
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                {/* 좋아요 버튼 (호버 시) */}
+                <button
+                  onClick={(e) => handleLike(snap.id, e)}
+                  className="absolute top-2.5 right-2.5 p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 hover:scale-110"
                 >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </button>
-            </button>
-          ))}
-        </div>
+                  <svg
+                    className={`w-4 h-4 transition-colors ${snap.isLiked ? 'fill-red-500 text-red-500' : 'fill-none text-gray-600'}`}
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* 빈 상태 */}
-        {snaps.length === 0 && (
+        {!loading && !error && snaps.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-gray-500">스냅 이미지를 준비 중입니다.</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-400 text-sm">아직 스냅이 없습니다</p>
+          </div>
+        )}
+
+        {/* 더보기 버튼 */}
+        {page < totalPages && !loading && (
+          <div className="text-center mt-10 mb-4">
+            <button
+              onClick={() => setPage(prev => prev + 1)}
+              className="px-8 py-2.5 border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 transition-colors text-sm font-medium"
+            >
+              더보기
+            </button>
+          </div>
+        )}
+
+        {/* 로딩 more */}
+        {loading && snaps.length > 0 && (
+          <div className="text-center mt-8 mb-4">
+            <div className="inline-block w-6 h-6 border-2 border-gray-200 border-t-[#E85A6B] rounded-full animate-spin" />
           </div>
         )}
       </div>
 
-      {/* 이미지 모달 */}
+      {/* 스냅 상세 모달 */}
       {selectedSnap && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-          onClick={handleCloseModal}
-        >
-          <div
-            className="relative max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 닫기 버튼 */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-            >
-              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* 이미지 */}
-              <div className="bg-gray-100">
-                <img
-                  src={selectedSnap.imageUrl}
-                  className="w-full h-full object-cover max-h-[70vh]"
-                  alt={selectedSnap.title || 'Nail snap'}
-                />
-              </div>
-
-              {/* 상세 정보 */}
-              <div className="p-6 flex flex-col">
-                {/* 작성자 정보 */}
-                <div className="flex items-center gap-3 mb-4">
-                  {selectedSnap.creator.avatar && (
-                    <img
-                      src={selectedSnap.creator.avatar}
-                      className="w-12 h-12 rounded-full border-2 border-gray-200"
-                      alt={selectedSnap.creator.name}
-                    />
-                  )}
-                  <div>
-                    <p className="font-semibold text-gray-900">{selectedSnap.creator.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(selectedSnap.createdAt).toLocaleDateString('ko-KR')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 제목 & 설명 */}
-                {selectedSnap.title && (
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedSnap.title}</h2>
-                )}
-                {selectedSnap.description && (
-                  <p className="text-gray-600 mb-4">{selectedSnap.description}</p>
-                )}
-
-                {/* 좋아요 */}
-                <div className="flex items-center gap-4 mb-6">
-                  <button
-                    onClick={() => handleLike(selectedSnap.id, {} as any)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <svg
-                      className={`w-5 h-5 ${likedSnaps.has(selectedSnap.id) ? 'fill-red-500 text-red-500' : 'fill-none text-gray-700'}`}
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                    <span className="font-medium">{selectedSnap.likesCount + (likedSnaps.has(selectedSnap.id) ? 1 : 0)}</span>
-                  </button>
-                </div>
-
-                {/* 태그 */}
-                {selectedSnap.tags && selectedSnap.tags.length > 0 && (
-                  <div className="mb-6">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">태그</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedSnap.tags.map((tag: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 연관 상품 */}
-                {selectedSnap.relatedProducts && selectedSnap.relatedProducts.length > 0 && (
-                  <div className="mt-auto">
-                    <p className="text-sm font-semibold text-gray-700 mb-3">이 디자인과 어울리는 상품</p>
-                    <div className="flex gap-2 overflow-x-auto">
-                      {selectedSnap.relatedProducts.map((productId: string) => (
-                        <button
-                          key={productId}
-                          onClick={() => {
-                            onOpen(productId);
-                            handleCloseModal();
-                          }}
-                          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-                        >
-                          상품 보기
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <SnapDetailModal
+          snap={selectedSnap}
+          onClose={handleCloseModal}
+          onProductClick={(id) => { onOpen(id); handleCloseModal(); }}
+          onTagClick={(tag) => { setActiveTag(tag); handleCloseModal(); }}
+          onDelete={(uuid) => { setSnaps(prev => prev.filter(s => (s.id || s.snapUuid) !== uuid)); handleCloseModal(); }}
+        />
       )}
+
+      {/* 스냅 업로드 모달 */}
+      <SnapUploadModal
+        isOpen={showUploadModal}
+        onClose={() => { setShowUploadModal(false); if (initialUpload) onGo('/snap'); }}
+        onSuccess={() => fetchSnaps(true)}
+      />
     </>
   );
 }

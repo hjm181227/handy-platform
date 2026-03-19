@@ -40,7 +40,7 @@ function ArticleCard({
         </div>
         <button
           onClick={() => onGo(`/news/${p.slug}`)}
-          className="mt-2 text-sm text-blue-600 hover:underline"
+          className="mt-2 text-sm text-[#E85A6B] hover:underline"
         >
           자세히 보기 →
         </button>

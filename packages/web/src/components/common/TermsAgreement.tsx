@@ -80,7 +80,7 @@ export function TermsAgreement({
                 <div className="font-semibold text-gray-800">{userInfo.name}</div>
                 <div className="text-sm text-gray-600">{userInfo.email}</div>
                 {userInfo.provider && (
-                  <div className="text-xs text-blue-600 mt-1">
+                  <div className="text-xs text-[#E85A6B] mt-1">
                     {userInfo.provider === 'kakao' && '카카오'}
                     {userInfo.provider === 'google' && 'Google'}
                     {userInfo.provider === 'naver' && 'NAVER'}
@@ -95,7 +95,7 @@ export function TermsAgreement({
         <div className="text-sm font-semibold text-gray-800">{title}</div>
         
         {description && (
-          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+          <div className="text-sm text-gray-600 bg-[#FFF1F2] p-3 rounded">
             {description}
           </div>
         )}
@@ -127,7 +127,7 @@ export function TermsAgreement({
           <button
             type="button"
             onClick={() => setShowPolicy('terms')}
-            className="text-blue-600 hover:text-blue-800 text-xs underline"
+            className="text-[#E85A6B] hover:text-[#D14A5B] text-xs underline"
           >
             전문보기
           </button>
@@ -148,7 +148,7 @@ export function TermsAgreement({
           <button
             type="button"
             onClick={() => setShowPolicy('privacy')}
-            className="text-blue-600 hover:text-blue-800 text-xs underline"
+            className="text-[#E85A6B] hover:text-[#D14A5B] text-xs underline"
           >
             전문보기
           </button>
@@ -169,7 +169,7 @@ export function TermsAgreement({
           <button
             type="button"
             onClick={() => setShowPolicy('personalData')}
-            className="text-blue-600 hover:text-blue-800 text-xs underline"
+            className="text-[#E85A6B] hover:text-[#D14A5B] text-xs underline"
           >
             전문보기
           </button>
@@ -191,7 +191,7 @@ export function TermsAgreement({
         </label>
 
         {/* 필수 약관 안내 */}
-        <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded flex items-center gap-1">
+        <div className="text-xs text-gray-600 bg-[#FFF1F2] p-2 rounded flex items-center gap-1">
           <span className="material-symbols-outlined text-sm">lightbulb</span>
           필수 약관에 동의하지 않으시면 회원가입이 제한됩니다.
         </div>

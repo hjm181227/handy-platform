@@ -19,6 +19,8 @@ import { BaseUserService, UserServiceFactory } from './user/UserService';
 import { BaseLikesService, LikesServiceFactory } from './likes/LikesService';
 import { BaseCategoryService, CategoryServiceFactory } from './category/CategoryService';
 import { BaseBannerService, BannerServiceFactory } from './banner/BannerService';
+import { BaseSnapService, SnapServiceFactory } from './snap/SnapService';
+import { BaseFollowService, FollowServiceFactory } from './follow/FollowService';
 import { BaseChatService, getChatService } from './chat';
 
 // 통합 API 서비스 인터페이스
@@ -44,6 +46,8 @@ export interface IntegratedApiService {
   likes: BaseLikesService;
   category: BaseCategoryService;
   banner: BaseBannerService;
+  snap: BaseSnapService;
+  follow: BaseFollowService;
   chat: BaseChatService;
 
   // 환경 정보 메서드
@@ -76,6 +80,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public likes: BaseLikesService;
   public category: BaseCategoryService;
   public banner: BaseBannerService;
+  public snap: BaseSnapService;
+  public follow: BaseFollowService;
   public chat: BaseChatService;
 
   protected baseURL: string;
@@ -114,6 +120,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.likes = LikesServiceFactory.create(baseURL, getAuthHeaders);
     this.category = CategoryServiceFactory.create(baseURL, getAuthHeaders);
     this.banner = BannerServiceFactory.create(baseURL, getAuthHeaders);
+    this.snap = SnapServiceFactory.create(baseURL, getAuthHeaders);
+    this.follow = FollowServiceFactory.create(baseURL, getAuthHeaders);
     this.chat = getChatService();
   }
 
@@ -142,6 +150,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'likes',
         'category',
         'banner',
+        'snap',
+        'follow',
         'chat'
       ],
     };
@@ -238,4 +248,6 @@ export type {
   BaseBrandService,
   BaseUserService,
   BaseLikesService,
+  BaseSnapService,
+  BaseFollowService,
 };

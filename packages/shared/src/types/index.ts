@@ -805,7 +805,7 @@ export interface PushNotification {
 export interface PresignedUrlRequest {
   filename: string;
   contentType: string;  // 다시 필수 필드로 복원
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message' | 'snap';
 }
 
 export interface PresignedUrlResponse {
@@ -1535,26 +1535,231 @@ export interface BrandUpdateResponse {
 
 // ===== SNAP (네일 갤러리) TYPES =====
 
-// 스냅 (네일 아트 갤러리 이미지)
+export interface SnapImage {
+  imageUrl: string;
+  thumbnailUrl?: string;
+  sortOrder: number;
+}
+
+export interface SnapCreator {
+  userUuid: string;
+  name: string;
+  nickname?: string;
+  avatar?: string;
+}
+
+export interface SnapRelatedProduct {
+  productUuid: string;
+  name: string;
+  mainImageUrl: string;
+  price: number;
+  salePrice?: number;
+}
+
+export interface SnapNailCategories {
+  style?: string[];
+  color?: string[];
+  texture?: string[];
+  tpo?: string[];
+  nation?: string;
+}
+
 export interface Snap {
   id: string;
+  snapId: string;
+  images: SnapImage[];
   imageUrl: string;
   title?: string;
   description?: string;
-  creator: {
-    name: string;
-    avatar?: string;
-  };
+  creator: SnapCreator;
+  tags: string[];
+  nailCategories?: SnapNailCategories;
+  nailShape?: string;
+  nailLength?: string;
+  relatedProducts: SnapRelatedProduct[];
   likesCount: number;
+  viewsCount: number;
+  commentsCount: number;
+  isLiked?: boolean;
   createdAt: string;
+}
+
+export interface SnapListResponse {
+  success: boolean;
+  data: {
+    snaps: Snap[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+    };
+  };
+}
+
+export interface SnapDetailResponse {
+  success: boolean;
+  data: Snap;
+}
+
+export interface SnapCreateRequest {
+  title?: string;
+  description?: string;
+  images: Array<{ imageUrl: string; imageS3Key?: string; thumbnailUrl?: string; sortOrder: number }>;
   tags?: string[];
-  relatedProducts?: string[]; // 연관 상품 ID 목록
+  nailCategories?: SnapNailCategories;
+  nailShape?: string;
+  nailLength?: string;
+  relatedProducts?: string[];
+}
+
+export interface SnapFeedParams {
+  page?: number;
+  limit?: number;
+  sort?: 'newest' | 'popular' | 'trending';
+  tag?: string;
+  style?: string;
+  color?: string;
+  texture?: string;
+  tpo?: string;
+  nation?: string;
+  shape?: string;
+  length?: string;
+  creator?: string;
+}
+
+export interface SnapComment {
+  id: string;
+  snapUuid: string;
+  content: string;
+  creator: SnapCreator;
+  parentCommentUuid?: string;
+  likesCount: number;
+  replies?: SnapComment[];
+  createdAt: string;
+}
+
+export interface SnapCommentListResponse {
+  success: boolean;
+  data: {
+    comments: SnapComment[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+    };
+  };
+}
+
+export interface SnapPopularTagsResponse {
+  success: boolean;
+  data: Array<{ tag: string; count: number }>;
+}
+
+export interface SnapFeedResponse {
+  success: boolean;
+  data: {
+    snaps: Snap[];
+    feedType: 'following' | 'trending';
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+    };
+  };
+}
+
+// ===== SNAP REPORT (스냅 신고) TYPES =====
+
+export type SnapReportReason = 'spam' | 'inappropriate' | 'copyright' | 'harassment' | 'misinformation' | 'other';
+
+export interface SnapReportRequest {
+  reason: SnapReportReason;
+  description?: string;
+}
+
+export interface SnapReportResponse {
+  success: boolean;
+  data: {
+    reportUuid: string;
+  };
+}
+
+// ===== FOLLOW (팔로우) TYPES =====
+
+export interface FollowUser {
+  userUuid: string;
+  name: string;
+  nickname?: string;
+  avatar?: string;
+  isFollowing?: boolean;
+  followedAt?: string;
+}
+
+export interface FollowListResponse {
+  success: boolean;
+  data: {
+    users: FollowUser[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+    };
+  };
+}
+
+export interface FollowStatusResponse {
+  success: boolean;
+  data: {
+    isFollowing: boolean;
+  };
+}
+
+export interface FollowCountsResponse {
+  success: boolean;
+  data: {
+    followerCount: number;
+    followingCount: number;
+  };
+}
+
+export interface FollowActionResponse {
+  success: boolean;
+  data: {
+    isFollowing: boolean;
+    targetUserUuid: string;
+    followerCount: number;
+    followingCount: number;
+  };
+}
+
+export interface UserProfile {
+  userUuid: string;
+  name: string;
+  nickname?: string;
+  avatar?: string;
+  followerCount: number;
+  followingCount: number;
+  snapsCount: number;
+  isFollowing?: boolean;
+}
+
+export interface UserProfileSnapsResponse {
+  success: boolean;
+  data: {
+    profile: UserProfile | null;
+    snaps: Snap[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+    };
+  };
 }
 
 // ===== LIKES (좋아요) TYPES =====
 
 // 좋아요 타겟 타입
-export type TargetType = 'product' | 'brand' | 'post';
+export type TargetType = 'product' | 'brand' | 'post' | 'snap';
 
 // 좋아요 응답 (추가/제거 시)
 export interface LikeResponse {
@@ -1705,6 +1910,12 @@ export interface CategoryResponse {
 // ====================
 
 // 어드민용 배너 상세 정보
+export interface BannerDetailImage {
+  imageUrl: string;
+  imageS3Key?: string;
+  displayOrder: number;
+}
+
 export interface AdminBanner {
   _id: string;
   bannerId: string;
@@ -1725,6 +1936,7 @@ export interface AdminBanner {
     value: string;
     type: string;
   }>;
+  detailImages?: BannerDetailImage[];
   displayOrder: number;
   isActive: boolean;
   startDate?: string;
@@ -1757,6 +1969,7 @@ export interface CreateBannerRequest {
   displayOrder?: number;
   startDate?: string;
   endDate?: string;
+  detailImages?: Array<{ imageUrl: string; imageS3Key?: string; displayOrder: number }>;
 }
 
 // 배너 수정 요청
@@ -1771,6 +1984,7 @@ export interface UpdateBannerRequest {
   startDate?: string;
   endDate?: string;
   isActive?: boolean;
+  detailImages?: Array<{ imageUrl: string; imageS3Key?: string; displayOrder: number }>;
 }
 
 // 배너 생성/수정 응답
@@ -1819,6 +2033,7 @@ export interface EventBanner {
   redirectUrl?: string;
   brands?: BannerBrandInfo[];
   categories?: BannerCategoryInfo[];
+  detailImages?: BannerDetailImage[];
   isActive: boolean;
   displayOrder: number;
   startDate?: string;
@@ -1833,6 +2048,12 @@ export interface EventBanner {
 export interface EventBannerListResponse {
   success: boolean;
   eventBanners: EventBanner[];
+}
+
+export interface EventBannerDetailResponse {
+  success: boolean;
+  eventBanner: EventBanner;
+  error?: string;
 }
 
 // ==========================================

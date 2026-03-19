@@ -1,14 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  FaSearch,
-  FaTimes,
-  FaCog,
-  FaBell,
-  FaArrowLeft,
-  FaHome
-} from 'react-icons/fa';
-import { FiShoppingBag } from 'react-icons/fi';
-import { IoPersonCircleOutline } from 'react-icons/io5';
+import { Search, X, Settings, Bell, ArrowLeft, Home, ShoppingBag, UserCircle, MessageCircle } from 'lucide-react';
 
 interface MobilePageHeaderProps {
   // 스타일
@@ -20,14 +11,16 @@ interface MobilePageHeaderProps {
   showHome?: boolean;
 
   // 중앙 영역
-  showSearchBar?: boolean; // 인라인 검색바
+  showSearchBar?: boolean; // 인라인 검색바 (항상 표시)
+  searchPlaceholder?: string; // 검색바 placeholder
 
   // 오른쪽 영역
-  showSearch?: boolean; // 검색 아이콘
+  showSearch?: boolean; // 검색 아이콘 (클릭 시 인라인 검색바 토글)
   showCart?: boolean;
   showProfile?: boolean;
   showSettings?: boolean;
   showNotification?: boolean;
+  showChat?: boolean;
 
   // 데이터
   cartCount?: number;
@@ -40,6 +33,7 @@ interface MobilePageHeaderProps {
   onProfile?: () => void;
   onSettings?: () => void;
   onNotification?: () => void;
+  onChat?: () => void;
   onGo?: (path: string) => void;
 }
 
@@ -49,11 +43,13 @@ export function MobilePageHeader({
   showBack,
   showHome,
   showSearchBar,
+  searchPlaceholder = '검색어를 입력하세요',
   showSearch,
   showCart,
   showProfile,
   showSettings,
   showNotification,
+  showChat,
   cartCount = 0,
   onBack,
   onHome,
@@ -62,11 +58,21 @@ export function MobilePageHeader({
   onProfile,
   onSettings,
   onNotification,
+  onChat,
   onGo
 }: MobilePageHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // 검색 모드 활성화 시 포커스
+  useEffect(() => {
+    if (isSearchActive && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchActive]);
 
   // 외부 클릭으로 검색 제안 닫기
   useEffect(() => {
@@ -87,6 +93,23 @@ export function MobilePageHeader({
     }
   };
 
+  const handleSearchToggle = () => {
+    setIsSearchActive(true);
+  };
+
+  const handleSearchClose = () => {
+    setIsSearchActive(false);
+    setSearchQuery('');
+    setShowSearchSuggestions(false);
+  };
+
+  // title prop 변경 시 검색 상태 초기화 (페이지 이동 대응)
+  useEffect(() => {
+    handleSearchClose();
+  }, [title]);
+
+  const isSearchBarVisible = showSearchBar || isSearchActive;
+
   const IconButton = ({
     icon: Icon,
     onClick,
@@ -103,7 +126,7 @@ export function MobilePageHeader({
       className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors relative"
       aria-label={ariaLabel}
     >
-      <Icon className="w-5 h-5 text-gray-700" />
+      <Icon size={20} className="text-gray-700" />
       {badge !== undefined && badge > 0 && (
         <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
           {badge > 99 ? '99+' : badge}
@@ -117,38 +140,48 @@ export function MobilePageHeader({
       <div className="flex items-center justify-between h-14 px-4">
         {/* 왼쪽 영역 */}
         <div className="flex items-center gap-2 min-w-0">
-          {showBack && (
+          {isSearchActive && (
+            <button
+              onClick={handleSearchClose}
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              aria-label="검색 닫기"
+            >
+              <ArrowLeft size={20} className="text-gray-700" />
+            </button>
+          )}
+          {!isSearchActive && showBack && (
             <IconButton
-              icon={FaArrowLeft}
+              icon={ArrowLeft}
               onClick={onBack}
               ariaLabel="뒤로가기"
             />
           )}
-          {showHome && (
+          {!isSearchActive && showHome && (
             <IconButton
-              icon={FaHome}
+              icon={Home}
               onClick={onHome}
               ariaLabel="홈으로"
             />
           )}
-          {title && !showSearchBar && (
-            <h1 className="text-lg font-bold text-gray-900 truncate">
+          {title && !isSearchBarVisible && (
+            <h1 className="text-3xl font-bold text-gray-900 truncate">
               {title}
             </h1>
           )}
         </div>
 
         {/* 중앙 영역 - 검색바 */}
-        {showSearchBar && (
+        {isSearchBarVisible && (
           <div className="flex-1 mx-4 relative" ref={searchRef}>
             <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(); }}>
               <div className="relative">
                 <input
+                  ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSearchSuggestions(true)}
-                  placeholder="검색어를 입력하세요"
-                  className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-gray-700"
+                  placeholder={searchPlaceholder}
+                  className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                   {searchQuery && (
@@ -157,14 +190,14 @@ export function MobilePageHeader({
                       onClick={() => setSearchQuery('')}
                       className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      <FaTimes className="w-4 h-4" />
+                      <X size={16} />
                     </button>
                   )}
                   <button
                     type="submit"
                     className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    <FaSearch className="w-4 h-4" />
+                    <Search size={16} />
                   </button>
                 </div>
               </div>
@@ -197,44 +230,53 @@ export function MobilePageHeader({
         )}
 
         {/* 오른쪽 영역 */}
-        <div className="flex items-center gap-1">
-          {showNotification && (
-            <IconButton
-              icon={FaBell}
-              onClick={onNotification}
-              ariaLabel="알림"
-            />
-          )}
-          {showSearch && (
-            <IconButton
-              icon={FaSearch}
-              onClick={onSearch}
-              ariaLabel="검색"
-            />
-          )}
-          {showSettings && (
-            <IconButton
-              icon={FaCog}
-              onClick={onSettings}
-              ariaLabel="설정"
-            />
-          )}
-          {showProfile && (
-            <IconButton
-              icon={IoPersonCircleOutline}
-              onClick={onProfile}
-              ariaLabel="프로필"
-            />
-          )}
-          {showCart && (
-            <IconButton
-              icon={FiShoppingBag}
-              onClick={onCart}
-              badge={cartCount}
-              ariaLabel="장바구니"
-            />
-          )}
-        </div>
+        {!isSearchActive && (
+          <div className="flex items-center gap-1">
+            {showChat && (
+              <IconButton
+                icon={MessageCircle}
+                onClick={onChat}
+                ariaLabel="채팅"
+              />
+            )}
+            {showNotification && (
+              <IconButton
+                icon={Bell}
+                onClick={onNotification}
+                ariaLabel="알림"
+              />
+            )}
+            {showSearch && (
+              <IconButton
+                icon={Search}
+                onClick={handleSearchToggle}
+                ariaLabel="검색"
+              />
+            )}
+            {showProfile && (
+              <IconButton
+                icon={UserCircle}
+                onClick={onProfile}
+                ariaLabel="프로필"
+              />
+            )}
+            {showCart && (
+              <IconButton
+                icon={ShoppingBag}
+                onClick={onCart}
+                badge={cartCount}
+                ariaLabel="장바구니"
+              />
+            )}
+            {showSettings && (
+              <IconButton
+                icon={Settings}
+                onClick={onSettings}
+                ariaLabel="설정"
+              />
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

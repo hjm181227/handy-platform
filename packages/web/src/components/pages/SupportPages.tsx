@@ -136,7 +136,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
+            className="w-full bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B]"
           >
             문의 등록
           </button>
@@ -154,7 +154,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
           <h3 className="font-medium">문의 내역</h3>
           <button 
             onClick={() => setShowNewInquiry(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+            className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#D14A5B]"
           >
             문의하기
           </button>
@@ -179,9 +179,9 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
               <div className="p-4">
                 <div className="text-sm text-gray-700 mb-3">{inquiry.content}</div>
                 {inquiry.answer && (
-                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3">
-                    <div className="font-medium text-sm text-blue-800 mb-1">답변</div>
-                    <div className="text-sm text-blue-700">{inquiry.answer}</div>
+                  <div className="bg-[#FFF1F2] border-l-4 border-blue-400 p-3">
+                    <div className="font-medium text-sm text-[#D14A5B] mb-1">답변</div>
+                    <div className="text-sm text-[#E85A6B]">{inquiry.answer}</div>
                   </div>
                 )}
               </div>
@@ -236,9 +236,9 @@ export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
               key={category}
               onClick={() => setActiveCategory(category)}
               className={`px-4 py-2 text-sm whitespace-nowrap ${
-                activeCategory === category 
-                  ? 'text-blue-600 border-b-2 border-blue-600' 
-                  : 'text-gray-600'
+                activeCategory === category
+                  ? 'text-black font-bold'
+                  : 'text-gray-400'
               }`}
             >
               {category}
@@ -311,7 +311,7 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
       <button
         onClick={onToggle}
         className={`w-12 h-6 rounded-full transition-colors ${
-          enabled ? 'bg-blue-600' : 'bg-gray-300'
+          enabled ? 'bg-[#E85A6B]' : 'bg-gray-300'
         }`}
       >
         <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -641,7 +641,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B] mx-auto mb-2"></div>
             <p className="text-gray-500">사용자 정보를 불러오는 중...</p>
           </div>
         </div>
@@ -659,7 +659,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg hover:bg-[#D14A5B]"
             >
               다시 시도
             </button>
@@ -702,7 +702,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <button
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
               disabled={loading}
-              className="text-sm text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm text-[#E85A6B] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "저장 중..." : isEditing ? "저장" : "수정"}
             </button>
@@ -813,7 +813,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                 onClick={() => setUserInfo(prev => ({ ...prev, marketingConsent: !prev.marketingConsent }))}
                 disabled={loading}
                 className={`w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
-                  userInfo.marketingConsent ? 'bg-blue-600' : 'bg-gray-300'
+                  userInfo.marketingConsent ? 'bg-[#E85A6B]' : 'bg-gray-300'
                 }`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -840,9 +840,9 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                   onGo("/seller/register");
                 }
               }}
-              className="w-full bg-white border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-50"
+              className="w-full bg-white border border-[#E85A6B]/20 rounded-lg p-4 text-left hover:bg-[#FFF1F2]"
             >
-              <div className="font-medium text-blue-600">판매자 전환</div>
+              <div className="font-medium text-[#E85A6B]">판매자 전환</div>
               <div className="text-sm text-gray-600">상품을 판매하고 수익을 창출하세요</div>
             </button>
           )}
@@ -886,7 +886,7 @@ export function PromoPage({ onGo }: { onGo: (to: string) => void }) {
             <div className="text-sm opacity-90 mb-1">월 구독료</div>
             <div className="text-2xl font-bold">9,900원</div>
           </div>
-          <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-blue-50">
+          <button className="bg-white text-[#E85A6B] px-8 py-3 rounded-lg font-medium hover:bg-[#FFF1F2]">
             멤버십 가입하기
           </button>
         </div>

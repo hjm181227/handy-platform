@@ -214,19 +214,19 @@ export function CouponSelector({
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
           </svg>
           <span className="font-semibold text-gray-900">쿠폰 적용</span>
           {availableCoupons.length > 0 && !appliedCoupon && (
-            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
+            <span className="bg-[#FFF1F2] text-[#E85A6B] text-xs px-2 py-0.5 rounded-full font-medium">
               {availableCoupons.length}장 사용 가능
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {appliedCoupon && (
-            <span className="text-blue-600 font-semibold">
+            <span className="text-[#E85A6B] font-semibold">
               -{money(appliedCoupon.discountAmount)}
             </span>
           )}
@@ -244,20 +244,20 @@ export function CouponSelector({
       {/* Applied Coupon Display */}
       {appliedCoupon && !isExpanded && (
         <div className="px-6 pb-4 border-t border-gray-100">
-          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="mt-3 bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <div>
-                <span className="text-sm font-medium text-blue-800">{appliedCoupon.name}</span>
-                <span className="text-xs text-blue-600 ml-2">-{money(appliedCoupon.discountAmount)}</span>
+                <span className="text-sm font-medium text-[#D14A5B]">{appliedCoupon.name}</span>
+                <span className="text-xs text-[#E85A6B] ml-2">-{money(appliedCoupon.discountAmount)}</span>
               </div>
             </div>
             <button
               onClick={handleRemoveCoupon}
               disabled={applying}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+              className="text-xs text-[#E85A6B] hover:text-[#D14A5B] font-medium disabled:opacity-50"
             >
               {applying ? '처리중...' : '제거'}
             </button>
@@ -270,23 +270,23 @@ export function CouponSelector({
         <div className="px-6 pb-4 border-t border-gray-100 space-y-4">
           {/* Applied Coupon */}
           {appliedCoupon && (
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="mt-4 bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="font-semibold text-blue-800">{appliedCoupon.name}</span>
+                    <span className="font-semibold text-[#D14A5B]">{appliedCoupon.name}</span>
                   </div>
-                  <p className="text-sm text-blue-600 mt-1">
+                  <p className="text-sm text-[#E85A6B] mt-1">
                     할인 금액: <span className="font-bold">{money(appliedCoupon.discountAmount)}</span>
                   </p>
                 </div>
                 <button
                   onClick={handleRemoveCoupon}
                   disabled={applying}
-                  className="px-3 py-1.5 bg-white border border-blue-300 text-blue-700 text-sm rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 bg-white border border-blue-300 text-[#E85A6B] text-sm rounded-lg hover:bg-[#FFF1F2] disabled:opacity-50 transition-colors"
                 >
                   {applying ? '처리중...' : '쿠폰 제거'}
                 </button>
@@ -302,7 +302,7 @@ export function CouponSelector({
 
                 {loading ? (
                   <div className="flex items-center justify-center py-6">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
                     <span className="ml-2 text-sm text-gray-500">쿠폰 목록을 불러오는 중...</span>
                   </div>
                 ) : availableCoupons.length === 0 ? (
@@ -320,7 +320,7 @@ export function CouponSelector({
                         key={couponItem.userCouponUuid}
                         onClick={() => handleApplyCoupon(couponItem.userCouponUuid)}
                         disabled={applying}
-                        className="w-full text-left border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50 group"
+                        className="w-full text-left border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-[#FFF1F2] transition-colors disabled:opacity-50 group"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
@@ -346,7 +346,7 @@ export function CouponSelector({
                             </div>
                           </div>
                           <div className="text-right ml-3">
-                            <div className="text-lg font-bold text-blue-600">
+                            <div className="text-lg font-bold text-[#E85A6B]">
                               -{money(couponItem.potentialDiscount)}
                             </div>
                             <div className="text-xs text-gray-500">
@@ -372,13 +372,13 @@ export function CouponSelector({
                       setCodeError('');
                     }}
                     placeholder="쿠폰 코드 입력"
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm uppercase"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#E85A6B] focus:ring-1 focus:ring-[#E85A6B] text-sm uppercase"
                     disabled={applying}
                   />
                   <button
                     onClick={handleApplyCode}
                     disabled={!couponCode.trim() || applying}
-                    className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                    className="px-4 py-2.5 bg-[#E85A6B] text-white text-sm font-medium rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                   >
                     {applying ? '확인중...' : '적용'}
                   </button>

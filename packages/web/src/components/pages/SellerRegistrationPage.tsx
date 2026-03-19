@@ -35,7 +35,7 @@ const FormField = ({
         placeholder={placeholder}
         disabled={disabled}
         rows={4}
-        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E85A6B] disabled:bg-gray-100 ${
           error ? 'border-red-300' : 'border-gray-300'
         }`}
       />
@@ -46,7 +46,7 @@ const FormField = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E85A6B] disabled:bg-gray-100 ${
           error ? 'border-red-300' : 'border-gray-300'
         }`}
       />
@@ -72,7 +72,7 @@ const CheckboxField = ({
       type="checkbox"
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
-      className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+      className="mt-1 w-4 h-4 text-[#E85A6B] border-gray-300 rounded focus:ring-[#E85A6B]"
     />
     <label className="text-sm text-gray-700">
       {label} {required && <span className="text-red-500">*</span>}
@@ -240,7 +240,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
             </p>
             <button
               onClick={() => onGo('/seller')}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700"
+              className="w-full bg-[#E85A6B] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#D14A5B]"
             >
               판매자 센터로 이동
             </button>
@@ -256,12 +256,12 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* 안내 섹션 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <div className="text-blue-600 text-xl">ℹ️</div>
+            <div className="text-[#E85A6B] text-xl">ℹ️</div>
             <div>
               <h3 className="font-medium text-blue-900 mb-2">판매자 신청 안내</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
+              <ul className="text-sm text-[#D14A5B] space-y-1">
                 <li>• 신청 후 2-3일 내 검토 완료</li>
                 <li>• 승인 후 상품 등록 및 판매 가능</li>
                 <li>• 판매 수수료: 5% (부가세 별도)</li>
@@ -397,7 +397,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-[#E85A6B] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#D14A5B] disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {submitting ? '신청 중...' : '판매자 신청하기'}
           </button>

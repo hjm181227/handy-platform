@@ -476,6 +476,7 @@ export abstract class BaseAdminService extends BaseApiService {
     displayOrder?: number;
     startDate?: string;
     endDate?: string;
+    detailImages?: Array<{ imageUrl: string; imageS3Key?: string; displayOrder: number }>;
   }): Promise<ApiResponse<any>> {
     return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_CREATE, {
       method: 'POST',
@@ -496,6 +497,7 @@ export abstract class BaseAdminService extends BaseApiService {
       startDate?: string;
       endDate?: string;
       isActive?: boolean;
+      detailImages?: Array<{ imageUrl: string; imageS3Key?: string; displayOrder: number }>;
     }
   ): Promise<ApiResponse<any>> {
     return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_UPDATE(bannerId), {
@@ -513,6 +515,37 @@ export abstract class BaseAdminService extends BaseApiService {
 
   async deleteBanner(bannerId: string): Promise<ApiResponse<any>> {
     return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.EVENT_BANNERS_DELETE(bannerId), {
+      method: 'DELETE',
+    });
+  }
+
+  // === 스냅 관리 ===
+
+  async getAdminSnaps(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) queryParams.append(key, value.toString());
+    });
+    const url = `${API_ENDPOINTS.ADMIN.SNAPS_LIST}?${queryParams.toString()}`;
+    return this.request<any>(url);
+  }
+
+  async updateSnapStatus(snapUuid: string, status: string): Promise<any> {
+    return this.request<any>(API_ENDPOINTS.ADMIN.SNAPS_STATUS(snapUuid), {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteAdminSnap(snapUuid: string): Promise<any> {
+    return this.request<any>(API_ENDPOINTS.ADMIN.SNAPS_DELETE(snapUuid), {
       method: 'DELETE',
     });
   }

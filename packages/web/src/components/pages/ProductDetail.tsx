@@ -136,7 +136,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto"></div>
           <p className="mt-4 text-gray-600">상품 정보를 불러오는 중...</p>
         </div>
       </div>
@@ -150,7 +150,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
           <h1 className="text-2xl font-bold text-gray-900 mb-4">상품을 찾을 수 없습니다</h1>
           <button
             onClick={() => onGo('/')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
           >
             홈으로 돌아가기
           </button>
@@ -275,7 +275,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                 {product.brand && (
                   <>
                     <span className="text-sm text-gray-500">|</span>
-                    <span className="text-sm text-blue-600">{product.brand}</span>
+                    <span className="text-sm text-[#E85A6B]">{product.brand}</span>
                   </>
                 )}
               </div>
@@ -336,7 +336,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
               </div>
               
               {/* 네일 옵션 */}
-              <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="p-4 bg-[#FFF1F2] rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">커스터마이징 옵션</h4>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="flex justify-between">
@@ -415,7 +415,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
               <button
                 onClick={handleBuyNow}
                 disabled={!product.isInStock || product.stockQuantity === 0 || product.status !== 'active'}
-                className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-[#E85A6B] text-white py-4 rounded-lg font-semibold text-lg hover:bg-[#D14A5B] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 바로 구매
               </button>
@@ -423,11 +423,11 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
               <button
                 onClick={handleAddToCart}
                 disabled={addingToCart || !product.isInStock || product.stockQuantity === 0 || product.status !== 'active'}
-                className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="w-full border-2 border-[#E85A6B] text-[#E85A6B] py-4 rounded-lg font-semibold text-lg hover:bg-[#FFF1F2] disabled:border-gray-300 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {addingToCart ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#E85A6B] mr-2"></div>
                     장바구니 추가 중...
                   </div>
                 ) : (

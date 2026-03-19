@@ -497,12 +497,12 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       <div className="space-y-2 mb-4">
         {/* 다중 판매자 안내 */}
         {cartSummary?.hasMultipleSellers && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <div className="text-blue-500 text-lg sm:text-xl flex-shrink-0">🚚</div>
+              <div className="text-[#E85A6B] text-lg sm:text-xl flex-shrink-0">🚚</div>
               <div className="min-w-0">
-                <div className="text-blue-800 font-medium text-sm sm:text-base">다중 판매자 주문</div>
-                <div className="text-blue-700 text-xs sm:text-sm mt-0.5 sm:mt-1">
+                <div className="text-[#D14A5B] font-medium text-sm sm:text-base">다중 판매자 주문</div>
+                <div className="text-[#E85A6B] text-xs sm:text-sm mt-0.5 sm:mt-1">
                   {cartSummary.totalSellers}개 판매자로부터 주문하여 개별 배송될 수 있습니다.
                 </div>
               </div>
@@ -723,7 +723,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
                   배송비: {money(seller.shipping.shippingCost)}
                 </span>
                 {seller.shipping.freeShippingRemaining > 0 && (
-                  <div className="text-[10px] sm:text-xs text-blue-600 mt-0.5 sm:mt-1">
+                  <div className="text-[10px] sm:text-xs text-[#E85A6B] mt-0.5 sm:mt-1">
                     {money(seller.shipping.freeShippingRemaining)} 더 구매하면 무료배송
                   </div>
                 )}
@@ -767,7 +767,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
             </div>
           )}
           {totals.freeShippingRemaining > 0 && (
-            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+            <div className="text-xs text-[#E85A6B] bg-[#FFF1F2] p-2 rounded">
               {money(totals.freeShippingRemaining)} 더 구매하면 무료배송!
             </div>
           )}
@@ -777,7 +777,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
         </div>
         <div className="mb-4 flex items-center justify-between border-t pt-3">
           <span className="font-semibold text-base sm:text-lg">총 결제금액</span>
-          <span className={`font-bold ${mode === 'drawer' ? 'text-lg' : 'text-xl sm:text-2xl'} text-blue-600`}>
+          <span className={`font-bold ${mode === 'drawer' ? 'text-lg' : 'text-xl sm:text-2xl'} text-[#E85A6B]`}>
             {money(totals.total)}
           </span>
         </div>

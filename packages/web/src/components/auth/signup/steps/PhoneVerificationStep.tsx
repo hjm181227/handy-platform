@@ -225,7 +225,7 @@ export function PhoneVerificationStep({
           title="인증번호를 입력해주세요"
           subtitle={
             <>
-              <span className="text-blue-600 font-medium">{phone}</span>
+              <span className="text-[#E85A6B] font-medium">{phone}</span>
               으로 전송했어요
             </>
           }
@@ -262,7 +262,7 @@ export function PhoneVerificationStep({
             disabled={!canResend || loading}
             className={`text-sm ${
               canResend && !loading
-                ? 'text-blue-600 hover:underline'
+                ? 'text-[#E85A6B] hover:underline'
                 : 'text-gray-400 cursor-not-allowed'
             }`}
           >

@@ -64,7 +64,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
             <span className="text-sm font-medium">{brand.stats.averageRating.toFixed(1)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-blue-600 font-medium">{brand.stats.totalOrders}</span>
+            <span className="text-[#E85A6B] font-medium">{brand.stats.totalOrders}</span>
             <span>주문</span>
           </div>
         </div>
@@ -188,7 +188,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
         <TitleBar title={`검색: ${searchQuery || "전체"}`} desc="검색 중..." />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-gray-600 text-lg">검색 중입니다...</p>
             <p className="text-gray-400 text-sm mt-2">잠시만 기다려주세요</p>
           </div>
@@ -214,7 +214,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
             <div className="flex gap-3">
               <button
                 onClick={handleRetry}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="px-6 py-2.5 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
               >
                 다시 시도
               </button>
@@ -261,7 +261,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               {searchQuery && (
                 <button
                   onClick={() => performSearch('')}
-                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="px-6 py-2.5 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
                 >
                   전체 보기
                 </button>
@@ -301,7 +301,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               </span>
             )}
             <span className="text-gray-600">
-              총 <span className="font-semibold text-blue-600">{totalCount}개</span> 결과
+              총 <span className="font-semibold text-[#E85A6B]">{totalCount}개</span> 결과
             </span>
             {hasBrands && (
               <span className="text-gray-500">
@@ -318,7 +318,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           {searchQuery && totalCount > 0 && (
             <button
               onClick={() => performSearch('')}
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-sm text-[#E85A6B] hover:text-[#D14A5B] hover:underline"
             >
               전체 보기
             </button>
@@ -338,7 +338,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               {brands.length > 6 && (
                 <button
                   onClick={() => window.location.href = '/brands'}
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  className="text-sm text-[#E85A6B] hover:text-[#D14A5B] hover:underline"
                 >
                   브랜드 전체 보기 →
                 </button>
@@ -377,21 +377,21 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
         {/* 검색 결과가 적을 때 추가 안내 */}
         {totalCount > 0 && totalCount < 5 && (
           <div className="mt-8">
-            <div className="bg-blue-50 rounded-lg p-6 text-center">
+            <div className="bg-[#FFF1F2] rounded-lg p-6 text-center">
               <h4 className="text-lg font-medium text-blue-900 mb-2">더 많은 결과를 찾고 계신가요?</h4>
-              <p className="text-blue-700 mb-4">
+              <p className="text-[#E85A6B] mb-4">
                 다양한 키워드로 검색하거나 카테고리를 둘러보세요.
               </p>
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => performSearch('')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors text-sm font-medium"
                 >
                   전체 보기
                 </button>
                 <button
                   onClick={() => window.location.href = '/brands'}
-                  className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                  className="px-4 py-2 border border-blue-300 text-[#E85A6B] rounded-lg hover:bg-[#E85A6B]/10 transition-colors text-sm font-medium"
                 >
                   브랜드 둘러보기
                 </button>

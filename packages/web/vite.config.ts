@@ -31,10 +31,8 @@ export default defineConfig(({ mode }) => {
     }
   },
   optimizeDeps: {
-    // React Native 모듈 제외
-    exclude: ['react-native'],
-    // workspace 패키지 명시적으로 포함
-    include: ['@handy-platform/shared'],
+    // React Native 모듈 및 워크스페이스 패키지 제외 (사전 번들링 캐시 문제 방지)
+    exclude: ['react-native', '@handy-platform/shared'],
   },
   define: {
     global: 'globalThis',

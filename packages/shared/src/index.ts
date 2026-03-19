@@ -54,6 +54,12 @@ export * from './services/user/UserService';
 // Banner Services
 export * from './services/banner/BannerService';
 
+// Snap Services
+export * from './services/snap/SnapService';
+
+// Follow Services
+export * from './services/follow/FollowService';
+
 // Chat Services
 export * from './services/chat';
 

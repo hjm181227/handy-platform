@@ -114,7 +114,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
               <p className="text-gray-600">배송지를 불러오는 중...</p>
             </div>
           </div>
@@ -125,25 +125,30 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+      {/* 헤더 */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => onGo('/my')}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-800 hover:text-black p-1"
             >
-              ← 뒤로
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-            <h1 className="text-2xl font-bold">배송지 관리</h1>
+            <h1 className="text-lg font-bold">배송지 관리</h1>
           </div>
           <button
             onClick={startAdd}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium"
+            className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg hover:bg-[#D14A5B] text-sm font-medium"
           >
             + 새 배송지 추가
           </button>
         </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-6">
 
         {/* 에러 메시지 */}
         {error && (
@@ -160,7 +165,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
             <p className="text-gray-500 mb-4">자주 사용하는 배송지를 등록해두면 주문이 더욱 편리해집니다.</p>
             <button
               onClick={startAdd}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+              className="bg-[#E85A6B] text-white px-6 py-2 rounded-lg hover:bg-[#D14A5B]"
             >
               첫 번째 배송지 추가
             </button>
@@ -176,7 +181,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                         {address.addressName || '배송지'}
                       </h3>
                       {address.isDefault && (
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                        <span className="bg-[#FFF1F2] text-[#D14A5B] px-2 py-1 rounded-full text-xs font-medium">
                           기본배송지
                         </span>
                       )}
@@ -187,7 +192,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                     {!address.isDefault && (
                       <button
                         onClick={() => handleSetDefault(address.index)}
-                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                        className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
                       >
                         기본설정
                       </button>

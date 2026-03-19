@@ -322,6 +322,15 @@ export const API_ENDPOINTS = {
     EVENT_BANNERS_UPDATE: (id: string) => `/api/admin/event-banners/${id}`,
     EVENT_BANNERS_DELETE: (id: string) => `/api/admin/event-banners/${id}`,
     EVENT_BANNERS_TOGGLE: (id: string) => `/api/admin/event-banners/${id}/activate`,
+
+    // 스냅 관리
+    SNAPS_LIST: '/api/admin/snaps',
+    SNAPS_STATUS: (snapUuid: string) => `/api/admin/snaps/${snapUuid}/status`,
+    SNAPS_DELETE: (snapUuid: string) => `/api/admin/snaps/${snapUuid}`,
+
+    // 스냅 신고 관리
+    SNAP_REPORTS: '/api/admin/snaps/reports',
+    SNAP_REPORT_STATUS: (reportUuid: string) => `/api/admin/snaps/reports/${reportUuid}`,
   },
 
   // 판매자 센터 (서버 API 스펙에 완전 일치)
@@ -466,6 +475,32 @@ export const API_ENDPOINTS = {
 
   // 이벤트 배너 (Public)
   EVENT_BANNERS: '/api/event-banners',          // GET - 공개 이벤트 배너 목록 조회
+  EVENT_BANNER_DETAIL: (id: string) => `/api/event-banners/${id}`, // GET - 공개 이벤트 배너 상세 조회
+
+  // 스냅 (네일 갤러리)
+  SNAPS: {
+    LIST: '/api/snaps',
+    DETAIL: (snapUuid: string) => `/api/snaps/${snapUuid}`,
+    CREATE: '/api/snaps',
+    UPDATE: (snapUuid: string) => `/api/snaps/${snapUuid}`,
+    DELETE: (snapUuid: string) => `/api/snaps/${snapUuid}`,
+    USER_SNAPS: (userUuid: string) => `/api/snaps/user/${userUuid}`,
+    POPULAR_TAGS: '/api/snaps/tags/popular',
+    COMMENTS: (snapUuid: string) => `/api/snaps/${snapUuid}/comments`,
+    COMMENT_DELETE: (snapUuid: string, commentUuid: string) => `/api/snaps/${snapUuid}/comments/${commentUuid}`,
+    FEED: '/api/snaps/feed',
+    REPORT: (snapUuid: string) => `/api/snaps/${snapUuid}/report`,
+  },
+
+  // 팔로우
+  FOLLOWS: {
+    FOLLOW: (userUuid: string) => `/api/follows/${userUuid}`,
+    UNFOLLOW: (userUuid: string) => `/api/follows/${userUuid}`,
+    FOLLOWERS: (userUuid: string) => `/api/follows/${userUuid}/followers`,
+    FOLLOWING: (userUuid: string) => `/api/follows/${userUuid}/following`,
+    STATUS: (userUuid: string) => `/api/follows/${userUuid}/status`,
+    MY_COUNTS: '/api/follows/me/counts',
+  },
 
   // 커스텀 주문
   CUSTOM_ORDER: {

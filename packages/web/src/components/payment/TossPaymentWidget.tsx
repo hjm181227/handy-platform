@@ -129,7 +129,7 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
   if (!isReady) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B]"></div>
         <span className="mt-3 text-gray-600 text-sm">결제 수단을 불러오는 중...</span>
       </div>
     );

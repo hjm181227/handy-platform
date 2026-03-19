@@ -699,7 +699,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">주문 정보를 준비하고 있습니다...</p>
           <p className="text-sm text-gray-500 mt-2">장바구니를 불러오는 중</p>
         </div>
@@ -819,16 +819,16 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
             {/* 제작 및 배송 안내 */}
             {cart?.productionInfo && (
-              <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+              <div className="bg-[#FFF1F2] rounded-lg border border-[#E85A6B]/20 p-6">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="text-blue-600">⏱️</span>
+                  <span className="text-[#E85A6B]">⏱️</span>
                   제작 및 배송 안내
                 </h2>
 
                 {/* 제작 소요 기간 */}
                 <div className="mb-4">
                   <div className="text-sm font-medium text-gray-700 mb-2">
-                    총 제작 소요 기간: <span className="text-blue-600 font-bold">{cart.productionInfo.estimatedProductionTime}일</span>
+                    총 제작 소요 기간: <span className="text-[#E85A6B] font-bold">{cart.productionInfo.estimatedProductionTime}일</span>
                   </div>
                   <div className="text-sm text-gray-600">
                     예상 배송일: {new Date(cart.productionInfo.earliestDeliveryDate).toLocaleDateString('ko-KR', {
@@ -852,7 +852,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                             <span className="font-medium">{schedule.sellerName || `판매자 ${index + 1}`}</span>
                             <span className="text-gray-500 ml-2">({schedule.itemCount}개 상품)</span>
                           </div>
-                          <span className="text-blue-600 font-medium">{schedule.processingDays}일 소요</span>
+                          <span className="text-[#E85A6B] font-medium">{schedule.processingDays}일 소요</span>
                         </div>
                         <div className="text-gray-600 mt-1">
                           예상 완성일: {new Date(schedule.estimatedCompletionDate).toLocaleDateString('ko-KR', {
@@ -867,10 +867,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
                 {/* 배송비 추정 정보 */}
                 {cart.shippingEstimate && (
-                  <div className="mt-4 pt-4 border-t border-blue-200">
+                  <div className="mt-4 pt-4 border-t border-[#E85A6B]/20">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-700">예상 배송비</span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="font-semibold text-[#E85A6B]">
                         {cart.shippingEstimate.estimatedCost === 0
                           ? '무료 배송'
                           : `${money(cart.shippingEstimate.estimatedCost)}`}
@@ -893,7 +893,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 {!showAddressForm && (
                   <button
                     onClick={handleAddNewAddress}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium"
                   >
                     + 배송지 추가
                   </button>
@@ -908,7 +908,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   <p className="text-gray-500 mb-4">주문을 완료하려면 배송지를 추가해주세요.</p>
                   <button
                     onClick={() => onGo('/my/shipping-address')}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
                   >
                     배송지 관리 페이지에서 추가하기 →
                   </button>
@@ -925,7 +925,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                         key={address.id}
                         className={`border rounded-lg cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'border-[#E85A6B] bg-[#FFF1F2]'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                         onClick={() => handleAddressSelect(address)}
@@ -946,7 +946,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                               {address.roadAddress}
                             </span>
                             {address.isDefault && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium flex-shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full font-medium flex-shrink-0">
                                 <Star className="w-3 h-3 fill-current" />
                                 기본
                               </span>
@@ -965,7 +965,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                                     {address.addressName || '배송지'}
                                   </span>
                                   {address.isDefault && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full font-medium">
                                       <Star className="w-3 h-3 fill-current" />
                                       기본 배송지
                                     </span>
@@ -976,7 +976,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                                     e.stopPropagation();
                                     handleEditAddress(address);
                                   }}
-                                  className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                  className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-[#E85A6B] hover:bg-[#FFF1F2] rounded-md transition-colors"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                   수정
@@ -1126,7 +1126,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     <span>{order.shippingCost > 0 ? money(order.shippingCost) : '무료'}</span>
                   </div>
                   {appliedCoupon && (
-                    <div className="flex justify-between text-blue-600">
+                    <div className="flex justify-between text-[#E85A6B]">
                       <span className="flex items-center gap-1.5">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -1145,7 +1145,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>총 결제금액</span>
-                    <span className="text-blue-600">{money(order.finalPrice)}</span>
+                    <span className="text-[#E85A6B]">{money(order.finalPrice)}</span>
                   </div>
                 </div>
               )}

@@ -125,8 +125,8 @@ export function RankingPage({
 
   return (
     <div className="relative">
-      {/* 페이지 헤더 */}
-      <div className="mx-auto max-w-7xl px-4 py-4 border-b">
+      {/* 페이지 헤더 (데스크톱) */}
+      <div className="mx-auto max-w-7xl px-4 py-4 border-b hidden md:block">
         <div>
           <h1 className="text-xl font-semibold">랭킹</h1>
           <p className="text-sm text-gray-600 mt-1">
@@ -143,7 +143,7 @@ export function RankingPage({
             onClick={() => setActivePeriod('weekly')}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
               activePeriod === 'weekly'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#E85A6B] text-white'
                 : 'bg-white border hover:bg-gray-50'
             }`}
           >
@@ -153,7 +153,7 @@ export function RankingPage({
             onClick={() => setActivePeriod('monthly')}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
               activePeriod === 'monthly'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#E85A6B] text-white'
                 : 'bg-white border hover:bg-gray-50'
             }`}
           >
@@ -191,7 +191,7 @@ export function RankingPage({
             <h3 className="text-lg font-medium text-gray-600 mb-2">{error}</h3>
             <button
               onClick={() => fetchRankings(activePeriod)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
               다시 시도
             </button>
@@ -212,8 +212,7 @@ export function RankingPage({
             {/* TOP 5 특별 섹션 */}
             {rankings.length >= 5 && (
               <div className="mb-8">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="text-yellow-500">🏆</span>
+                <h2 className="text-lg font-semibold mb-4">
                   TOP 5
                 </h2>
 

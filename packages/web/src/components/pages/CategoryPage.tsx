@@ -194,7 +194,7 @@ export function CategoryPage({
             <select
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -227,7 +227,7 @@ export function CategoryPage({
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => fetchProducts(1, false)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
               다시 시도
             </button>
@@ -243,7 +243,7 @@ export function CategoryPage({
             <p className="text-gray-500 mb-2">해당 카테고리에 상품이 없습니다.</p>
             <button
               onClick={() => onGo('/category')}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-[#E85A6B] hover:underline text-sm"
             >
               다른 카테고리 보기
             </button>
@@ -273,7 +273,7 @@ export function CategoryPage({
             <div ref={observerRef} className="h-20 flex items-center justify-center">
               {loadingMore && (
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin" />
                   <span className="text-sm text-gray-500">불러오는 중...</span>
                 </div>
               )}

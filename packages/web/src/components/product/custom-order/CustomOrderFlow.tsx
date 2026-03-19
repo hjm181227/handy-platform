@@ -100,7 +100,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
         </p>
         <button
           onClick={onBack}
-          className="text-blue-600 hover:underline font-medium"
+          className="text-[#E85A6B] hover:underline font-medium"
         >
           돌아가기
         </button>

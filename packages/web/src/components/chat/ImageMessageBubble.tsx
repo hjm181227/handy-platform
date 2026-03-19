@@ -21,7 +21,7 @@ export const ImageMessageBubble: React.FC<ImageMessageBubbleProps> = ({
       <div
         className={`
           flex items-center justify-center w-[200px] h-[150px] rounded-2xl
-          ${isMe ? 'bg-blue-100 rounded-br-sm' : 'bg-gray-100 rounded-bl-sm'}
+          ${isMe ? 'bg-[#FFF1F2] rounded-br-sm' : 'bg-gray-100 rounded-bl-sm'}
         `}
       >
         <div className="text-center text-gray-400">
