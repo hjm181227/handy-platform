@@ -460,7 +460,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           <Section title="혜택 / 결제">
             <LinkRow title="쿠폰" to="/my/coupons" badge={`${couponCount}장`} />
             <LinkRow title="포인트" to="/my/points" />
-            <LinkRow title="결제수단 관리" to="/my/payments" />
+            {/* <LinkRow title="결제수단 관리" to="/my/payments" /> */}
           </Section>
 
           {/* Menu Section 5 */}
