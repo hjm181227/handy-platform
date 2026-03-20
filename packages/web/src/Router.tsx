@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMiniRouter } from './utils';
-import { products } from './data';
 import { webApiService, brandService } from './services/apiService';
 import type { Product, Brand } from '@handy-platform/shared';
 import { RequireAuth } from './components/auth';
@@ -12,7 +11,7 @@ import { useAuthModal } from './contexts/AuthModalContext';
 import { MainLayout } from './layouts/MainLayout';
 
 // Product Components
-import { SectionRow, ProductGrid, TitleBar } from './components/product/ProductGrid';
+import { SectionRow, TitleBar } from './components/product/ProductGrid';
 import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
 import { CustomOrderFlow } from './components/product/custom-order';
@@ -218,7 +217,7 @@ export function Router() {
       setNewProducts(response.data || []);
     } catch (error: any) {
       console.error('Failed to load new products:', error);
-      setNewProducts([...products].reverse().slice(0, 10));
+      setNewProducts([]);
     } finally {
       setLoadingNewProducts(false);
     }
@@ -400,15 +399,10 @@ export function Router() {
     screen = (
       <>
         <TitleBar title="세일" />
-        <ProductGrid
-          title="할인 중"
-          items={products.filter(p => p.sale)}
-          onOpen={openProduct}
-          onAdd={addProduct}
-          onLike={handleLike}
-          onGo={nav}
-          likedProducts={likedProducts}
-        />
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-lg font-medium mb-2">세일 상품 준비 중</p>
+          <p className="text-sm">곧 할인 상품이 등록됩니다</p>
+        </div>
       </>
     );
   }
@@ -439,15 +433,10 @@ export function Router() {
     screen = (
       <>
         <TitleBar title="트렌드" />
-        <ProductGrid
-          title="지금 뜨는 상품"
-          items={[...products].sort((a, b) => (Number(b.sale) || 0) - (Number(a.sale) || 0))}
-          onOpen={openProduct}
-          onAdd={addProduct}
-          onLike={handleLike}
-          onGo={nav}
-          likedProducts={likedProducts}
-        />
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-lg font-medium mb-2">트렌드 준비 중</p>
+          <p className="text-sm">곧 인기 상품이 업데이트됩니다</p>
+        </div>
       </>
     );
   }
@@ -456,15 +445,10 @@ export function Router() {
     screen = (
       <>
         <TitleBar title={`프로모션: ${slug}`} desc="프로모션 기획전" />
-        <SectionRow
-          title="기획전 상품"
-          items={[...products]}
-          onOpen={openProduct}
-          onAdd={addProduct}
-          onLike={handleLike}
-          onGo={nav}
-          likedProducts={likedProducts}
-        />
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-lg font-medium mb-2">기획전 준비 중</p>
+          <p className="text-sm">곧 프로모션 상품이 등록됩니다</p>
+        </div>
       </>
     );
   }
