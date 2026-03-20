@@ -1057,36 +1057,17 @@ export function ReviewsPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 쿠폰함 페이지
 export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
-  const coupons = [
-    { id: 1, name: "신규회원 10% 할인", discount: 10, type: "percent", minOrder: 50000, expiry: "2024-12-31", used: false },
-    { id: 2, name: "5천원 할인쿠폰", discount: 5000, type: "fixed", minOrder: 30000, expiry: "2024-09-30", used: false },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="쿠폰함" onBack={() => onGo("/my")} />
-      <div className="p-4 space-y-3">
-        {coupons.map(coupon => (
-          <div key={coupon.id} className={`bg-white rounded-lg border-2 ${coupon.used ? 'border-gray-200 opacity-50' : 'border-[#E85A6B]/20'} p-4`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-medium">{coupon.name}</div>
-              <div className={`text-lg font-bold ${coupon.used ? 'text-gray-400' : 'text-[#E85A6B]'}`}>
-                {coupon.type === 'percent' ? `${coupon.discount}%` : `${coupon.discount.toLocaleString()}원`}
-              </div>
-            </div>
-            <div className="text-xs text-gray-500 mb-3">
-              {coupon.minOrder.toLocaleString()}원 이상 구매 시 • {coupon.expiry}까지
-            </div>
-            <div className="flex justify-between items-center">
-              <span className={`text-xs px-2 py-1 rounded ${coupon.used ? 'bg-gray-100 text-gray-500' : 'bg-[#FFF1F2] text-[#E85A6B]'}`}>
-                {coupon.used ? '사용완료' : '사용가능'}
-              </span>
-              {!coupon.used && (
-                <button className="text-xs text-[#E85A6B] hover:underline">바로사용</button>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="text-center py-20">
+        <div className="text-gray-300 mb-4">
+          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+            <path d="M20 12V6H4v6c1.1 0 2 .9 2 2s-.9 2-2 2v4h16v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-4v2.54c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V20H6v-2.54c1.19-.69 2-1.99 2-3.46s-.81-2.77-2-3.46V8h12z"/>
+          </svg>
+        </div>
+        <h3 className="text-base font-medium text-gray-600 mb-1">보유한 쿠폰이 없습니다</h3>
+        <p className="text-sm text-gray-400">이벤트나 프로모션을 통해 쿠폰을 받아보세요</p>
       </div>
     </div>
   );
@@ -1094,13 +1075,6 @@ export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 포인트 페이지
 export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
-  const currentPoints = 2300;
-  const pointHistory = [
-    { id: 1, type: "적립", amount: 230, reason: "주문완료 적립", date: "2024-08-15", orderId: "2024081502" },
-    { id: 2, type: "사용", amount: -500, reason: "주문 시 포인트 사용", date: "2024-08-12", orderId: "2024081203" },
-    { id: 3, type: "적립", amount: 300, reason: "리뷰작성 적립", date: "2024-08-10", orderId: null },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="포인트" onBack={() => onGo("/my")} />
@@ -1109,32 +1083,19 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="bg-white border-b p-6">
         <div className="text-center">
           <div className="text-sm text-gray-500 mb-1">보유 포인트</div>
-          <div className="text-3xl font-bold text-[#E85A6B] mb-4">{currentPoints.toLocaleString()}P</div>
-          <button className="bg-[#E85A6B] text-white px-6 py-2 rounded-lg text-sm hover:bg-[#D14A5B]">
-            포인트 사용하기
-          </button>
+          <div className="text-3xl font-bold text-[#E85A6B] mb-4">0P</div>
         </div>
       </div>
 
       {/* 포인트 내역 */}
-      <div className="p-4">
-        <h3 className="font-medium mb-3">포인트 내역</h3>
-        <div className="space-y-3">
-          {pointHistory.map(history => (
-            <div key={history.id} className="bg-white rounded-lg border p-4 flex items-center justify-between">
-              <div>
-                <div className="font-medium mb-1">{history.reason}</div>
-                <div className="text-xs text-gray-500">{history.date}</div>
-                {history.orderId && (
-                  <div className="text-xs text-gray-400">주문번호: {history.orderId}</div>
-                )}
-              </div>
-              <div className={`font-semibold ${history.type === '적립' ? 'text-blue-600' : 'text-red-700'}`}>
-                {history.type === '적립' ? '+' : ''}{history.amount.toLocaleString()}P
-              </div>
-            </div>
-          ))}
+      <div className="text-center py-16">
+        <div className="text-gray-300 mb-4">
+          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H11.5v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.65c.09 1.71 1.37 2.66 2.85 2.97V19h1.72v-1.67c1.52-.29 2.72-1.16 2.72-2.74 0-2.22-1.86-2.97-3.63-3.45z"/>
+          </svg>
         </div>
+        <h3 className="text-base font-medium text-gray-600 mb-1">포인트 내역이 없습니다</h3>
+        <p className="text-sm text-gray-400">구매 및 리뷰 작성 시 포인트가 적립됩니다</p>
       </div>
     </div>
   );
@@ -1375,40 +1336,17 @@ export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 결제수단 관리 페이지
 export function PaymentsPage({ onGo }: { onGo: (to: string) => void }) {
-  const [cards] = useState([
-    { id: 1, type: "신용카드", name: "KB국민카드", number: "**** **** **** 1234", isDefault: true },
-    { id: 2, type: "체크카드", name: "신한카드", number: "**** **** **** 5678", isDefault: false },
-  ]);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="결제수단 관리" onBack={() => onGo("/my")} />
-      <div className="p-4">
-        <div className="mb-4 flex justify-between items-center">
-          <h3 className="font-medium">등록된 카드</h3>
-          <button className="text-sm text-[#E85A6B] hover:underline">+ 카드 추가</button>
+      <div className="text-center py-20">
+        <div className="text-gray-300 mb-4">
+          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+            <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+          </svg>
         </div>
-
-        <div className="space-y-3">
-          {cards.map(card => (
-            <div key={card.id} className="bg-white rounded-lg border p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-medium">{card.name}</div>
-                {card.isDefault && (
-                  <span className="bg-[#FFF1F2] text-[#E85A6B] text-xs px-2 py-1 rounded-full">기본</span>
-                )}
-              </div>
-              <div className="text-sm text-gray-600 mb-3">{card.number}</div>
-              <div className="flex gap-2">
-                <button className="px-3 py-1.5 text-xs border rounded hover:bg-gray-50">수정</button>
-                <button className="px-3 py-1.5 text-xs border rounded hover:bg-gray-50 text-red-600">삭제</button>
-                {!card.isDefault && (
-                  <button className="px-3 py-1.5 text-xs bg-[#E85A6B] text-white rounded hover:bg-[#D14A5B]">기본으로 설정</button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <h3 className="text-base font-medium text-gray-600 mb-1">등록된 결제수단이 없습니다</h3>
+        <p className="text-sm text-gray-400">주문 시 결제수단을 등록할 수 있습니다</p>
       </div>
     </div>
   );

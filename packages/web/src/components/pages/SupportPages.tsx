@@ -56,26 +56,15 @@ const InfoItem = ({
 
 // 1:1 문의 페이지
 export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
-  const [inquiries] = useState([
-    { 
-      id: 1, 
-      title: "배송 지연 문의", 
-      category: "배송", 
-      status: "답변완료", 
-      date: "2024-08-15",
-      content: "주문한 상품이 예정일보다 늦게 도착하는 것 같은데 언제 받을 수 있을까요?",
-      answer: "안녕하세요. 배송이 지연되어 죄송합니다. 택배사 사정으로 인해 1일 지연되었으며, 내일(8/16) 오후에 수령 가능합니다."
-    },
-    { 
-      id: 2, 
-      title: "상품 불량 신고", 
-      category: "상품", 
-      status: "처리중", 
-      date: "2024-08-14",
-      content: "받은 네일팁에 균열이 있어서 교환 요청드립니다.",
-      answer: null
-    }
-  ]);
+  const [inquiries] = useState<Array<{
+    id: number;
+    title: string;
+    category: string;
+    status: string;
+    date: string;
+    content: string;
+    answer: string | null;
+  }>>([]);
 
   const [showNewInquiry, setShowNewInquiry] = useState(false);
   const [newInquiry, setNewInquiry] = useState({
@@ -160,34 +149,46 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
           </button>
         </div>
 
-        <div className="space-y-3">
-          {inquiries.map(inquiry => (
-            <div key={inquiry.id} className="bg-white rounded-lg border">
-              <div className="p-4 border-b">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">{inquiry.category}</span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    inquiry.status === '답변완료' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                  }`}>
-                    {inquiry.status}
-                  </span>
-                </div>
-                <div className="font-medium mb-1">{inquiry.title}</div>
-                <div className="text-xs text-gray-500">{inquiry.date}</div>
-              </div>
-              
-              <div className="p-4">
-                <div className="text-sm text-gray-700 mb-3">{inquiry.content}</div>
-                {inquiry.answer && (
-                  <div className="bg-[#FFF1F2] border-l-4 border-blue-400 p-3">
-                    <div className="font-medium text-sm text-[#D14A5B] mb-1">답변</div>
-                    <div className="text-sm text-[#E85A6B]">{inquiry.answer}</div>
-                  </div>
-                )}
-              </div>
+        {inquiries.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-gray-300 mb-4">
+              <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+              </svg>
             </div>
-          ))}
-        </div>
+            <h3 className="text-base font-medium text-gray-600 mb-1">문의 내역이 없습니다</h3>
+            <p className="text-sm text-gray-400">궁금한 점이 있으시면 문의하기를 눌러주세요</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {inquiries.map(inquiry => (
+              <div key={inquiry.id} className="bg-white rounded-lg border">
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">{inquiry.category}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      inquiry.status === '답변완료' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {inquiry.status}
+                    </span>
+                  </div>
+                  <div className="font-medium mb-1">{inquiry.title}</div>
+                  <div className="text-xs text-gray-500">{inquiry.date}</div>
+                </div>
+
+                <div className="p-4">
+                  <div className="text-sm text-gray-700 mb-3">{inquiry.content}</div>
+                  {inquiry.answer && (
+                    <div className="bg-[#FFF1F2] border-l-4 border-blue-400 p-3">
+                      <div className="font-medium text-sm text-[#D14A5B] mb-1">답변</div>
+                      <div className="text-sm text-[#E85A6B]">{inquiry.answer}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
