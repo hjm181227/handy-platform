@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { products } from '../../data';
 import { webApiService, likesService } from '../../services/apiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
@@ -215,19 +214,24 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   const [user, setUser] = useState<User | null>(null);
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [couponCount, setCouponCount] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [profileRes, nailRes] = await Promise.all([
+        const [profileRes, nailRes, couponRes] = await Promise.all([
           webApiService.getCurrentUserProfile(),
           webApiService.user.getNailSize().catch(() => ({ success: false, data: null })),
+          webApiService.loyalty.getUserCoupons({ limit: 1 }).catch(() => ({ data: null })),
         ]);
         if (profileRes.user) {
           setUser(profileRes.user);
         }
         if (nailRes.success && nailRes.data) {
           setNailSizeData(nailRes.data);
+        }
+        if (couponRes.data?.summary) {
+          setCouponCount(couponRes.data.summary.available || 0);
         }
       } catch (error) {
         console.error('Failed to load user profile:', error);
@@ -237,13 +241,6 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     };
     loadData();
   }, []);
-
-  const stats = {
-    coupons: 2,
-    ordersWaiting: 0,
-    shipping: 0,
-    likes: 23,
-  };
 
   // 로딩 스켈레톤
   if (loading) {
@@ -406,9 +403,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           {/* Stats Row */}
           <div className="flex gap-2">
             {[
-              { label: '주문/배송', value: `${stats.ordersWaiting}건`, to: '/my/orders' },
-              { label: '배송중', value: `${stats.shipping}건`, to: '/my/shipping' },
-              { label: '쿠폰', value: `${stats.coupons}장`, to: '/my/coupons' },
+              { label: '주문/배송', value: '보기', to: '/my/orders' },
+              { label: '배송중', value: '보기', to: '/my/shipping' },
+              { label: '쿠폰', value: `${couponCount}장`, to: '/my/coupons' },
             ].map((stat) => (
               <a
                 key={stat.to}
@@ -456,12 +453,12 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           {/* Menu Section 3 */}
           <Section title="리뷰·좋아요">
             <LinkRow title="내 리뷰 관리" to="/my/reviews" />
-            <LinkRow title="좋아요(위시리스트)" to="/likes" badge={`${stats.likes}`} />
+            <LinkRow title="좋아요(위시리스트)" to="/likes" />
           </Section>
 
           {/* Menu Section 4 */}
           <Section title="혜택 / 결제">
-            <LinkRow title="쿠폰" to="/my/coupons" badge={`${stats.coupons}장`} />
+            <LinkRow title="쿠폰" to="/my/coupons" badge={`${couponCount}장`} />
             <LinkRow title="포인트" to="/my/points" />
             <LinkRow title="결제수단 관리" to="/my/payments" />
           </Section>

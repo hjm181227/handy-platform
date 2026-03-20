@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { products } from '../../data';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { reviewService, webApiService } from '../../services/apiService';
 import type { CustomerOrder, DetailedReview } from '@handy-platform/shared';

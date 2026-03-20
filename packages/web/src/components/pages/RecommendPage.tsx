@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
-import { products } from '../../data';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ProductCard } from '../product/ProductCard';
 import { RecommendationEngine, getUserActivity, addToRecentViews } from '../../utils/recommendationEngine';
-import type { User } from '@handy-platform/shared';
+import { webApiService } from '../../services/apiService';
+import type { User, Product } from '@handy-platform/shared';
 
 // 추천 섹션 컴포넌트
 const RecommendationSection = ({
@@ -16,7 +16,7 @@ const RecommendationSection = ({
   likedProducts = []
 }: {
   title: string;
-  products: typeof products;
+  products: Product[];
   reason?: string;
   onOpen: (id: string) => void;
   onAdd: (id: string) => void;
@@ -39,7 +39,7 @@ const RecommendationSection = ({
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
-        {sectionProducts.map((product, index) => {
+        {sectionProducts.map((product: Product, index: number) => {
           const productId = product.id || product.productUuid;
           return (
             <div key={product.id || product.productId || index} className="md:snap-start md:flex-shrink-0">
@@ -89,20 +89,44 @@ export function RecommendPage({
 }) {
   const isLoggedIn = !!currentUser;
 
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 실제 상품 데이터 로드
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await webApiService.product.getProducts({
+          page: '1',
+          limit: '50',
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        });
+        setAllProducts(response.data || []);
+      } catch (error) {
+        console.error('Failed to load products for recommendations:', error);
+        setAllProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   // 추천 엔진 초기화
-  const recommendationEngine = useMemo(() => new RecommendationEngine(products), []);
+  const recommendationEngine = useMemo(() => new RecommendationEngine(allProducts), [allProducts]);
 
   // 추천 데이터 계산
   const recommendations = useMemo(() => {
+    if (allProducts.length === 0) return [];
     if (isLoggedIn) {
-      // 로그인 사용자: 개인화 추천
       const userActivity = getUserActivity();
       return recommendationEngine.getPersonalizedRecommendations(currentUser, userActivity);
     } else {
-      // 비로그인 사용자: 카테고리별 추천
       return recommendationEngine.getCategoryBasedRecommendations();
     }
-  }, [isLoggedIn, currentUser, recommendationEngine]);
+  }, [isLoggedIn, currentUser, recommendationEngine, allProducts]);
 
   // 상품 열람 시 최근 본 상품에 추가
   const handleProductOpen = (productId: string) => {
@@ -175,7 +199,13 @@ export function RecommendPage({
 
       {/* 추천 상품 목록 */}
       <div className="mx-auto max-w-7xl px-4 py-6">
-        {recommendations.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : recommendations.length === 0 ? (
           <EmptyRecommendations isLoggedIn={isLoggedIn} />
         ) : (
           <div className="space-y-8">
