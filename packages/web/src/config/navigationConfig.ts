@@ -57,7 +57,6 @@ const COMMERCE_GNB: GnbItem[] = [
   { label: '신상', to: '/new' },
   { label: '추천', to: '/recommend' },
   { label: '이벤트', to: '/event' },
-  { label: '디자인 툴', to: '/design-tool?from=shopping' },
 ];
 
 export const GNB_ITEMS = COMMUNITY_NAV_ENABLED ? COMMUNITY_GNB : COMMERCE_GNB;
