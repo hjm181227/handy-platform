@@ -568,22 +568,19 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       return;
     }
 
-    if ((cart as any).status !== 'validated') {
-      setError('배송지를 먼저 선택해주세요.');
-      await alert('배송지를 선택해주세요.', { variant: 'error' });
-      return;
-    }
-
     try {
       setProcessing(true);
       setError(null);
+
+      // 스테이지 테스트: status 체크 스킵 (validate API가 실패해도 테스트 결제 진행)
+      console.log('🧪 [CheckoutPage] Test payment - cart status:', (cart as any).status);
 
       // 1. 결제 준비 (주문 생성)
       console.log('🧪 [CheckoutPage] Test payment - preparing order...');
       const prepareResponse = await webApiService.order.preparePayment(
         (cart as any).sessionId,
         cart.totals.finalTotal,
-        'KAKAO_PAY' // 테스트용 기본값
+        'TOSS_PAYMENTS' // 테스트용 기본값
       );
 
       if (!prepareResponse.success || !prepareResponse.data?.orderId) {
@@ -1168,7 +1165,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               {isStaging && (
                 <button
                   onClick={handleTestPayment}
-                  disabled={processing || !validateCheckout()}
+                  disabled={processing || !(selectedAddressId || validateShipping())}
                   className="w-full mt-3 bg-orange-500 text-white font-semibold py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processing ? '처리 중...' : '🧪 테스트 결제 (결제 스킵)'}

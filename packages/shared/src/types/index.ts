@@ -16,6 +16,50 @@ export interface PaginationInfo {
   hasPrev: boolean;
 }
 
+// Design Tool Types
+export type DesignToolPlanId = 'free' | 'pro';
+
+export interface DesignToolPlan {
+  planId: DesignToolPlanId;
+  name: string;
+  price: number;
+  features: string[];
+  maxProjects: number;
+  maxExports: number;
+  hasAiFeatures: boolean;
+  hasCollaboration: boolean;
+}
+
+export interface DesignToolAccess {
+  hasAccess: boolean;
+  currentPlan: DesignToolPlanId;
+  subscriptionStatus: 'active' | 'cancelled' | 'expired' | 'trial' | 'none';
+  expiresAt?: string;
+  trialEndsAt?: string;
+  subscribedAt?: string;
+  cancelledAt?: string;
+  autoRenew: boolean;
+}
+
+export interface DesignToolSubscribeRequest {
+  planId: DesignToolPlanId;
+  paymentMethod?: string;
+}
+
+export interface DesignToolPaymentSession {
+  orderId: string;
+  amount: number;
+  clientKey: string;
+  orderName: string;
+}
+
+export interface DesignToolSubscribeResponse {
+  success: boolean;
+  subscription?: DesignToolAccess;
+  paymentSession?: DesignToolPaymentSession;
+  message: string;
+}
+
 // User Related Types
 export interface User {
   userUuid: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) - primary identifier
@@ -37,6 +81,7 @@ export interface User {
     totalOrders: number;
     totalSpent: number;
   };
+  designToolAccess?: DesignToolAccess;
   createdAt: string;
 }
 
@@ -2212,14 +2257,20 @@ export interface CustomOrderRequest {
 }
 
 // 커스텀 주문서 상세 (판매자 조회용) - specifications 포함
+export type CustomOrderVisibility = 'public' | 'private';
+export type CustomOrderStatus = 'pending' | 'quoted' | 'approved' | 'in_production' | 'completed' | 'rejected' | 'cancelled';
+
 export interface CustomOrderDetail {
-  id: string;                    // 주문서 UUID
+  id: string;                    // 주문서 UUID (레거시)
+  requestUuid: string;           // 주문서 UUID (백엔드 실제 필드명)
   userUuid: string;              // 주문 고객 UUID
-  sellerUuid: string;            // 판매자 UUID
+  sellerUuid?: string;           // 판매자 UUID (공개 주문은 없을 수 있음)
+  brandName?: string;            // 브랜드명
+  visibility: CustomOrderVisibility;
   title: string;                 // 주문서 제목
   baseProductUuid?: string;      // 기반 상품 UUID
   baseProductType?: 'original' | 'custom';
-  status: 'pending' | 'quoted' | 'approved' | 'in_production' | 'completed' | 'rejected' | 'cancelled';
+  status: CustomOrderStatus;
   specifications: {
     shape: NailShape;
     length: NailLength;
@@ -2244,6 +2295,8 @@ export interface CustomOrderDetail {
     designNotes?: string;
     referenceImages?: string[];
   };
+  quotesCount?: number;          // 받은 견적 수
+  quotes?: QuoteDetail[];        // 견적 목록
   createdAt: string;
   updatedAt?: string;
 }
@@ -2274,7 +2327,7 @@ declare global {
 
 // 커스텀 주문서 생성 요청
 export interface CreateCustomOrderRequest {
-  sellerUuid: string;
+  sellerUuid?: string;           // optional: 없으면 공개 주문
   baseProductUuid?: string;
   baseProductType?: 'original' | 'custom';
   title: string;
@@ -2296,10 +2349,78 @@ export interface CreateCustomOrderRequest {
 export interface CreateCustomOrderResponse {
   requestUuid: string;
   userUuid: string;
-  sellerUuid: string;
+  sellerUuid?: string;
   brandName?: string;
+  visibility: CustomOrderVisibility;
   title: string;
   specifications: CreateCustomOrderRequest['specifications'];
-  status: 'pending' | 'quoted' | 'approved' | 'in_production' | 'completed' | 'rejected' | 'cancelled';
+  status: CustomOrderStatus;
   createdAt: string;
+}
+
+// 커스텀 주문서 수정 요청
+export interface UpdateCustomOrderRequest {
+  title?: string;
+  specifications?: Partial<CreateCustomOrderRequest['specifications']>;
+}
+
+// 커스텀 주문서 목록 응답
+export interface CustomOrderListResponse {
+  success: boolean;
+  data: {
+    orders: CustomOrderDetail[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+}
+
+// 견적 상세
+export interface QuoteDetail {
+  quoteUuid: string;
+  customRequestUuid: string;
+  sellerUuid: string;
+  brandName?: string;
+  price: number;
+  processingDays: number;
+  sellerNotes?: string;
+  quotationImages?: string[];
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  expiresAt?: string;
+  issuedAt: string;
+  respondedAt?: string;
+  createdAt: string;
+}
+
+// 주문서별 견적 목록 응답
+export interface CustomOrderQuotesResponse {
+  success: boolean;
+  data: {
+    quotes: QuoteDetail[];
+    total: number;
+  };
+}
+
+// 판매자용 공개 주문서 (추가 메타 포함)
+export interface PublicCustomOrder extends CustomOrderDetail {
+  buyerNickname: string;
+  myQuoteStatus: string | null;
+  myQuoteUuid: string | null;
+}
+
+// 판매자용 공개 주문서 목록 응답
+export interface PublicCustomOrderListResponse {
+  success: boolean;
+  data: {
+    orders: PublicCustomOrder[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
 }

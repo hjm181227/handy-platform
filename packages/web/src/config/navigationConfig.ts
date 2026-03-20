@@ -29,7 +29,7 @@ const COMMUNITY_BOTTOM_TABS: BottomTab[] = [
 const COMMERCE_BOTTOM_TABS: BottomTab[] = [
   { label: '쇼핑', path: '/', iconName: 'shopping-bag' },
   { label: '스냅', path: '/snap', iconName: 'camera' },
-  { label: '', path: '/snap/new', iconName: 'plus', isSpecial: true },
+  { label: '', path: '/snap/new', iconName: 'plus', isSpecial: true, requiresAuth: true },
   { label: '좋아요', path: '/likes', iconName: 'heart', requiresAuth: true },
   { label: '마이', path: '/my', iconName: 'user', requiresAuth: true },
 ];

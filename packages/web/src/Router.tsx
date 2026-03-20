@@ -65,6 +65,18 @@ import {
   PromoPage
 } from './components/pages/SupportPages';
 
+// Custom Order Pages
+import { PublicCustomOrderPage } from './components/pages/PublicCustomOrderPage';
+import { CustomOrderManagementPage } from './components/pages/CustomOrderManagementPage';
+import { CustomOrderDetailPage } from './components/pages/CustomOrderDetailPage';
+import { SellerPublicOrdersPage } from './components/pages/SellerPublicOrdersPage';
+import { SellerPublicOrderDetailPage } from './components/pages/SellerPublicOrderDetailPage';
+
+// Design Tool Pages
+import { DesignToolPage } from './components/pages/DesignToolPage';
+import { DesignToolSubscriptionPage } from './components/pages/DesignToolSubscriptionPage';
+import { DesignToolPaymentResultPage } from './components/pages/DesignToolPaymentResultPage';
+
 // Seller Components
 import { SellerRegistrationPage } from './components/pages/SellerRegistrationPage';
 
@@ -253,7 +265,7 @@ export function Router() {
   const isSellerPage = pathname.startsWith('/seller');
   const isAdminPage = pathname.startsWith('/admin');
   const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
-  const isCustomOrderPage = /^\/product\/.+\/custom-order$/.test(pathname);
+  const isCustomOrderPage = /^\/product\/.+\/custom-order$/.test(pathname) || pathname === '/custom-order/new';
 
   // Route matching and screen rendering
   let screen: React.ReactNode;
@@ -657,6 +669,69 @@ export function Router() {
     const roomId = pathname.split('/')[2];
     screen = <ChatRoomPage nav={nav} roomId={roomId} />;
   }
+  // ==================== Custom Order Routes ====================
+  else if (pathname === '/custom-order/new') {
+    screen = (
+      <RequireAuth>
+        <PublicCustomOrderPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname.match(/^\/my\/custom-orders\/(.+)$/)) {
+    const uuid = pathname.split('/')[3];
+    screen = (
+      <RequireAuth>
+        <CustomOrderDetailPage uuid={uuid} onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/my/custom-orders') {
+    screen = (
+      <RequireAuth>
+        <CustomOrderManagementPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname.match(/^\/seller\/custom-orders\/public\/(.+)$/)) {
+    const uuid = pathname.split('/')[4];
+    screen = (
+      <RequireAuth>
+        <SellerPublicOrderDetailPage uuid={uuid} onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/seller/custom-orders/public') {
+    screen = (
+      <RequireAuth>
+        <SellerPublicOrdersPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  // ==================== Design Tool Routes (비활성화 - 실제 디자인 에디터 UI 미구현) ====================
+  // else if (pathname === '/design-tool') {
+  //   screen = <DesignToolPage onGo={nav} />;
+  // }
+  // else if (pathname === '/design-tool/subscription') {
+  //   screen = (
+  //     <RequireAuth>
+  //       <DesignToolSubscriptionPage onGo={nav} />
+  //     </RequireAuth>
+  //   );
+  // }
+  // else if (pathname === '/design-tool/payment/success') {
+  //   screen = (
+  //     <RequireAuth>
+  //       <DesignToolPaymentResultPage onGo={nav} type="success" />
+  //     </RequireAuth>
+  //   );
+  // }
+  // else if (pathname === '/design-tool/payment/fail') {
+  //   screen = (
+  //     <RequireAuth>
+  //       <DesignToolPaymentResultPage onGo={nav} type="fail" />
+  //     </RequireAuth>
+  //   );
+  // }
   // ==================== Seller Registration Routes ====================
   else if (pathname === '/seller/register') {
     screen = (
@@ -995,6 +1070,30 @@ function HomeContent({
   return (
     <>
       <EventBanners onGo={nav} />
+
+      {/* 커스텀 네일 주문서 작성 CTA */}
+      <div className="mx-auto max-w-7xl px-4 mt-4">
+        <button
+          onClick={() => nav('/custom-order/new')}
+          className="w-full rounded-2xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #FF6B8A 0%, #FF8E9E 50%, #FFB5C0 100%)',
+          }}
+        >
+          <div className="flex items-center justify-between px-5 py-4">
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-white text-[15px] font-bold">커스텀 네일 주문서 작성</span>
+              <span className="text-white/80 text-xs">나만의 디자인을 요청하고 여러 브랜드의 견적을 받아보세요</span>
+            </div>
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M13.477 10.754L8.477 15.754a1.063 1.063 0 01-1.504-1.504L11.22 10 6.973 5.754a1.063 1.063 0 011.504-1.504l5 5a1.063 1.063 0 010 1.504z" fill="white"/>
+              </svg>
+            </div>
+          </div>
+        </button>
+      </div>
+
       <SectionRow
         title="신상 제품"
         items={newProducts}

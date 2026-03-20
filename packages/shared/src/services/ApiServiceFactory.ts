@@ -22,6 +22,7 @@ import { BaseBannerService, BannerServiceFactory } from './banner/BannerService'
 import { BaseSnapService, SnapServiceFactory } from './snap/SnapService';
 import { BaseFollowService, FollowServiceFactory } from './follow/FollowService';
 import { BaseChatService, getChatService } from './chat';
+import { BaseDesignToolService, DesignToolServiceFactory } from './designtool/DesignToolService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -49,6 +50,7 @@ export interface IntegratedApiService {
   snap: BaseSnapService;
   follow: BaseFollowService;
   chat: BaseChatService;
+  designTool: BaseDesignToolService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -83,6 +85,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public snap: BaseSnapService;
   public follow: BaseFollowService;
   public chat: BaseChatService;
+  public designTool: BaseDesignToolService;
 
   protected baseURL: string;
   protected platform: string;
@@ -123,6 +126,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.snap = SnapServiceFactory.create(baseURL, getAuthHeaders);
     this.follow = FollowServiceFactory.create(baseURL, getAuthHeaders);
     this.chat = getChatService();
+    this.designTool = DesignToolServiceFactory.create(baseURL, getAuthHeaders);
   }
 
   getEnvironmentInfo() {
@@ -152,7 +156,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'banner',
         'snap',
         'follow',
-        'chat'
+        'chat',
+        'designTool'
       ],
     };
   }
@@ -250,4 +255,5 @@ export type {
   BaseLikesService,
   BaseSnapService,
   BaseFollowService,
+  BaseDesignToolService,
 };

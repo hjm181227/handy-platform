@@ -380,6 +380,7 @@ export const API_ENDPOINTS = {
     SHIPPING_TOGGLE: '/api/seller/shipping/toggle',                     // PATCH
     // 커스텀 주문서 관리
     CUSTOM_ORDERS: '/api/seller/custom-orders',                      // GET - 커스텀 주문서 목록
+    CUSTOM_ORDERS_PUBLIC: '/api/seller/custom-orders/public',        // GET - 공개 커스텀 주문서 목록
     CUSTOM_ORDER_DETAIL: (requestUuid: string) => `/api/seller/custom-orders/${requestUuid}`, // GET - 커스텀 주문서 상세
     CUSTOM_ORDER_QUOTE: (requestUuid: string) => `/api/seller/custom-orders/${requestUuid}/quote`, // POST/PATCH - 견적서 발급/수정
     CUSTOM_ORDER_COMPLETE: (requestUuid: string) => `/api/seller/custom-orders/${requestUuid}/complete`, // POST - 제작 완료
@@ -505,7 +506,21 @@ export const API_ENDPOINTS = {
   // 커스텀 주문
   CUSTOM_ORDER: {
     CREATE: '/api/custom-orders',               // POST - 커스텀 주문서 생성
+    LIST: '/api/custom-orders',                 // GET - 내 커스텀 주문서 목록
     DETAIL: (uuid: string) => `/api/custom-orders/${uuid}`, // GET - 커스텀 주문서 상세 조회
+    UPDATE: (uuid: string) => `/api/custom-orders/${uuid}`, // PUT - 커스텀 주문서 수정
+    QUOTES: (uuid: string) => `/api/custom-orders/${uuid}/quotes`, // GET - 주문서별 견적 목록
+  },
+
+  // 디자인 툴
+  DESIGN_TOOL: {
+    ACCESS: '/api/design-tool/access',
+    PLANS: '/api/design-tool/plans',
+    SUBSCRIBE: '/api/design-tool/subscribe',
+    APPROVE: '/api/design-tool/approve',
+    CANCEL: '/api/design-tool/cancel',
+    CHANGE_PLAN: '/api/design-tool/change-plan',
+    ADMIN_ACCESS: (userUuid: string) => `/api/design-tool/admin/${userUuid}/access`,
   },
 
   // 견적서

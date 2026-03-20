@@ -17,6 +17,19 @@ function getDday(endDate: string): string {
   return `D-${diff}`;
 }
 
+// CTA 설정 해석 (동작은 추후 구현)
+function resolveCtaConfig(redirectUrl: string | undefined) {
+  if (!redirectUrl) return null;
+
+  if (redirectUrl === '/contact-inquiry') {
+    return { label: '입점 문의하기', bgColor: '#ff073a', hoverBgColor: '#e00030' };
+  }
+  if (redirectUrl === 'app-download') {
+    return { label: '앱 다운로드', bgColor: '#1A1A1A', hoverBgColor: '#333333' };
+  }
+  return { label: '이벤트 참여하기', bgColor: '#E85A6B', hoverBgColor: '#D14A5B' };
+}
+
 // 이벤트 상태 판별
 function getEventStatus(banner: EventBanner): { label: string; color: string; bgColor: string } {
   const now = new Date();
@@ -249,21 +262,25 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                 )}
 
                 {/* CTA */}
-                {banner.redirectUrl && (
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-3 bg-[#FFF1F2] rounded-xl flex items-center justify-center">
-                      <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
+                {(() => {
+                  const cta = resolveCtaConfig(banner.redirectUrl);
+                  return cta ? (
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center" style={{ backgroundColor: cta.bgColor + '1A' }}>
+                        <svg className="w-6 h-6" style={{ color: cta.bgColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </div>
+                      <button
+                        onClick={() => onGo(banner.redirectUrl!)}
+                        className="text-sm font-bold hover:underline"
+                        style={{ color: cta.bgColor }}
+                      >
+                        {cta.label}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onGo(banner.redirectUrl!)}
-                      className="text-sm font-bold text-[#E85A6B] hover:underline"
-                    >
-                      이벤트 참여하기
-                    </button>
-                  </div>
-                )}
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>
@@ -478,16 +495,22 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
         )}
 
         {/* CTA 버튼 - redirectUrl이 있을 때만 */}
-        {banner.redirectUrl && (
-          <div className="sticky bottom-0 px-5 py-4 bg-white border-t">
-            <button
-              onClick={() => onGo(banner.redirectUrl!)}
-              className="w-full py-3.5 bg-[#E85A6B] text-white text-[15px] font-bold rounded-xl hover:bg-[#D14A5B] transition-colors"
-            >
-              이벤트 참여하기
-            </button>
-          </div>
-        )}
+        {(() => {
+          const cta = resolveCtaConfig(banner.redirectUrl);
+          return cta ? (
+            <div className="sticky bottom-0 px-5 py-4 bg-white border-t">
+              <button
+                onClick={() => onGo(banner.redirectUrl!)}
+                className="w-full py-3.5 text-white text-[15px] font-bold rounded-xl transition-colors"
+                style={{ backgroundColor: cta.bgColor }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = cta.hoverBgColor)}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = cta.bgColor)}
+              >
+                {cta.label}
+              </button>
+            </div>
+          ) : null;
+        })()}
       </div>
     </div>
   );

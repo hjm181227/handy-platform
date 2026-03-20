@@ -20,6 +20,9 @@ export * from './seller/ProductionService';
 // Loyalty
 export * from './loyalty/LoyaltyService';
 
+// Design Tool
+export * from './designtool/DesignToolService';
+
 // Utilities
 export * from './utils';
 

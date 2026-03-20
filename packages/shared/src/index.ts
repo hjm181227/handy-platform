@@ -60,6 +60,9 @@ export * from './services/snap/SnapService';
 // Follow Services
 export * from './services/follow/FollowService';
 
+// Design Tool Services
+export * from './services/designtool/DesignToolService';
+
 // Chat Services
 export * from './services/chat';
 

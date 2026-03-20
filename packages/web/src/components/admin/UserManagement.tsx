@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminUser, AdminUsersResponse, UserRoleUpdateRequest } from '@handy-platform/shared';
-import { adminService } from '../../services/apiService';
+import type { DesignToolPlanId } from '@handy-platform/shared';
+import { adminService, designToolService } from '../../services/apiService';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -16,6 +17,8 @@ const UserManagement: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleChangeLoading, setRoleChangeLoading] = useState(false);
+  const [showDesignToolModal, setShowDesignToolModal] = useState(false);
+  const [designToolLoading, setDesignToolLoading] = useState(false);
 
   // 통합된 adminService 사용 (토큰 관리 자동화)
 
@@ -96,6 +99,48 @@ const UserManagement: React.FC = () => {
       console.error('Status toggle failed:', error);
       alert('상태 변경에 실패했습니다.');
     }
+  };
+
+  const handleDesignToolChange = async (planId: DesignToolPlanId, hasAccess: boolean) => {
+    if (!selectedUser) return;
+
+    try {
+      setDesignToolLoading(true);
+      await designToolService.adminUpdateAccess(selectedUser.userUuid, {
+        hasAccess,
+        currentPlan: planId,
+        subscriptionStatus: hasAccess ? 'active' : 'none',
+      });
+      await loadUsers();
+      setShowDesignToolModal(false);
+      setSelectedUser(null);
+      alert(`${selectedUser.name}님의 디자인 툴 플랜이 변경되었습니다.`);
+    } catch (error) {
+      console.error('Design tool access change failed:', error);
+      alert('디자인 툴 권한 변경에 실패했습니다.');
+    } finally {
+      setDesignToolLoading(false);
+    }
+  };
+
+  const getDesignToolBadge = (user: AdminUser) => {
+    const access = user.designToolAccess;
+    if (!access || access.subscriptionStatus === 'none') {
+      return { label: '없음', color: 'bg-gray-100 text-gray-500' };
+    }
+    if (access.currentPlan === 'pro' && access.subscriptionStatus === 'active') {
+      return { label: 'Pro', color: 'bg-pink-100 text-pink-700' };
+    }
+    if (access.currentPlan === 'free' && access.subscriptionStatus === 'active') {
+      return { label: 'Free', color: 'bg-green-100 text-green-700' };
+    }
+    if (access.subscriptionStatus === 'cancelled') {
+      return { label: '취소됨', color: 'bg-yellow-100 text-yellow-700' };
+    }
+    if (access.subscriptionStatus === 'expired') {
+      return { label: '만료', color: 'bg-red-100 text-red-700' };
+    }
+    return { label: access.currentPlan, color: 'bg-gray-100 text-gray-600' };
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -236,6 +281,9 @@ const UserManagement: React.FC = () => {
                     상태
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    디자인 툴
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     가입일
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -280,6 +328,22 @@ const UserManagement: React.FC = () => {
                       }`}>
                         {user.isActive ? '활성' : '비활성'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const badge = getDesignToolBadge(user);
+                        return (
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowDesignToolModal(true);
+                            }}
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badge.color} hover:opacity-80 transition-opacity cursor-pointer`}
+                          >
+                            {badge.label}
+                          </button>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(user.createdAt).toLocaleDateString('ko-KR')}
@@ -571,6 +635,125 @@ const UserManagement: React.FC = () => {
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 디자인 툴 관리 모달 */}
+      {showDesignToolModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-pink-50 to-purple-50 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">디자인 툴 관리</h3>
+                  <p className="text-sm text-gray-600">{selectedUser.name}님의 디자인 툴 플랜</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowDesignToolModal(false);
+                    setSelectedUser(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-white/50"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-6">
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-2">현재 상태</p>
+                <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium">
+                  {(() => {
+                    const badge = getDesignToolBadge(selectedUser);
+                    return badge.label;
+                  })()}
+                </div>
+                {selectedUser.designToolAccess?.expiresAt && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    만료일: {new Date(selectedUser.designToolAccess.expiresAt).toLocaleDateString('ko-KR')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-gray-900 mb-3">플랜 변경</p>
+                {([
+                  { id: 'pro' as const, label: '프로 (Pro)', desc: '모든 기능 + AI + 협업', icon: '👑', color: 'bg-pink-100 text-pink-600' },
+                  { id: 'free' as const, label: '무료 (Free)', desc: '기본 디자인 도구', icon: '🎨', color: 'bg-green-100 text-green-600' },
+                ]).map((plan) => {
+                  const isCurrent = selectedUser.designToolAccess?.subscriptionStatus === 'active' && selectedUser.designToolAccess?.currentPlan === plan.id;
+                  return (
+                    <button
+                      key={plan.id}
+                      onClick={() => handleDesignToolChange(plan.id, true)}
+                      disabled={designToolLoading || isCurrent}
+                      className={`w-full text-left px-4 py-3 border-2 rounded-lg transition-all duration-200 ${
+                        isCurrent
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${plan.color}`}>
+                            {plan.icon}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{plan.label}</p>
+                            <p className="text-xs text-gray-500">{plan.desc}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {isCurrent && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                              현재
+                            </span>
+                          )}
+                          {designToolLoading && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {/* 접근 회수 버튼 */}
+                {selectedUser.designToolAccess?.subscriptionStatus === 'active' && (
+                  <button
+                    onClick={() => handleDesignToolChange('free', false)}
+                    disabled={designToolLoading}
+                    className="w-full text-left px-4 py-3 border-2 border-red-200 rounded-lg text-red-700 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-100 text-red-600">
+                        🚫
+                      </div>
+                      <div>
+                        <p className="font-medium">접근 회수</p>
+                        <p className="text-xs text-red-500">디자인 툴 접근을 완전히 제거합니다</p>
+                      </div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl flex justify-end">
+              <button
+                onClick={() => {
+                  setShowDesignToolModal(false);
+                  setSelectedUser(null);
+                }}
+                disabled={designToolLoading}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                닫기
               </button>
             </div>
           </div>
