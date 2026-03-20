@@ -51,7 +51,7 @@ import {
   ReviewsPage,
   CouponsPage,
   PointsPage,
-  PaymentsPage,
+  // PaymentsPage, // 토스페이먼츠 사용 예정으로 비활성화
   NailSizesPage
 } from './components/pages/MyPages';
 
@@ -611,13 +611,14 @@ export function Router() {
       </RequireAuth>
     );
   }
-  else if (pathname === '/my/payments') {
-    screen = (
-      <RequireAuth>
-        <PaymentsPage onGo={nav} />
-      </RequireAuth>
-    );
-  }
+  // 토스페이먼츠 사용 예정으로 결제수단 관리 페이지 비활성화
+  // else if (pathname === '/my/payments') {
+  //   screen = (
+  //     <RequireAuth>
+  //       <PaymentsPage onGo={nav} />
+  //     </RequireAuth>
+  //   );
+  // }
   else if (pathname === '/my/nail-sizes') {
     screen = (
       <RequireAuth>
