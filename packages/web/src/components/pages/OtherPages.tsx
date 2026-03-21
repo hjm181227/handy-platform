@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { webApiService, likesService } from '../../services/apiService';
+import { purchaseApiService } from '../../services/purchaseApiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import { ProductCard } from '../product/ProductCard';
@@ -215,17 +216,30 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [couponCount, setCouponCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [snapCount, setSnapCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+  const [shippingCount, setShippingCount] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [profileRes, nailRes, couponRes] = await Promise.all([
+        const [profileRes, nailRes, couponRes, followCountsRes] = await Promise.all([
           webApiService.getCurrentUserProfile(),
           webApiService.user.getNailSize().catch(() => ({ success: false, data: null })),
           webApiService.loyalty.getUserCoupons({ limit: 1 }).catch(() => ({ data: null })),
+          webApiService.follow.getMyCounts().catch(() => ({ success: false, data: { followerCount: 0, followingCount: 0 } })),
         ]);
         if (profileRes.user) {
           setUser(profileRes.user);
+          // 스냅 수 조회 (userUuid 필요하므로 프로필 로드 후)
+          try {
+            const snapRes = await webApiService.snap.getUserProfile(profileRes.user.userUuid, { page: 1, limit: 1 });
+            if (snapRes.success && snapRes.data?.profile) {
+              setSnapCount(snapRes.data.profile.snapsCount || 0);
+            }
+          } catch { /* ignore */ }
         }
         if (nailRes.success && nailRes.data) {
           setNailSizeData(nailRes.data);
@@ -233,6 +247,23 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
         if (couponRes.data?.summary) {
           setCouponCount(couponRes.data.summary.available || 0);
         }
+        if ((followCountsRes as any).success && (followCountsRes as any).data) {
+          setFollowerCount((followCountsRes as any).data.followerCount || 0);
+          setFollowingCount((followCountsRes as any).data.followingCount || 0);
+        }
+        // 주문/배송 카운트 조회
+        try {
+          const [ordersRes, shippingRes] = await Promise.all([
+            purchaseApiService.getOrders({ page: 1, limit: 1 }),
+            purchaseApiService.getOrders({ page: 1, limit: 1, status: ['shipped'] }),
+          ]);
+          if (ordersRes.success && ordersRes.pagination) {
+            setOrderCount(ordersRes.pagination.totalItems || 0);
+          }
+          if (shippingRes.success && shippingRes.pagination) {
+            setShippingCount(shippingRes.pagination.totalItems || 0);
+          }
+        } catch { /* ignore */ }
       } catch (error) {
         console.error('Failed to load user profile:', error);
       } finally {
@@ -248,8 +279,13 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
       <div className="min-h-screen bg-[#F4F4F5]">
         <div className="max-w-lg mx-auto px-5 py-4">
           <div className="rounded-2xl bg-white p-5 animate-pulse">
-            <div className="h-3 bg-gray-200 rounded w-16 mb-3"></div>
-            <div className="h-6 bg-gray-200 rounded w-40"></div>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-gray-200" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 bg-gray-200 rounded w-32" />
+                <div className="h-4 bg-gray-200 rounded w-48" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -336,38 +372,69 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
           {/* Profile Card */}
           <div className="rounded-2xl bg-white p-5 flex flex-col gap-4 border border-[#E5E0DC]">
-            {/* Header Row */}
-            <div className="flex items-center justify-between">
-              <div className="text-[13px] text-[#71717A] font-medium">내 정보</div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onGo('/my/settings')}
-                  className="rounded-lg border border-[#E5E0DC] px-2.5 py-1.5 text-xs font-medium text-[#131211] hover:bg-gray-50 transition-colors"
-                >
-                  회원정보 수정
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-md border border-[#E5E0DC] p-1.5 text-[#71717A] hover:bg-gray-50 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+            {/* Avatar + Info */}
+            <div className="flex items-start gap-4">
+              {/* Avatar */}
+              <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)}>
+                {user?.avatar ? (
+                  <img src={user.avatar} className="w-14 h-14 rounded-full border border-[#E5E0DC] object-cover" alt="" />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-[#F4F4F5] flex items-center justify-center text-lg font-bold text-[#71717A]">
+                    {(user?.nickname || user?.name || '?').charAt(0)}
+                  </div>
+                )}
+              </button>
+
+              {/* Name + Stats */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-[#131211] truncate">
+                    {user?.nickname || user?.name || '사용자'}
+                  </span>
+                  {getRoleLabel(user?.role || 'user') && (
+                    <>
+                      <span className="text-xl text-[#D0C9C3]">/</span>
+                      <span className="text-xl font-bold text-[#FF4D6D]">
+                        {getRoleLabel(user?.role || 'user')}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {/* Follower / Following / Snap Counts */}
+                <div className="flex gap-4 mt-1.5">
+                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)} className="text-sm text-[#71717A]">
+                    <span className="font-bold text-[#131211]">{snapCount}</span> 스냅
+                  </button>
+                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=followers`)} className="text-sm text-[#71717A]">
+                    <span className="font-bold text-[#131211]">{followerCount}</span> 팔로워
+                  </button>
+                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=following`)} className="text-sm text-[#71717A]">
+                    <span className="font-bold text-[#131211]">{followingCount}</span> 팔로잉
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Profile Name */}
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-[#131211]">
-                {user?.nickname || user?.name || '사용자'}
-              </span>
-              {getRoleLabel(user?.role || 'user') && (
-                <>
-                  <span className="text-xl text-[#D0C9C3]">/</span>
-                  <span className="text-xl font-bold text-[#FF4D6D]">
-                    {getRoleLabel(user?.role || 'user')}
-                  </span>
-                </>
-              )}
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)}
+                className="flex-1 rounded-lg border border-[#E5E0DC] py-2 text-sm font-medium text-[#131211] hover:bg-gray-50 transition-colors"
+              >
+                프로필 보기
+              </button>
+              <button
+                onClick={() => onGo('/my/settings')}
+                className="rounded-lg border border-[#E5E0DC] px-3 py-2 text-sm font-medium text-[#131211] hover:bg-gray-50 transition-colors"
+              >
+                프로필 편집
+              </button>
+              <button
+                onClick={handleLogout}
+                className="rounded-md border border-[#E5E0DC] p-2 text-[#71717A] hover:bg-gray-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Size Status */}
@@ -403,8 +470,8 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           {/* Stats Row */}
           <div className="flex gap-2">
             {[
-              { label: '주문/배송', value: '보기', to: '/my/orders' },
-              { label: '배송중', value: '보기', to: '/my/shipping' },
+              { label: '주문/배송', value: `${orderCount}건`, to: '/my/orders' },
+              { label: '배송중', value: `${shippingCount}건`, to: '/my/shipping' },
               { label: '쿠폰', value: `${couponCount}장`, to: '/my/coupons' },
             ].map((stat) => (
               <a

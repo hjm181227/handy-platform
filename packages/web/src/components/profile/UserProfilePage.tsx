@@ -9,9 +9,10 @@ interface UserProfilePageProps {
   userUuid: string;
   onGo: (path: string) => void;
   onOpen: (productUuid: string) => void;
+  initialView?: 'grid' | 'followers' | 'following';
 }
 
-export default function UserProfilePage({ userUuid, onGo, onOpen }: UserProfilePageProps) {
+export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 'grid' }: UserProfilePageProps) {
   const { currentUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [snaps, setSnaps] = useState<any[]>([]);
@@ -19,7 +20,7 @@ export default function UserProfilePage({ userUuid, onGo, onOpen }: UserProfileP
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedSnap, setSelectedSnap] = useState<any>(null);
-  const [activeView, setActiveView] = useState<'grid' | 'followers' | 'following'>('grid');
+  const [activeView, setActiveView] = useState<'grid' | 'followers' | 'following'>(initialView);
   const [followList, setFollowList] = useState<any[]>([]);
   const [followListLoading, setFollowListLoading] = useState(false);
 
@@ -27,6 +28,9 @@ export default function UserProfilePage({ userUuid, onGo, onOpen }: UserProfileP
 
   useEffect(() => {
     loadProfile();
+    if (initialView !== 'grid') {
+      loadFollowList(initialView);
+    }
   }, [userUuid]);
 
   const loadProfile = async () => {
@@ -162,16 +166,16 @@ export default function UserProfilePage({ userUuid, onGo, onOpen }: UserProfileP
       </div>
 
       {/* 탭 */}
-      <div className="border-b mb-4">
+      <div className="mb-4">
         <div className="flex">
           {(['grid', 'followers', 'following'] as const).map(view => (
             <button
               key={view}
               onClick={() => handleViewChange(view)}
-              className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 py-3 text-sm ${
                 activeView === view
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
+                  ? 'text-[#131211] font-bold'
+                  : 'text-[#A39E99] font-medium'
               }`}
             >
               {view === 'grid' ? '스냅' : view === 'followers' ? '팔로워' : '팔로잉'}
