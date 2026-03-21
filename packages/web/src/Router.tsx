@@ -41,6 +41,7 @@ import SnapFeed from './components/snap/SnapFeed';
 import UserProfilePage from './components/profile/UserProfilePage';
 import DiscoverPage from './components/discover/DiscoverPage';
 import { COMMUNITY_NAV_ENABLED } from './config/navigationConfig';
+import { SEOHead } from './components/common/SEOHead';
 
 // MyPage Components
 import {
@@ -1013,15 +1014,35 @@ export function Router() {
     );
   }
 
+  // SEO meta tags based on route
+  const seoProps = useMemo(() => {
+    if (pathname === '/' || pathname === '/shop') return { path: '/' };
+    if (pathname === '/category') return { title: '카테고리', description: '네일아트 카테고리별 상품을 찾아보세요.', path: '/category' };
+    if (pathname === '/brands') return { title: '브랜드', description: '다양한 네일 브랜드를 만나보세요.', path: '/brands' };
+    if (pathname === '/discover') return { title: '디스커버', description: '새로운 네일 트렌드를 발견하세요.', path: '/discover' };
+    if (pathname === '/ranking') return { title: '랭킹', description: '인기 네일 상품 랭킹을 확인하세요.', path: '/ranking' };
+    if (pathname === '/event') return { title: '이벤트', description: '진행 중인 이벤트와 프로모션을 확인하세요.', path: '/event' };
+    if (pathname.startsWith('/brand/')) return { title: '브랜드 상세', path: pathname };
+    if (pathname.startsWith('/product/')) return { title: '상품 상세', path: pathname };
+    if (pathname === '/my/orders') return { title: '주문 내역', path: '/my/orders' };
+    if (pathname === '/my/points') return { title: '포인트', path: '/my/points' };
+    if (pathname === '/my/coupons') return { title: '쿠폰', path: '/my/coupons' };
+    return { path: pathname };
+  }, [pathname]);
+
   // Wrap with appropriate layout
   if (isSellerPage || isAdminPage || isChatPage || isCustomOrderPage) {
     // Seller, Admin, Chat pages have their own layouts
-    return <>{screen}</>;
+    return <>
+      <SEOHead {...seoProps} />
+      {screen}
+    </>;
   }
 
   // Main layout for all other pages
   return (
     <MainLayout pathname={pathname}>
+      <SEOHead {...seoProps} />
       {screen}
     </MainLayout>
   );
