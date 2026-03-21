@@ -63,12 +63,17 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [partnerLastReadAt, setPartnerLastReadAt] = useState<string | null>(null);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const chatSocket = useRef(getChatSocket());
   const imageUploadManager = useRef(webApiService.createImageUploadManager());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const useFallback = useRef(false);
   const currentUserId = useRef<string | null>(token ? getUserIdFromToken(token) : null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const actualRoomIdRef = useRef<string | null>(null);
 
   /**
    * 소켓 연결 및 방 입장
@@ -106,6 +111,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           const roomData = await ensureResponse.json();
           const mongoRoomId = roomData._id;
           setActualRoomId(mongoRoomId);
+          actualRoomIdRef.current = mongoRoomId;
           console.log('[useChat] Got room ID:', mongoRoomId);
 
           // 2. GET /messages - 메시지 히스토리 로드
@@ -148,6 +154,8 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
             });
 
             setMessages(sortedMessages);
+            // 50개가 로드됐다면 더 이전 메시지가 있을 수 있음
+            setHasMoreMessages(backendMessages.length >= 50);
           }
 
           // 3. Socket.IO 연결 및 방 입장 (실제 MongoDB roomId 사용)
@@ -286,12 +294,31 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
       setError(err.message);
     });
 
+    // 타이핑 인디케이터 구독 — 상대방의 타이핑 상태만 반영
+    const unsubscribeTyping = chatSocket.current.onTyping((data) => {
+      if (data.roomId === actualRoomId && data.userId !== currentUserId.current) {
+        setIsPartnerTyping(data.isTyping);
+        // 상대방이 타이핑 중이면 5초 후 자동 해제 (서버 이벤트 유실 방어)
+        if (data.isTyping) {
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setIsPartnerTyping(false), 5000);
+        } else {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+          }
+        }
+      }
+    });
+
     return () => {
       unsubscribeMessage();
       unsubscribeRead();
       unsubscribeConnect();
       unsubscribeDisconnect();
       unsubscribeError();
+      unsubscribeTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [actualRoomId]);
 
@@ -371,16 +398,18 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
                   id: sentMessage.id || msg.id, // 서버 ID로 업데이트
                   senderId: sentMessage.senderId,
                   read: false,
+                  failed: false,
                 }
               : msg
           ));
         } catch (sendError) {
-          // 4. 실패 시: 메시지를 에러 상태로 표시 (일단 그대로 유지, 향후 재전송 기능 추가 가능)
+          // 4. 실패 시: 메시지를 failed 상태로 표시하여 재전송 버튼 노출
           console.error('[useChat] Send message to server failed:', sendError);
-          setError('메시지 전송에 실패했습니다');
-
-          // 실패한 메시지는 UI에 남겨두되, 에러 표시 가능 (향후 구현)
-          // 현재는 그냥 로컬에 남아있는 상태로 유지
+          setMessages(prev => prev.map(msg =>
+            msg.clientMessageId === clientMessageId
+              ? { ...msg, failed: true }
+              : msg
+          ));
         }
       }
     } catch (err) {
@@ -462,6 +491,88 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
       setUploadProgress(0);
     }
   }, [actualRoomId]);
+
+  /**
+   * 실패한 메시지 재전송
+   */
+  const retryMessage = useCallback(async (clientMessageId: string) => {
+    const failedMsg = messages.find(m => m.clientMessageId === clientMessageId && m.failed);
+    if (!failedMsg || !failedMsg.text) return;
+
+    // failed 상태 해제 후 재전송
+    setMessages(prev => prev.map(msg =>
+      msg.clientMessageId === clientMessageId ? { ...msg, failed: false } : msg
+    ));
+
+    if (!actualRoomIdRef.current) return;
+    try {
+      const sentMessage = await chatSocket.current.sendMessage(actualRoomIdRef.current, failedMsg.text);
+      setMessages(prev => prev.map(msg =>
+        msg.clientMessageId === clientMessageId
+          ? { ...msg, id: sentMessage.id || msg.id, senderId: sentMessage.senderId, read: false, failed: false }
+          : msg
+      ));
+    } catch {
+      setMessages(prev => prev.map(msg =>
+        msg.clientMessageId === clientMessageId ? { ...msg, failed: true } : msg
+      ));
+    }
+  }, [messages]);
+
+  /**
+   * 이전 메시지 추가 로드 (페이지네이션)
+   */
+  const loadMoreMessages = useCallback(async () => {
+    if (!actualRoomIdRef.current || !token || isLoadingMore || !hasMoreMessages || useFallback.current) return;
+
+    const oldestMessage = messages[0];
+    if (!oldestMessage?.createdAt) return;
+
+    try {
+      setIsLoadingMore(true);
+      const before = encodeURIComponent(oldestMessage.createdAt);
+      const response = await fetch(
+        `${CHAT_API_URL}/messages?roomId=${actualRoomIdRef.current}&limit=50&before=${before}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (!response.ok) return;
+
+      const olderMessages = await response.json();
+      if (olderMessages.length === 0) {
+        setHasMoreMessages(false);
+        return;
+      }
+
+      const transformed: Message[] = olderMessages.map((msg: any) => ({
+        id: msg._id,
+        roomId: msg.roomId,
+        sender: msg.senderId === currentUserId.current ? 'me' : 'other',
+        senderId: msg.senderId,
+        text: msg.text,
+        timestamp: new Date(msg.createdAt).toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        createdAt: msg.createdAt,
+        read: msg.senderId === currentUserId.current ? false : true,
+        messageType: msg.messageType || 'text',
+        metadata: msg.metadata || undefined,
+        fileUrl: msg.fileUrl || undefined,
+      }));
+
+      const sorted = transformed.sort((a, b) =>
+        new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+      );
+
+      setMessages(prev => [...sorted, ...prev]);
+      setHasMoreMessages(olderMessages.length >= 50);
+    } catch (err) {
+      console.error('[useChat] loadMoreMessages error:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [token, isLoadingMore, hasMoreMessages, messages]);
 
   /**
    * 방 입장
@@ -555,5 +666,10 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
     markAsRead,
     isUploading,
     uploadProgress,
+    isPartnerTyping,
+    retryMessage,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
   };
 }
