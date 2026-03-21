@@ -257,33 +257,9 @@ npx tsc --noEmit --project packages/mobile
 
 ### 테스트 계정
 ```javascript
-// 일반 사용자 1
-const testUser1 = {
-  email: "user@test.com",
-  password: "password123"
-}
-
-// 일반 사용자 2
-const testUser2 = {
-  email: "testuser@example.com",
-  password: "testpass123"
-}
-
-// 관리자 (전체 시스템 관리)
-const adminUser = {
-  email: "admin@handy-server.com",
-  password: "admin123456"
-}
-
-// 판매자 (상품 등록/관리, 주문 처리)
-const sellerUser = {
-  email: "seller@handy-server.com",
-  password: "seller123456"
-}
-
-// 스테이지 환경 판매자 계정
-const stageSeller = {
-  email: "seller@stage.handy-server.com",
+// 프로덕션 일반 사용자
+const testUser = {
+  email: "usertest@handy.com",
   password: "password123"
 }
 ```
