@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { webApiService } from '../../services/apiService';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { webApiService, imageService } from '../../services/apiService';
 import { User } from '@handy-platform/shared';
 import { PageHeader } from '../layout/PageHeader';
+import { RefreshCw } from 'lucide-react';
 
 // 정보 입력 항목 컴포넌트
 const InfoItem = ({
@@ -405,6 +406,61 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   const [nicknameAvailable, setNicknameAvailable] = useState(false);
   const [nicknameCheckLoading, setNicknameCheckLoading] = useState(false);
   const [nicknameError, setNicknameError] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 이미지 타입 검증
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+    // 5MB 제한
+    if (file.size > 5 * 1024 * 1024) {
+      alert('이미지 크기는 5MB 이하만 가능합니다.');
+      return;
+    }
+
+    try {
+      setAvatarUploading(true);
+
+      // 1. presigned URL 발급
+      const presignedResponse = await imageService.getPresignedUrl({
+        filename: file.name,
+        contentType: file.type,
+        uploadType: 'avatar',
+      });
+
+      // 2. S3에 업로드
+      const uploadHeaders: Record<string, string> = { 'Content-Type': file.type };
+      if ((presignedResponse as any).uploadHeaders) {
+        Object.assign(uploadHeaders, (presignedResponse as any).uploadHeaders);
+      }
+      await fetch(presignedResponse.presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: uploadHeaders,
+      });
+
+      // 3. 프로필에 avatar URL 저장
+      const response = await webApiService.updateUserProfile({ avatar: presignedResponse.imageUrl } as Partial<User>);
+      if (response.user) {
+        setUserInfo(prev => ({ ...prev, avatar: response.user.avatar || presignedResponse.imageUrl }));
+      } else {
+        setUserInfo(prev => ({ ...prev, avatar: presignedResponse.imageUrl }));
+      }
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      alert('프로필 이미지 변경에 실패했습니다.');
+    } finally {
+      setAvatarUploading(false);
+      // input 초기화 (같은 파일 재선택 가능하도록)
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   // 페이지 로드 시 사용자 정보 불러오기
   useEffect(() => {
@@ -676,26 +732,47 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
       <div className="p-4">
         {/* 사용자 요약 정보 */}
-        {userInfo.avatar && (
-          <div className="bg-white rounded-lg border mb-4 p-4">
-            <div className="flex items-center gap-4">
-              <img
-                src={userInfo.avatar}
-                alt="프로필 이미지"
-                className="w-16 h-16 rounded-full border"
-              />
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold">{userInfo.name}</h2>
-                <div className="text-sm text-gray-600">
-                  {userInfo.membershipLevel} 등급 • 포인트: {userInfo.points.toLocaleString()}P
+        <div className="bg-white rounded-lg border mb-4 p-4">
+          <div className="flex items-center gap-4">
+            {/* 아바타 + 업로드 버튼 */}
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="relative shrink-0"
+            >
+              {userInfo.avatar ? (
+                <img src={userInfo.avatar} alt="프로필 이미지" className="w-16 h-16 rounded-full border object-cover" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-400">
+                  {(userInfo.nickname || userInfo.name || '?').charAt(0)}
                 </div>
-                <div className="text-xs text-gray-500">
-                  총 주문: {userInfo.totalOrders}회
-                </div>
+              )}
+              <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#E85A6B] flex items-center justify-center border-2 border-white">
+                {avatarUploading ? (
+                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3 h-3 text-white" />
+                )}
+              </div>
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold">{userInfo.name}</h2>
+              <div className="text-sm text-gray-600">
+                {userInfo.membershipLevel} 등급 • 포인트: {userInfo.points.toLocaleString()}P
+              </div>
+              <div className="text-xs text-gray-500">
+                총 주문: {userInfo.totalOrders}회
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="bg-white rounded-lg border">
           <div className="p-4 border-b flex justify-between items-center">

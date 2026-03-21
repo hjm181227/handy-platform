@@ -348,6 +348,7 @@ export function Router() {
         userUuid={decodeURIComponent(mUser[1])}
         onGo={nav}
         onOpen={openProduct}
+        initialView={(q.get('tab') as 'grid' | 'followers' | 'following') || 'grid'}
       />
     );
   }
