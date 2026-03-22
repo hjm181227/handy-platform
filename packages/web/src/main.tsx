@@ -10,7 +10,7 @@ import './index.css'
 
 // Sentry 에러 모니터링 초기화
 const sentryEnv = (import.meta as any).env?.VITE_ENVIRONMENT;
-if (sentryEnv === 'production' || sentryEnv === 'staging') {
+if (sentryEnv === 'production' || sentryEnv === 'staging' || sentryEnv === 'stage') {
   Sentry.init({
     dsn: (import.meta as any).env?.VITE_SENTRY_DSN,
     environment: sentryEnv,
