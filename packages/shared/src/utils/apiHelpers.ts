@@ -172,8 +172,8 @@ export function isRetryableError(error: unknown): boolean {
     // 5xx 서버 에러는 재시도
     if (error.status >= 500) return true;
     
-    // 408(timeout), 429(rate limit)는 재시도
-    if (error.status === 408 || error.status === 429) return true;
+    // 408(timeout)는 재시도, 429(rate limit)는 재시도하면 악화되므로 제외
+    if (error.status === 408) return true;
     
     // 4xx 클라이언트 에러는 재시도 안함
     if (error.status >= 400 && error.status < 500) return false;
