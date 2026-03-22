@@ -1,9 +1,26 @@
+import * as Sentry from '@sentry/react';
 import {
   createApiService,
   BaseIntegratedApiService,
+  BaseApiService,
   User,
   API_BASE_URL
 } from '@handy-platform/shared';
+
+// API 에러를 Sentry에 자동 보고 (5xx, 네트워크 에러, 타임아웃)
+BaseApiService.onApiError = (error, context) => {
+  // 401/403은 정상적인 인증 흐름이므로 제외
+  if (context.status && context.status < 500 && context.status !== 408) return;
+
+  Sentry.captureException(error, {
+    tags: {
+      component: 'ApiService',
+      apiMethod: context.method,
+      apiEndpoint: context.endpoint,
+      httpStatus: context.status ? String(context.status) : 'network_error',
+    },
+  });
+};
 
 // 웹 전용 토큰 관리
 class WebTokenManager {

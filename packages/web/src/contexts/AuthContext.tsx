@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   /**
    * localStorage에서 사용자 정보 로드 (토큰 유효성 확인 포함)
+   * 토큰은 있지만 user 데이터가 없으면 서버에서 프로필을 가져옴
    */
   const loadUserFromStorage = useCallback(async () => {
     try {
@@ -49,7 +50,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setCurrentUser(null);
         return;
       }
-      const user = await webApiService.getCurrentUser();
+
+      // localStorage에서 사용자 정보 로드
+      let user = await webApiService.getCurrentUser();
+
+      // 토큰은 있지만 user 데이터가 없으면 서버에서 프로필 가져오기
+      if (!user) {
+        console.log('[AuthContext] Token exists but no user data, fetching from server...');
+        try {
+          const response = await webApiService.auth.getUserProfile();
+          if (response.data?.user) {
+            user = response.data.user;
+            // localStorage에 user 데이터 저장
+            const token = await webApiService.auth.getAuthToken();
+            await webApiService.auth.setAuthToken(token || '', user);
+            console.log('[AuthContext] User data fetched and saved from server');
+          }
+        } catch (profileError) {
+          console.error('[AuthContext] Failed to fetch user profile from server:', profileError);
+        }
+      }
+
       setCurrentUser(user);
     } catch (error) {
       console.error('[AuthContext] Failed to load user from storage:', error);
