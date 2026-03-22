@@ -42,7 +42,7 @@ export function SortDropdown({
 /**
  * sortBy 값을 API 파라미터 (sortBy, sortOrder)로 변환
  */
-export function parseSortValue(sortBy: string): { sortBy: string; sortOrder: string } {
+export function parseSortValue(sortBy: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
   if (sortBy === 'price-asc') return { sortBy: 'price', sortOrder: 'asc' };
   if (sortBy === 'price-desc') return { sortBy: 'price', sortOrder: 'desc' };
   return { sortBy, sortOrder: 'desc' };

@@ -149,10 +149,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
       }
       setProductsLoading(false);
 
-      console.log('🔍 Search results - Brands:', brandResponse.brands?.length || 0, 'Products:', productResponse.data?.length || 0);
-
     } catch (error: any) {
-      console.error('🔍 Search failed:', error);
       setBrands([]);
       setProducts([]);
       setBrandsLoading(false);

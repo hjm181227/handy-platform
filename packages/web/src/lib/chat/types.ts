@@ -51,6 +51,8 @@ export interface QuoteMessageData {
 
 // 메시지 메타데이터 타입 (서버에서 전송되는 실제 형식)
 export interface MessageMetadata {
+  // 메시지 서브타입 (서버에서 전달)
+  type?: string;
   // 커스텀 주문 메시지용
   customOrderId?: string;
   // 견적서 메시지용
