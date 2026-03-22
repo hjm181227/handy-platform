@@ -472,8 +472,9 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         const response = await webApiService.getCurrentUserProfile();
         console.log('🔍 사용자 프로필 API 응답:', response);
 
-        if (response.user) {
-          const user = response.user;
+        const profileUser = response?.data?.user;
+        if (profileUser) {
+          const user = profileUser;
           setUserInfo({
             name: user.name || "",
             nickname: user.nickname || "",

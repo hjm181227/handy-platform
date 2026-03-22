@@ -226,16 +226,17 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     const loadData = async () => {
       try {
         const [profileRes, nailRes, couponRes, followCountsRes] = await Promise.all([
-          webApiService.getCurrentUserProfile(),
+          webApiService.getCurrentUserProfile().catch(() => ({ success: false, data: null })),
           webApiService.user.getNailSize().catch(() => ({ success: false, data: null })),
           webApiService.loyalty.getUserCoupons({ limit: 1 }).catch(() => ({ data: null })),
           webApiService.follow.getMyCounts().catch(() => ({ success: false, data: { followerCount: 0, followingCount: 0 } })),
         ]);
-        if (profileRes.user) {
-          setUser(profileRes.user);
+        const profileUser = profileRes?.data?.user;
+        if (profileUser) {
+          setUser(profileUser);
           // 스냅 수 조회 (userUuid 필요하므로 프로필 로드 후)
           try {
-            const snapRes = await webApiService.snap.getUserProfile(profileRes.user.userUuid, { page: 1, limit: 1 });
+            const snapRes = await webApiService.snap.getUserProfile(profileUser.userUuid, { page: 1, limit: 1 });
             if (snapRes.success && snapRes.data?.profile) {
               setSnapCount(snapRes.data.profile.snapsCount || 0);
             }

@@ -108,13 +108,14 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
       try {
         setLoading(true);
         const response = await webApiService.getCurrentUserProfile();
-        if (response.user) {
-          setUser(response.user);
+        const profileUser = response?.data?.user;
+        if (profileUser) {
+          setUser(profileUser);
           // 기본 정보 자동 입력
           setFormData(prev => ({
             ...prev,
-            representativeName: response.user.name || '',
-            contactPhone: response.user.phone || '',
+            representativeName: profileUser.name || '',
+            contactPhone: profileUser.phone || '',
           }));
         }
       } catch (error) {
