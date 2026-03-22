@@ -9,18 +9,20 @@ import App from './App'
 import './index.css'
 
 // Sentry 에러 모니터링 초기화
-Sentry.init({
-  dsn: (import.meta as any).env?.VITE_SENTRY_DSN,
-  environment: (import.meta as any).env?.VITE_ENVIRONMENT || 'development',
-  enabled: (import.meta as any).env?.VITE_ENVIRONMENT === 'production' || (import.meta as any).env?.VITE_ENVIRONMENT === 'staging',
-  tracesSampleRate: 0.1,
-  replaysOnErrorSampleRate: 0.5,
-  replaysSessionSampleRate: 0,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
-  ],
-})
+const sentryEnv = (import.meta as any).env?.VITE_ENVIRONMENT;
+if (sentryEnv === 'production' || sentryEnv === 'staging') {
+  Sentry.init({
+    dsn: (import.meta as any).env?.VITE_SENTRY_DSN,
+    environment: sentryEnv,
+    tracesSampleRate: 0.1,
+    replaysOnErrorSampleRate: 0.5,
+    replaysSessionSampleRate: 0,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
+    ],
+  });
+}
 
 // 카카오 SDK 디버깅 헬퍼
 (window as any).debugKakao = () => {
