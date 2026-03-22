@@ -1,9 +1,9 @@
-import { webTokenManager } from './api';
+import { webApiService } from './apiService';
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await webTokenManager.getValidToken();
+  const token = await webApiService.auth.getAuthToken();
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {})
