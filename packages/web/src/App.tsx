@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -9,37 +10,41 @@ import { ToastNotification } from './components/common/ToastNotification';
 import { AuthModal } from './components/auth/AuthModal';
 import { Router } from './Router';
 
-/**
- * 메인 앱 컴포넌트
- *
- * 구조:
- * - AuthProvider: 인증 상태 관리
- * - ToastProvider: 토스트 알림 관리
- * - AuthModalProvider: 로그인 모달 관리 (Cart/Likes에서 사용하므로 상위에 배치)
- * - CartProvider: 장바구니 상태 관리
- * - LikesProvider: 좋아요 상태 관리
- * - AlertProvider: 알림 다이얼로그 관리
- * - Router: 라우팅 및 화면 렌더링
- * - ToastNotification: 전역 토스트 UI
- */
+function ErrorFallback() {
+  return (
+    <div style={{ padding: 20, textAlign: 'center', marginTop: '20vh' }}>
+      <h2>문제가 발생했습니다</h2>
+      <p style={{ color: '#666', margin: '12px 0' }}>잠시 후 다시 시도해주세요.</p>
+      <button
+        onClick={() => window.location.reload()}
+        style={{ padding: '8px 24px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer' }}
+      >
+        새로고침
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   return (
-    <HelmetProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <AuthModalProvider>
-            <CartProvider>
-              <LikesProvider>
-                <AlertProvider>
-                  <Router />
-                  <ToastNotification />
-                  <AuthModal />
-                </AlertProvider>
-              </LikesProvider>
-            </CartProvider>
-          </AuthModalProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </HelmetProvider>
+    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+      <HelmetProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <AuthModalProvider>
+              <CartProvider>
+                <LikesProvider>
+                  <AlertProvider>
+                    <Router />
+                    <ToastNotification />
+                    <AuthModal />
+                  </AlertProvider>
+                </LikesProvider>
+              </CartProvider>
+            </AuthModalProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </HelmetProvider>
+    </Sentry.ErrorBoundary>
   );
 }
