@@ -39,10 +39,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authLoading, setAuthLoading] = useState<boolean>(true);
 
   /**
-   * localStorage에서 사용자 정보 로드
+   * localStorage에서 사용자 정보 로드 (토큰 유효성 확인 포함)
    */
   const loadUserFromStorage = useCallback(async () => {
     try {
+      // 토큰이 유효한 경우에만 사용자 정보 로드
+      const isAuth = await webApiService.isAuthenticated();
+      if (!isAuth) {
+        setCurrentUser(null);
+        return;
+      }
       const user = await webApiService.getCurrentUser();
       setCurrentUser(user);
     } catch (error) {
@@ -61,8 +67,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await webApiService.auth.getUserProfile();
       if (response.data?.user) {
         // localStorage 업데이트
+        const currentToken = await webApiService.auth.getAuthToken();
         await webApiService.auth.setAuthToken(
-          webApiService.auth.getAuthToken() || '',
+          currentToken || '',
           response.data.user
         );
         setCurrentUser(response.data.user);
