@@ -63,14 +63,32 @@ class WebApiService {
     const baseURL = (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL;
     console.log('🔧 Web API Service Base URL:', baseURL);
 
-    // 토큰 만료 시 자동 처리 콜백 (중복 호출 방지)
+    // 토큰 만료 시 자동 처리 콜백 (중복 호출 방지 + 토큰 재검증)
     let isHandlingTokenExpiry = false;
-    const handleTokenExpired = () => {
+    const handleTokenExpired = async () => {
       // 이미 처리 중이면 무시 (병렬 요청에서 중복 호출 방지)
       if (isHandlingTokenExpiry) return;
       isHandlingTokenExpiry = true;
 
-      console.warn('🔴 [WebApiService] Token expired, clearing auth data and redirecting to login');
+      // 토큰이 정말로 만료되었는지 서버에 직접 확인
+      const token = WebTokenManager.getToken();
+      if (token) {
+        try {
+          const verifyResponse = await fetch(`${baseURL}/api/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (verifyResponse.ok) {
+            // 토큰이 아직 유효함 - 일시적 오류였으므로 무시
+            console.log('🟡 [WebApiService] Token still valid, ignoring 401 from individual request');
+            isHandlingTokenExpiry = false;
+            return;
+          }
+        } catch {
+          // 검증 요청 실패 - 토큰 만료로 처리
+        }
+      }
+
+      console.warn('🔴 [WebApiService] Token confirmed expired, clearing auth data and redirecting to login');
 
       // 로컬 데이터 정리
       WebTokenManager.clearToken();

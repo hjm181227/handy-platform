@@ -151,7 +151,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const handleAuthStateChanged = async () => {
       console.log('[AuthContext] Auth state changed event received');
+      setAuthLoading(true);
       await loadUserFromStorage();
+      setAuthLoading(false);
     };
 
     window.addEventListener('authStateChanged', handleAuthStateChanged);

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMiniRouter } from '../../utils';
 import { useAlert } from '../common';
@@ -32,14 +32,27 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
   children,
   fallbackPath = '/login',
 }) => {
-  const { currentUser, authLoading } = useAuth();
+  const { currentUser, authLoading, refreshUser } = useAuth();
   const { nav } = useMiniRouter();
   const { alert } = useAlert();
   const hasShownAlert = useRef(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
-    // 인증 확인이 완료되고 사용자가 없으면 알림 후 리다이렉트
-    if (!authLoading && !currentUser && !hasShownAlert.current) {
+    // 인증 확인이 완료되고 사용자가 없으면
+    if (!authLoading && !currentUser && !hasShownAlert.current && !retrying) {
+      // localStorage에 토큰이 있는지 직접 확인 (AuthContext 동기화 지연 방어)
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        console.log('[RequireAuth] AuthContext has no user but token exists in localStorage, retrying...');
+        setRetrying(true);
+        // AuthContext에 사용자 정보 재로드 요청
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
+        // 잠시 후 다시 확인
+        setTimeout(() => setRetrying(false), 1000);
+        return;
+      }
+
       hasShownAlert.current = true;
       console.warn('[RequireAuth] User not authenticated, redirecting to:', fallbackPath);
 
@@ -48,10 +61,10 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
         nav(fallbackPath);
       });
     }
-  }, [authLoading, currentUser, fallbackPath, nav, alert]);
+  }, [authLoading, currentUser, fallbackPath, nav, alert, retrying]);
 
-  // 인증 확인 중
-  if (authLoading) {
+  // 인증 확인 중 또는 재시도 중
+  if (authLoading || retrying) {
     return <LoadingScreen />;
   }
 
