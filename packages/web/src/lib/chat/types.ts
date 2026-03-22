@@ -51,6 +51,8 @@ export interface QuoteMessageData {
 
 // 메시지 메타데이터 타입 (서버에서 전송되는 실제 형식)
 export interface MessageMetadata {
+  // 메시지 서브타입 (서버에서 전달)
+  type?: string;
   // 커스텀 주문 메시지용
   customOrderId?: string;
   // 견적서 메시지용
@@ -73,6 +75,7 @@ export interface Message {
   messageType?: MessageType;  // 메시지 타입 (기본: text)
   metadata?: MessageMetadata; // 추가 메타데이터
   fileUrl?: string; // 이미지 메시지용 URL
+  failed?: boolean; // 전송 실패 상태
 }
 
 export interface ChatRoom {
@@ -125,6 +128,7 @@ export interface UseChatReturn {
   sendMessage: (text: string) => Promise<void>;
   sendImage: (file: File) => Promise<void>;
   setInputText: (text: string) => void;
+  retryMessage: (clientMessageId: string) => Promise<void>;
 
   // Image upload state
   isUploading: boolean;
@@ -133,6 +137,14 @@ export interface UseChatReturn {
   // Room operations
   joinRoom: (roomId: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
+
+  // Pagination
+  loadMoreMessages: () => Promise<void>;
+  hasMoreMessages: boolean;
+  isLoadingMore: boolean;
+
+  // Typing indicator
+  isPartnerTyping: boolean;
 
   // Utilities
   scrollToLatest: () => void;

@@ -1,3 +1,4 @@
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { CartProvider } from './contexts/CartContext';
@@ -23,20 +24,22 @@ import { Router } from './Router';
  */
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <AuthModalProvider>
-          <CartProvider>
-            <LikesProvider>
-              <AlertProvider>
-                <Router />
-                <ToastNotification />
-                <AuthModal />
-              </AlertProvider>
-            </LikesProvider>
-          </CartProvider>
-        </AuthModalProvider>
-      </ToastProvider>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <AuthModalProvider>
+            <CartProvider>
+              <LikesProvider>
+                <AlertProvider>
+                  <Router />
+                  <ToastNotification />
+                  <AuthModal />
+                </AlertProvider>
+              </LikesProvider>
+            </CartProvider>
+          </AuthModalProvider>
+        </ToastProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }

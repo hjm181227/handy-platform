@@ -12,6 +12,7 @@ import { CartDrawer } from '../components/layout/Drawers';
 import { MobileBottomNav } from '../components/layout/MobileBottomNav';
 import { CategoryModal } from '../components/common/CategoryModal';
 import { ToastNotification } from '../components/common/ToastNotification';
+import { useUnreadNotificationCount } from '../components/common/NotificationBell';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -49,6 +50,9 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
     closeCategoryModal,
   } = useCart();
 
+  // 알림 미읽음 수
+  const { count: notificationCount } = useUnreadNotificationCount();
+
   // 페이지 타입 판단
   const isHomePage = pathname === '/';
   const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
@@ -70,6 +74,7 @@ export function MainLayout({ children, pathname, hideHeader = false, hideFooter 
         title: 'SNAP',
         showChat: true,
         showNotification: true,
+        notificationCount,
         showSearch: true,
         searchPlaceholder: '스냅 검색',
         cartCount,

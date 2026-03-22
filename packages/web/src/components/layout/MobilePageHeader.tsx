@@ -24,6 +24,7 @@ interface MobilePageHeaderProps {
 
   // 데이터
   cartCount?: number;
+  notificationCount?: number;
 
   // 콜백
   onBack?: () => void;
@@ -51,6 +52,7 @@ export function MobilePageHeader({
   showNotification,
   showChat,
   cartCount = 0,
+  notificationCount = 0,
   onBack,
   onHome,
   onSearch,
@@ -240,11 +242,18 @@ export function MobilePageHeader({
               />
             )}
             {showNotification && (
-              <IconButton
-                icon={Bell}
-                onClick={onNotification}
-                ariaLabel="알림"
-              />
+              <div className="relative">
+                <IconButton
+                  icon={Bell}
+                  onClick={onNotification}
+                  ariaLabel="알림"
+                />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 pointer-events-none">
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </span>
+                )}
+              </div>
             )}
             {showSearch && (
               <IconButton

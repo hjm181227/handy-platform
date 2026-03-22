@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { webApiService, brandService } from '../../services/apiService';
 import { TitleBar, ProductGrid } from '../product/ProductGrid';
+import { SortDropdown, parseSortValue, PRODUCT_SORT_OPTIONS } from '../common/SortDropdown';
 import { Stars } from '../ui';
 import type { Product, Brand } from '@handy-platform/shared';
 
@@ -20,6 +21,9 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
   // 브랜드 검색 상태
   const [brands, setBrands] = useState<Brand[]>([]);
   const [brandsLoading, setBrandsLoading] = useState(false);
+
+  // 정렬 상태
+  const [sortBy, setSortBy] = useState('trending');
 
   // 공통 상태
   const [error, setError] = useState<string | null>(null);
@@ -108,18 +112,19 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
 
       // 상품 검색
       setProductsLoading(true);
+      const sortParams = parseSortValue(sortBy);
       const productPromise = query.trim()
         ? webApiService.product.searchProducts(query, {
             page: '1',
             limit: '20',
-            sortBy: 'createdAt',
-            sortOrder: 'desc'
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder
           })
         : webApiService.product.getProducts({
             page: '1',
             limit: '20',
-            sortBy: 'createdAt',
-            sortOrder: 'desc'
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder
           });
       searchPromises.push(productPromise);
 
@@ -144,10 +149,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
       }
       setProductsLoading(false);
 
-      console.log('🔍 Search results - Brands:', brandResponse.brands?.length || 0, 'Products:', productResponse.data?.length || 0);
-
     } catch (error: any) {
-      console.error('🔍 Search failed:', error);
       setBrands([]);
       setProducts([]);
       setBrandsLoading(false);
@@ -166,10 +168,10 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
     }
   };
 
-  // 검색어가 변경될 때마다 검색 실행
+  // 검색어 또는 정렬이 변경될 때마다 검색 실행
   useEffect(() => {
     performSearch(searchQuery);
-  }, [searchQuery]);
+  }, [searchQuery, sortBy]);
 
   // 재시도 핸들러
   const handleRetry = () => {
@@ -294,7 +296,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
       {/* 검색 결과 요약 */}
       <div className="mx-auto max-w-7xl px-4 py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm flex-1">
             {searchQuery && (
               <span className="text-gray-600">
                 검색어: <span className="font-semibold text-gray-900">'{searchQuery}'</span>
@@ -314,6 +316,8 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               </span>
             )}
           </div>
+
+          <SortDropdown value={sortBy} onChange={setSortBy} />
 
           {searchQuery && totalCount > 0 && (
             <button

@@ -10,26 +10,6 @@ import { webApiService } from '../../services/api';
 import { createImagePreview, revokeImagePreview } from '@handy-platform/shared/src/utils/imageUpload';
 import type { Message, UseChatReturn, ChatRoom } from './types';
 
-// Dummy data as fallback (일반 텍스트 메시지만 - 커스텀 주문서는 API 연동)
-const DUMMY_MESSAGES: Record<string, Message[]> = {
-  '1': [
-    { id: '1', roomId: '1', sender: 'other', senderId: 'user1', text: '안녕하세요!', timestamp: '오전 10:30', createdAt: '2025-11-25T01:30:00Z', read: true },
-    { id: '2', roomId: '1', sender: 'me', senderId: 'me', text: '네, 안녕하세요!', timestamp: '오전 10:31', createdAt: '2025-11-25T01:31:00Z', read: true },
-    { id: '3', roomId: '1', sender: 'other', senderId: 'user1', text: '오늘 날씨가 좋네요', timestamp: '오전 10:32', createdAt: '2025-11-25T01:32:00Z', read: true },
-    { id: '4', roomId: '1', sender: 'me', senderId: 'me', text: '그러게요. 산책하기 좋은 날씨에요', timestamp: '오전 10:33', createdAt: '2025-11-25T01:33:00Z', read: false },
-  ],
-  '2': [
-    { id: '5', roomId: '2', sender: 'other', senderId: 'user2', text: '회의 자료 받으셨나요?', timestamp: '오후 2:15', createdAt: '2025-11-25T05:15:00Z', read: true },
-    { id: '6', roomId: '2', sender: 'me', senderId: 'me', text: '네, 확인했습니다', timestamp: '오후 2:16', createdAt: '2025-11-25T05:16:00Z', read: true },
-  ],
-};
-
-const CHAT_ROOM_INFO: Record<string, ChatRoom> = {
-  '1': { id: '1', name: '김철수', avatar: '' },
-  '2': { id: '2', name: '이영희', avatar: '' },
-  '3': { id: '3', name: '박민수', avatar: '' },
-};
-
 // 백엔드 채팅 서버 URL
 const CHAT_API_URL = config.chatApiUrl;
 
@@ -63,12 +43,17 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [partnerLastReadAt, setPartnerLastReadAt] = useState<string | null>(null);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const chatSocket = useRef(getChatSocket());
   const imageUploadManager = useRef(webApiService.createImageUploadManager());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const useFallback = useRef(false);
   const currentUserId = useRef<string | null>(token ? getUserIdFromToken(token) : null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const actualRoomIdRef = useRef<string | null>(null);
 
   /**
    * 소켓 연결 및 방 입장
@@ -86,7 +71,6 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
         // 백엔드 API 연동 시도
         try {
           // 1. POST /rooms/ensure - 채팅방 생성/조회
-          console.log('[useChat] Ensuring chat room with:', roomId);
           const ensureResponse = await fetch(`${CHAT_API_URL}/rooms/ensure`, {
             method: 'POST',
             headers: {
@@ -106,10 +90,9 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           const roomData = await ensureResponse.json();
           const mongoRoomId = roomData._id;
           setActualRoomId(mongoRoomId);
-          console.log('[useChat] Got room ID:', mongoRoomId);
+          actualRoomIdRef.current = mongoRoomId;
 
           // 2. GET /messages - 메시지 히스토리 로드
-          console.log('[useChat] Loading message history...');
           const messagesResponse = await fetch(
             `${CHAT_API_URL}/messages?roomId=${mongoRoomId}&limit=50`,
             {
@@ -119,7 +102,6 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
 
           if (messagesResponse.ok) {
             const backendMessages = await messagesResponse.json();
-            console.log('[useChat] Loaded messages:', backendMessages.length);
 
             // 백엔드 메시지 형식을 프론트엔드 형식으로 변환
             const transformedMessages: Message[] = backendMessages.map((msg: any) => ({
@@ -148,19 +130,15 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
             });
 
             setMessages(sortedMessages);
+            // 50개가 로드됐다면 더 이전 메시지가 있을 수 있음
+            setHasMoreMessages(backendMessages.length >= 50);
           }
 
           // 3. Socket.IO 연결 및 방 입장 (실제 MongoDB roomId 사용)
-          console.log('[useChat] Connecting to Socket.IO...');
           await chatSocket.current.connect({ token });
-
-          // connect() Promise가 resolve되면 연결 성공으로 간주
-          console.log('[useChat] Socket.IO connected successfully (via Promise resolve)');
           setIsConnected(true);
 
-          console.log('[useChat] Joining room:', mongoRoomId);
           await chatSocket.current.joinRoom(mongoRoomId);
-          console.log('[useChat] Successfully joined room:', mongoRoomId);
 
           // 4. 읽음 표시 — REST API로 마크 + 파트너 읽음 시간 조회
           try {
@@ -184,31 +162,20 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           useFallback.current = false;
 
         } catch (connectError) {
-          console.warn('[useChat] Backend connection failed, using fallback data:', connectError);
+          console.warn('[useChat] Backend connection failed:', connectError);
           useFallback.current = true;
           setIsConnected(false);
-
-          // Fallback 더미 데이터 사용 (시간순 정렬)
-          const dummyMessages = DUMMY_MESSAGES[roomId] || [];
-          const sortedDummy = [...dummyMessages].sort((a, b) =>
-            new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
-          );
-          setMessages(sortedDummy);
-          setCurrentRoom(CHAT_ROOM_INFO[roomId] || { id: roomId, name: partnerUsername || roomId, avatar: '' });
+          setError('채팅 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          setMessages([]);
+          setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
         }
 
       } catch (err) {
         console.error('[useChat] Initialization error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize chat');
-
-        // 에러 시에도 더미 데이터로 폴백 (시간순 정렬)
+        setError(err instanceof Error ? err.message : '채팅을 초기화하는데 실패했습니다');
         useFallback.current = true;
-        const dummyMessages = DUMMY_MESSAGES[roomId] || [];
-        const sortedDummy = [...dummyMessages].sort((a, b) =>
-          new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
-        );
-        setMessages(sortedDummy);
-        setCurrentRoom(CHAT_ROOM_INFO[roomId] || { id: roomId, name: partnerUsername || roomId, avatar: '' });
+        setMessages([]);
+        setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
       } finally {
         setIsLoading(false);
       }
@@ -216,10 +183,10 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
 
     initializeChat();
 
-    // Cleanup: 방 퇴장
+    // Cleanup: 방 퇴장 (ref 사용으로 stale closure 방지)
     return () => {
-      if (chatSocket.current.isConnected() && actualRoomId) {
-        chatSocket.current.leaveRoom(actualRoomId);
+      if (chatSocket.current.isConnected() && actualRoomIdRef.current) {
+        chatSocket.current.leaveRoom(actualRoomIdRef.current);
       }
     };
   }, [roomId, token, partnerUsername]);
@@ -286,12 +253,31 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
       setError(err.message);
     });
 
+    // 타이핑 인디케이터 구독 — 상대방의 타이핑 상태만 반영
+    const unsubscribeTyping = chatSocket.current.onTyping((data) => {
+      if (data.roomId === actualRoomId && data.userId !== currentUserId.current) {
+        setIsPartnerTyping(data.isTyping);
+        // 상대방이 타이핑 중이면 5초 후 자동 해제 (서버 이벤트 유실 방어)
+        if (data.isTyping) {
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setIsPartnerTyping(false), 5000);
+        } else {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+          }
+        }
+      }
+    });
+
     return () => {
       unsubscribeMessage();
       unsubscribeRead();
       unsubscribeConnect();
       unsubscribeDisconnect();
       unsubscribeError();
+      unsubscribeTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [actualRoomId]);
 
@@ -371,16 +357,18 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
                   id: sentMessage.id || msg.id, // 서버 ID로 업데이트
                   senderId: sentMessage.senderId,
                   read: false,
+                  failed: false,
                 }
               : msg
           ));
         } catch (sendError) {
-          // 4. 실패 시: 메시지를 에러 상태로 표시 (일단 그대로 유지, 향후 재전송 기능 추가 가능)
+          // 4. 실패 시: 메시지를 failed 상태로 표시하여 재전송 버튼 노출
           console.error('[useChat] Send message to server failed:', sendError);
-          setError('메시지 전송에 실패했습니다');
-
-          // 실패한 메시지는 UI에 남겨두되, 에러 표시 가능 (향후 구현)
-          // 현재는 그냥 로컬에 남아있는 상태로 유지
+          setMessages(prev => prev.map(msg =>
+            msg.clientMessageId === clientMessageId
+              ? { ...msg, failed: true }
+              : msg
+          ));
         }
       }
     } catch (err) {
@@ -464,13 +452,94 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   }, [actualRoomId]);
 
   /**
+   * 실패한 메시지 재전송
+   */
+  const retryMessage = useCallback(async (clientMessageId: string) => {
+    const failedMsg = messages.find(m => m.clientMessageId === clientMessageId && m.failed);
+    if (!failedMsg || !failedMsg.text) return;
+
+    // failed 상태 해제 후 재전송
+    setMessages(prev => prev.map(msg =>
+      msg.clientMessageId === clientMessageId ? { ...msg, failed: false } : msg
+    ));
+
+    if (!actualRoomIdRef.current) return;
+    try {
+      const sentMessage = await chatSocket.current.sendMessage(actualRoomIdRef.current, failedMsg.text);
+      setMessages(prev => prev.map(msg =>
+        msg.clientMessageId === clientMessageId
+          ? { ...msg, id: sentMessage.id || msg.id, senderId: sentMessage.senderId, read: false, failed: false }
+          : msg
+      ));
+    } catch {
+      setMessages(prev => prev.map(msg =>
+        msg.clientMessageId === clientMessageId ? { ...msg, failed: true } : msg
+      ));
+    }
+  }, [messages]);
+
+  /**
+   * 이전 메시지 추가 로드 (페이지네이션)
+   */
+  const loadMoreMessages = useCallback(async () => {
+    if (!actualRoomIdRef.current || !token || isLoadingMore || !hasMoreMessages || useFallback.current) return;
+
+    const oldestMessage = messages[0];
+    if (!oldestMessage?.createdAt) return;
+
+    try {
+      setIsLoadingMore(true);
+      const before = encodeURIComponent(oldestMessage.createdAt);
+      const response = await fetch(
+        `${CHAT_API_URL}/messages?roomId=${actualRoomIdRef.current}&limit=50&before=${before}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (!response.ok) return;
+
+      const olderMessages = await response.json();
+      if (olderMessages.length === 0) {
+        setHasMoreMessages(false);
+        return;
+      }
+
+      const transformed: Message[] = olderMessages.map((msg: any) => ({
+        id: msg._id,
+        roomId: msg.roomId,
+        sender: msg.senderId === currentUserId.current ? 'me' : 'other',
+        senderId: msg.senderId,
+        text: msg.text,
+        timestamp: new Date(msg.createdAt).toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        createdAt: msg.createdAt,
+        read: msg.senderId === currentUserId.current ? false : true,
+        messageType: msg.messageType || 'text',
+        metadata: msg.metadata || undefined,
+        fileUrl: msg.fileUrl || undefined,
+      }));
+
+      const sorted = transformed.sort((a, b) =>
+        new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+      );
+
+      setMessages(prev => [...sorted, ...prev]);
+      setHasMoreMessages(olderMessages.length >= 50);
+    } catch (err) {
+      console.error('[useChat] loadMoreMessages error:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [token, isLoadingMore, hasMoreMessages, messages]);
+
+  /**
    * 방 입장
    */
   const joinRoom = useCallback(async (newRoomId: string) => {
     if (useFallback.current) {
-      // Fallback 모드에서는 더미 데이터만 로드
-      setMessages(DUMMY_MESSAGES[newRoomId] || []);
-      setCurrentRoom(CHAT_ROOM_INFO[newRoomId] || null);
+      setMessages([]);
+      setCurrentRoom(null);
       return;
     }
 
@@ -482,7 +551,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
 
       // 새 방 입장
       await chatSocket.current.joinRoom(newRoomId);
-      setCurrentRoom(CHAT_ROOM_INFO[newRoomId] || null);
+      setCurrentRoom({ id: newRoomId, name: newRoomId, avatar: '' });
 
     } catch (err) {
       console.error('[useChat] Join room error:', err);
@@ -555,5 +624,10 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
     markAsRead,
     isUploading,
     uploadProgress,
+    isPartnerTyping,
+    retryMessage,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
   };
 }

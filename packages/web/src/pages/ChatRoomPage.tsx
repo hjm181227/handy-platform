@@ -96,10 +96,16 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     clearError,
     isUploading,
     uploadProgress,
+    isPartnerTyping,
+    retryMessage,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
   } = useChat(roomId, token, partnerUsernameFromUrl);
 
   // 자동 스크롤을 위한 ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // 주문서 바텀 시트 상태
   const [showOrderSheet, setShowOrderSheet] = useState(false);
@@ -176,6 +182,21 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // 스크롤 위로 올렸을 때 이전 메시지 로드
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (container.scrollTop < 60 && hasMoreMessages && !isLoadingMore) {
+        loadMoreMessages();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
 
   const handleSend = () => {
     if (selectedImage) {
@@ -302,8 +323,14 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 py-4">
+          {/* 이전 메시지 로딩 스피너 */}
+          {isLoadingMore && (
+            <div className="flex justify-center py-3">
+              <div className="w-5 h-5 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
           {messages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-[#A39E99]">아직 메시지가 없습니다.</p>
@@ -364,14 +391,24 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                     )}
 
                     {/* 메시지 버블 + 타임스탬프 */}
+                    <div className="flex flex-col items-end gap-1">
+                      {/* 전송 실패 재전송 버튼 */}
+                      {isMe && message.failed && message.clientMessageId && (
+                        <button
+                          onClick={() => retryMessage(message.clientMessageId!)}
+                          className="text-[11px] text-[#E85A6B] font-semibold self-end"
+                        >
+                          재전송
+                        </button>
+                      )}
                     <div className="flex items-end gap-1.5">
                       {/* 내 메시지: 읽음 표시 + 타임스탬프 (왼쪽) */}
                       {isMe && isGroupEnd && (
                         <div className="flex flex-col items-end gap-1 text-[11px]">
-                          {!message.read && (
+                          {!message.read && !message.failed && (
                             <span className="text-[#E85A6B] font-semibold">1</span>
                           )}
-                          <span className="text-[#A39E99]">{message.timestamp}</span>
+                          <span className={`${message.failed ? 'text-[#E85A6B]' : 'text-[#A39E99]'}`}>{message.timestamp}</span>
                         </div>
                       )}
 
@@ -421,6 +458,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         </span>
                       )}
                     </div>
+                    </div>
                   </div>
                   </div>
                 </React.Fragment>
@@ -428,17 +466,15 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             })
           )}
 
-          {/* 타이핑 인디케이터 (향후 구현 예정) */}
-          {false && ( // 일단 비활성화
-            <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
-                {roomName.charAt(0)}
-              </div>
-              <span className="italic">{roomName}님이 입력 중</span>
-              <div className="flex gap-1">
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></span>
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+          {/* 타이핑 인디케이터 */}
+          {isPartnerTyping && (
+            <div className="flex items-center gap-2 mt-4 ml-10">
+              <div className="bg-white rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-3.5 py-2.5">
+                <div className="flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 bg-[#A39E99] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></span>
+                  <span className="w-1.5 h-1.5 bg-[#A39E99] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                  <span className="w-1.5 h-1.5 bg-[#A39E99] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                </div>
               </div>
             </div>
           )}

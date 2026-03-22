@@ -3,6 +3,7 @@ import { ProductCard } from '../product/ProductCard';
 import { productService, brandService, imageService } from '../../services/apiService';
 import type { Product, ProductsResponse, BrandDetail, ProductType } from '@handy-platform/shared';
 import { useAuth } from '../../hooks/useAuth';
+import { SortDropdown, PRODUCT_SORT_OPTIONS, parseSortValue } from '../common/SortDropdown';
 
 // 브랜드별 이미지 매핑 및 테마 설정
 interface BrandTheme {
@@ -80,7 +81,7 @@ export function BrandDetailPage({
   isBrandLiked?: boolean;
 }) {
   // 정렬 및 필터 상태
-  const [sortBy, setSortBy] = useState<'popular' | 'price' | 'latest'>('popular');
+  const [sortBy, setSortBy] = useState('trending');
   const [priceFilter, setPriceFilter] = useState<{ min: number; max: number } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [productTypeFilter, setProductTypeFilter] = useState<ProductType | null>(null);
@@ -344,10 +345,8 @@ export function BrandDetailPage({
         }),
         ...(categoryFilter && { search: categoryFilter }),
         ...(productTypeFilter && { productType: productTypeFilter }),
-        sortBy: sortBy === 'popular' ? 'trending' as const :
-               sortBy === 'price' ? 'price' as const :
-               sortBy === 'latest' ? 'createdAt' as const : 'trending' as const,
-        sortOrder: sortBy === 'price' ? 'asc' as const : 'desc' as const
+        sortBy: parseSortValue(sortBy).sortBy as any,
+        sortOrder: parseSortValue(sortBy).sortOrder as any
       };
 
       const response: ProductsResponse = await productService.getProducts(filters);
@@ -794,39 +793,8 @@ export function BrandDetailPage({
               )}
             </button>
 
-            {/* 정렬 버튼들 */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSortBy('popular')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === 'popular'
-                    ? 'bg-[#E85A6B] text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-              >
-                인기순
-              </button>
-              <button
-                onClick={() => setSortBy('price')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === 'price'
-                    ? 'bg-[#E85A6B] text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-              >
-                가격순
-              </button>
-              <button
-                onClick={() => setSortBy('latest')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === 'latest'
-                    ? 'bg-[#E85A6B] text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-              >
-                최신순
-              </button>
-            </div>
+            {/* 정렬 드롭다운 */}
+            <SortDropdown value={sortBy} onChange={setSortBy} />
           </div>
         </div>
 
