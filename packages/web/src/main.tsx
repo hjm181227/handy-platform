@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BaseApiService } from '@handy-platform/shared'
 import '@fontsource/pretendard/400.css'
 import '@fontsource/pretendard/500.css'
 import '@fontsource/pretendard/600.css'
@@ -22,7 +23,30 @@ if (sentryEnv === 'production' || sentryEnv === 'staging' || sentryEnv === 'stag
       Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
     ],
   });
+
+  // API 에러를 Sentry에 전송
+  BaseApiService.onApiError = (error, context) => {
+    Sentry.captureException(error, {
+      tags: {
+        api_method: context.method,
+        api_endpoint: context.endpoint,
+        api_status: context.status?.toString(),
+      },
+      extra: {
+        endpoint: context.endpoint,
+        method: context.method,
+        status: context.status,
+      },
+    });
+  };
 }
+
+// unhandled promise rejection 캡처 (try/catch 밖에서 발생하는 에러)
+window.addEventListener('unhandledrejection', (event) => {
+  Sentry.captureException(event.reason, {
+    tags: { type: 'unhandled_promise_rejection' },
+  });
+});
 
 // 카카오 SDK 디버깅 헬퍼
 (window as any).debugKakao = () => {

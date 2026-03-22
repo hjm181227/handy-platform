@@ -16,6 +16,9 @@ export abstract class BaseApiService {
   protected getAuthHeaders: () => Promise<Record<string, string>>;
   protected onTokenExpired?: () => void;
 
+  /** 전역 API 에러 콜백 (Sentry 등 에러 모니터링 연동용) */
+  static onApiError?: (error: unknown, context: { method: string; endpoint: string; status?: number }) => void;
+
   constructor(
     baseURL: string,
     getAuthHeaders: () => Promise<Record<string, string>>,
@@ -74,6 +77,12 @@ export abstract class BaseApiService {
         // Log error
         console.error(`🔴 API Error [${method} ${endpoint}]:`, error);
 
+        // 에러 모니터링 콜백 호출 (Sentry 등)
+        if (BaseApiService.onApiError) {
+          const status = error instanceof ApiError ? error.status : undefined;
+          BaseApiService.onApiError(error, { method, endpoint, status });
+        }
+
         if (error instanceof Error && error.name === 'AbortError') {
           throw new ApiError('Request timeout', 408, 'TIMEOUT');
         }
@@ -95,6 +104,15 @@ export abstract class BaseApiService {
     if (!response.ok) {
       const errorData = await safeJsonParse(response);
       const apiError = parseApiError(response, errorData);
+
+      // 5xx 서버 에러 또는 네트워크 에러는 모니터링에 보고
+      if (BaseApiService.onApiError && response.status >= 500) {
+        BaseApiService.onApiError(apiError, {
+          method: 'RESPONSE',
+          endpoint: response.url,
+          status: response.status,
+        });
+      }
 
       // 로그인/회원가입 등 공개 API에서는 토큰 만료 처리를 스킵
       if (!skipTokenExpiredHandler && isTokenExpired(apiError)) {
