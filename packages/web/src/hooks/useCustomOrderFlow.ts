@@ -130,23 +130,26 @@ export function useCustomOrderFlow(productId: string) {
 
         // 상품의 쉐입/길이가 고정이면 해당 값으로 초기화
         const prod = productResponse.data;
-        const initialShape = prod?.nailOptions?.shapeCustomizable === false && prod?.nailShape
-          ? prod.nailShape : prev.data.shape;
-        const initialLength = prod?.nailOptions?.lengthCustomizable === false && prod?.nailLength
-          ? prod.nailLength : prev.data.length;
 
-        setState(prev => ({
-          ...prev,
-          product: prod,
-          userNailSize: nailSizeResponse.data || null,
-          data: {
-            ...prev.data,
-            shape: initialShape,
-            length: initialLength,
-            sizes: initialSizes,
-          },
-          loading: false,
-        }));
+        setState(prev => {
+          const initialShape = prod?.nailOptions?.shapeCustomizable === false && prod?.nailShape
+            ? prod.nailShape : prev.data.shape;
+          const initialLength = prod?.nailOptions?.lengthCustomizable === false && prod?.nailLength
+            ? prod.nailLength : prev.data.length;
+
+          return {
+            ...prev,
+            product: prod,
+            userNailSize: nailSizeResponse.data || null,
+            data: {
+              ...prev.data,
+              shape: initialShape,
+              length: initialLength,
+              sizes: initialSizes,
+            },
+            loading: false,
+          };
+        });
       } catch (err: any) {
         setState(prev => ({
           ...prev,
