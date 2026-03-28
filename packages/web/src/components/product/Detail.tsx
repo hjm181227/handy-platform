@@ -778,7 +778,10 @@ export function Detail({
           {p.productType === 'custom' ? (
             <div className="pt-2">
               <button
-                onClick={() => onGo(`/product/${p.productUuid}/custom-order`)}
+                onClick={() => {
+                  if (!currentUser) { openLogin(); return; }
+                  onGo(`/product/${p.productUuid}/custom-order`);
+                }}
                 className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
               >
                 커스텀 주문하기
@@ -876,7 +879,10 @@ export function Detail({
           <div className="text-base font-semibold">{money(salePrice)}</div>
           {p.productType === 'custom' ? (
             <button
-              onClick={() => onGo?.(`/product/${p.productUuid}/custom-order`)}
+              onClick={() => {
+                if (!currentUser) { openLogin(); return; }
+                onGo?.(`/product/${p.productUuid}/custom-order`);
+              }}
               className="rounded-lg px-6 py-2 text-sm text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
             >
               커스텀 주문하기
