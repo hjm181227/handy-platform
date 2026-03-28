@@ -91,7 +91,11 @@ export function usePublicCustomOrderFlow() {
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
 
-        const nailSizeResponse = await userService.getNailSize().catch(() => ({ success: false, data: null }));
+        // 네일 사이즈는 로그인 상태에서만 조회 (토큰 없이 호출하면 401 → 토큰 만료 핸들러가 리다이렉트시킴)
+        const token = localStorage.getItem('accessToken');
+        const nailSizeResponse = token
+          ? await userService.getNailSize().catch(() => ({ success: false, data: null }))
+          : { success: false, data: null };
 
         let initialSizes = initialData.sizes;
 
