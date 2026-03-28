@@ -141,6 +141,8 @@ export function BrandDetailPage({
 
   // 이미지 preload를 위한 useEffect
   useEffect(() => {
+    if (!currentBackgroundImage) return;
+
     const link = document.createElement('link');
     link.rel = 'preload';
     link.href = currentBackgroundImage;
@@ -148,7 +150,6 @@ export function BrandDetailPage({
     document.head.appendChild(link);
 
     return () => {
-      // 안전하게 제거
       if (document.head.contains(link)) {
         document.head.removeChild(link);
       }
