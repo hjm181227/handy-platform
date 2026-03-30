@@ -694,31 +694,31 @@ export function Router() {
       </RequireAuth>
     );
   }
-  // ==================== Design Tool Routes (비활성화 - 실제 디자인 에디터 UI 미구현) ====================
-  // else if (pathname === '/design-tool') {
-  //   screen = <DesignToolPage onGo={nav} />;
-  // }
-  // else if (pathname === '/design-tool/subscription') {
-  //   screen = (
-  //     <RequireAuth>
-  //       <DesignToolSubscriptionPage onGo={nav} />
-  //     </RequireAuth>
-  //   );
-  // }
-  // else if (pathname === '/design-tool/payment/success') {
-  //   screen = (
-  //     <RequireAuth>
-  //       <DesignToolPaymentResultPage onGo={nav} type="success" />
-  //     </RequireAuth>
-  //   );
-  // }
-  // else if (pathname === '/design-tool/payment/fail') {
-  //   screen = (
-  //     <RequireAuth>
-  //       <DesignToolPaymentResultPage onGo={nav} type="fail" />
-  //     </RequireAuth>
-  //   );
-  // }
+  // ==================== Design Tool Routes ====================
+  else if (pathname === '/design-tool') {
+    screen = (
+      <RequireAuth>
+        <DesignToolSubscriptionPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/design-tool/subscription') {
+    screen = <DesignToolPage onGo={nav} />;
+  }
+  else if (pathname === '/design-tool/payment/success') {
+    screen = (
+      <RequireAuth>
+        <DesignToolPaymentResultPage onGo={nav} type="success" />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/design-tool/payment/fail') {
+    screen = (
+      <RequireAuth>
+        <DesignToolPaymentResultPage onGo={nav} type="fail" />
+      </RequireAuth>
+    );
+  }
   // ==================== Seller Registration Routes ====================
   else if (pathname === '/seller/register') {
     screen = (

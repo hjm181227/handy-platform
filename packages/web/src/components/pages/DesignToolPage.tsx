@@ -1,19 +1,12 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { Check, Sparkles, Palette, Crown, CreditCard, ArrowLeft } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Check, Sparkles, Palette, Crown, ArrowLeft } from 'lucide-react';
 import { useDesignToolAccess } from '../../hooks/useDesignToolAccess';
 import { isAuthenticated } from '../../services/apiService';
-import { TossPaymentWidget, TossPaymentWidgetRef } from '../payment/TossPaymentWidget';
+import { requestTossBillingAuth } from '../../hooks/useTossPayments';
 import type { DesignToolPlan, DesignToolPlanId } from '@handy-platform/shared';
 
 interface DesignToolPageProps {
   onGo: (to: string) => void;
-}
-
-interface PaymentSessionData {
-  orderId: string;
-  amount: number;
-  clientKey: string;
-  orderName: string;
 }
 
 export function DesignToolPage({ onGo }: DesignToolPageProps) {
@@ -25,24 +18,8 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
 
   const { access, plans, loading, error, subscribe } = useDesignToolAccess();
   const [subscribing, setSubscribing] = useState(false);
-  const [paymentSession, setPaymentSession] = useState<PaymentSessionData | null>(null);
-  const [paymentReady, setPaymentReady] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const tossWidgetRef = useRef<TossPaymentWidgetRef>(null);
   const loggedIn = isAuthenticated();
-
-  const customerKey = useMemo(() => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.userId || payload.sub || null;
-      }
-    } catch (e) {
-      console.warn('[DesignToolPage] Failed to extract customerKey from token');
-    }
-    return null;
-  }, []);
 
   const handleSubscribe = async (planId: DesignToolPlanId) => {
     if (!loggedIn) {
@@ -53,44 +30,34 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
     setSubscribing(true);
     setPaymentError(null);
 
-    if (planId === 'free') {
-      const session = await subscribe(planId);
-      setSubscribing(false);
-      if (!session) {
-        // free plan: subscribe returns null (no payment session), access is updated
-        onGo('/design-tool/subscription');
-      }
-    } else {
-      // pro 플랜: 결제 세션 반환
-      const session = await subscribe(planId);
-      setSubscribing(false);
-      if (session) {
-        setPaymentSession(session);
-      }
-    }
-  };
-
-  const handleRequestPayment = useCallback(async () => {
-    if (!tossWidgetRef.current || !paymentSession) return;
-
     try {
-      const baseUrl = window.location.origin;
-      await tossWidgetRef.current.requestPayment({
-        orderId: paymentSession.orderId,
-        orderName: paymentSession.orderName,
-        successUrl: `${baseUrl}/design-tool/payment/success`,
-        failUrl: `${baseUrl}/design-tool/payment/fail`,
-      });
+      if (planId === 'free') {
+        const session = await subscribe(planId);
+        if (!session) {
+          onGo('/design-tool/subscription');
+        }
+      } else {
+        // pro 플랜: 서버에서 결제 세션 + customerKey 반환 → 빌링 인증 요청
+        const session = await subscribe(planId);
+        if (session) {
+          const baseUrl = window.location.origin;
+          await requestTossBillingAuth({
+            clientKey: session.clientKey,
+            customerKey: session.customerKey,
+            amount: session.amount,
+            orderId: session.orderId,
+            orderName: session.orderName,
+            successUrl: `${baseUrl}/design-tool/payment/success`,
+            failUrl: `${baseUrl}/design-tool/payment/fail`,
+          });
+        }
+      }
     } catch (err: any) {
-      console.error('Payment request failed:', err);
+      console.error('[DesignToolPage] Payment failed:', err);
       setPaymentError(err.message || '결제 요청에 실패했습니다.');
+    } finally {
+      setSubscribing(false);
     }
-  }, [paymentSession]);
-
-  const handleCancelPayment = () => {
-    setPaymentSession(null);
-    setPaymentReady(false);
-    setPaymentError(null);
   };
 
   const currentPlan = access?.currentPlan;
@@ -149,43 +116,8 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
         </div>
       )}
 
-      {/* Toss 결제 위젯 */}
-      {paymentSession && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <button onClick={handleCancelPayment} className="p-1 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <h2 className="text-xl font-bold text-gray-900">프로 플랜 결제</h2>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-4 mb-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">결제 금액</span>
-              <span className="text-xl font-bold text-gray-900">
-                ₩{paymentSession.amount.toLocaleString()}
-              </span>
-            </div>
-          </div>
-          <TossPaymentWidget
-            ref={tossWidgetRef}
-            amount={paymentSession.amount}
-            customerKey={customerKey}
-            onReady={() => setPaymentReady(true)}
-            onError={(err) => setPaymentError(err)}
-          />
-          <button
-            onClick={handleRequestPayment}
-            disabled={!paymentReady}
-            className="w-full mt-4 py-4 bg-pink-500 text-white rounded-xl font-semibold text-base hover:bg-pink-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <CreditCard className="w-5 h-5" />
-            {paymentReady ? '결제하기' : '결제 수단 불러오는 중...'}
-          </button>
-        </div>
-      )}
-
       {/* 플랜 비교 카드 */}
-      {paymentSession ? null : loading && plans.length === 0 ? (
+      {loading && plans.length === 0 ? (
         <div className="flex justify-center py-16">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500" />
         </div>

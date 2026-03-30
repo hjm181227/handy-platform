@@ -55,6 +55,18 @@ export abstract class BaseDesignToolService extends BaseApiService {
     });
   }
 
+  // 빌링키 발급 및 첫 결제 확인 (정기구독)
+  async confirmBilling(data: {
+    authKey: string;
+    customerKey: string;
+    orderId: string;
+  }): Promise<DesignToolSubscribeResponse> {
+    return this.request<DesignToolSubscribeResponse>(API_ENDPOINTS.DESIGN_TOOL.BILLING_CONFIRM, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // 관리자: 유저 디자인 툴 접근 관리
   async adminUpdateAccess(userUuid: string, data: {
     hasAccess?: boolean;
