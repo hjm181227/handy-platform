@@ -1,0 +1,63 @@
+{
+  "bottom": {
+    "home": "ホーム",
+    "discover": "探索",
+    "snap": "スナップ",
+    "shop": "ショップ",
+    "my": "マイ",
+    "likes": "いいね",
+    "new": "新規スナップ",
+    "snapUpload": "スナップアップロード",
+    "customOrder": "カスタムオーダー作成"
+  },
+  "gnb": {
+    "feed": "フィード",
+    "discover": "探索",
+    "shop": "ショップ",
+    "ranking": "ランキング",
+    "brands": "ブランド",
+    "new": "新着",
+    "recommend": "おすすめ",
+    "event": "イベント"
+  },
+  "header": {
+    "search": "検索",
+    "cart": "カート",
+    "notification": "通知",
+    "back": "戻る",
+    "menu": "メニュー",
+    "home": "ホーム",
+    "navigation": "ナビゲーション",
+    "recentSearches": "最近の検索",
+    "recommendedSearches": "おすすめ検索",
+    "deleteAll": "全削除",
+    "searchFor": "'{{query}}'を検索",
+    "category": "カテゴリー",
+    "chat": "チャット",
+    "closeCategory": "カテゴリーを閉じる",
+    "closeSearch": "検索を閉じる",
+    "goTo": "{{label}}へ移動",
+    "profile": "プロフィール",
+    "settings": "設定"
+  },
+  "footer": {
+    "aboutHandy": "HANDYについて",
+    "companyIntro": "会社紹介",
+    "businessIntro": "ビジネス紹介",
+    "newsroom": "ニュースルーム",
+    "notice": "お知らせ",
+    "customerSupport": "カスタマーサポート",
+    "contactUs": "お問い合わせ",
+    "faq": "よくある質問",
+    "csPhone": "CS: 010-9611-1711",
+    "csHours": "営業時間: 平日 09:00 ~ 18:00 (12:00~13:00除く)",
+    "csEmail": "email: hermosear98@gmail.com",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
+    "pgAgent": "決済代行会社",
+    "disputeResolution": "紛争解決基準",
+    "companyInfo": "エルモセアル | 代表者: キム・ドンヒョン | 住所: 京畿道龍仁市器興区公世路150-29, B01-G160号 | 通信販売業届出番号: 2024-龍仁器興-2437 | 事業者登録番号: 106-16-34319 | 電話: 010-9611-1711",
+    "eventPreparing": "イベント準備中です",
+    "eventComingSoon": "新しいイベントをお楽しみに！"
+  }
+}

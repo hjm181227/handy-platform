@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StepLayout, StepTitle, StepInput, StepButton } from '../common';
 
 interface NameStepProps {
@@ -18,6 +19,7 @@ export function NameStep({
   totalSteps,
   error: externalError,
 }: NameStepProps) {
+  const { t } = useTranslation(['auth', 'common']);
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,17 +35,17 @@ export function NameStep({
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      setError('이름을 입력해주세요.');
+      setError(t('auth:signup.nameRequired'));
       return;
     }
 
     if (trimmedName.length < 2) {
-      setError('이름은 2자 이상이어야 합니다.');
+      setError(t('auth:signup.nameTooShort'));
       return;
     }
 
     if (trimmedName.length > 50) {
-      setError('이름은 50자 이하여야 합니다.');
+      setError(t('auth:signup.nameTooLong'));
       return;
     }
 
@@ -59,14 +61,14 @@ export function NameStep({
     >
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
         <StepTitle
-          title="이름을 입력해주세요"
-          subtitle="배송 시 사용되는 실명을 입력해주세요"
+          title={t('auth:signup.nameTitle')}
+          subtitle={t('auth:signup.nameSubtitle')}
         />
 
         <StepInput
           ref={inputRef}
           type="text"
-          placeholder="이름"
+          placeholder={t('auth:signup.namePlaceholderShort')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           error={error || externalError || undefined}
@@ -79,7 +81,7 @@ export function NameStep({
           type="submit"
           disabled={!name.trim()}
         >
-          다음
+          {t('common:next')}
         </StepButton>
       </form>
     </StepLayout>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StepLayout, StepTitle, StepInput, StepButton } from '../common';
 
 interface EmailStepProps {
@@ -24,6 +25,7 @@ export function EmailStep({
   totalSteps,
   error: externalError,
 }: EmailStepProps) {
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,12 +40,12 @@ export function EmailStep({
 
     // 유효성 검사
     if (!email.trim()) {
-      setError('이메일을 입력해주세요.');
+      setError(t('auth:signup.emailRequired'));
       return;
     }
 
     if (!isValidEmail(email)) {
-      setError('올바른 이메일 형식이 아닙니다.');
+      setError(t('auth:signup.emailInvalid'));
       return;
     }
 
@@ -59,8 +61,8 @@ export function EmailStep({
     >
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
         <StepTitle
-          title="이메일을 입력해주세요"
-          subtitle="로그인할 때 사용할 이메일이에요"
+          title={t('auth:signup.emailTitle')}
+          subtitle={t('auth:signup.emailSubtitle')}
         />
 
         <StepInput
@@ -79,7 +81,7 @@ export function EmailStep({
           type="submit"
           disabled={!email.trim()}
         >
-          다음
+          {t('common:next')}
         </StepButton>
       </form>
     </StepLayout>

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ProductCard } from '../product/ProductCard';
 import { RecommendationEngine, getUserActivity, addToRecentViews } from '../../utils/recommendationEngine';
 import { webApiService } from '../../services/apiService';
@@ -24,6 +25,7 @@ const RecommendationSection = ({
   onGo?: (path: string) => void;
   likedProducts?: string[];
 }) => {
+  const { t } = useTranslation(['common', 'product']);
   if (sectionProducts.length === 0) return null;
 
   return (
@@ -31,7 +33,7 @@ const RecommendationSection = ({
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-base font-bold">{title}</h2>
-          <span className="text-xs font-medium text-[#E85A6B] cursor-pointer">더보기 &gt;</span>
+          <span className="text-xs font-medium text-[#E85A6B] cursor-pointer">{t('seeMore')} &gt;</span>
         </div>
         {reason && (
           <p className="text-xs text-gray-500">{reason}</p>
@@ -53,24 +55,27 @@ const RecommendationSection = ({
 };
 
 // 빈 상태 컴포넌트
-const EmptyRecommendations = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
-  <div className="text-center py-20">
-    <div className="text-gray-400 mb-4">
-      <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-      </svg>
+const EmptyRecommendations = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
+  const { t } = useTranslation('product');
+  return (
+    <div className="text-center py-20">
+      <div className="text-gray-400 mb-4">
+        <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+      <h3 className="text-lg font-medium text-gray-600 mb-2">
+        {isLoggedIn ? t('recommend.preparing') : t('recommend.noRecommendations')}
+      </h3>
+      <p className="text-sm text-gray-500">
+        {isLoggedIn
+          ? t('recommend.browseMore')
+          : t('recommend.browseProducts')
+        }
+      </p>
     </div>
-    <h3 className="text-lg font-medium text-gray-600 mb-2">
-      {isLoggedIn ? '맞춤 추천을 준비 중입니다' : '추천 상품이 없습니다'}
-    </h3>
-    <p className="text-sm text-gray-500">
-      {isLoggedIn
-        ? '상품을 둘러보시면 더 정확한 추천을 받을 수 있어요'
-        : '다양한 상품을 둘러보세요'
-      }
-    </p>
-  </div>
-);
+  );
+};
 
 export function RecommendPage({
   currentUser,
@@ -87,6 +92,7 @@ export function RecommendPage({
   onLike?: (id: string) => void;
   likedProducts?: string[];
 }) {
+  const { t } = useTranslation(['product', 'common']);
   const isLoggedIn = !!currentUser;
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -140,13 +146,13 @@ export function RecommendPage({
   const getPageInfo = () => {
     if (isLoggedIn) {
       return {
-        title: '맞춤 추천',
-        description: `${currentUser?.name || '회원'}님을 위한 개인화 추천`
+        title: t('product:recommend.title'),
+        description: t('product:recommend.personalizedDesc', { name: currentUser?.name || '' })
       };
     } else {
       return {
-        title: '추천',
-        description: '카테고리별 인기 상품 추천'
+        title: t('product:recommend.generalTitle'),
+        description: t('product:recommend.generalDesc')
       };
     }
   };
@@ -168,12 +174,12 @@ export function RecommendPage({
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-green-600">개인화 추천</span>
+                <span className="text-green-600">{t('product:recommend.personalized')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#E85A6B] rounded-full"></div>
-                <span className="text-[#E85A6B]">카테고리별 추천</span>
+                <span className="text-[#E85A6B]">{t('product:recommend.categoryBased')}</span>
               </div>
             )}
           </div>
@@ -185,13 +191,13 @@ export function RecommendPage({
         <div className="mx-auto max-w-7xl px-4 py-3 bg-[#FFF1F2] border-b">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs md:text-sm text-[#D14A5B] font-medium truncate">
-              로그인하면 맞춤 추천을 받을 수 있어요
+              {t('product:recommend.loginForRecommend')}
             </span>
             <button
               onClick={() => onGo('/login')}
               className="px-3.5 py-1.5 bg-[#E85A6B] text-white text-xs font-semibold rounded-xl whitespace-nowrap flex-shrink-0 hover:bg-[#D14A5B]"
             >
-              로그인
+              {t('common:login')}
             </button>
           </div>
         </div>
@@ -230,12 +236,12 @@ export function RecommendPage({
           <div className="mt-8 p-5 bg-gray-100 rounded-2xl">
             <div className="text-center">
               <h3 className="text-sm font-semibold text-gray-800 mb-1">
-                {isLoggedIn ? '더 정확한 추천을 원하시나요?' : '더 많은 상품을 둘러보세요'}
+                {isLoggedIn ? t('product:recommend.wantBetter') : t('product:recommend.browseSuggestion')}
               </h3>
               <p className="text-xs text-gray-500 mb-4">
                 {isLoggedIn
-                  ? '상품을 더 많이 둘러보고 좋아요를 누르시면 취향에 맞는 추천이 개선됩니다'
-                  : '다양한 카테고리의 상품들을 확인해보세요'
+                  ? t('product:recommend.improveHint')
+                  : t('product:recommend.categoryHint')
                 }
               </p>
               <div className="flex items-center justify-center gap-2">
@@ -243,7 +249,7 @@ export function RecommendPage({
                   onClick={() => onGo('/brands')}
                   className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-gray-50"
                 >
-                  브랜드
+                  {t('product:recommend.brands')}
                 </button>
                 <button
                   onClick={() => onGo('/ranking')}
@@ -256,7 +262,7 @@ export function RecommendPage({
                     onClick={() => onGo('/login')}
                     className="px-3.5 py-2 bg-[#E85A6B] text-white rounded-xl text-xs font-medium hover:bg-[#D14A5B]"
                   >
-                    로그인
+                    {t('common:login')}
                   </button>
                 )}
               </div>

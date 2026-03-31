@@ -1,0 +1,81 @@
+{
+  "title": "マイページ",
+  "profile": {
+    "title": "プロフィール",
+    "edit": "プロフィール編集",
+    "profileImage": "プロフィール写真",
+    "changeImage": "写真を変更",
+    "nickname": "ニックネーム",
+    "email": "メールアドレス",
+    "phone": "電話番号",
+    "bio": "自己紹介",
+    "bioPlaceholder": "自己紹介を入力してください",
+    "saved": "プロフィールを保存しました"
+  },
+  "menu": {
+    "orders": "注文履歴",
+    "wishlist": "ウィッシュリスト",
+    "likes": "いいね",
+    "coupons": "クーポン",
+    "points": "ポイント",
+    "reviews": "マイレビュー",
+    "shippingAddresses": "配送先管理",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "notice": "お知らせ",
+    "faq": "よくある質問",
+    "inquiry": "お問い合わせ",
+    "logout": "ログアウト",
+    "deleteAccount": "退会"
+  },
+  "wishlist": {
+    "title": "ウィッシュリスト",
+    "empty": "ウィッシュリストは空です",
+    "emptyDescription": "お気に入りの商品を保存しましょう",
+    "removed": "ウィッシュリストから削除しました",
+    "added": "ウィッシュリストに追加しました"
+  },
+  "points": {
+    "title": "ポイント",
+    "available": "利用可能ポイント",
+    "history": "ポイント履歴",
+    "earned": "獲得",
+    "used": "使用",
+    "expired": "失効",
+    "noHistory": "ポイント履歴がありません"
+  },
+  "coupons": {
+    "title": "クーポン",
+    "available": "利用可能なクーポン",
+    "expired": "期限切れクーポン",
+    "noCoupons": "クーポンがありません",
+    "expiryDate": "有効期限: {{date}}まで",
+    "minOrderAmount": "最低注文金額: {{amount}}ウォン"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語設定",
+    "notification": "通知設定",
+    "pushNotification": "プッシュ通知",
+    "marketingNotification": "マーケティング通知",
+    "darkMode": "ダークモード",
+    "version": "バージョン情報",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー",
+    "deleteAccount": "退会",
+    "deleteAccountConfirm": "本当に退会しますか？すべてのデータが削除されます。",
+    "languageOptions": {
+      "ko": "한국어",
+      "en": "English",
+      "ja": "日本語"
+    }
+  },
+  "seller": {
+    "apply": "販売者申請",
+    "dashboard": "販売者ダッシュボード",
+    "products": "商品管理",
+    "orders": "注文管理",
+    "stats": "統計",
+    "settings": "販売者設定"
+  }
+}

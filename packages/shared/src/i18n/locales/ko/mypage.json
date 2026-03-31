@@ -1,0 +1,81 @@
+{
+  "title": "마이페이지",
+  "profile": {
+    "title": "프로필",
+    "edit": "프로필 수정",
+    "profileImage": "프로필 사진",
+    "changeImage": "사진 변경",
+    "nickname": "닉네임",
+    "email": "이메일",
+    "phone": "연락처",
+    "bio": "소개",
+    "bioPlaceholder": "자기소개를 입력해주세요",
+    "saved": "프로필이 저장되었습니다"
+  },
+  "menu": {
+    "orders": "주문 내역",
+    "wishlist": "위시리스트",
+    "likes": "좋아요",
+    "coupons": "쿠폰함",
+    "points": "포인트",
+    "reviews": "내 리뷰",
+    "shippingAddresses": "배송지 관리",
+    "settings": "설정",
+    "help": "고객센터",
+    "notice": "공지사항",
+    "faq": "자주 묻는 질문",
+    "inquiry": "1:1 문의",
+    "logout": "로그아웃",
+    "deleteAccount": "회원 탈퇴"
+  },
+  "wishlist": {
+    "title": "위시리스트",
+    "empty": "위시리스트가 비어있습니다",
+    "emptyDescription": "마음에 드는 상품을 저장해보세요",
+    "removed": "위시리스트에서 삭제되었습니다",
+    "added": "위시리스트에 추가되었습니다"
+  },
+  "points": {
+    "title": "포인트",
+    "available": "사용 가능 포인트",
+    "history": "포인트 내역",
+    "earned": "적립",
+    "used": "사용",
+    "expired": "소멸",
+    "noHistory": "포인트 내역이 없습니다"
+  },
+  "coupons": {
+    "title": "쿠폰함",
+    "available": "사용 가능 쿠폰",
+    "expired": "만료된 쿠폰",
+    "noCoupons": "보유한 쿠폰이 없습니다",
+    "expiryDate": "유효기간: {{date}}까지",
+    "minOrderAmount": "최소 주문금액: {{amount}}원"
+  },
+  "settings": {
+    "title": "설정",
+    "language": "언어 설정",
+    "notification": "알림 설정",
+    "pushNotification": "푸시 알림",
+    "marketingNotification": "마케팅 알림",
+    "darkMode": "다크 모드",
+    "version": "버전 정보",
+    "terms": "이용약관",
+    "privacy": "개인정보처리방침",
+    "deleteAccount": "회원 탈퇴",
+    "deleteAccountConfirm": "정말 탈퇴하시겠습니까? 탈퇴 시 모든 데이터가 삭제됩니다.",
+    "languageOptions": {
+      "ko": "한국어",
+      "en": "English",
+      "ja": "日本語"
+    }
+  },
+  "seller": {
+    "apply": "판매자 신청",
+    "dashboard": "판매자 대시보드",
+    "products": "상품 관리",
+    "orders": "주문 관리",
+    "stats": "통계",
+    "settings": "판매자 설정"
+  }
+}
