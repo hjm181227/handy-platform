@@ -1,0 +1,57 @@
+{
+  "shape": {
+    "ROUND": "Round",
+    "ALMOND": "Almond",
+    "SQUARE": "Square",
+    "OVAL": "Oval",
+    "COFFIN": "Coffin",
+    "STILETTO": "Stiletto"
+  },
+  "length": {
+    "SHORT": "Short",
+    "MEDIUM": "Medium",
+    "LONG": "Long"
+  },
+  "finger": {
+    "thumb": "Thumb",
+    "index": "Index",
+    "middle": "Middle",
+    "ring": "Ring",
+    "pinky": "Pinky"
+  },
+  "material": {
+    "gel": "Gel",
+    "acrylic": "Acrylic",
+    "pressOn": "Press-On",
+    "sticker": "Nail Sticker",
+    "dipping": "Dip Powder",
+    "polygel": "Polygel"
+  },
+  "service": {
+    "manicure": "Manicure",
+    "pedicure": "Pedicure",
+    "nailArt": "Nail Art",
+    "gelExtension": "Gel Extension",
+    "removal": "Removal",
+    "repair": "Repair",
+    "care": "Nail Care"
+  },
+  "design": {
+    "solid": "Solid",
+    "gradient": "Ombré",
+    "french": "French",
+    "marble": "Marble",
+    "glitter": "Glitter",
+    "chrome": "Chrome",
+    "matte": "Matte",
+    "holographic": "Holographic",
+    "catEye": "Cat Eye",
+    "waterColor": "Watercolor",
+    "flower": "Floral",
+    "geometric": "Geometric",
+    "minimal": "Minimal",
+    "maximal": "Maximal",
+    "character": "Character",
+    "seasonal": "Seasonal"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { webApiService } from '../../services/apiService';
 import { initKakaoSdk } from '../../utils/kakaoSdk';
@@ -10,6 +11,7 @@ import { SocialTermsStep } from './SocialTermsStep';
 import { Logo } from '../common/Logo';
 
 export function AuthModalContent() {
+  const { t } = useTranslation(['auth', 'common', 'error']);
   const { currentView, setView, close, socialNewUser, openSocialTerms } = useAuthModal();
 
   // 이메일 로그인 상태
@@ -75,7 +77,7 @@ export function AuthModalContent() {
   const handleEmailLogin = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
     if (!email || !password) {
-      setError('이메일과 비밀번호를 입력하세요.');
+      setError(t('auth:login.emailAndPasswordRequired'));
       return;
     }
 
@@ -93,7 +95,7 @@ export function AuthModalContent() {
       close();
     } catch (error: any) {
       console.error('로그인 실패:', error);
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      setError(t('error:INVALID_CREDENTIALS.message'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +122,7 @@ export function AuthModalContent() {
         return;
       }
       console.error(`${provider} 로그인 실패:`, error);
-      setError(error.message || `${provider} 로그인에 실패했습니다.`);
+      setError(error.message || t('error:INVALID_CREDENTIALS.message'));
       setLoading(false);
     }
   };
@@ -323,8 +325,8 @@ export function AuthModalContent() {
           </svg>
         </button>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">로그인</h1>
-        <p className="text-gray-500 mb-8">이메일로 로그인하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('auth:login.title')}</h1>
+        <p className="text-gray-500 mb-8">{t('auth:login.subtitle')}</p>
 
         <form onSubmit={handleEmailLogin} className="space-y-4 flex-1 flex flex-col">
           {error && (
@@ -340,7 +342,7 @@ export function AuthModalContent() {
               setEmail(e.target.value);
               setError('');
             }}
-            placeholder="이메일 주소"
+            placeholder={t('auth:login.emailPlaceholder')}
             className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-[#E85A6B] transition-colors"
             disabled={loading}
           />
@@ -353,7 +355,7 @@ export function AuthModalContent() {
                 setPassword(e.target.value);
                 setError('');
               }}
-              placeholder="비밀번호"
+              placeholder={t('auth:login.passwordPlaceholder')}
               className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-[#E85A6B] transition-colors"
               disabled={loading}
             />
@@ -379,7 +381,7 @@ export function AuthModalContent() {
                 onChange={(e) => setAuto(e.target.checked)}
                 className="w-4 h-4 rounded"
               />
-              자동 로그인
+              {t('auth:login.autoLogin')}
             </label>
             <button
               type="button"
@@ -389,7 +391,7 @@ export function AuthModalContent() {
               }}
               className="text-gray-500 hover:text-gray-700"
             >
-              비밀번호 찾기
+              {t('auth:login.forgotPassword')}
             </button>
           </div>
 
@@ -400,17 +402,17 @@ export function AuthModalContent() {
             disabled={loading}
             className="w-full rounded-xl bg-[#E85A6B] py-4 text-base font-semibold text-white hover:bg-[#D14A5B] disabled:bg-gray-300 transition-colors"
           >
-            {loading ? '로그인 중...' : '로그인'}
+            {loading ? t('auth:login.loggingIn') : t('auth:login.loginButton')}
           </button>
         </form>
 
         <div className="mt-6 text-center pb-6">
-          <span className="text-gray-500 text-sm">계정이 없으신가요? </span>
+          <span className="text-gray-500 text-sm">{t('auth:login.noAccount')} </span>
           <button
             onClick={() => setView('signup')}
             className="text-[#E85A6B] text-sm font-medium hover:underline"
           >
-            회원가입
+            {t('common:signup')}
           </button>
         </div>
       </div>
@@ -425,7 +427,7 @@ export function AuthModalContent() {
         <button
           onClick={close}
           className="flex items-center justify-center w-10 h-10 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
-          aria-label="닫기"
+          aria-label={t('common:close')}
         >
           <svg
             className="w-6 h-6 text-gray-800"
@@ -451,7 +453,7 @@ export function AuthModalContent() {
         <div className="flex justify-center mb-3">
           <Logo size="xl" />
         </div>
-        <p className="text-gray-500 text-lg">나를 위한 네일아트, 핸디</p>
+        <p className="text-gray-500 text-lg">{t('auth:brandTagline')}</p>
       </div>
 
       {/* 에러 메시지 */}
@@ -470,7 +472,7 @@ export function AuthModalContent() {
           className="w-full rounded-xl bg-black py-4 text-base font-medium text-white inline-flex items-center justify-center gap-3 hover:bg-gray-800 disabled:bg-gray-300 transition-colors"
         >
           <AppleIcon />
-          Apple로 계속하기
+          {t('auth:login.continueWithApple')}
         </button>
 
         {/* 카카오 로그인 */}
@@ -481,7 +483,7 @@ export function AuthModalContent() {
           style={{ backgroundColor: loading ? '#e5e7eb' : '#FEE500' }}
         >
           <KakaoIcon />
-          카카오로 계속하기
+          {t('auth:login.continueWithKakao')}
         </button>
 
         {/* Google 로그인 */}
@@ -491,7 +493,7 @@ export function AuthModalContent() {
           className="w-full rounded-xl border-2 border-gray-200 bg-white py-4 text-base font-medium text-gray-700 inline-flex items-center justify-center gap-3 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
         >
           <GoogleIcon />
-          Google로 계속하기
+          {t('auth:login.continueWithGoogle')}
         </button>
 
         {/* 네이버 로그인 */}
@@ -502,7 +504,7 @@ export function AuthModalContent() {
           style={{ backgroundColor: loading ? '#d1d5db' : '#03C75A' }}
         >
           <NaverIcon />
-          네이버로 계속하기
+          {t('auth:login.continueWithNaver')}
         </button>
       </div>
 
@@ -514,7 +516,7 @@ export function AuthModalContent() {
       {/* 구분선 */}
       <div className="flex items-center my-8">
         <div className="flex-grow border-t border-gray-200"></div>
-        <span className="mx-4 text-sm text-gray-400">또는</span>
+        <span className="mx-4 text-sm text-gray-400">{t('common:or')}</span>
         <div className="flex-grow border-t border-gray-200"></div>
       </div>
 
@@ -525,18 +527,18 @@ export function AuthModalContent() {
           disabled={loading}
           className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
         >
-          이메일로 시작하기
+          {t('auth:login.startWithEmail')}
         </button>
       )}
 
       {/* 기존 계정 로그인 링크 - 모든 환경에서 표시 */}
       <div className="mt-6 text-center">
-        <span className="text-gray-500 text-sm">이미 계정이 있나요? </span>
+        <span className="text-gray-500 text-sm">{t('auth:signup.alreadyHaveAccount')} </span>
         <button
           onClick={() => setView('email-login')}
           className="text-[#E85A6B] text-sm font-medium hover:underline"
         >
-          로그인
+          {t('common:login')}
         </button>
       </div>
 

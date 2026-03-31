@@ -1,16 +1,19 @@
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '../common/LanguageSelector';
 
 /* ---------------- Mega Footer (링크도 라우팅) ---------------- */
 export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
+  const { t } = useTranslation(['nav', 'common', 'mypage']);
   const cols = [
-    { h: "어바웃 HANDY", items: ["회사 소개", "비즈니스 소개", "뉴스룸", /* "채용 정보", */ "공지사항"], base:"/about" },
-    // { h: "파트너 지원", items: ["입점 문의", "광고/제휴 문의", "협찬 문의", "공동/대량 구매 문의", "제조/생산 문의", "이미지/저작권 문의"], base:"/partner" },
-    { h: "고객 지원", items: ["1:1 문의하기", "FAQ 자주 묻는 질문", "고객센터 010-9611-1711", "운영시간: 평일 09:00 ~ 18:00 (12:00~13:00 제외)", "email: hermosear98@gmail.com"], base:"/support" },
+    { h: t('nav:footer.aboutHandy'), items: [t('nav:footer.companyIntro'), t('nav:footer.businessIntro'), t('nav:footer.newsroom'), /* "채용 정보", */ t('nav:footer.notice')], base:"/about" },
+    // { h: "파트너 지원", items: [...], base:"/partner" },
+    { h: t('nav:footer.customerSupport'), items: [t('nav:footer.contactUs'), t('nav:footer.faq'), t('nav:footer.csPhone'), t('nav:footer.csHours'), t('nav:footer.csEmail')], base:"/support" },
   ];
   const policy = [
-    {label:"개인정보처리방침", to:"/policy/privacy"},
-    {label:"이용약관", to:"/policy/terms"},
-    {label:"결제대행 위탁사", to:"/policy/pg"},
-    {label:"분쟁해결기준", to:"/policy/dispute"},
+    {label:t('nav:footer.privacyPolicy'), to:"/policy/privacy"},
+    {label:t('nav:footer.termsOfService'), to:"/policy/terms"},
+    {label:t('nav:footer.pgAgent'), to:"/policy/pg"},
+    {label:t('nav:footer.disputeResolution'), to:"/policy/dispute"},
   ];
 
   return (
@@ -23,7 +26,7 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
               <ul className="space-y-1 text-[13px]">
                 {c.items.map((it) => {
                   // 고객센터와 운영시간은 클릭 불가
-                  const isNonClickable = it.startsWith("고객센터") || it.startsWith("운영시간:");
+                  const isNonClickable = it === t('nav:footer.csPhone') || it === t('nav:footer.csHours') || it === t('nav:footer.csEmail');
 
                   if (isNonClickable) {
                     return (
@@ -35,19 +38,17 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
 
                   let linkPath = `${c.base}/${encodeURIComponent(it)}`;
                   // 특별한 링크들을 직접 매핑
-                  if (it === "1:1 문의하기") {
+                  if (it === t('nav:footer.contactUs')) {
                     linkPath = "/contact-inquiry";
-                  } else if (it === "FAQ 자주 묻는 질문") {
+                  } else if (it === t('nav:footer.faq')) {
                     linkPath = "/footer-faq";
-                  } else if (it === "회사 소개") {
+                  } else if (it === t('nav:footer.companyIntro')) {
                     linkPath = "/about-company";
-                  } else if (it === "비즈니스 소개") {
+                  } else if (it === t('nav:footer.businessIntro')) {
                     linkPath = "/about-business";
-                  } else if (it === "뉴스룸") {
+                  } else if (it === t('nav:footer.newsroom')) {
                     linkPath = "/about-newsroom";
-                  // } else if (it === "채용 정보") {
-                  //   linkPath = "/about-careers";
-                  } else if (it === "공지사항") {
+                  } else if (it === t('nav:footer.notice')) {
                     linkPath = "/about-notice";
                   }
 
@@ -67,14 +68,15 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
         <div className="text-[12px] leading-6 text-[#777]">
           <div className="text-[#444] font-medium">© HANDY ALL RIGHTS RESERVED</div>
           <p className="mt-2">
-            에르모세아르 | 대표자: 김동현 | 주소: 경기도 용인시 기흥구 공세로 150-29, B01-G160호 | 통신판매업 신고번호: 2024-용인기흥-2437 |
-            사업자등록번호: 106-16-34319 | 유선전화번호: 010-9611-1711
+            {t('nav:footer.companyInfo')}
           </p>
     
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
             {policy.map((p)=>(
               <a key={p.label} href={p.to} onClick={(e)=>{e.preventDefault(); onGo(p.to);}} className="underline">{p.label}</a>
             ))}
+            <span className="mx-1 text-[#ddd]">|</span>
+            <LanguageSelector variant="dropdown" className="!text-[12px] !px-2 !py-1 !border-[#ccc] bg-white" />
           </div>
 
           {/* 인증 배지 숨김 */}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StepLayout, StepTitle, StepInput, StepButton } from '../common';
 
 interface PhoneVerificationStepProps {
@@ -58,6 +59,8 @@ export function PhoneVerificationStep({
   const [canResend, setCanResend] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const { t } = useTranslation(['auth', 'common']);
+
   // 입력 refs
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
@@ -100,7 +103,7 @@ export function PhoneVerificationStep({
   // 인증번호 발송
   const handleSendCode = useCallback(async () => {
     if (!isValidPhone(phone)) {
-      setError('올바른 휴대폰 번호를 입력해주세요.');
+      setError(t('auth:phone.phoneInvalid'));
       return;
     }
 
@@ -114,7 +117,7 @@ export function PhoneVerificationStep({
       setCanResend(false);
       setCode('');
     } else {
-      setError(result.error || '인증번호 발송에 실패했습니다.');
+      setError(result.error || t('auth:phone.sendFailed'));
     }
   }, [phone, sendVerification]);
 
@@ -132,19 +135,19 @@ export function PhoneVerificationStep({
       setCode('');
       codeInputRef.current?.focus();
     } else {
-      setError(result.error || '인증번호 재발송에 실패했습니다.');
+      setError(result.error || t('auth:phone.resendFailed'));
     }
   }, [canResend, loading, phone, sendVerification]);
 
   // 인증번호 확인
   const handleVerifyCode = useCallback(async () => {
     if (code.length !== 6) {
-      setError('6자리 인증번호를 입력해주세요.');
+      setError(t('auth:phone.enterCode6Digits'));
       return;
     }
 
     if (timeLeft === 0) {
-      setError('인증번호가 만료되었습니다. 재전송해주세요.');
+      setError(t('auth:phone.codeExpiredResend'));
       return;
     }
 
@@ -154,7 +157,7 @@ export function PhoneVerificationStep({
     if (result.success) {
       onComplete();
     } else {
-      setError(result.error || '인증번호가 일치하지 않습니다.');
+      setError(result.error || t('auth:phone.codeMismatch'));
     }
   }, [code, timeLeft, verifyCode, onComplete]);
 
@@ -185,8 +188,8 @@ export function PhoneVerificationStep({
       >
         <div className="flex-1 flex flex-col">
           <StepTitle
-            title="휴대폰 번호를 인증해주세요"
-            subtitle="본인 확인을 위해 인증이 필요해요"
+            title={t('auth:phone.phoneTitle')}
+            subtitle={t('auth:phone.phoneSubtitle')}
           />
 
           <StepInput
@@ -206,7 +209,7 @@ export function PhoneVerificationStep({
             disabled={!isValidPhone(phone) || loading}
             loading={loading}
           >
-            인증번호 받기
+            {t('auth:phone.getCode')}
           </StepButton>
         </div>
       </StepLayout>
@@ -222,11 +225,11 @@ export function PhoneVerificationStep({
     >
       <div className="flex-1 flex flex-col">
         <StepTitle
-          title="인증번호를 입력해주세요"
+          title={t('auth:phone.enterCodeTitle')}
           subtitle={
             <>
               <span className="text-[#E85A6B] font-medium">{phone}</span>
-              으로 전송했어요
+              {t('auth:phone.sentTo')}
             </>
           }
         />
@@ -237,7 +240,7 @@ export function PhoneVerificationStep({
             ref={codeInputRef}
             type="text"
             inputMode="numeric"
-            placeholder="인증번호 6자리"
+            placeholder={t('auth:phone.codePlaceholder6')}
             value={code}
             onChange={(e) => handleCodeChange(e.target.value)}
             error={error || externalError || undefined}
@@ -250,7 +253,7 @@ export function PhoneVerificationStep({
               timeLeft <= 30 ? 'text-red-500' : 'text-gray-500'
             }`}
           >
-            {timeLeft > 0 ? formatTime(timeLeft) : '만료'}
+            {timeLeft > 0 ? formatTime(timeLeft) : t('auth:phone.expired')}
           </div>
         </div>
 
@@ -266,7 +269,7 @@ export function PhoneVerificationStep({
                 : 'text-gray-400 cursor-not-allowed'
             }`}
           >
-            {loading ? '발송 중...' : '인증번호 재전송'}
+            {loading ? t('auth:phone.sending') : t('auth:phone.resendCodeButton')}
           </button>
         </div>
 
@@ -277,7 +280,7 @@ export function PhoneVerificationStep({
           disabled={code.length !== 6 || loading}
           loading={loading}
         >
-          확인
+          {t('common:confirm')}
         </StepButton>
       </div>
     </StepLayout>

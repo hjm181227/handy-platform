@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StepLayout, StepTitle, StepInput, StepButton } from '../common';
 
 interface PasswordStepProps {
@@ -24,6 +25,7 @@ export function PasswordStep({
   totalSteps,
   error: externalError,
 }: PasswordStepProps) {
+  const { t } = useTranslation(['auth', 'common']);
   const [password, setPassword] = useState(initialPassword);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,12 +42,12 @@ export function PasswordStep({
     e.preventDefault();
 
     if (!password) {
-      setError('비밀번호를 입력해주세요.');
+      setError(t('auth:signup.passwordRequired'));
       return;
     }
 
     if (!isValid) {
-      setError('비밀번호 요구사항을 충족해주세요.');
+      setError(t('auth:signup.passwordRequirementsNotMet'));
       return;
     }
 
@@ -61,14 +63,14 @@ export function PasswordStep({
     >
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
         <StepTitle
-          title="비밀번호를 설정해주세요"
-          subtitle="안전한 비밀번호로 계정을 보호해요"
+          title={t('auth:signup.passwordTitle')}
+          subtitle={t('auth:signup.passwordSubtitle')}
         />
 
         <StepInput
           ref={inputRef}
           type="password"
-          placeholder="비밀번호 입력"
+          placeholder={t('auth:signup.passwordInput')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={error || externalError || undefined}
@@ -80,11 +82,11 @@ export function PasswordStep({
         <div className="mt-4 space-y-2">
           <RequirementItem
             met={requirements.minLength}
-            text="8자 이상"
+            text={t('auth:signup.minLength')}
           />
           <RequirementItem
             met={requirements.hasLetterAndNumber}
-            text="영문, 숫자 포함"
+            text={t('auth:signup.hasLetterAndNumber')}
           />
         </div>
 
@@ -94,7 +96,7 @@ export function PasswordStep({
           type="submit"
           disabled={!isValid}
         >
-          다음
+          {t('common:next')}
         </StepButton>
       </form>
     </StepLayout>

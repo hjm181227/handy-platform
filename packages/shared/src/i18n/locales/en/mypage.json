@@ -1,0 +1,81 @@
+{
+  "title": "My Page",
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit Profile",
+    "profileImage": "Profile Photo",
+    "changeImage": "Change Photo",
+    "nickname": "Nickname",
+    "email": "Email",
+    "phone": "Phone",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell us about yourself",
+    "saved": "Profile saved"
+  },
+  "menu": {
+    "orders": "Orders",
+    "wishlist": "Wishlist",
+    "likes": "Likes",
+    "coupons": "Coupons",
+    "points": "Points",
+    "reviews": "My Reviews",
+    "shippingAddresses": "Addresses",
+    "settings": "Settings",
+    "help": "Help Center",
+    "notice": "Notices",
+    "faq": "FAQ",
+    "inquiry": "Contact Us",
+    "logout": "Log Out",
+    "deleteAccount": "Delete Account"
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "empty": "Your wishlist is empty",
+    "emptyDescription": "Save items you love",
+    "removed": "Removed from wishlist",
+    "added": "Added to wishlist"
+  },
+  "points": {
+    "title": "Points",
+    "available": "Available Points",
+    "history": "Points History",
+    "earned": "Earned",
+    "used": "Used",
+    "expired": "Expired",
+    "noHistory": "No points history"
+  },
+  "coupons": {
+    "title": "Coupons",
+    "available": "Available Coupons",
+    "expired": "Expired Coupons",
+    "noCoupons": "No coupons available",
+    "expiryDate": "Valid until {{date}}",
+    "minOrderAmount": "Min. order: {{amount}} KRW"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "notification": "Notifications",
+    "pushNotification": "Push Notifications",
+    "marketingNotification": "Marketing Notifications",
+    "darkMode": "Dark Mode",
+    "version": "Version",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "deleteAccount": "Delete Account",
+    "deleteAccountConfirm": "Are you sure? All data will be permanently deleted.",
+    "languageOptions": {
+      "ko": "한국어",
+      "en": "English",
+      "ja": "日本語"
+    }
+  },
+  "seller": {
+    "apply": "Apply as Seller",
+    "dashboard": "Seller Dashboard",
+    "products": "Product Management",
+    "orders": "Order Management",
+    "stats": "Analytics",
+    "settings": "Seller Settings"
+  }
+}

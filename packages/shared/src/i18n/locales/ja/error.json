@@ -1,0 +1,189 @@
+{
+  "USER_ALREADY_EXISTS": {
+    "title": "登録済みのアカウントです",
+    "message": "このメールアドレスは既に登録されています。ログインしてください。",
+    "action": "ログイン"
+  },
+  "USER_NOT_FOUND": {
+    "title": "アカウントが見つかりません",
+    "message": "未登録のメールアドレスです。新規登録してください。",
+    "action": "新規登録"
+  },
+  "INVALID_CREDENTIALS": {
+    "title": "ログイン情報が正しくありません",
+    "message": "メールアドレスまたはパスワードが間違っています。",
+    "action": "再試行"
+  },
+  "INVALID_PASSWORD": {
+    "title": "パスワードが正しくありません",
+    "message": "パスワードが一致しません。再入力してください。",
+    "action": "再試行"
+  },
+  "TOKEN_EXPIRED": {
+    "title": "セッションが期限切れです",
+    "message": "セッションが期限切れです。再度ログインしてください。",
+    "action": "ログイン"
+  },
+  "TOKEN_INVALID": {
+    "title": "認証情報が無効です",
+    "message": "ログイン情報に問題があります。再度ログインしてください。",
+    "action": "ログイン"
+  },
+  "ACCESS_DENIED": {
+    "title": "アクセス権限がありません",
+    "message": "この機能を利用する権限がありません。",
+    "action": "確認"
+  },
+  "VALIDATION_ERROR": {
+    "title": "入力内容をご確認ください",
+    "message": "入力内容に誤りがあります。再度ご確認ください。",
+    "action": "修正"
+  },
+  "EMAIL_INVALID": {
+    "title": "メールアドレスの形式が正しくありません",
+    "message": "正しいメールアドレスを入力してください。",
+    "action": "修正"
+  },
+  "PASSWORD_TOO_SHORT": {
+    "title": "パスワードが短すぎます",
+    "message": "パスワードは6文字以上必要です。",
+    "action": "修正"
+  },
+  "PASSWORD_TOO_WEAK": {
+    "title": "パスワードが簡単すぎます",
+    "message": "より強力なパスワードを設定してください。",
+    "action": "修正"
+  },
+  "PHONE_INVALID": {
+    "title": "電話番号が正しくありません",
+    "message": "正しい電話番号を入力してください。",
+    "action": "修正"
+  },
+  "PRODUCT_NOT_FOUND": {
+    "title": "商品が見つかりません",
+    "message": "この商品は存在しないか削除されました。",
+    "action": "商品一覧へ"
+  },
+  "PRODUCT_OUT_OF_STOCK": {
+    "title": "在庫切れです",
+    "message": "現在在庫がなく注文できません。",
+    "action": "入荷通知"
+  },
+  "INSUFFICIENT_STOCK": {
+    "title": "在庫が不足しています",
+    "message": "ご希望の数量に対して在庫が不足しています。",
+    "action": "数量変更"
+  },
+  "CART_ITEM_NOT_FOUND": {
+    "title": "カート内の商品が見つかりません",
+    "message": "カートにこの商品が見つかりません。",
+    "action": "カートを更新"
+  },
+  "CART_EMPTY": {
+    "title": "カートが空です",
+    "message": "注文する商品をカートに入れてください。",
+    "action": "買い物を続ける"
+  },
+  "ORDER_NOT_FOUND": {
+    "title": "注文が見つかりません",
+    "message": "注文情報が見つかりません。",
+    "action": "注文履歴へ"
+  },
+  "ORDER_ALREADY_CANCELLED": {
+    "title": "キャンセル済みの注文です",
+    "message": "この注文は既にキャンセルされています。",
+    "action": "注文履歴へ"
+  },
+  "ORDER_CANNOT_CANCEL": {
+    "title": "注文をキャンセルできません",
+    "message": "配送が開始された注文はキャンセルできません。",
+    "action": "サポートに連絡"
+  },
+  "PAYMENT_FAILED": {
+    "title": "決済に失敗しました",
+    "message": "決済処理中に問題が発生しました。もう一度お試しください。",
+    "action": "再決済"
+  },
+  "PAYMENT_CANCELLED": {
+    "title": "決済がキャンセルされました",
+    "message": "決済がキャンセルされました。",
+    "action": "再決済"
+  },
+  "INSUFFICIENT_FUNDS": {
+    "title": "残高が不足しています",
+    "message": "残高が不足しています。別の決済方法をお選びください。",
+    "action": "決済方法を変更"
+  },
+  "COUPON_NOT_FOUND": {
+    "title": "クーポンが見つかりません",
+    "message": "無効なクーポンです。",
+    "action": "クーポンを確認"
+  },
+  "COUPON_EXPIRED": {
+    "title": "クーポンの有効期限が切れています",
+    "message": "使用期限が過ぎたクーポンです。",
+    "action": "別のクーポンを使用"
+  },
+  "COUPON_ALREADY_USED": {
+    "title": "使用済みのクーポンです",
+    "message": "一度使用したクーポンは再使用できません。",
+    "action": "別のクーポンを使用"
+  },
+  "INSUFFICIENT_POINTS": {
+    "title": "ポイントが不足しています",
+    "message": "利用可能なポイントを超えています。",
+    "action": "ポイント調整"
+  },
+  "NETWORK_ERROR": {
+    "title": "ネットワークエラー",
+    "message": "インターネット接続を確認して再試行してください。",
+    "action": "再試行"
+  },
+  "SERVER_ERROR": {
+    "title": "サーバーエラーが発生しました",
+    "message": "一時的なサーバーエラーです。しばらくしてから再試行してください。",
+    "action": "再試行"
+  },
+  "TIMEOUT": {
+    "title": "リクエストがタイムアウトしました",
+    "message": "サーバーの応答が遅延しています。再試行してください。",
+    "action": "再試行"
+  },
+  "SERVICE_UNAVAILABLE": {
+    "title": "サービスをご利用いただけません",
+    "message": "現在メンテナンス中です。しばらくしてからご利用ください。",
+    "action": "確認"
+  },
+  "FILE_TOO_LARGE": {
+    "title": "ファイルサイズが大きすぎます",
+    "message": "アップロード可能なファイルサイズを超えています。",
+    "action": "別のファイルを選択"
+  },
+  "INVALID_FILE_TYPE": {
+    "title": "サポートされていないファイル形式です",
+    "message": "許可されたファイル形式のみアップロードできます。",
+    "action": "別のファイルを選択"
+  },
+  "PERMISSION_DENIED": {
+    "title": "権限がありません",
+    "message": "この操作を行う権限がありません。",
+    "action": "確認"
+  },
+  "ACCOUNT_SUSPENDED": {
+    "title": "アカウントが停止されました",
+    "message": "利用規約違反によりアカウントが停止されました。",
+    "action": "サポートに連絡"
+  },
+  "UNKNOWN_ERROR": {
+    "title": "不明なエラーが発生しました",
+    "message": "予期しないエラーが発生しました。サポートにお問い合わせください。",
+    "action": "サポートに連絡"
+  },
+  "TOO_MANY_REQUESTS": {
+    "title": "リクエストが多すぎます",
+    "message": "しばらくしてからもう一度お試しください。",
+    "action": "確認"
+  },
+  "defaultTitle": "エラーが発生しました",
+  "defaultAction": "確認"
+}

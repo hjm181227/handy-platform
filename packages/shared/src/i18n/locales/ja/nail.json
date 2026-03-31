@@ -1,0 +1,57 @@
+{
+  "shape": {
+    "ROUND": "ラウンド",
+    "ALMOND": "アーモンド",
+    "SQUARE": "スクエア",
+    "OVAL": "オーバル",
+    "COFFIN": "コフィン",
+    "STILETTO": "スティレット"
+  },
+  "length": {
+    "SHORT": "ショート",
+    "MEDIUM": "ミディアム",
+    "LONG": "ロング"
+  },
+  "finger": {
+    "thumb": "親指",
+    "index": "人差し指",
+    "middle": "中指",
+    "ring": "薬指",
+    "pinky": "小指"
+  },
+  "material": {
+    "gel": "ジェル",
+    "acrylic": "アクリル",
+    "pressOn": "プレスオン",
+    "sticker": "ネイルシール",
+    "dipping": "ディップパウダー",
+    "polygel": "ポリジェル"
+  },
+  "service": {
+    "manicure": "マニキュア",
+    "pedicure": "ペディキュア",
+    "nailArt": "ネイルアート",
+    "gelExtension": "ジェルスカルプ",
+    "removal": "オフ",
+    "repair": "リペア",
+    "care": "ネイルケア"
+  },
+  "design": {
+    "solid": "ワンカラー",
+    "gradient": "グラデーション",
+    "french": "フレンチ",
+    "marble": "マーブル",
+    "glitter": "ラメ",
+    "chrome": "ミラー",
+    "matte": "マット",
+    "holographic": "ホログラム",
+    "catEye": "キャッツアイ",
+    "waterColor": "水彩",
+    "flower": "フラワー",
+    "geometric": "ジオメトリック",
+    "minimal": "シンプル",
+    "maximal": "ゴージャス",
+    "character": "キャラクター",
+    "seasonal": "シーズンデザイン"
+  }
+}

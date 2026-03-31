@@ -1,3 +1,7 @@
+// i18n
+export { default as i18n, i18n as i18nInstance } from './i18n';
+export * from './i18n/types';
+
 // Types
 export * from './types';
 

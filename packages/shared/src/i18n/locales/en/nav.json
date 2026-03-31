@@ -1,0 +1,63 @@
+{
+  "bottom": {
+    "home": "Home",
+    "discover": "Discover",
+    "snap": "Snap",
+    "shop": "Shop",
+    "my": "My",
+    "likes": "Likes",
+    "new": "New Snap",
+    "snapUpload": "Upload Snap",
+    "customOrder": "Create Custom Order"
+  },
+  "gnb": {
+    "feed": "Feed",
+    "discover": "Discover",
+    "shop": "Shop",
+    "ranking": "Ranking",
+    "brands": "Brands",
+    "new": "New",
+    "recommend": "For You",
+    "event": "Events"
+  },
+  "header": {
+    "search": "Search",
+    "cart": "Cart",
+    "notification": "Notifications",
+    "back": "Back",
+    "menu": "Menu",
+    "home": "Home",
+    "navigation": "Bottom navigation",
+    "recentSearches": "Recent searches",
+    "recommendedSearches": "Recommended searches",
+    "deleteAll": "Delete all",
+    "searchFor": "Search '{{query}}'",
+    "category": "Categories",
+    "chat": "Chat",
+    "closeCategory": "Close categories",
+    "closeSearch": "Close search",
+    "goTo": "Go to {{label}}",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "footer": {
+    "aboutHandy": "About HANDY",
+    "companyIntro": "Company",
+    "businessIntro": "Business",
+    "newsroom": "Newsroom",
+    "notice": "Notices",
+    "customerSupport": "Customer Support",
+    "contactUs": "Contact Us",
+    "faq": "FAQ",
+    "csPhone": "CS: 010-9611-1711",
+    "csHours": "Hours: Weekdays 09:00 ~ 18:00 (Lunch 12:00~13:00)",
+    "csEmail": "email: hermosear98@gmail.com",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "pgAgent": "Payment Agent",
+    "disputeResolution": "Dispute Resolution",
+    "companyInfo": "Hermosear | CEO: Kim Donghyun | Address: B01-G160, 150-29 Gongse-ro, Giheung-gu, Yongin-si, Gyeonggi-do | Mail Order License: 2024-Yongin Giheung-2437 | Business No: 106-16-34319 | Tel: 010-9611-1711",
+    "eventPreparing": "Events coming soon",
+    "eventComingSoon": "Stay tuned for new events!"
+  }
+}

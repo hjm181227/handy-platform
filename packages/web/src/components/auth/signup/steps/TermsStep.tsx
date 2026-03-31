@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StepLayout, StepTitle, StepButton } from '../common';
 import type { AgreedTerms } from '../../../../hooks/useSignupFlow';
 
@@ -16,14 +17,15 @@ interface TermItem {
   link?: string;
 }
 
-const TERMS: TermItem[] = [
-  { key: 'age', label: '만 14세 이상입니다', required: true },
-  { key: 'service', label: '서비스 이용약관 동의', required: true, link: '/policy/terms' },
-  { key: 'privacy', label: '개인정보 처리방침 동의', required: true, link: '/policy/privacy' },
-  { key: 'marketing', label: '마케팅 정보 수신 동의', required: false },
-];
-
 export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: TermsStepProps) {
+  const { t } = useTranslation(['auth', 'common']);
+
+  const TERMS: TermItem[] = [
+    { key: 'age', label: t('auth:signup.ageRequirement'), required: true },
+    { key: 'service', label: t('auth:signup.serviceTerms'), required: true, link: '/policy/terms' },
+    { key: 'privacy', label: t('auth:signup.privacyTerms'), required: true, link: '/policy/privacy' },
+    { key: 'marketing', label: t('auth:signup.marketingTerms'), required: false },
+  ];
   const [agreed, setAgreed] = useState<AgreedTerms>({
     service: false,
     privacy: false,
@@ -70,8 +72,8 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
       showBackButton={!!onBack}
     >
       <StepTitle
-        title="서비스 이용을 위해"
-        subtitle="약관에 동의해주세요"
+        title={t('auth:signup.termsTitle')}
+        subtitle={t('auth:signup.termsSubtitle')}
       />
 
       <div className="flex-1 mt-6">
@@ -90,7 +92,7 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
               </svg>
             )}
           </div>
-          <span className="text-lg font-semibold text-gray-900">전체 동의</span>
+          <span className="text-lg font-semibold text-gray-900">{t('auth:signup.agreeAll')}</span>
         </button>
 
         {/* 구분선 */}
@@ -116,7 +118,7 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
                 </div>
                 <span className="text-gray-700">
                   <span className={term.required ? 'text-[#E85A6B]' : 'text-gray-400'}>
-                    [{term.required ? '필수' : '선택'}]
+                    [{term.required ? t('common:required') : t('common:optional')}]
                   </span>{' '}
                   {term.label}
                 </span>
@@ -138,7 +140,7 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
       </div>
 
       <StepButton onClick={handleNext} disabled={!allRequiredAgreed}>
-        동의하고 계속하기
+        {t('auth:signup.agreeAndContinue')}
       </StepButton>
     </StepLayout>
   );

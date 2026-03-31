@@ -1,0 +1,189 @@
+{
+  "USER_ALREADY_EXISTS": {
+    "title": "Account Already Exists",
+    "message": "This email is already registered. Try logging in instead.",
+    "action": "Log In"
+  },
+  "USER_NOT_FOUND": {
+    "title": "Account Not Found",
+    "message": "This email is not registered. Please sign up.",
+    "action": "Sign Up"
+  },
+  "INVALID_CREDENTIALS": {
+    "title": "Invalid Login",
+    "message": "Incorrect email or password. Please try again.",
+    "action": "Retry"
+  },
+  "INVALID_PASSWORD": {
+    "title": "Incorrect Password",
+    "message": "The password doesn't match. Please try again.",
+    "action": "Retry"
+  },
+  "TOKEN_EXPIRED": {
+    "title": "Session Expired",
+    "message": "Your session has expired. Please log in again.",
+    "action": "Log In"
+  },
+  "TOKEN_INVALID": {
+    "title": "Invalid Session",
+    "message": "There's a problem with your session. Please log in again.",
+    "action": "Log In"
+  },
+  "ACCESS_DENIED": {
+    "title": "Access Denied",
+    "message": "You don't have permission to use this feature.",
+    "action": "OK"
+  },
+  "VALIDATION_ERROR": {
+    "title": "Invalid Input",
+    "message": "Please check your input and try again.",
+    "action": "Fix"
+  },
+  "EMAIL_INVALID": {
+    "title": "Invalid Email",
+    "message": "Please enter a valid email address.",
+    "action": "Fix"
+  },
+  "PASSWORD_TOO_SHORT": {
+    "title": "Password Too Short",
+    "message": "Password must be at least 6 characters.",
+    "action": "Fix"
+  },
+  "PASSWORD_TOO_WEAK": {
+    "title": "Password Too Weak",
+    "message": "Please choose a stronger password.",
+    "action": "Fix"
+  },
+  "PHONE_INVALID": {
+    "title": "Invalid Phone Number",
+    "message": "Please enter a valid phone number.",
+    "action": "Fix"
+  },
+  "PRODUCT_NOT_FOUND": {
+    "title": "Product Not Found",
+    "message": "This product doesn't exist or has been removed.",
+    "action": "Browse Products"
+  },
+  "PRODUCT_OUT_OF_STOCK": {
+    "title": "Out of Stock",
+    "message": "This item is currently out of stock.",
+    "action": "Notify Me"
+  },
+  "INSUFFICIENT_STOCK": {
+    "title": "Insufficient Stock",
+    "message": "Not enough stock for the requested quantity.",
+    "action": "Adjust Quantity"
+  },
+  "CART_ITEM_NOT_FOUND": {
+    "title": "Cart Item Not Found",
+    "message": "This item is no longer in your cart.",
+    "action": "Refresh Cart"
+  },
+  "CART_EMPTY": {
+    "title": "Cart is Empty",
+    "message": "Add items to your cart before checkout.",
+    "action": "Continue Shopping"
+  },
+  "ORDER_NOT_FOUND": {
+    "title": "Order Not Found",
+    "message": "The requested order could not be found.",
+    "action": "View Orders"
+  },
+  "ORDER_ALREADY_CANCELLED": {
+    "title": "Already Cancelled",
+    "message": "This order has already been cancelled.",
+    "action": "View Orders"
+  },
+  "ORDER_CANNOT_CANCEL": {
+    "title": "Cannot Cancel Order",
+    "message": "Orders that have been shipped cannot be cancelled.",
+    "action": "Contact Support"
+  },
+  "PAYMENT_FAILED": {
+    "title": "Payment Failed",
+    "message": "There was an issue processing your payment. Please try again.",
+    "action": "Try Again"
+  },
+  "PAYMENT_CANCELLED": {
+    "title": "Payment Cancelled",
+    "message": "The payment was cancelled.",
+    "action": "Try Again"
+  },
+  "INSUFFICIENT_FUNDS": {
+    "title": "Insufficient Funds",
+    "message": "Insufficient balance. Please try a different payment method.",
+    "action": "Change Payment"
+  },
+  "COUPON_NOT_FOUND": {
+    "title": "Coupon Not Found",
+    "message": "This coupon is invalid.",
+    "action": "Check Coupon"
+  },
+  "COUPON_EXPIRED": {
+    "title": "Coupon Expired",
+    "message": "This coupon has expired.",
+    "action": "Use Another"
+  },
+  "COUPON_ALREADY_USED": {
+    "title": "Coupon Already Used",
+    "message": "This coupon has already been redeemed.",
+    "action": "Use Another"
+  },
+  "INSUFFICIENT_POINTS": {
+    "title": "Insufficient Points",
+    "message": "You don't have enough points.",
+    "action": "Adjust Points"
+  },
+  "NETWORK_ERROR": {
+    "title": "Network Error",
+    "message": "Please check your internet connection and try again.",
+    "action": "Retry"
+  },
+  "SERVER_ERROR": {
+    "title": "Server Error",
+    "message": "A temporary server error occurred. Please try again later.",
+    "action": "Retry"
+  },
+  "TIMEOUT": {
+    "title": "Request Timeout",
+    "message": "The server is taking too long to respond. Please try again.",
+    "action": "Retry"
+  },
+  "SERVICE_UNAVAILABLE": {
+    "title": "Service Unavailable",
+    "message": "The service is under maintenance. Please try again later.",
+    "action": "OK"
+  },
+  "FILE_TOO_LARGE": {
+    "title": "File Too Large",
+    "message": "The file exceeds the maximum upload size.",
+    "action": "Choose Another"
+  },
+  "INVALID_FILE_TYPE": {
+    "title": "Unsupported File Type",
+    "message": "Only supported file formats can be uploaded.",
+    "action": "Choose Another"
+  },
+  "PERMISSION_DENIED": {
+    "title": "Permission Denied",
+    "message": "You don't have permission to perform this action.",
+    "action": "OK"
+  },
+  "ACCOUNT_SUSPENDED": {
+    "title": "Account Suspended",
+    "message": "Your account has been suspended due to a policy violation.",
+    "action": "Contact Support"
+  },
+  "UNKNOWN_ERROR": {
+    "title": "Unknown Error",
+    "message": "An unexpected error occurred. Please contact support.",
+    "action": "Contact Support"
+  },
+  "TOO_MANY_REQUESTS": {
+    "title": "Too Many Requests",
+    "message": "Please try again later.",
+    "action": "OK"
+  },
+  "defaultTitle": "An error occurred",
+  "defaultAction": "OK"
+}

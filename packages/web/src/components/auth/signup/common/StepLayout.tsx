@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ProgressBar } from './ProgressBar';
 
 interface StepLayoutProps {
@@ -20,6 +21,7 @@ export function StepLayout({
   showBackButton = true,
   className = '',
 }: StepLayoutProps) {
+  const { t } = useTranslation('common');
   return (
     <div className={`h-full min-h-screen bg-white flex flex-col mx-auto max-w-md overflow-y-auto ${className}`}>
       {/* Header */}
@@ -30,7 +32,7 @@ export function StepLayout({
             <button
               onClick={onBack}
               className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="뒤로가기"
+              aria-label={t('back')}
             >
               <svg
                 className="w-6 h-6 text-gray-800"

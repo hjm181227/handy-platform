@@ -1,0 +1,57 @@
+{
+  "shape": {
+    "ROUND": "라운드",
+    "ALMOND": "아몬드",
+    "SQUARE": "스퀘어",
+    "OVAL": "오벌",
+    "COFFIN": "코핀",
+    "STILETTO": "스틸레토"
+  },
+  "length": {
+    "SHORT": "숏",
+    "MEDIUM": "미디움",
+    "LONG": "롱"
+  },
+  "finger": {
+    "thumb": "엄지",
+    "index": "검지",
+    "middle": "중지",
+    "ring": "약지",
+    "pinky": "소지"
+  },
+  "material": {
+    "gel": "젤",
+    "acrylic": "아크릴",
+    "pressOn": "프레스온",
+    "sticker": "스티커",
+    "dipping": "딥핑",
+    "polygel": "폴리젤"
+  },
+  "service": {
+    "manicure": "매니큐어",
+    "pedicure": "페디큐어",
+    "nailArt": "네일 아트",
+    "gelExtension": "젤 연장",
+    "removal": "제거",
+    "repair": "보수",
+    "care": "네일 케어"
+  },
+  "design": {
+    "solid": "단색",
+    "gradient": "그라데이션",
+    "french": "프렌치",
+    "marble": "마블",
+    "glitter": "글리터",
+    "chrome": "크롬",
+    "matte": "매트",
+    "holographic": "홀로그래픽",
+    "catEye": "캣아이",
+    "waterColor": "수채화",
+    "flower": "꽃무늬",
+    "geometric": "지오메트릭",
+    "minimal": "미니멀",
+    "maximal": "맥시멀",
+    "character": "캐릭터",
+    "seasonal": "시즌 디자인"
+  }
+}
