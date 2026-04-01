@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { NailCategories } from '@handy-platform/shared';
 import { CategoryIcon } from '../common/CategoryIcon';
 import type { CategoryType } from '@handy-platform/shared';
@@ -14,43 +15,45 @@ interface CategoryItem {
 }
 
 export function CategorySelector({ value, onChange }: CategorySelectorProps) {
+  const { t } = useTranslation('product');
+
   const categoryData: Record<CategoryType, CategoryItem[]> = {
     style: [
-      { label: "신상", value: "new" },
-      { label: "심플", value: "simple" },
-      { label: "화려", value: "fancy" },
-      { label: "아트", value: "art" },
-      { label: "트렌디", value: "trendy" },
-      { label: "클래식", value: "classic" },
-      { label: "시즌", value: "season" },
-      { label: "테마", value: "theme" },
-      { label: "키치", value: "kitsch" },
-      { label: "네츄럴", value: "natural" },
+      { label: t('categoryFilter.style_new'), value: "new" },
+      { label: t('categoryFilter.style_simple'), value: "simple" },
+      { label: t('categoryFilter.style_fancy'), value: "fancy" },
+      { label: t('categoryFilter.style_art'), value: "art" },
+      { label: t('categoryFilter.style_trendy'), value: "trendy" },
+      { label: t('categoryFilter.style_classic'), value: "classic" },
+      { label: t('categoryFilter.style_season'), value: "season" },
+      { label: t('categoryFilter.style_theme'), value: "theme" },
+      { label: t('categoryFilter.style_kitsch'), value: "kitsch" },
+      { label: t('categoryFilter.style_natural'), value: "natural" },
     ],
     color: [
-      { label: "레드", value: "red" },
-      { label: "핑크", value: "pink" },
-      { label: "블루", value: "blue" },
-      { label: "그린", value: "green" },
-      { label: "블랙/화이트", value: "black-white" },
-      { label: "브라운", value: "brown" },
-      { label: "옐로우", value: "yellow" },
-      { label: "뉴트럴", value: "neutral" },
+      { label: t('categoryFilter.color_red'), value: "red" },
+      { label: t('categoryFilter.color_pink'), value: "pink" },
+      { label: t('categoryFilter.color_blue'), value: "blue" },
+      { label: t('categoryFilter.color_green'), value: "green" },
+      { label: t('categoryFilter.color_blackWhite'), value: "black-white" },
+      { label: t('categoryFilter.color_brown'), value: "brown" },
+      { label: t('categoryFilter.color_yellow'), value: "yellow" },
+      { label: t('categoryFilter.color_neutral'), value: "neutral" },
     ],
     texture: [
-      { label: "글리터", value: "glitter" },
-      { label: "크롬/메탈", value: "chrome" },
-      { label: "매트", value: "matte" },
-      { label: "벨벳", value: "velvet" },
-      { label: "젤", value: "gel" },
-      { label: "자석", value: "magnet" },
+      { label: t('categoryFilter.texture_glitter'), value: "glitter" },
+      { label: t('categoryFilter.texture_chrome'), value: "chrome" },
+      { label: t('categoryFilter.texture_matte'), value: "matte" },
+      { label: t('categoryFilter.texture_velvet'), value: "velvet" },
+      { label: t('categoryFilter.texture_gel'), value: "gel" },
+      { label: t('categoryFilter.texture_magnet'), value: "magnet" },
     ],
     tpo: [
-      { label: "데일리", value: "daily" },
-      { label: "파티", value: "party" },
-      { label: "웨딩", value: "wedding" },
-      { label: "공연", value: "performance" },
-      { label: "Special day", value: "special" },
+      { label: t('categoryFilter.tpo_daily'), value: "daily" },
+      { label: t('categoryFilter.tpo_party'), value: "party" },
+      { label: t('categoryFilter.tpo_wedding'), value: "wedding" },
+      { label: t('categoryFilter.tpo_performance'), value: "performance" },
+      { label: t('categoryFilter.tpo_special'), value: "special" },
     ],
     shape: [],
     length: [],
@@ -90,7 +93,7 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
           <span className="text-xs text-gray-500">
-            {selectedItems.length}/{maxCount}개 선택
+            {t('categorySelector.selectedCount', { current: selectedItems.length, max: maxCount })}
           </span>
         </div>
 
@@ -130,32 +133,32 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
   return (
     <div className="space-y-6">
       <div className="border-b pb-2">
-        <h2 className="text-lg font-semibold text-gray-900">네일 카테고리 설정</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{t('categorySelector.title')}</h2>
         <p className="text-sm text-gray-600 mt-1">
-          상품에 적합한 카테고리를 선택해주세요. 스타일, 컬러, 텍스쳐, TPO는 각각 최대 3개까지 선택 가능합니다.
+          {t('categorySelector.description')}
         </p>
       </div>
 
-      {renderMultiSelectCategory('style', '스타일', 3)}
-      {renderMultiSelectCategory('color', '컬러', 3)}
-      {renderMultiSelectCategory('texture', '텍스쳐', 3)}
-      {renderMultiSelectCategory('tpo', 'TPO', 3)}
+      {renderMultiSelectCategory('style', t('categoryType.style'), 3)}
+      {renderMultiSelectCategory('color', t('categoryType.color'), 3)}
+      {renderMultiSelectCategory('texture', t('categoryType.texture'), 3)}
+      {renderMultiSelectCategory('tpo', t('categoryType.tpo'), 3)}
 
       {(value.style?.length || value.color?.length || value.texture?.length || value.tpo?.length) && (
         <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-800 mb-2">선택된 카테고리</h4>
+          <h4 className="text-sm font-semibold text-gray-800 mb-2">{t('categorySelector.selectedCategories')}</h4>
           <div className="space-y-1 text-xs text-gray-600">
             {value.style?.length && (
-              <div><span className="font-medium">스타일:</span> {value.style.join(', ')}</div>
+              <div><span className="font-medium">{t('categoryType.style')}:</span> {value.style.join(', ')}</div>
             )}
             {value.color?.length && (
-              <div><span className="font-medium">컬러:</span> {value.color.join(', ')}</div>
+              <div><span className="font-medium">{t('categoryType.color')}:</span> {value.color.join(', ')}</div>
             )}
             {value.texture?.length && (
-              <div><span className="font-medium">텍스쳐:</span> {value.texture.join(', ')}</div>
+              <div><span className="font-medium">{t('categoryType.texture')}:</span> {value.texture.join(', ')}</div>
             )}
             {value.tpo?.length && (
-              <div><span className="font-medium">TPO:</span> {value.tpo.join(', ')}</div>
+              <div><span className="font-medium">{t('categoryType.tpo')}:</span> {value.tpo.join(', ')}</div>
             )}
           </div>
         </div>

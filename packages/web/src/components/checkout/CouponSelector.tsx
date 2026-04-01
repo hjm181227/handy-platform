@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { money } from '../../utils';
 
 // API Base URL
@@ -50,6 +51,7 @@ export function CouponSelector({
   onCouponRemoved,
   onError,
 }: CouponSelectorProps) {
+  const { t } = useTranslation('order');
   const [isExpanded, setIsExpanded] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [loading, setLoading] = useState(false);
@@ -109,12 +111,12 @@ export function CouponSelector({
         onCouponApplied(data.data.appliedCoupon, data.data.updatedTotals);
         setIsExpanded(false);
       } else {
-        const error = data.error || '쿠폰 적용에 실패했습니다.';
+        const error = data.error || t('checkout.couponApplyFailed');
         setCodeError(error);
         onError?.(error);
       }
     } catch (err: any) {
-      const error = err.message || '쿠폰 적용에 실패했습니다.';
+      const error = err.message || t('checkout.couponApplyFailed');
       setCodeError(error);
       onError?.(error);
     } finally {
@@ -145,10 +147,10 @@ export function CouponSelector({
         setCouponCode('');
         setIsExpanded(false);
       } else {
-        setCodeError(data.error || '유효하지 않은 쿠폰 코드입니다.');
+        setCodeError(data.error || t('checkout.invalidCouponCode'));
       }
     } catch (err: any) {
-      setCodeError(err.message || '쿠폰 코드 확인에 실패했습니다.');
+      setCodeError(err.message || t('checkout.couponCodeCheckFailed'));
     } finally {
       setApplying(false);
     }
@@ -172,10 +174,10 @@ export function CouponSelector({
       if (data.success && data.data) {
         onCouponRemoved(data.data.updatedTotals);
       } else {
-        onError?.(data.error || '쿠폰 제거에 실패했습니다.');
+        onError?.(data.error || t('checkout.couponRemoveFailed'));
       }
     } catch (err: any) {
-      onError?.(err.message || '쿠폰 제거에 실패했습니다.');
+      onError?.(err.message || t('checkout.couponRemoveFailed'));
     } finally {
       setApplying(false);
     }
@@ -186,9 +188,9 @@ export function CouponSelector({
       case 'percentage':
         return `${coupon.discountValue}%`;
       case 'fixed_amount':
-        return `${coupon.discountValue.toLocaleString()}원`;
+        return money(coupon.discountValue);
       case 'free_shipping':
-        return '무료배송';
+        return t('checkout.freeShippingCoupon');
       default:
         return '-';
     }
@@ -199,9 +201,9 @@ export function CouponSelector({
     const now = new Date();
     const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays <= 0) return '오늘까지';
-    if (diffDays === 1) return '내일까지';
-    if (diffDays <= 7) return `${diffDays}일 남음`;
+    if (diffDays <= 0) return t('checkout.expiryToday');
+    if (diffDays === 1) return t('checkout.expiryTomorrow');
+    if (diffDays <= 7) return t('checkout.expiryDaysLeft', { days: diffDays });
 
     return `~${date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}`;
   };
@@ -217,10 +219,10 @@ export function CouponSelector({
           <svg className="w-5 h-5 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
           </svg>
-          <span className="font-semibold text-gray-900">쿠폰 적용</span>
+          <span className="font-semibold text-gray-900">{t('checkout.couponApply')}</span>
           {availableCoupons.length > 0 && !appliedCoupon && (
             <span className="bg-[#FFF1F2] text-[#E85A6B] text-xs px-2 py-0.5 rounded-full font-medium">
-              {availableCoupons.length}장 사용 가능
+              {t('checkout.couponAvailableCount', { count: availableCoupons.length })}
             </span>
           )}
         </div>
@@ -259,7 +261,7 @@ export function CouponSelector({
               disabled={applying}
               className="text-xs text-[#E85A6B] hover:text-[#D14A5B] font-medium disabled:opacity-50"
             >
-              {applying ? '처리중...' : '제거'}
+              {applying ? t('checkout.processing') : t('checkout.remove')}
             </button>
           </div>
         </div>
@@ -280,7 +282,7 @@ export function CouponSelector({
                     <span className="font-semibold text-[#D14A5B]">{appliedCoupon.name}</span>
                   </div>
                   <p className="text-sm text-[#E85A6B] mt-1">
-                    할인 금액: <span className="font-bold">{money(appliedCoupon.discountAmount)}</span>
+                    {t('checkout.couponDiscountLabel')}: <span className="font-bold">{money(appliedCoupon.discountAmount)}</span>
                   </p>
                 </div>
                 <button
@@ -288,7 +290,7 @@ export function CouponSelector({
                   disabled={applying}
                   className="px-3 py-1.5 bg-white border border-blue-300 text-[#E85A6B] text-sm rounded-lg hover:bg-[#FFF1F2] disabled:opacity-50 transition-colors"
                 >
-                  {applying ? '처리중...' : '쿠폰 제거'}
+                  {applying ? t('checkout.processing') : t('checkout.removeCoupon')}
                 </button>
               </div>
             </div>
@@ -298,20 +300,20 @@ export function CouponSelector({
           {!appliedCoupon && (
             <>
               <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">보유 쿠폰</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">{t('checkout.ownedCoupons')}</h3>
 
                 {loading ? (
                   <div className="flex items-center justify-center py-6">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
-                    <span className="ml-2 text-sm text-gray-500">쿠폰 목록을 불러오는 중...</span>
+                    <span className="ml-2 text-sm text-gray-500">{t('checkout.loadingCoupons')}</span>
                   </div>
                 ) : availableCoupons.length === 0 ? (
                   <div className="text-center py-6 text-gray-500">
                     <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                     </svg>
-                    <p className="text-sm">사용 가능한 쿠폰이 없습니다</p>
-                    <p className="text-xs text-gray-400 mt-1">쿠폰 코드가 있다면 아래에서 입력해주세요</p>
+                    <p className="text-sm">{t('checkout.noCouponsAvailable')}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('checkout.enterCodeBelow')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -330,7 +332,7 @@ export function CouponSelector({
                               </span>
                               {couponItem.scope.type === 'seller' && (
                                 <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
-                                  판매자
+                                  {t('checkout.sellerScope')}
                                 </span>
                               )}
                             </div>
@@ -340,7 +342,7 @@ export function CouponSelector({
                               </span>
                               {couponItem.minimumOrderAmount && couponItem.minimumOrderAmount > 0 && (
                                 <span className="text-xs text-gray-400">
-                                  {couponItem.minimumOrderAmount.toLocaleString()}원 이상
+                                  {t('checkout.minimumOrderAmount', { amount: couponItem.minimumOrderAmount.toLocaleString() })}
                                 </span>
                               )}
                             </div>
@@ -362,7 +364,7 @@ export function CouponSelector({
 
               {/* Coupon Code Input */}
               <div className="pt-4 border-t border-gray-200">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">쿠폰 코드 입력</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">{t('checkout.couponCodeInput')}</h3>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -371,7 +373,7 @@ export function CouponSelector({
                       setCouponCode(e.target.value.toUpperCase());
                       setCodeError('');
                     }}
-                    placeholder="쿠폰 코드 입력"
+                    placeholder={t('checkout.couponCodePlaceholder')}
                     className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#E85A6B] focus:ring-1 focus:ring-[#E85A6B] text-sm uppercase"
                     disabled={applying}
                   />
@@ -380,7 +382,7 @@ export function CouponSelector({
                     disabled={!couponCode.trim() || applying}
                     className="px-4 py-2.5 bg-[#E85A6B] text-white text-sm font-medium rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                   >
-                    {applying ? '확인중...' : '적용'}
+                    {applying ? t('checkout.checking') : t('checkout.apply')}
                   </button>
                 </div>
                 {codeError && (

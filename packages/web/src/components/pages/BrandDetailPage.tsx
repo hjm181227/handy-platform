@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ProductCard } from '../product/ProductCard';
 import { productService, brandService, imageService } from '../../services/apiService';
 import type { Product, ProductsResponse, BrandDetail, ProductType } from '@handy-platform/shared';
@@ -80,6 +81,8 @@ export function BrandDetailPage({
   onBrandLike?: (brandId: string) => void;
   isBrandLiked?: boolean;
 }) {
+  const { t } = useTranslation('common');
+
   // 정렬 및 필터 상태
   const [sortBy, setSortBy] = useState('trending');
   const [priceFilter, setPriceFilter] = useState<{ min: number; max: number } | null>(null);
@@ -168,11 +171,11 @@ export function BrandDetailPage({
         if (response.success && response.data) {
           setBrandInfo(response.data);
         } else {
-          setBrandError('브랜드 정보를 불러오는 데 실패했습니다.');
+          setBrandError(t('brandDetail.brandLoadFailed'));
         }
       } catch (err) {
         console.error('Brand info fetch error:', err);
-        setBrandError('브랜드 정보를 불러오는 데 오류가 발생했습니다.');
+        setBrandError(t('brandDetail.brandLoadError'));
       } finally {
         setBrandLoading(false);
       }
@@ -205,13 +208,13 @@ export function BrandDetailPage({
 
     // 파일 크기 검증 (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('파일 크기는 10MB를 초과할 수 없습니다.');
+      alert(t('brandDetail.fileSizeError'));
       return;
     }
 
     // 파일 타입 검증
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('지원하지 않는 이미지 형식입니다.');
+      alert(t('brandDetail.unsupportedFormat'));
       return;
     }
 
@@ -249,10 +252,10 @@ export function BrandDetailPage({
       const updatedBrand = await brandService.getBrandDetail(decodedSellerUuid);
       setBrandInfo(updatedBrand.data);
 
-      alert('프로필 이미지가 업데이트되었습니다!');
+      alert(t('brandDetail.profileUpdated'));
     } catch (error) {
       console.error('Profile image upload failed:', error);
-      alert('프로필 이미지 업로드에 실패했습니다.');
+      alert(t('brandDetail.profileUploadFailed'));
     } finally {
       setUploadingProfile(false);
       // 파일 input 초기화
@@ -269,13 +272,13 @@ export function BrandDetailPage({
 
     // 파일 크기 검증 (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('파일 크기는 10MB를 초과할 수 없습니다.');
+      alert(t('brandDetail.fileSizeError'));
       return;
     }
 
     // 파일 타입 검증
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('지원하지 않는 이미지 형식입니다.');
+      alert(t('brandDetail.unsupportedFormat'));
       return;
     }
 
@@ -313,10 +316,10 @@ export function BrandDetailPage({
       const updatedBrand = await brandService.getBrandDetail(decodedSellerUuid);
       setBrandInfo(updatedBrand.data);
 
-      alert('배너 이미지가 변경되었습니다!');
+      alert(t('brandDetail.bannerUpdated'));
     } catch (error) {
       console.error('Banner image upload failed:', error);
-      alert('배너 이미지 업로드에 실패했습니다.');
+      alert(t('brandDetail.bannerUploadFailed'));
     } finally {
       setUploadingBanner(false);
       // 파일 input 초기화
@@ -367,7 +370,7 @@ export function BrandDetailPage({
         setHasMore(response.pagination?.hasNext ?? false);
       } else {
         if (!isLoadMore) {
-          setProductsError('상품을 불러오는 데 실패했습니다.');
+          setProductsError(t('brandDetail.productLoadError'));
           setProducts([]);
         }
         setHasMore(false);
@@ -375,7 +378,7 @@ export function BrandDetailPage({
     } catch (err) {
       console.error('Product fetch error:', err);
       if (!isLoadMore) {
-        setProductsError('상품을 불러오는 데 오류가 발생했습니다.');
+        setProductsError(t('brandDetail.productLoadErrorDetail'));
         setProducts([]);
       }
       setHasMore(false);
@@ -502,7 +505,7 @@ export function BrandDetailPage({
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="text-center py-20">
           <div className="w-16 h-16 border-4 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
+          <p className="text-gray-600">{t('brandDetail.loadingBrand')}</p>
         </div>
       </div>
     );
@@ -513,13 +516,13 @@ export function BrandDetailPage({
     return (
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="text-center py-20">
-          <h1 className="text-2xl font-semibold mb-2 text-red-600">브랜드를 찾을 수 없습니다</h1>
-          <p className="text-gray-600 mb-4">{brandError || '해당 브랜드가 존재하지 않습니다.'}</p>
+          <h1 className="text-2xl font-semibold mb-2 text-red-600">{t('brandDetail.brandNotFound')}</h1>
+          <p className="text-gray-600 mb-4">{brandError || t('brandDetail.brandNotExist')}</p>
           <button
             onClick={() => onGo('/brands')}
             className="rounded-lg bg-black text-white px-6 py-2 hover:bg-gray-800"
           >
-            브랜드 목록으로 돌아가기
+            {t('brandDetail.backToBrands')}
           </button>
         </div>
       </div>
@@ -537,8 +540,8 @@ export function BrandDetailPage({
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
             <path d="M19 12H5m7-7l-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="hidden sm:inline">브랜드 목록으로 돌아가기</span>
-          <span className="sm:hidden">돌아가기</span>
+          <span className="hidden sm:inline">{t('brandDetail.backToBrands')}</span>
+          <span className="sm:hidden">{t('brandDetail.backButton')}</span>
         </button>
       </div>
 
@@ -556,7 +559,7 @@ export function BrandDetailPage({
           {/* 이미지 프리로딩 및 에러 처리 */}
           <img
             src={currentBackgroundImage}
-            alt={`${brandInfo?.brandName} 브랜드 대표 이미지 - ${brandTheme.description}`}
+            alt={t('brandDetail.brandImageAlt', { name: brandInfo?.brandName, description: brandTheme.description })}
             className="hidden"
             loading="eager"
             onLoad={() => setImageLoaded(true)}
@@ -565,13 +568,13 @@ export function BrandDetailPage({
 
           {/* 접근성을 위한 브랜드 정보 */}
           <div className="sr-only">
-            <h2>{brandInfo?.brandName} 브랜드 페이지</h2>
+            <h2>{brandInfo?.brandName} {t('brandDetail.brandPage')}</h2>
             <p>{brandTheme.description}</p>
           </div>
 
           {/* 로딩 상태 스켈레톤 */}
           {!imageLoaded && !imageError && (
-            <div className="absolute inset-0 bg-gray-300 animate-pulse" role="img" aria-label="브랜드 이미지 로딩 중">
+            <div className="absolute inset-0 bg-gray-300 animate-pulse" role="img" aria-label={t('brandDetail.brandImageLoading')}>
               <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-[length:200%_100%] animate-shimmer"></div>
             </div>
           )}
@@ -640,7 +643,7 @@ export function BrandDetailPage({
                     <button
                       onClick={() => onBrandLike?.(sellerUuid)}
                       className="flex items-center gap-1 hover:scale-110 transition-transform"
-                      aria-label={isBrandLiked ? '브랜드 좋아요 취소' : '브랜드 좋아요'}
+                      aria-label={isBrandLiked ? t('brandDetail.likeCancel') : t('brandDetail.likeAdd')}
                     >
                       <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${isBrandLiked ? 'text-red-500' : 'text-red-400'}`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
@@ -657,14 +660,14 @@ export function BrandDetailPage({
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                   </svg>
-                  <span className="text-white font-medium text-xs sm:text-sm">인증 브랜드</span>
+                  <span className="text-white font-medium text-xs sm:text-sm">{t('brandDetail.verifiedBrand')}</span>
                 </div>
                 {brandStats.totalProducts >= 3 && (
                   <div className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
                     <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
-                    <span className="text-white font-medium text-xs sm:text-sm">인기 브랜드</span>
+                    <span className="text-white font-medium text-xs sm:text-sm">{t('brandDetail.popularBrand')}</span>
                   </div>
                 )}
               </div>
@@ -676,8 +679,8 @@ export function BrandDetailPage({
             <button
               onClick={() => bannerInputRef.current?.click()}
               disabled={uploadingBanner}
-              title="배너 이미지 변경"
-              aria-label="배너 이미지 변경"
+              title={t('brandDetail.changeBanner')}
+              aria-label={t('brandDetail.changeBanner')}
               className="absolute bottom-6 sm:bottom-8 lg:bottom-12 right-4 sm:right-6 lg:right-8 z-30 bg-white/90 backdrop-blur-sm hover:bg-white hover:shadow-xl text-gray-700 p-3 rounded-lg shadow-lg transition-all flex items-center justify-center cursor-pointer"
             >
               {uploadingBanner ? (
@@ -701,7 +704,7 @@ export function BrandDetailPage({
                 </svg>
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-1">{brandStats.totalProducts}</div>
-              <div className="text-sm text-gray-600">상품 수</div>
+              <div className="text-sm text-gray-600">{t('brandDetail.productCount')}</div>
             </div>
 
             <div className="text-center group cursor-pointer">
@@ -711,13 +714,13 @@ export function BrandDetailPage({
                 </svg>
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-1">{brandStats.avgRating.toFixed(1)}</div>
-              <div className="text-sm text-gray-600">평균 평점</div>
+              <div className="text-sm text-gray-600">{t('brandDetail.avgRating')}</div>
             </div>
 
             <button
               onClick={() => onBrandLike?.(sellerUuid)}
               className="text-center group cursor-pointer hover:scale-105 transition-transform"
-              aria-label={isBrandLiked ? '브랜드 좋아요 취소' : '브랜드 좋아요'}
+              aria-label={isBrandLiked ? t('brandDetail.likeCancel') : t('brandDetail.likeAdd')}
             >
               <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-colors ${
                 isBrandLiked ? 'bg-red-200' : 'bg-red-100 group-hover:bg-red-200'
@@ -727,7 +730,7 @@ export function BrandDetailPage({
                 </svg>
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-1">{brandStats.totalLikes + (isBrandLiked ? 1 : 0)}</div>
-              <div className="text-sm text-gray-600">{isBrandLiked ? '좋아요 완료' : '총 좋아요'}</div>
+              <div className="text-sm text-gray-600">{isBrandLiked ? t('brandDetail.likeDone') : t('brandDetail.totalLikes')}</div>
             </button>
 
             <div className="text-center group cursor-pointer">
@@ -737,9 +740,9 @@ export function BrandDetailPage({
                 </svg>
               </div>
               <div className="text-xl font-bold text-gray-900 mb-1">
-                {brandStats.priceRange.min.toLocaleString()}~{brandStats.priceRange.max.toLocaleString()}원
+                {brandStats.priceRange.min.toLocaleString()}~{brandStats.priceRange.max.toLocaleString()}{t('won')}
               </div>
-              <div className="text-sm text-gray-600">가격대</div>
+              <div className="text-sm text-gray-600">{t('brandDetail.priceRange')}</div>
             </div>
           </div>
         </div>
@@ -748,9 +751,9 @@ export function BrandDetailPage({
       {/* 상품 유형 탭 */}
       <div className="flex gap-2 mb-6">
         {[
-          { value: null, label: '전체' },
-          { value: 'original' as ProductType, label: '오리지널' },
-          { value: 'custom' as ProductType, label: '커스텀' }
+          { value: null, label: t('brandDetail.allTab') },
+          { value: 'original' as ProductType, label: t('brandDetail.originalTab') },
+          { value: 'custom' as ProductType, label: t('brandDetail.customTab') }
         ].map((tab) => (
           <button
             key={tab.label}
@@ -771,11 +774,11 @@ export function BrandDetailPage({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold">
-              {productTypeFilter === 'original' ? '오리지널 상품' :
-               productTypeFilter === 'custom' ? '커스텀 상품' : '전체 상품'}
+              {productTypeFilter === 'original' ? t('brandDetail.originalProducts') :
+               productTypeFilter === 'custom' ? t('brandDetail.customProducts') : t('brandDetail.allProducts')}
             </h2>
             <span className="px-3 py-1 bg-[#FFF1F2] text-[#E85A6B] rounded-full text-sm font-medium">
-              {sortedProducts.length}개
+              {t('count', { count: sortedProducts.length })}
             </span>
           </div>
 
@@ -788,7 +791,7 @@ export function BrandDetailPage({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
               </svg>
-              필터
+              {t('brandDetail.filter')}
               {(priceFilter || categoryFilter || productTypeFilter) && (
                 <span className="w-2 h-2 bg-red-500 rounded-full"></span>
               )}
@@ -805,7 +808,7 @@ export function BrandDetailPage({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* 카테고리 필터 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">카테고리</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">{t('brandDetail.categoryLabel')}</label>
                 <div className="space-y-2">
                   <button
                     onClick={() => setCategoryFilter(null)}
@@ -815,7 +818,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    전체
+                    {t('brandDetail.all')}
                   </button>
                   {availableCategories.map(category => (
                     <button
@@ -835,7 +838,7 @@ export function BrandDetailPage({
 
               {/* 가격 필터 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">가격대</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">{t('brandDetail.priceRangeLabel')}</label>
                 <div className="space-y-2">
                   <button
                     onClick={() => setPriceFilter(null)}
@@ -845,7 +848,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    전체
+                    {t('brandDetail.all')}
                   </button>
                   <button
                     onClick={() => setPriceFilter({ min: 0, max: 50000 })}
@@ -855,7 +858,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    5만원 이하
+                    {t('brandDetail.under50k')}
                   </button>
                   <button
                     onClick={() => setPriceFilter({ min: 50000, max: 100000 })}
@@ -865,7 +868,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    5만원 - 10만원
+                    {t('brandDetail.range50to100k')}
                   </button>
                   <button
                     onClick={() => setPriceFilter({ min: 100000, max: Infinity })}
@@ -875,14 +878,14 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    10만원 이상
+                    {t('brandDetail.over100k')}
                   </button>
                 </div>
               </div>
 
               {/* 상품 유형 필터 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">상품 유형</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">{t('brandDetail.productTypeLabel')}</label>
                 <div className="space-y-2">
                   <button
                     onClick={() => setProductTypeFilter(null)}
@@ -892,7 +895,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    전체
+                    {t('brandDetail.all')}
                   </button>
                   <button
                     onClick={() => setProductTypeFilter('original')}
@@ -902,7 +905,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    오리지널
+                    {t('brandDetail.original')}
                   </button>
                   <button
                     onClick={() => setProductTypeFilter('custom')}
@@ -912,7 +915,7 @@ export function BrandDetailPage({
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
-                    커스텀
+                    {t('brandDetail.custom')}
                   </button>
                 </div>
               </div>
@@ -927,7 +930,7 @@ export function BrandDetailPage({
                   }}
                   className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
                 >
-                  필터 초기화
+                  {t('brandDetail.resetFilter')}
                 </button>
               </div>
             </div>
@@ -940,20 +943,20 @@ export function BrandDetailPage({
         {productsLoading ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 border-4 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">상품 목록을 불러오는 중...</p>
+            <p className="text-gray-600">{t('brandDetail.loadingProducts')}</p>
           </div>
         ) : productsError ? (
           <div className="text-center py-20">
             <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <h3 className="text-lg font-medium text-red-900 mb-2">상품 목록을 불러오지 못했습니다</h3>
+            <h3 className="text-lg font-medium text-red-900 mb-2">{t('brandDetail.productLoadFailed')}</h3>
             <p className="text-gray-600 mb-4">{productsError}</p>
             <button
               onClick={() => window.location.reload()}
               className="rounded-lg bg-[#E85A6B] text-white px-6 py-2 hover:bg-[#D14A5B]"
             >
-              다시 시도
+              {t('retry')}
             </button>
           </div>
         ) : sortedProducts.length === 0 ? (
@@ -961,8 +964,8 @@ export function BrandDetailPage({
             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 상품이 없습니다</h3>
-            <p className="text-gray-600">이 브랜드는 아직 상품을 등록하지 않았습니다.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('brandDetail.noProducts')}</h3>
+            <p className="text-gray-600">{t('brandDetail.noProductsDesc')}</p>
           </div>
         ) : (
           <>
@@ -988,11 +991,11 @@ export function BrandDetailPage({
               {loadingMore && (
                 <div className="flex items-center gap-2 text-gray-500">
                   <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                  <span>더 불러오는 중...</span>
+                  <span>{t('brandDetail.loadingMoreProducts')}</span>
                 </div>
               )}
               {!hasMore && products.length > 0 && (
-                <p className="text-gray-400 text-sm">모든 상품을 불러왔습니다</p>
+                <p className="text-gray-400 text-sm">{t('brandDetail.allProductsLoaded')}</p>
               )}
             </div>
           </>
@@ -1002,10 +1005,10 @@ export function BrandDetailPage({
       {/* 카테고리별 상품 (상품이 많을 때만 표시) */}
       {categoryGroups.length > 1 && (
         <div>
-          <h2 className="text-xl font-semibold mb-6">카테고리별 상품</h2>
+          <h2 className="text-xl font-semibold mb-6">{t('brandDetail.categoryProducts')}</h2>
           {categoryGroups.map(({ category, products: categoryProducts }) => (
             <div key={category} className="mb-8">
-              <h3 className="text-lg font-medium mb-3">{category} ({categoryProducts.length}개)</h3>
+              <h3 className="text-lg font-medium mb-3">{category} ({t('count', { count: categoryProducts.length })})</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {categoryProducts.map((product) => {
                   const productId = product.id || product.productUuid;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Stars } from '../ui';
 import { FaSearch } from 'react-icons/fa';
 import { brandService } from '../../services/apiService';
@@ -10,11 +11,11 @@ type SortOption = {
   order: 'asc' | 'desc';
 };
 
-const SORT_OPTIONS: SortOption[] = [
-  { key: 'totalOrders', label: '인기순', order: 'desc' },
-  { key: 'totalProducts', label: '상품 많은순', order: 'desc' },
-  { key: 'averageRating', label: '평점 높은순', order: 'desc' },
-  { key: 'createdAt', label: '최신순', order: 'desc' },
+const SORT_OPTION_KEYS: { key: SortOption['key']; labelKey: string; order: 'asc' | 'desc' }[] = [
+  { key: 'totalOrders', labelKey: 'brandPage.sortPopular', order: 'desc' },
+  { key: 'totalProducts', labelKey: 'brandPage.sortMostProducts', order: 'desc' },
+  { key: 'averageRating', labelKey: 'brandPage.sortHighestRating', order: 'desc' },
+  { key: 'createdAt', labelKey: 'brandPage.sortNewest', order: 'desc' },
 ];
 
 export function BrandsPage({
@@ -35,6 +36,8 @@ export function BrandsPage({
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
 
+  const { t } = useTranslation('common');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSort, setActiveSort] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +48,7 @@ export function BrandsPage({
         setLoading(true);
         setError(null);
 
-        const sort = SORT_OPTIONS[activeSort];
+        const sort = SORT_OPTION_KEYS[activeSort];
         const params: BrandListParams = {
           page: currentPage.toString(),
           listNum: '20',
@@ -60,7 +63,7 @@ export function BrandsPage({
         setPagination(response.pagination);
       } catch (err) {
         console.error('Brand fetch error:', err);
-        setError('브랜드 목록을 불러오는 데 오류가 발생했습니다.');
+        setError(t('brandPage.loadError'));
         setBrands([]);
       } finally {
         setLoading(false);
@@ -118,10 +121,10 @@ export function BrandsPage({
         {/* 상품수 / 주문수 */}
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-medium text-gray-400">
-            상품 {brand.stats.totalProducts}개
+            {t('brandPage.productCount', { count: brand.stats.totalProducts })}
           </span>
           <span className="text-[11px] font-medium text-[#E85A6B]">
-            주문 {brand.stats.totalOrders}+
+            {t('brandPage.orderCount', { count: brand.stats.totalOrders })}
           </span>
         </div>
 
@@ -141,7 +144,7 @@ export function BrandsPage({
       <div className="mx-auto max-w-7xl px-4 py-5">
         <div className="text-center py-20">
           <div className="w-12 h-12 border-4 border-[#E85A6B]/20 border-t-[#E85A6B] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sm text-gray-500">브랜드 목록을 불러오는 중...</p>
+          <p className="text-sm text-gray-500">{t('brandPage.loadingBrands')}</p>
         </div>
       </div>
     );
@@ -157,7 +160,7 @@ export function BrandsPage({
             onClick={() => window.location.reload()}
             className="rounded-lg bg-[#E85A6B] text-white px-6 py-2 text-sm hover:bg-[#D14A5B]"
           >
-            다시 시도
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -169,9 +172,9 @@ export function BrandsPage({
       {/* 페이지 헤더 (데스크톱) */}
       <div className="mx-auto max-w-7xl px-4 py-4 border-b hidden md:block">
         <div>
-          <h1 className="text-xl font-semibold">브랜드</h1>
+          <h1 className="text-xl font-semibold">{t('brand')}</h1>
           <p className="text-sm text-gray-600 mt-1">
-            총 {pagination?.totalItems || brands.length}개 브랜드
+            {t('brandPage.totalBrands', { count: pagination?.totalItems || brands.length })}
           </p>
         </div>
       </div>
@@ -189,14 +192,14 @@ export function BrandsPage({
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="브랜드명으로 검색"
+              placeholder={t('brandPage.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#E85A6B] focus:ring-1 focus:ring-[#E85A6B] placeholder-gray-400"
             />
           </div>
 
           {/* 필터 칩 */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
-            {SORT_OPTIONS.map((opt, i) => (
+            {SORT_OPTION_KEYS.map((opt, i) => (
               <button
                 key={opt.key}
                 onClick={() => handleSortChange(i)}
@@ -206,7 +209,7 @@ export function BrandsPage({
                     : 'bg-white border hover:bg-gray-50'
                 }`}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </button>
             ))}
           </div>
@@ -218,13 +221,13 @@ export function BrandsPage({
         {/* 모바일 카운트 */}
         <div className="flex items-center justify-between mb-4 md:hidden">
           <span className="text-sm font-semibold text-gray-800">
-            총 {pagination?.totalItems || brands.length}개 브랜드
+            {t('brandPage.totalBrands', { count: pagination?.totalItems || brands.length })}
           </span>
         </div>
 
         {brands.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-sm text-gray-400">검색 결과가 없습니다.</p>
+            <p className="text-sm text-gray-400">{t('brandPage.noSearchResults')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
@@ -243,7 +246,7 @@ export function BrandsPage({
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                이전
+                {t('prev')}
               </button>
 
               {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
@@ -268,7 +271,7 @@ export function BrandsPage({
                 disabled={currentPage === pagination.totalPages}
                 className="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                다음
+                {t('next')}
               </button>
             </div>
           </div>

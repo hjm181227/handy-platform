@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShippingAddress, KoreanAddress } from '@handy-platform/shared';
 import { webApiService } from '../../services/apiService';
 
@@ -18,9 +19,11 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
   onCancel,
   showCancelButton = true,
   processing = false,
-  title = '배송지 정보',
+  title: titleProp,
   showAddressName = false
 }) => {
+  const { t } = useTranslation('order');
+  const title = titleProp ?? t('shipping.shippingInfo');
   // 전화번호 하이픈 자동 포맷팅
   const formatPhoneNumber = (value: string): string => {
     const numbers = value.replace(/\D/g, '');
@@ -74,7 +77,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
   // 우편번호 찾기 (Daum Postcode API)
   const handlePostcodeSearch = () => {
     if (typeof window === 'undefined' || !window.daum || !window.daum.Postcode) {
-      alert('우편번호 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      alert(t('shipping.postcodeServiceLoading'));
       return;
     }
 
@@ -113,7 +116,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      alert('필수 정보를 모두 입력해주세요.');
+      alert(t('shipping.fillRequired'));
       return;
     }
 
@@ -157,11 +160,11 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
 
         await onSave(savedAddress);
       } else {
-        throw new Error(response.message || '배송지 저장에 실패했습니다.');
+        throw new Error(response.message || t('shipping.saveFailed'));
       }
     } catch (error: any) {
       console.error('❌ [ShippingAddressForm] Address save failed:', error);
-      alert(error.message || '배송지 저장에 실패했습니다. 다시 시도해주세요.');
+      alert(error.message || t('shipping.saveFailedRetry'));
     }
   };
 
@@ -186,14 +189,14 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
         {showAddressName && (
           <div>
             <label className="block text-sm font-medium mb-2">
-              배송지명
+              {t('shipping.addressName')}
             </label>
             <input
               type="text"
               value={addressName}
               onChange={(e) => setAddressName(e.target.value)}
               className="w-full border rounded-lg px-3 py-2"
-              placeholder="예) 집, 회사, 학교"
+              placeholder={t('shipping.addressNamePlaceholder')}
             />
           </div>
         )}
@@ -202,19 +205,19 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              받는 분 <span className="text-red-500">*</span>
+              {t('shipping.recipientName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.recipientName || ''}
               onChange={(e) => handleFieldChange('recipientName', e.target.value)}
               className="w-full border rounded-lg px-3 py-2"
-              placeholder="받는 분 성함"
+              placeholder={t('shipping.recipientNamePlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">
-              연락처 <span className="text-red-500">*</span>
+              {t('shipping.phone')} <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
@@ -229,7 +232,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
         {/* 우편번호 */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            우편번호 <span className="text-red-500">*</span>
+            {t('shipping.zipCode')} <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2 max-w-xs">
             <input
@@ -244,7 +247,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
               type="button"
               className="px-3 py-2 border rounded-lg hover:bg-gray-50 whitespace-nowrap"
             >
-              검색
+              {t('shipping.postcodeSearch')}
             </button>
           </div>
         </div>
@@ -252,37 +255,37 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
         {/* 주소 */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            주소 <span className="text-red-500">*</span>
+            {t('shipping.address')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.roadAddress || ''}
             onChange={(e) => handleFieldChange('roadAddress', e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
-            placeholder="기본 주소"
+            placeholder={t('shipping.addressPlaceholder')}
           />
         </div>
 
         {/* 상세 주소 */}
         <div>
-          <label className="block text-sm font-medium mb-2">상세 주소</label>
+          <label className="block text-sm font-medium mb-2">{t('shipping.detailAddress')}</label>
           <input
             type="text"
             value={formData.detailAddress || ''}
             onChange={(e) => handleFieldChange('detailAddress', e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
-            placeholder="상세 주소 (아파트 동/호수 등)"
+            placeholder={t('shipping.detailAddressPlaceholder')}
           />
         </div>
 
         {/* 배송 메모 */}
         <div>
-          <label className="block text-sm font-medium mb-2">배송 메모</label>
+          <label className="block text-sm font-medium mb-2">{t('shipping.memo')}</label>
           <textarea
             value={formData.deliveryNote || ''}
             onChange={(e) => handleFieldChange('deliveryNote', e.target.value)}
             className="w-full border rounded-lg px-3 py-2 h-20 resize-none"
-            placeholder="배송 시 요청사항이 있으면 입력해주세요"
+            placeholder={t('shipping.deliveryNotePlaceholder')}
           />
         </div>
 
@@ -297,7 +300,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
               className="rounded"
             />
             <label htmlFor="isDefault" className="text-sm text-gray-700">
-              기본 배송지로 설정
+              {t('shipping.setDefault')}
             </label>
           </div>
         )}
@@ -310,7 +313,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
               disabled={processing}
               className="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
             >
-              취소
+              {t('shipping.cancel')}
             </button>
           )}
           <button
@@ -318,7 +321,7 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
             disabled={!validateForm() || processing}
             className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {processing ? '저장 중...' : '저장'}
+            {processing ? t('shipping.saving') : t('shipping.save')}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { Cart, CartItem, ShippingAddress, PaymentMethod, CustomerOrder } from '@handy-platform/shared';
@@ -15,6 +16,7 @@ interface CheckoutStep {
 }
 
 export function Checkout({ onGo, directItem }: CheckoutProps) {
+  const { t } = useTranslation('order');
   const { alert, error: showError, confirm } = useAlert();
   
   // 상태 관리
@@ -36,9 +38,9 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
 
   // 체크아웃 단계
   const steps: CheckoutStep[] = [
-    { id: 'shipping', title: '배송지 선택', completed: !!selectedShippingAddress },
-    { id: 'payment', title: '결제 수단', completed: !!selectedPaymentMethod },
-    { id: 'review', title: '주문 확인', completed: false }
+    { id: 'shipping', title: t('checkout.shippingSelect'), completed: !!selectedShippingAddress },
+    { id: 'payment', title: t('checkout.paymentMethodSelect'), completed: !!selectedPaymentMethod },
+    { id: 'review', title: t('checkout.orderReview'), completed: false }
   ];
 
   useEffect(() => {
@@ -55,14 +57,14 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
           const itemData = JSON.parse(decodeURIComponent(directItem));
           setDirectCartItem(itemData);
         } catch (err) {
-          throw new Error('잘못된 상품 정보입니다.');
+          throw new Error(t('checkout.invalidProductInfo'));
         }
       } else {
         // 장바구니에서 주문하는 경우
         const cartResponse = await purchaseApiService.getCart();
         if (!cartResponse.success || !cartResponse.data || cartResponse.data.items.length === 0) {
-          await alert('장바구니가 비어있습니다.', {
-            title: '주문 불가',
+          await alert(t('checkout.cartEmpty'), {
+            title: t('checkout.orderNotPossible'),
             variant: 'warning'
           });
           onGo('/cart');
@@ -79,7 +81,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
 
     } catch (err) {
       console.error('체크아웃 초기화 실패:', err);
-      await showError(err, { title: '체크아웃 로드 실패' });
+      await showError(err, { title: t('checkout.checkoutLoadFailed') });
       onGo('/cart');
     } finally {
       setLoading(false);
@@ -136,17 +138,17 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
 
   const handleNextStep = () => {
     if (currentStep === 0 && !selectedShippingAddress) {
-      alert('배송지를 선택해주세요.', {
+      alert(t('checkout.selectAddressFirst'), {
         variant: 'warning',
-        title: '배송지 선택 필요'
+        title: t('checkout.selectAddressRequiredTitle')
       });
       return;
     }
 
     if (currentStep === 1 && !selectedPaymentMethod) {
-      alert('결제 수단을 선택해주세요.', {
+      alert(t('checkout.selectPaymentFirst'), {
         variant: 'warning',
-        title: '결제 수단 선택 필요'
+        title: t('checkout.selectPaymentRequiredTitle')
       });
       return;
     }
@@ -160,19 +162,19 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
 
   const handlePlaceOrder = async () => {
     if (!selectedShippingAddress || !selectedPaymentMethod) {
-      await alert('배송지와 결제 수단을 모두 선택해주세요.', {
+      await alert(t('checkout.selectAllRequired'), {
         variant: 'warning',
-        title: '정보 누락'
+        title: t('checkout.infoMissing')
       });
       return;
     }
 
     const confirmed = await confirm(
-      `총 ₩${getOrderTotal().toLocaleString()}을 결제하시겠습니까?`,
+      t('checkout.confirmPayment', { amount: getOrderTotal().toLocaleString() }),
       {
-        title: '주문 확인',
-        confirmLabel: '결제하기',
-        cancelLabel: '취소'
+        title: t('checkout.orderReview'),
+        confirmLabel: t('checkout.placeOrder'),
+        cancelLabel: t('checkout.cancel')
       }
     );
 
@@ -192,9 +194,9 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
 
       if (response.success && response.data) {
         // 주문 성공
-        await alert('주문이 완료되었습니다!', {
+        await alert(t('checkout.orderCompleted'), {
           variant: 'success',
-          title: '주문 완료'
+          title: t('checkout.orderComplete')
         });
 
         // 주문 완료 페이지로 이동
@@ -205,12 +207,12 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
           await purchaseApiService.clearCart();
         }
       } else {
-        throw new Error('결제 처리에 실패했습니다.');
+        throw new Error(t('checkout.paymentProcessFailed'));
       }
     } catch (err) {
       console.error('주문 처리 실패:', err);
       await showError(err, {
-        title: '주문 실패',
+        title: t('checkout.orderFailed'),
         showRetry: true
       });
     } finally {
@@ -223,7 +225,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto"></div>
-          <p className="mt-4 text-gray-600">주문 정보를 준비하는 중...</p>
+          <p className="mt-4 text-gray-600">{t('checkout.preparingOrder')}</p>
         </div>
       </div>
     );
@@ -242,7 +244,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">주문/결제</h1>
+          <h1 className="text-lg font-semibold text-gray-900">{t('checkout.title')}</h1>
         </div>
       </header>
 
@@ -333,7 +335,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
                 disabled={currentStep === 0}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                이전
+                {t('checkout.previous')}
               </button>
 
               {currentStep < steps.length - 1 ? (
@@ -341,7 +343,7 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
                   onClick={handleNextStep}
                   className="px-8 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
                 >
-                  다음
+                  {t('checkout.next')}
                 </button>
               ) : (
                 <button
@@ -352,10 +354,10 @@ export function Checkout({ onGo, directItem }: CheckoutProps) {
                   {processing ? (
                     <div className="flex items-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      결제 처리 중...
+                      {t('checkout.processingPaymentBtn')}
                     </div>
                   ) : (
-                    '결제하기'
+                    t('checkout.placeOrder')
                   )}
                 </button>
               )}
@@ -406,15 +408,16 @@ function ShippingAddressStep({
   onAddAddress: () => void;
   onLoadAddresses: () => void;
 }) {
+  const { t } = useTranslation('order');
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">배송지 선택</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{t('checkout.shippingSelect')}</h2>
         <button
           onClick={onAddAddress}
           className="px-4 py-2 text-[#E85A6B] border border-[#E85A6B] rounded-lg hover:bg-[#FFF1F2]"
         >
-          새 주소 추가
+          {t('checkout.addNewAddress')}
         </button>
       </div>
 
@@ -435,7 +438,7 @@ function ShippingAddressStep({
                   <span className="font-medium text-gray-900">{address.name}</span>
                   {address.isDefault && (
                     <span className="px-2 py-1 text-xs bg-green-100 text-green-600 rounded">
-                      기본 배송지
+                      {t('checkout.defaultAddress')}
                     </span>
                   )}
                 </div>
@@ -462,12 +465,12 @@ function ShippingAddressStep({
 
         {addresses.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">등록된 배송지가 없습니다.</p>
+            <p className="text-gray-600 mb-4">{t('checkout.noAddressesCheckout')}</p>
             <button
               onClick={onAddAddress}
               className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
             >
-              배송지 추가하기
+              {t('checkout.addShippingAddress')}
             </button>
           </div>
         )}
@@ -490,15 +493,16 @@ function PaymentMethodStep({
   onAddMethod: () => void;
   onLoadMethods: () => void;
 }) {
+  const { t } = useTranslation('order');
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">결제 수단 선택</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{t('checkout.selectPaymentMethodTitle')}</h2>
         <button
           onClick={onAddMethod}
           className="px-4 py-2 text-[#E85A6B] border border-[#E85A6B] rounded-lg hover:bg-[#FFF1F2]"
         >
-          새 카드 추가
+          {t('checkout.addNewCard')}
         </button>
       </div>
 
@@ -527,7 +531,7 @@ function PaymentMethodStep({
                   </p>
                   {method.isDefault && (
                     <span className="inline-block px-2 py-1 text-xs bg-green-100 text-green-600 rounded mt-1">
-                      기본 결제 수단
+                      {t('checkout.defaultPayment')}
                     </span>
                   )}
                 </div>
@@ -549,12 +553,12 @@ function PaymentMethodStep({
 
         {paymentMethods.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">등록된 결제 수단이 없습니다.</p>
+            <p className="text-gray-600 mb-4">{t('checkout.noPaymentMethods')}</p>
             <button
               onClick={onAddMethod}
               className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
             >
-              결제 수단 추가하기
+              {t('checkout.addPaymentMethodBtn')}
             </button>
           </div>
         )}
@@ -575,11 +579,12 @@ function OrderReviewStep({
   paymentMethod: PaymentMethod | null;
   totalAmount: number;
 }) {
+  const { t } = useTranslation('order');
   return (
     <div className="space-y-6">
       {/* 주문 상품 */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">주문 상품</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('checkout.orderSummary')}</h2>
         <div className="space-y-4">
           {items.map(item => (
             <div key={item.id} className="flex items-center space-x-4">
@@ -607,7 +612,7 @@ function OrderReviewStep({
                     ).join(', ')}
                   </p>
                 )}
-                <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
+                <p className="text-sm text-gray-600">{t('checkout.quantity', { count: item.quantity })}</p>
               </div>
               <div className="text-right">
                 <p className="font-semibold text-gray-900">₩{item.totalPrice.toLocaleString()}</p>
@@ -620,7 +625,7 @@ function OrderReviewStep({
       {/* 배송 정보 */}
       {shippingAddress && (
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">배송 정보</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('checkout.shippingInfo')}</h2>
           <div>
             <p className="font-medium text-gray-900 mb-1">{shippingAddress.name}</p>
             <p className="text-gray-700">{shippingAddress.recipient} | {shippingAddress.phone}</p>
@@ -635,7 +640,7 @@ function OrderReviewStep({
       {/* 결제 정보 */}
       {paymentMethod && (
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">결제 정보</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('checkout.paymentInfo')}</h2>
           <div className="flex items-center space-x-3">
             <div className="w-12 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -665,38 +670,39 @@ function OrderSummary({
   shippingAddress: ShippingAddress | null;
   paymentMethod: PaymentMethod | null;
 }) {
+  const { t } = useTranslation('order');
   const itemsTotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const shippingCost = totalAmount >= 50000 ? 0 : 3000; // 5만원 이상 무료배송
-  const discount = 0; // 할인 계산 로직
+  const shippingCost = totalAmount >= 50000 ? 0 : 3000;
+  const discount = 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 sticky top-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">주문 요약</h3>
-      
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('checkout.summary')}</h3>
+
       <div className="space-y-3 mb-6">
         <div className="flex justify-between text-gray-600">
-          <span>상품 금액 ({items.length}개)</span>
+          <span>{t('checkout.itemAmount', { count: items.length })}</span>
           <span>₩{itemsTotal.toLocaleString()}</span>
         </div>
-        
+
         {discount > 0 && (
           <div className="flex justify-between text-red-600">
-            <span>할인 금액</span>
+            <span>{t('checkout.discountAmount')}</span>
             <span>-₩{discount.toLocaleString()}</span>
           </div>
         )}
-        
+
         <div className="flex justify-between text-gray-600">
-          <span>배송비</span>
+          <span>{t('checkout.shippingFee')}</span>
           <span>
-            {shippingCost === 0 ? '무료배송' : `₩${shippingCost.toLocaleString()}`}
+            {shippingCost === 0 ? t('checkout.freeShippingLabel') : `₩${shippingCost.toLocaleString()}`}
           </span>
         </div>
-        
+
         <hr />
-        
+
         <div className="flex justify-between text-xl font-bold text-gray-900">
-          <span>총 결제 금액</span>
+          <span>{t('checkout.totalPaymentAmount')}</span>
           <span>₩{totalAmount.toLocaleString()}</span>
         </div>
       </div>
@@ -705,14 +711,14 @@ function OrderSummary({
       <div className="space-y-3 text-sm">
         {shippingAddress && (
           <div>
-            <p className="font-medium text-gray-700">배송지</p>
+            <p className="font-medium text-gray-700">{t('checkout.shippingAddress')}</p>
             <p className="text-gray-600 truncate">{shippingAddress.name}</p>
           </div>
         )}
-        
+
         {paymentMethod && (
           <div>
-            <p className="font-medium text-gray-700">결제 수단</p>
+            <p className="font-medium text-gray-700">{t('checkout.paymentMethodLabel')}</p>
             <p className="text-gray-600">{paymentMethod.name}</p>
           </div>
         )}
@@ -729,6 +735,7 @@ function AddAddressModal({
   onClose: () => void;
   onAddressAdded: () => void;
 }) {
+  const { t } = useTranslation('order');
   const { alert, error: showError } = useAlert();
   const [formData, setFormData] = useState({
     name: '',
@@ -742,33 +749,32 @@ function AddAddressModal({
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    // 간단한 유효성 검사
     if (!formData.name || !formData.recipient || !formData.phone || !formData.address) {
-      await alert('필수 정보를 모두 입력해주세요.', {
+      await alert(t('checkout.fillRequiredFields'), {
         variant: 'warning',
-        title: '입력 오류'
+        title: t('checkout.inputError')
       });
       return;
     }
 
     try {
       setSaving(true);
-      
+
       const response = await purchaseApiService.addShippingAddress(formData);
-      
+
       if (response.success) {
-        await alert('배송지가 추가되었습니다.', {
+        await alert(t('checkout.addressAdded'), {
           variant: 'success',
-          title: '추가 완료'
+          title: t('checkout.addComplete')
         });
         onAddressAdded();
         onClose();
       } else {
-        throw new Error('배송지 추가에 실패했습니다.');
+        throw new Error(t('checkout.addressAddFailed'));
       }
     } catch (err) {
       console.error('배송지 추가 실패:', err);
-      await showError(err, { title: '배송지 추가 실패' });
+      await showError(err, { title: t('checkout.addressAddFailed') });
     } finally {
       setSaving(false);
     }
@@ -779,7 +785,7 @@ function AddAddressModal({
       <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">새 배송지 추가</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('checkout.addNewShippingTitle')}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full"
@@ -792,18 +798,18 @@ function AddAddressModal({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">주소별명</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.addressNickname')}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="집, 회사 등"
+                placeholder={t('checkout.addressNicknamePlaceholder')}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">받는 분</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.recipientLabel')}</label>
               <input
                 type="text"
                 value={formData.recipient}
@@ -813,7 +819,7 @@ function AddAddressModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">전화번호</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.phoneLabel')}</label>
               <input
                 type="tel"
                 value={formData.phone}
@@ -824,7 +830,7 @@ function AddAddressModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">우편번호</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.zipCodeLabel')}</label>
               <input
                 type="text"
                 value={formData.zipCode}
@@ -835,7 +841,7 @@ function AddAddressModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">주소</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.addressFieldLabel')}</label>
               <input
                 type="text"
                 value={formData.address}
@@ -845,12 +851,12 @@ function AddAddressModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">상세주소</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.detailAddressLabel')}</label>
               <input
                 type="text"
                 value={formData.detailAddress}
                 onChange={(e) => setFormData(prev => ({ ...prev, detailAddress: e.target.value }))}
-                placeholder="동, 호수 등"
+                placeholder={t('checkout.detailAddressPlaceholder')}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
@@ -864,7 +870,7 @@ function AddAddressModal({
                 className="w-4 h-4 text-[#E85A6B] border-gray-300 rounded focus:ring-[#E85A6B]"
               />
               <label htmlFor="isDefault" className="ml-2 text-sm text-gray-700">
-                기본 배송지로 설정
+                {t('shipping.setDefault')}
               </label>
             </div>
           </div>
@@ -875,14 +881,14 @@ function AddAddressModal({
               disabled={saving}
               className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
             >
-              취소
+              {t('checkout.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
               className="flex-1 bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B] disabled:opacity-50"
             >
-              {saving ? '저장 중...' : '저장'}
+              {saving ? t('checkout.saving') : t('checkout.save')}
             </button>
           </div>
         </div>
@@ -899,6 +905,7 @@ function AddPaymentMethodModal({
   onClose: () => void;
   onPaymentAdded: () => void;
 }) {
+  const { t } = useTranslation('order');
   const { alert, error: showError } = useAlert();
   const [formData, setFormData] = useState({
     name: '',
@@ -909,18 +916,17 @@ function AddPaymentMethodModal({
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    // 간단한 유효성 검사
     if (!formData.name || !formData.cardNumber || !formData.expiryDate) {
-      await alert('카드 정보를 모두 입력해주세요.', {
+      await alert(t('checkout.fillCardInfo'), {
         variant: 'warning',
-        title: '입력 오류'
+        title: t('checkout.inputError')
       });
       return;
     }
 
     try {
       setSaving(true);
-      
+
       const paymentMethod = {
         type: 'credit_card' as const,
         name: formData.name,
@@ -931,20 +937,20 @@ function AddPaymentMethodModal({
       };
 
       const response = await purchaseApiService.addPaymentMethod(paymentMethod);
-      
+
       if (response.success) {
-        await alert('결제 수단이 추가되었습니다.', {
+        await alert(t('checkout.paymentMethodAdded'), {
           variant: 'success',
-          title: '추가 완료'
+          title: t('checkout.addComplete')
         });
         onPaymentAdded();
         onClose();
       } else {
-        throw new Error('결제 수단 추가에 실패했습니다.');
+        throw new Error(t('checkout.paymentMethodAddFailed'));
       }
     } catch (err) {
       console.error('결제 수단 추가 실패:', err);
-      await showError(err, { title: '결제 수단 추가 실패' });
+      await showError(err, { title: t('checkout.paymentMethodAddFailed') });
     } finally {
       setSaving(false);
     }
@@ -955,7 +961,7 @@ function AddPaymentMethodModal({
       <div className="bg-white rounded-xl w-full max-w-md">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">새 결제 수단 추가</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('checkout.addNewPaymentTitle')}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full"
@@ -968,18 +974,18 @@ function AddPaymentMethodModal({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">카드명</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.cardName')}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="신한카드"
+                placeholder={t('checkout.cardNamePlaceholder')}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">카드번호</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.cardNumber')}</label>
               <input
                 type="text"
                 value={formData.cardNumber}
@@ -990,7 +996,7 @@ function AddPaymentMethodModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">만료일</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.expiryDate')}</label>
               <input
                 type="text"
                 value={formData.expiryDate}
@@ -1009,7 +1015,7 @@ function AddPaymentMethodModal({
                 className="w-4 h-4 text-[#E85A6B] border-gray-300 rounded focus:ring-[#E85A6B]"
               />
               <label htmlFor="isDefaultPayment" className="ml-2 text-sm text-gray-700">
-                기본 결제 수단으로 설정
+                {t('checkout.defaultPaymentSetting')}
               </label>
             </div>
           </div>
@@ -1020,14 +1026,14 @@ function AddPaymentMethodModal({
               disabled={saving}
               className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
             >
-              취소
+              {t('checkout.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
               className="flex-1 bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B] disabled:opacity-50"
             >
-              {saving ? '저장 중...' : '저장'}
+              {saving ? t('checkout.saving') : t('checkout.save')}
             </button>
           </div>
         </div>

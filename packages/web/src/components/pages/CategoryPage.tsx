@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import type { Product } from '@handy-platform/shared';
 import { ProductCard } from '../product/ProductCard';
@@ -16,12 +17,12 @@ interface CategoryPageProps {
 }
 
 // 정렬 옵션
-const sortOptions = [
-  { value: 'trending', label: '인기순' },
-  { value: 'createdAt', label: '최신순' },
-  { value: 'price-asc', label: '가격 낮은순' },
-  { value: 'price-desc', label: '가격 높은순' },
-  { value: 'rating', label: '평점순' }
+const SORT_OPTION_KEYS = [
+  { value: 'trending', labelKey: 'categoryPage.sortTrending' },
+  { value: 'createdAt', labelKey: 'categoryPage.sortLatest' },
+  { value: 'price-asc', labelKey: 'categoryPage.sortPriceAsc' },
+  { value: 'price-desc', labelKey: 'categoryPage.sortPriceDesc' },
+  { value: 'rating', labelKey: 'categoryPage.sortRating' }
 ];
 
 export function CategoryPage({
@@ -33,6 +34,8 @@ export function CategoryPage({
   onLike,
   likedProducts
 }: CategoryPageProps) {
+  const { t } = useTranslation(['product', 'common']);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -125,11 +128,11 @@ export function CategoryPage({
           setHasMore(newProducts.length === ITEMS_PER_PAGE);
         }
       } else {
-        setError('상품을 불러오는데 실패했습니다.');
+        setError(t('categoryPage.loadFailed'));
       }
     } catch (err: any) {
       console.error('Failed to fetch products:', err);
-      setError(err.message || '상품을 불러오는 중 오류가 발생했습니다.');
+      setError(err.message || t('categoryPage.loadError'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -187,7 +190,7 @@ export function CategoryPage({
           <div className="flex items-center justify-between">
             {/* 상품 수 */}
             <span className="text-sm text-gray-600">
-              {totalItems > 0 ? `${totalItems.toLocaleString()}개 상품` : ''}
+              {totalItems > 0 ? t('categoryPage.productCount', { count: totalItems }) : ''}
             </span>
 
             {/* 정렬 드롭다운 */}
@@ -196,9 +199,9 @@ export function CategoryPage({
               onChange={(e) => handleSortChange(e.target.value)}
               className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
             >
-              {sortOptions.map((option) => (
+              {SORT_OPTION_KEYS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
@@ -229,7 +232,7 @@ export function CategoryPage({
               onClick={() => fetchProducts(1, false)}
               className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         ) : products.length === 0 ? (
@@ -240,12 +243,12 @@ export function CategoryPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
             </div>
-            <p className="text-gray-500 mb-2">해당 카테고리에 상품이 없습니다.</p>
+            <p className="text-gray-500 mb-2">{t('categoryPage.noProducts')}</p>
             <button
               onClick={() => onGo('/category')}
               className="text-[#E85A6B] hover:underline text-sm"
             >
-              다른 카테고리 보기
+              {t('categoryPage.browseOther')}
             </button>
           </div>
         ) : (
@@ -274,11 +277,11 @@ export function CategoryPage({
               {loadingMore && (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 border-2 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin" />
-                  <span className="text-sm text-gray-500">불러오는 중...</span>
+                  <span className="text-sm text-gray-500">{t('categoryPage.loadingMore')}</span>
                 </div>
               )}
               {!hasMore && products.length > 0 && (
-                <p className="text-sm text-gray-400">모든 상품을 불러왔습니다.</p>
+                <p className="text-sm text-gray-400">{t('categoryPage.allLoaded')}</p>
               )}
             </div>
           </>
