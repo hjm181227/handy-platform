@@ -245,5 +245,84 @@
     "generalError": "An error occurred during search.",
     "resultDesc": "Results for '{{query}}'",
     "allResults": "All Results"
+  },
+  "detailPage": {
+    "tabs": {
+      "info": "Details",
+      "reviews": "Reviews",
+      "qa": "Q&A",
+      "shipping": "Shipping & Returns"
+    },
+    "info": {
+      "nailShape": "Nail Shape",
+      "nailLength": "Nail Length",
+      "productionTime": "Production Time"
+    },
+    "review": {
+      "totalCount": "{{count}} Reviews",
+      "ratingUnit": "★",
+      "sortRating": "Highest Rated",
+      "clearFilter": "Clear Filter",
+      "loading": "Loading reviews...",
+      "noRatings": "No {{rating}}-star reviews.",
+      "anonymous": "Anonymous",
+      "verified": "Verified Purchase",
+      "imageAlt": "Review image {{index}}",
+      "helpful": "Helpful",
+      "sellerReply": "Seller Reply"
+    },
+    "qa": {
+      "title": "Product Inquiries",
+      "subtitle": "Feel free to ask us anything about this product.",
+      "buttonLabel": "Ask a Question",
+      "q1": "Can I exchange if the size doesn't fit?",
+      "a1": "Yes, unused products can be exchanged within 7 days of purchase. Please contact our customer service for assistance.",
+      "q2": "How long can I wear these?",
+      "a2": "It varies by individual, but typically 2-3 weeks. With proper care, they may last even longer.",
+      "q3": "Will removal damage my nails?",
+      "a3": "Using our dedicated remover, you can safely remove them without damaging your nails."
+    },
+    "shipping": {
+      "period": "Shipping Period",
+      "processingTime": "Ships within 1-2 days of order",
+      "area": "Shipping Area",
+      "areaDesc": "Nationwide (additional costs for remote areas)",
+      "carrier": "Carrier",
+      "carriers": "CJ Logistics, Logen Express",
+      "fee": "Shipping Fee",
+      "freeShippingDesc": "Free shipping on orders over ₩30,000"
+    },
+    "returns": {
+      "period": "Period",
+      "periodDesc": "Within 7 days of receipt",
+      "conditions": "Conditions",
+      "conditionsDesc": "Unused, original packaging intact",
+      "cost": "Cost",
+      "costDesc": "Change of mind: Customer pays",
+      "reasons": "Non-returnable",
+      "reasonsDesc": "Used, packaging damaged, time passed after opening",
+      "caution": "Important Notice",
+      "caution1": "Due to the nature of nail products, exchanges/returns may be restricted after opening",
+      "caution2": "Please confirm the size before ordering",
+      "caution3": "If damaged during shipping, please contact customer service immediately"
+    },
+    "option": {
+      "shape": "Shape",
+      "length": "Length",
+      "notEditable": "(Cannot be changed)"
+    },
+    "customOrderButton": "Custom Order",
+    "addingToCart": "Adding...",
+    "liked": "Liked",
+    "unliked": "Add to Wishlist",
+    "sizing": "Sizing",
+    "sizingAppPrompt": "Measure and save your nail size easily in the HANDY app!",
+    "buyNowMobile": "Buy Now",
+    "buyNowError": "An error occurred while processing your purchase.",
+    "navigationError": "Navigation feature is not configured.",
+    "shareUnsupported": "Your browser does not support sharing.",
+    "linkCopied": "Link copied!",
+    "contactCustomerService": "Contact Customer Service",
+    "backButton": "← Back"
   }
 }

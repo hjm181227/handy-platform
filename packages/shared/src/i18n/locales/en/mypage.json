@@ -77,5 +77,45 @@
     "orders": "Order Management",
     "stats": "Analytics",
     "settings": "Seller Settings"
-  }
+  },
+  "roles": {
+    "seller": "Seller",
+    "admin": "Admin"
+  },
+  "stats": {
+    "snaps": "Snaps",
+    "followers": "Followers",
+    "following": "Following",
+    "ordersAndShipping": "Orders",
+    "shipping": "Shipping",
+    "unit": "",
+    "couponUnit": ""
+  },
+  "actions": {
+    "viewProfile": "View Profile",
+    "realtimeCustomerOrders": "Real-time Customer Orders"
+  },
+  "nailSize": {
+    "myNailSize": "My Nail Size",
+    "measurementComplete": "Complete · Left/Right Hand",
+    "measurementIncomplete": "Incomplete · {{count}}/10",
+    "noMeasurement": "No measurement yet · Measure now"
+  },
+  "sections": {
+    "sellerService": "Seller Service",
+    "ordersAndReturns": "Orders & Shipping / Returns",
+    "reviewsAndLikes": "Reviews & Likes",
+    "benefitsAndPayment": "Benefits & Payment",
+    "customerServiceAndSettings": "Support & Settings"
+  },
+  "defaultUser": "User",
+  "customOrderManagement": "Custom Order Management",
+  "claims": "Returns & Exchanges",
+  "cancelHistory": "Cancellations",
+  "notifications": "Notification Settings",
+  "goToSellerCenter": "Go to Seller Center",
+  "applyAsSeller": "Apply as Seller",
+  "myReviewManagement": "My Reviews",
+  "likesWishlist": "Likes (Wishlist)",
+  "editAccountInfo": "Edit Account Info"
 }

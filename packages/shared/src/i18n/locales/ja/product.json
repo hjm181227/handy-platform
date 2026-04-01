@@ -245,5 +245,84 @@
     "generalError": "検索中にエラーが発生しました。",
     "resultDesc": "'{{query}}'の検索結果",
     "allResults": "全体結果"
+  },
+  "detailPage": {
+    "tabs": {
+      "info": "詳細情報",
+      "reviews": "レビュー",
+      "qa": "Q&A",
+      "shipping": "配送・返品"
+    },
+    "info": {
+      "nailShape": "ネイルシェイプ",
+      "nailLength": "ネイル長さ",
+      "productionTime": "制作所要時間"
+    },
+    "review": {
+      "totalCount": "全{{count}}件のレビュー",
+      "ratingUnit": "点",
+      "sortRating": "評価順",
+      "clearFilter": "フィルター解除",
+      "loading": "レビューを読み込み中...",
+      "noRatings": "{{rating}}点のレビューがありません。",
+      "anonymous": "匿名",
+      "verified": "購入確認済み",
+      "imageAlt": "レビュー画像{{index}}",
+      "helpful": "役に立った",
+      "sellerReply": "販売者の返信"
+    },
+    "qa": {
+      "title": "商品についてのご質問",
+      "subtitle": "ご不明な点はお気軽にお問い合わせください。",
+      "buttonLabel": "質問する",
+      "q1": "サイズが合わない場合、交換は可能ですか？",
+      "a1": "はい、購入後7日以内のご未使用商品に限り交換が可能です。カスタマーサービスまでご連絡ください。",
+      "q2": "どのくらい着用できますか？",
+      "a2": "個人差がありますが、通常2〜3週間程度着用可能です。お手入れ次第でさらに長くお使いいただけます。",
+      "q3": "除去する際に爪が傷みませんか？",
+      "a3": "専用リムーバーをご使用いただくと、爪に負担をかけずに安全に除去できます。"
+    },
+    "shipping": {
+      "period": "配送期間",
+      "processingTime": "ご注文後1〜2日以内に発送",
+      "area": "配送地域",
+      "areaDesc": "全国（離島・山間部は追加送料）",
+      "carrier": "配送業者",
+      "carriers": "CJ大韓通運、Logenクーリエ",
+      "fee": "送料",
+      "freeShippingDesc": "3万ウォン以上ご購入で送料無料"
+    },
+    "returns": {
+      "period": "期間",
+      "periodDesc": "商品受取後7日以内",
+      "conditions": "条件",
+      "conditionsDesc": "未使用、元の梱包状態を保持",
+      "cost": "費用",
+      "costDesc": "お客様都合：お客様負担",
+      "reasons": "返品不可理由",
+      "reasonsDesc": "使用後、梱包破損、開封後の時間経過",
+      "caution": "ご注意",
+      "caution1": "ネイル製品の性質上、開封後は交換・返品が制限される場合があります",
+      "caution2": "ご注文前にサイズをご確認ください",
+      "caution3": "配送中の破損は、すぐにカスタマーサービスへご連絡ください"
+    },
+    "option": {
+      "shape": "シェイプ",
+      "length": "長さ",
+      "notEditable": "（変更不可）"
+    },
+    "customOrderButton": "カスタムオーダーする",
+    "addingToCart": "追加中...",
+    "liked": "お気に入り済み",
+    "unliked": "お気に入り登録",
+    "sizing": "サイズ測定",
+    "sizingAppPrompt": "HANDYアプリでサイズを簡単に測定・保存できます！",
+    "buyNowMobile": "購入する",
+    "buyNowError": "購入処理中にエラーが発生しました。",
+    "navigationError": "ナビゲーション機能が設定されていません。",
+    "shareUnsupported": "お使いのブラウザは共有機能に対応していません。",
+    "linkCopied": "リンクがコピーされました！",
+    "contactCustomerService": "カスタマーサービスに連絡",
+    "backButton": "← 戻る"
   }
 }

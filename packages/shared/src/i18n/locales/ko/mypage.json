@@ -77,5 +77,45 @@
     "orders": "주문 관리",
     "stats": "통계",
     "settings": "판매자 설정"
-  }
+  },
+  "roles": {
+    "seller": "판매자",
+    "admin": "관리자"
+  },
+  "stats": {
+    "snaps": "스냅",
+    "followers": "팔로워",
+    "following": "팔로잉",
+    "ordersAndShipping": "주문/배송",
+    "shipping": "배송중",
+    "unit": "건",
+    "couponUnit": "장"
+  },
+  "actions": {
+    "viewProfile": "프로필 보기",
+    "realtimeCustomerOrders": "실시간 고객 주문 확인"
+  },
+  "nailSize": {
+    "myNailSize": "내 손톱 사이즈",
+    "measurementComplete": "측정 완료 · 왼손/오른손",
+    "measurementIncomplete": "측정 미완료 · {{count}}/10",
+    "noMeasurement": "아직 측정 기록이 없어요 · 측정하기"
+  },
+  "sections": {
+    "sellerService": "판매자 서비스",
+    "ordersAndReturns": "주문·배송 / 반품·교환",
+    "reviewsAndLikes": "리뷰·좋아요",
+    "benefitsAndPayment": "혜택 / 결제",
+    "customerServiceAndSettings": "고객센터 / 설정"
+  },
+  "defaultUser": "사용자",
+  "customOrderManagement": "커스텀 주문 관리",
+  "claims": "반품/교환 내역",
+  "cancelHistory": "취소 내역",
+  "notifications": "알림/푸시 설정",
+  "goToSellerCenter": "판매자 센터로 이동",
+  "applyAsSeller": "판매자 신청하기",
+  "myReviewManagement": "내 리뷰 관리",
+  "likesWishlist": "좋아요(위시리스트)",
+  "editAccountInfo": "회원정보 수정"
 }

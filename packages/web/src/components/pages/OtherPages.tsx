@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService, likesService } from '../../services/apiService';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
@@ -212,6 +213,7 @@ export function LikesPage({
 }
 
 export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (id: string) => void }) {
+  const { t } = useTranslation(['mypage', 'common']);
   const [user, setUser] = useState<User | null>(null);
   const [nailSizeData, setNailSizeData] = useState<NailSizeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -295,8 +297,8 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'seller': return '판매자';
-      case 'admin': return '관리자';
+      case 'seller': return t('mypage:roles.seller');
+      case 'admin': return t('mypage:roles.admin');
       default: return '';
     }
   };
@@ -390,7 +392,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-[#131211] truncate">
-                    {user?.nickname || user?.name || '사용자'}
+                    {user?.nickname || user?.name || t('mypage:defaultUser')}
                   </span>
                   {getRoleLabel(user?.role || 'user') && (
                     <>
@@ -404,13 +406,13 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                 {/* Follower / Following / Snap Counts */}
                 <div className="flex gap-4 mt-1.5">
                   <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)} className="text-sm text-[#71717A]">
-                    <span className="font-bold text-[#131211]">{snapCount}</span> 스냅
+                    <span className="font-bold text-[#131211]">{snapCount}</span> {t('mypage:stats.snaps')}
                   </button>
                   <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=followers`)} className="text-sm text-[#71717A]">
-                    <span className="font-bold text-[#131211]">{followerCount}</span> 팔로워
+                    <span className="font-bold text-[#131211]">{followerCount}</span> {t('mypage:stats.followers')}
                   </button>
                   <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=following`)} className="text-sm text-[#71717A]">
-                    <span className="font-bold text-[#131211]">{followingCount}</span> 팔로잉
+                    <span className="font-bold text-[#131211]">{followingCount}</span> {t('mypage:stats.following')}
                   </button>
                 </div>
               </div>
@@ -422,13 +424,13 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                 onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)}
                 className="flex-1 rounded-lg border border-[#E5E0DC] py-2 text-sm font-medium text-[#131211] hover:bg-gray-50 transition-colors"
               >
-                프로필 보기
+                {t('mypage:actions.viewProfile')}
               </button>
               <button
                 onClick={() => onGo('/my/settings')}
                 className="rounded-lg border border-[#E5E0DC] px-3 py-2 text-sm font-medium text-[#131211] hover:bg-gray-50 transition-colors"
               >
-                프로필 편집
+                {t('mypage:profile.edit')}
               </button>
               <button
                 onClick={handleLogout}
@@ -447,7 +449,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                 <Ruler className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
-                <div className="text-xs font-semibold text-[#991B1B]">내 손톱 사이즈</div>
+                <div className="text-xs font-semibold text-[#991B1B]">{t('mypage:nailSize.myNailSize')}</div>
                 {nailSizeData ? (() => {
                   const allFingers = [
                     ...Object.values(nailSizeData.leftHand),
@@ -456,12 +458,12 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                   const measuredCount = allFingers.filter(v => v > 0).length;
                   const isComplete = measuredCount === 10;
                   return isComplete ? (
-                    <div className="text-sm font-medium text-[#131211]">측정 완료 · 왼손/오른손</div>
+                    <div className="text-sm font-medium text-[#131211]">{t('mypage:nailSize.measurementComplete')}</div>
                   ) : (
-                    <div className="text-sm font-medium text-[#FF4D6D]">측정 미완료 · {measuredCount}/10</div>
+                    <div className="text-sm font-medium text-[#FF4D6D]">{t('mypage:nailSize.measurementIncomplete', { count: measuredCount })}</div>
                   );
                 })() : (
-                  <div className="text-sm font-medium text-[#71717A]">아직 측정 기록이 없어요 · 측정하기</div>
+                  <div className="text-sm font-medium text-[#71717A]">{t('mypage:nailSize.noMeasurement')}</div>
                 )}
               </div>
               <ChevronIcon className="text-[#FF4D6D]" />
@@ -471,9 +473,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           {/* Stats Row */}
           <div className="flex gap-2">
             {[
-              { label: '주문/배송', value: `${orderCount}건`, to: '/my/orders' },
-              { label: '배송중', value: `${shippingCount}건`, to: '/my/shipping' },
-              { label: '쿠폰', value: `${couponCount}장`, to: '/my/coupons' },
+              { label: t('mypage:stats.ordersAndShipping'), value: `${orderCount}${t('mypage:stats.unit')}`, to: '/my/orders' },
+              { label: t('mypage:stats.shipping'), value: `${shippingCount}${t('mypage:stats.unit')}`, to: '/my/shipping' },
+              { label: t('mypage:menu.coupons'), value: `${couponCount}${t('mypage:stats.couponUnit')}`, to: '/my/coupons' },
             ].map((stat) => (
               <a
                 key={stat.to}
@@ -488,55 +490,55 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           </div>
 
           {/* Menu Section 1 */}
-          <Section title="판매자 서비스">
+          <Section title={t('mypage:sections.sellerService')}>
             {user?.role === 'seller' ? (
               <>
-                <LinkRow title="판매자 센터로 이동" to="/seller" />
+                <LinkRow title={t('mypage:goToSellerCenter')} to="/seller" />
                 <a
                   href="/seller/custom-orders/public"
                   onClick={(e) => { e.preventDefault(); onGo('/seller/custom-orders/public'); }}
                   className="flex items-center justify-between py-3 px-1 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-[#FF4D6D]">실시간 고객 주문 확인</span>
+                    <span className="text-sm font-semibold text-[#FF4D6D]">{t('mypage:actions.realtimeCustomerOrders')}</span>
                     <span className="rounded-full bg-[#FF4D6D] text-white text-[10px] px-1.5 py-0.5 font-bold">NEW</span>
                   </div>
                   <ChevronIcon className="text-[#FF4D6D]" />
                 </a>
               </>
             ) : (
-              <LinkRow title="판매자 신청하기" to="/seller/apply" />
+              <LinkRow title={t('mypage:applyAsSeller')} to="/seller/apply" />
             )}
           </Section>
 
           {/* Menu Section 2 */}
-          <Section title="주문·배송 / 반품·교환">
-            <LinkRow title="주문 내역" to="/my/orders" />
-            <LinkRow title="커스텀 주문 관리" to="/my/custom-orders" />
-            <LinkRow title="배송지 관리" to="/my/shipping-address" />
-            <LinkRow title="반품/교환 내역" to="/my/claims" />
-            <LinkRow title="취소 내역" to="/my/cancel" />
+          <Section title={t('mypage:sections.ordersAndReturns')}>
+            <LinkRow title={t('mypage:menu.orders')} to="/my/orders" />
+            <LinkRow title={t('mypage:customOrderManagement')} to="/my/custom-orders" />
+            <LinkRow title={t('mypage:menu.shippingAddresses')} to="/my/shipping-address" />
+            <LinkRow title={t('mypage:claims')} to="/my/claims" />
+            <LinkRow title={t('mypage:cancelHistory')} to="/my/cancel" />
           </Section>
 
           {/* Menu Section 3 */}
-          <Section title="리뷰·좋아요">
-            <LinkRow title="내 리뷰 관리" to="/my/reviews" />
-            <LinkRow title="좋아요(위시리스트)" to="/likes" />
+          <Section title={t('mypage:sections.reviewsAndLikes')}>
+            <LinkRow title={t('mypage:myReviewManagement')} to="/my/reviews" />
+            <LinkRow title={t('mypage:likesWishlist')} to="/likes" />
           </Section>
 
           {/* Menu Section 4 */}
-          <Section title="혜택 / 결제">
-            <LinkRow title="쿠폰" to="/my/coupons" badge={`${couponCount}장`} />
-            <LinkRow title="포인트" to="/my/points" />
+          <Section title={t('mypage:sections.benefitsAndPayment')}>
+            <LinkRow title={t('mypage:menu.coupons')} to="/my/coupons" badge={`${couponCount}${t('mypage:stats.couponUnit')}`} />
+            <LinkRow title={t('mypage:menu.points')} to="/my/points" />
             {/* <LinkRow title="결제수단 관리" to="/my/payments" /> */}
           </Section>
 
           {/* Menu Section 5 */}
-          <Section title="고객센터 / 설정">
-            <LinkRow title="1:1 문의" to="/support/contact" />
-            <LinkRow title="FAQ" to="/support/faq" />
-            <LinkRow title="알림/푸시 설정" to="/my/notifications" />
-            <LinkRow title="회원정보 수정" to="/my/settings" />
+          <Section title={t('mypage:sections.customerServiceAndSettings')}>
+            <LinkRow title={t('mypage:menu.inquiry')} to="/support/contact" />
+            <LinkRow title={t('mypage:menu.faq')} to="/support/faq" />
+            <LinkRow title={t('mypage:notifications')} to="/my/notifications" />
+            <LinkRow title={t('mypage:editAccountInfo')} to="/my/settings" />
           </Section>
         </div>
       </div>

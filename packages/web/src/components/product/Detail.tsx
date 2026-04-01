@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService } from '@handy-platform/shared';
 import { productService, cartService, reviewService } from '../../services/apiService';
 import { money } from '../../utils';
@@ -23,6 +24,9 @@ export function Detail({
   currentUser?: User | null;
   onGo?: (path: string) => void;  // ✅ sessionStorage 사용으로 1개 인자만
 }) {
+  // i18n
+  const { t } = useTranslation(['product', 'common']);
+
   // 로그인 모달
   const { openLogin } = useAuthModal();
 
@@ -36,7 +40,7 @@ export function Detail({
   const [length, setLength] = useState<string>("SHORT");
   const [qty, setQty] = useState<number>(1);
   const [liked, setLiked] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("상세정보");
+  const [activeTab, setActiveTab] = useState<string>("info");
 
   // 리뷰 관련 상태
   const [reviews, setReviews] = useState<DetailedReview[]>([]);
@@ -56,7 +60,7 @@ export function Detail({
         const response = await productService.getProduct(id);
         setProduct(response.data);
       } catch (err: any) {
-        setError(err.message || '상품을 불러오는데 실패했습니다.');
+        setError(err.message || t('common:loadFailed'));
         console.error('Product fetch failed:', err);
       } finally {
         setLoading(false);
@@ -118,14 +122,14 @@ export function Detail({
 
   // 리뷰 탭 활성화 시 로드
   useEffect(() => {
-    if (activeTab === '리뷰' && product && reviews.length === 0) {
+    if (activeTab === 'reviews' && product && reviews.length === 0) {
       loadProductReviews(1);
     }
   }, [activeTab, product]);
 
   // 정렬/필터 변경 시 리뷰 새로고침
   useEffect(() => {
-    if (activeTab === '리뷰' && product) {
+    if (activeTab === 'reviews' && product) {
       loadProductReviews(1);
     }
   }, [reviewSort, ratingFilter]);
@@ -208,7 +212,7 @@ export function Detail({
     // onGo prop이 없으면 경고 (개발 환경)
     if (!onGo) {
       console.warn('onGo prop is not provided to Detail component');
-      setCartMessage('페이지 이동 기능이 설정되지 않았습니다.');
+      setCartMessage(t('product:detailPage.navigationError'));
       setTimeout(() => setCartMessage(null), 3000);
       return;
     }
@@ -239,7 +243,7 @@ export function Detail({
 
     } catch (err) {
       console.error('Buy now failed:', err);
-      setCartMessage('바로구매 처리 중 오류가 발생했습니다.');
+      setCartMessage(t('product:detailPage.buyNowError'));
       setTimeout(() => setCartMessage(null), 3000);
     }
   };
@@ -256,9 +260,9 @@ export function Detail({
     } else {
       try {
         await navigator.clipboard.writeText(url);
-        alert("링크가 복사되었어요!");
+        alert(t('product:detailPage.linkCopied'));
       } catch {
-        alert("공유를 지원하지 않는 브라우저입니다.");
+        alert(t('product:detailPage.shareUnsupported'));
       }
     }
   };
@@ -269,7 +273,7 @@ export function Detail({
 
     if (!isWebView) {
       // 웹 브라우저: 앱 안내 메시지
-      alert('HANDY 앱에서 사이즈를 편리하게 측정하고 저장할 수 있습니다!');
+      alert(t('product:detailPage.sizingAppPrompt'));
       return;
     }
 
@@ -301,9 +305,9 @@ export function Detail({
     return (
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">상품을 찾을 수 없습니다</div>
+          <div className="text-gray-500 mb-4">{t('common:productNotFound')}</div>
           <div className="text-sm text-red-500 mb-4">{error}</div>
-          <button onClick={onBack} className="px-4 py-2 bg-black text-white rounded">← 뒤로가기</button>
+          <button onClick={onBack} className="px-4 py-2 bg-black text-white rounded">{t('product:detailPage.backButton')}</button>
         </div>
       </div>
     );
@@ -322,21 +326,21 @@ export function Detail({
   // 탭 콘텐츠 렌더링 함수
   const renderTabContent = () => {
     switch(activeTab) {
-      case "상세정보":
+      case "info":
         return (
           <div className="space-y-6">
             {/* 상품 정보 */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-base">상품 정보</h3>
+              <h3 className="font-semibold text-base">{t('common:productInfo')}</h3>
               <table className="w-full text-left text-sm">
                 <tbody className="[&>tr>td]:py-2">
-                  <tr><td className="w-40 text-gray-500">네일 쉐입</td><td>{NAIL_SHAPE_NAME[p.nailShape] || p.nailShape}</td></tr>
-                  <tr><td className="text-gray-500">네일 길이</td><td>{NAIL_LENGTH_NAME[p.nailLength] || p.nailLength}</td></tr>
-                  <tr><td className="text-gray-500">길이 커스터마이징</td><td>{p.nailOptions.lengthCustomizable ? '가능' : '불가능'}</td></tr>
-                  <tr><td className="text-gray-500">쉐입 커스터마이징</td><td>{p.nailOptions.shapeCustomizable ? '가능' : '불가능'}</td></tr>
-                  <tr><td className="text-gray-500">디자인 커스터마이징</td><td>{p.nailOptions.designCustomizable ? '가능' : '불가능'}</td></tr>
-                  <tr><td className="text-gray-500">제작 소요시간</td><td>{p.processingDays}일</td></tr>
-                  {p.brand && <tr><td className="text-gray-500">브랜드</td><td>{p.brand}</td></tr>}
+                  <tr><td className="w-40 text-gray-500">{t('product:detailPage.info.nailShape')}</td><td>{NAIL_SHAPE_NAME[p.nailShape] || p.nailShape}</td></tr>
+                  <tr><td className="text-gray-500">{t('product:detailPage.info.nailLength')}</td><td>{NAIL_LENGTH_NAME[p.nailLength] || p.nailLength}</td></tr>
+                  <tr><td className="text-gray-500">{t('common:lengthCustom')}</td><td>{p.nailOptions.lengthCustomizable ? t('common:available') : t('common:unavailable')}</td></tr>
+                  <tr><td className="text-gray-500">{t('common:shapeCustom')}</td><td>{p.nailOptions.shapeCustomizable ? t('common:available') : t('common:unavailable')}</td></tr>
+                  <tr><td className="text-gray-500">{t('common:designCustom')}</td><td>{p.nailOptions.designCustomizable ? t('common:available') : t('common:unavailable')}</td></tr>
+                  <tr><td className="text-gray-500">{t('product:detailPage.info.productionTime')}</td><td>{p.processingDays}{t('common:daysUnit')}</td></tr>
+                  {p.brand && <tr><td className="text-gray-500">{t('common:brand')}</td><td>{p.brand}</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -361,7 +365,7 @@ export function Detail({
           </div>
         );
 
-      case "리뷰":
+      case "reviews":
         return (
           <div className="space-y-6">
             {/* 평점 요약 */}
@@ -371,7 +375,7 @@ export function Detail({
                 <span className="text-2xl font-bold">{p.rating.average.toFixed(1)}</span>
               </div>
               <div className="text-sm text-gray-600">
-                총 {p.rating.count.toLocaleString()}개의 리뷰
+                {t('product:detailPage.review.totalCount', { count: p.rating.count.toLocaleString() })}
               </div>
             </div>
 
@@ -388,7 +392,7 @@ export function Detail({
                       ratingFilter === rating ? 'bg-purple-50' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <span className="w-12 text-sm text-gray-600">{rating}점</span>
+                    <span className="w-12 text-sm text-gray-600">{rating}{t('product:detailPage.review.ratingUnit')}</span>
                     <div className="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
                       <div
                         className="h-full bg-yellow-400 rounded transition-all"
@@ -409,7 +413,7 @@ export function Detail({
                   reviewSort === 'newest' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
                 }`}
               >
-                최신순
+                {t('product:list.sortLatest')}
               </button>
               <button
                 onClick={() => setReviewSort('rating')}
@@ -417,7 +421,7 @@ export function Detail({
                   reviewSort === 'rating' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
                 }`}
               >
-                평점순
+                {t('product:detailPage.review.sortRating')}
               </button>
               <button
                 onClick={() => setReviewSort('photo')}
@@ -425,14 +429,14 @@ export function Detail({
                   reviewSort === 'photo' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
                 }`}
               >
-                사진리뷰
+                {t('product:review.photoReview')}
               </button>
               {ratingFilter && (
                 <button
                   onClick={() => setRatingFilter(null)}
                   className="px-3 py-1.5 text-sm text-purple-600 hover:underline"
                 >
-                  필터 해제
+                  {t('product:detailPage.review.clearFilter')}
                 </button>
               )}
             </div>
@@ -441,25 +445,25 @@ export function Detail({
             {reviewsLoading ? (
               <div className="py-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2" />
-                <p className="text-gray-500">리뷰를 불러오는 중...</p>
+                <p className="text-gray-500">{t('product:detailPage.review.loading')}</p>
               </div>
             ) : reviews.length === 0 ? (
               <div className="py-8 text-center text-gray-500">
-                {ratingFilter ? `${ratingFilter}점 리뷰가 없습니다.` : '아직 리뷰가 없습니다.'}
+                {ratingFilter ? t('product:detailPage.review.noRatings', { rating: ratingFilter }) : t('product:review.noReviews')}
               </div>
             ) : (
               <div className="space-y-4">
                 {reviews.map((review) => (
                   <div key={(review as any).reviewUuid || (review as any)._id || review.id} className="border-b pb-4 last:border-b-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium text-sm">{(review as any).userUuid?.name || review.user?.name || '익명'}</span>
+                      <span className="font-medium text-sm">{(review as any).userUuid?.name || review.user?.name || t('product:detailPage.review.anonymous')}</span>
                       <Stars v={review.rating} />
                       <span className="text-xs text-gray-500">
                         {new Date(review.createdAt).toLocaleDateString('ko-KR')}
                       </span>
                       {review.verifiedPurchase && (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                          구매인증
+                          {t('product:detailPage.review.verified')}
                         </span>
                       )}
                     </div>
@@ -471,7 +475,7 @@ export function Detail({
                           <img
                             key={idx}
                             src={img.url}
-                            alt={`리뷰 이미지 ${idx + 1}`}
+                            alt={t('product:detailPage.review.imageAlt', { index: idx + 1 })}
                             className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer hover:opacity-90"
                             onClick={() => window.open(img.url, '_blank')}
                           />
@@ -485,7 +489,7 @@ export function Detail({
                     <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                       <button className="flex items-center gap-1 hover:text-purple-600">
                         <span>👍</span>
-                        <span>도움이 됐어요 ({review.helpful?.upVotes || 0})</span>
+                        <span>{t('product:detailPage.review.helpful')} ({review.helpful?.upVotes || 0})</span>
                       </button>
                     </div>
 
@@ -493,7 +497,7 @@ export function Detail({
                     {review.reply && (
                       <div className="mt-3 bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-medium text-purple-700">판매자 답변</span>
+                          <span className="text-xs font-medium text-purple-700">{t('product:detailPage.review.sellerReply')}</span>
                           <span className="text-xs text-gray-400">
                             {new Date(review.reply.createdAt).toLocaleDateString('ko-KR')}
                           </span>
@@ -514,7 +518,7 @@ export function Detail({
                   disabled={!reviewsPagination.hasPrev}
                   className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  이전
+                  {t('common:prev')}
                 </button>
                 <span className="text-sm text-gray-600">
                   {reviewsPage} / {reviewsPagination.totalPages}
@@ -524,36 +528,36 @@ export function Detail({
                   disabled={!reviewsPagination.hasNext}
                   className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  다음
+                  {t('common:next')}
                 </button>
               </div>
             )}
           </div>
         );
 
-      case "Q&A":
+      case "qa":
         return (
           <div className="space-y-6">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-sm mb-2">상품 문의하기</h3>
-              <p className="text-xs text-gray-600 mb-3">궁금한 점이 있으시면 언제든 문의해주세요.</p>
-              <button className="px-4 py-2 bg-black text-white text-sm rounded-lg">문의하기</button>
+              <h3 className="font-semibold text-sm mb-2">{t('product:detailPage.qa.title')}</h3>
+              <p className="text-xs text-gray-600 mb-3">{t('product:detailPage.qa.subtitle')}</p>
+              <button className="px-4 py-2 bg-black text-white text-sm rounded-lg">{t('product:detailPage.qa.buttonLabel')}</button>
             </div>
             <div className="space-y-4">
               {[
                 {
-                  q: "사이즈가 맞지 않으면 교환 가능한가요?",
-                  a: "네, 구매 후 7일 이내에 미사용 제품에 한해 교환이 가능합니다. 고객센터로 연락 주시면 안내해드리겠습니다.",
+                  q: t('product:detailPage.qa.q1'),
+                  a: t('product:detailPage.qa.a1'),
                   date: "2024.01.14"
                 },
                 {
-                  q: "얼마나 오래 착용할 수 있나요?",
-                  a: "개인차가 있지만 일반적으로 2-3주 정도 착용 가능합니다. 관리 상태에 따라 더 오래 사용하실 수도 있어요.",
+                  q: t('product:detailPage.qa.q2'),
+                  a: t('product:detailPage.qa.a2'),
                   date: "2024.01.12"
                 },
                 {
-                  q: "제거할 때 손톱이 상하지 않나요?",
-                  a: "전용 리무버를 사용하시면 손톱에 무리 없이 안전하게 제거하실 수 있습니다.",
+                  q: t('product:detailPage.qa.q3'),
+                  a: t('product:detailPage.qa.a3'),
                   date: "2024.01.10"
                 }
               ].map((qa, index) => (
@@ -573,63 +577,63 @@ export function Detail({
           </div>
         );
 
-      case "배송/반품":
+      case "shipping":
         return (
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold text-base mb-3">배송 정보</h3>
+                <h3 className="font-semibold text-base mb-3">{t('product:detail.deliveryInfo')}</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">배송비</span>
-                    <span>무료배송 (30,000원 이상 구매시)</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.shipping.fee')}</span>
+                    <span>{t('product:detailPage.shipping.freeShippingDesc')}</span>
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">배송기간</span>
-                    <span>주문 후 1-2일 내 발송</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.shipping.period')}</span>
+                    <span>{t('product:detailPage.shipping.processingTime')}</span>
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">배송지역</span>
-                    <span>전국 (제주도, 도서산간 추가비용)</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.shipping.area')}</span>
+                    <span>{t('product:detailPage.shipping.areaDesc')}</span>
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">택배사</span>
-                    <span>CJ대한통운, 로젠택배</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.shipping.carrier')}</span>
+                    <span>{t('product:detailPage.shipping.carriers')}</span>
                   </div>
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-base mb-3">교환/반품</h3>
+                <h3 className="font-semibold text-base mb-3">{t('product:detail.returnPolicy')}</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">기간</span>
-                    <span>상품 수령 후 7일 이내</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.returns.period')}</span>
+                    <span>{t('product:detailPage.returns.periodDesc')}</span>
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">조건</span>
-                    <span>미사용, 원래 포장상태 유지</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.returns.conditions')}</span>
+                    <span>{t('product:detailPage.returns.conditionsDesc')}</span>
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">비용</span>
-                    <span>단순변심: 고객부담</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.returns.cost')}</span>
+                    <span>{t('product:detailPage.returns.costDesc')}</span>
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-gray-500 w-20">불가사유</span>
-                    <span>사용 후, 포장 훼손, 개봉 후 시간 경과</span>
+                    <span className="text-gray-500 w-20">{t('product:detailPage.returns.reasons')}</span>
+                    <span>{t('product:detailPage.returns.reasonsDesc')}</span>
                   </div>
                 </div>
               </div>
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-sm mb-2">주의사항</h4>
+              <h4 className="font-semibold text-sm mb-2">{t('product:detailPage.returns.caution')}</h4>
               <ul className="text-xs text-gray-700 space-y-1">
-                <li>• 네일 제품 특성상 개봉 후 교환/반품이 제한될 수 있습니다</li>
-                <li>• 사이즈 확인 후 주문해주세요</li>
-                <li>• 배송 중 파손 시 즉시 고객센터로 연락바랍니다</li>
+                <li>• {t('product:detailPage.returns.caution1')}</li>
+                <li>• {t('product:detailPage.returns.caution2')}</li>
+                <li>• {t('product:detailPage.returns.caution3')}</li>
               </ul>
             </div>
             <div className="text-center">
-              <button className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm">고객센터 연락하기</button>
+              <button className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm">{t('product:detailPage.contactCustomerService')}</button>
             </div>
           </div>
         );
@@ -670,7 +674,7 @@ export function Detail({
             {p.salePrice && p.salePrice < p.price ? (
               <>
                 <div className="text-sm text-gray-400 line-through">{money(p.price)}</div>
-                <span className="rounded bg-red-500 px-2 py-0.5 text-xs text-white">할인</span>
+                <span className="rounded bg-red-500 px-2 py-0.5 text-xs text-white">{t('common:discount')}</span>
               </>
             ) : null}
           </div>
@@ -682,16 +686,16 @@ export function Detail({
               <span>{p.rating.average.toFixed(1)}</span>
             </div>
             <span className="text-gray-400">|</span>
-            <span>리뷰 {p.rating.count.toLocaleString()}개</span>
+            <span>{t('product:detail.reviewCount', { count: p.rating.count.toLocaleString() })}</span>
             <span className="text-gray-400">|</span>
-            <span>무료배송</span>
+            <span>{t('product:detail.freeDelivery')}</span>
           </div>
 
           {/* 옵션 */}
           <div className="pt-2 space-y-2">
             {/* 쉐입 옵션 */}
             <div>
-              <div className="mb-1 text-sm text-gray-600">쉐입</div>
+              <div className="mb-1 text-sm text-gray-600">{t('product:detailPage.option.shape')}</div>
               {p.nailOptions?.shapeCustomizable ? (
                 // 커스터마이징 가능: 선택 가능한 버튼들 표시
                 <div className="flex flex-wrap gap-2">
@@ -716,13 +720,13 @@ export function Detail({
               ) : (
                 // 커스터마이징 불가능: 고정값만 텍스트로 표시
                 <div className="text-sm">
-                  {NAIL_SHAPE_NAME[p.nailShape] || p.nailShape} <span className="text-gray-400">(변경 불가)</span>
+                  {NAIL_SHAPE_NAME[p.nailShape] || p.nailShape} <span className="text-gray-400">{t('product:detailPage.option.notEditable')}</span>
                 </div>
               )}
             </div>
             {/* 길이 옵션 */}
             <div>
-              <div className="mb-1 text-sm text-gray-600">길이</div>
+              <div className="mb-1 text-sm text-gray-600">{t('product:detailPage.option.length')}</div>
               {p.nailOptions?.lengthCustomizable ? (
                 // 커스터마이징 가능: 선택 가능한 버튼들 표시
                 <div className="flex flex-wrap gap-2">
@@ -747,7 +751,7 @@ export function Detail({
               ) : (
                 // 커스터마이징 불가능: 고정값만 텍스트로 표시
                 <div className="text-sm">
-                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength} <span className="text-gray-400">(변경 불가)</span>
+                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength} <span className="text-gray-400">{t('product:detailPage.option.notEditable')}</span>
                 </div>
               )}
             </div>
@@ -755,7 +759,7 @@ export function Detail({
 
           {/* 수량 */}
           <div className="flex items-center gap-3 pt-2">
-            <div className="text-sm text-gray-600">수량</div>
+            <div className="text-sm text-gray-600">{t('common:quantity')}</div>
             <div className="inline-flex items-center rounded border">
               <button className="px-3 py-1" onClick={() => setQty((q) => Math.max(1, q - 1))}>-</button>
               <div className="w-10 text-center">{qty}</div>
@@ -784,7 +788,7 @@ export function Detail({
                 }}
                 className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
               >
-                커스텀 주문하기
+                {t('product:detailPage.customOrderButton')}
               </button>
             </div>
           ) : (
@@ -801,7 +805,7 @@ export function Detail({
                 }`}
               >
                 {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
-                {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니 담기'}
+                {!p.isInStock ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('product:detail.addToCart')}
               </button>
               <button
                 onClick={buyNow}
@@ -812,7 +816,7 @@ export function Detail({
                     : 'bg-black hover:bg-gray-800'
                 }`}
               >
-                바로구매
+                {t('product:detail.buyNow')}
               </button>
             </div>
           )}
@@ -821,14 +825,14 @@ export function Detail({
           <div className="flex items-center gap-3 text-sm pt-1">
             <button onClick={() => setLiked((v) => !v)} className="flex items-center gap-1 hover:text-gray-600">
               {liked ? <FaHeart className="w-4 h-4 text-red-500" /> : <FaRegHeart className="w-4 h-4" />}
-              <span>{liked ? "찜됨" : "찜하기"}</span>
+              <span>{liked ? t('product:detailPage.liked') : t('product:detailPage.unliked')}</span>
             </button>
-            <button onClick={share} className="hover:text-gray-600">공유</button>
+            <button onClick={share} className="hover:text-gray-600">{t('common:share')}</button>
             <button
               onClick={handleSizingClick}
               className="hover:text-gray-600"
             >
-              사이징
+              {t('product:detailPage.sizing')}
             </button>
           </div>
 
@@ -849,19 +853,25 @@ export function Detail({
       <div className="mt-8">
         <div className="border-b">
           <div className="mx-auto max-w-6xl px-4 flex gap-6">
-            {["상세정보", "리뷰", "Q&A", "배송/반품"].map((t) => {
-              const isActive = activeTab === t;
+            {(["info", "reviews", "qa", "shipping"] as const).map((tabKey) => {
+              const tabLabels: Record<string, string> = {
+                info: t('product:detailPage.tabs.info'),
+                reviews: t('product:detailPage.tabs.reviews'),
+                qa: t('product:detailPage.tabs.qa'),
+                shipping: t('product:detailPage.tabs.shipping'),
+              };
+              const isActive = activeTab === tabKey;
               return (
                 <button
-                  key={t}
-                  onClick={() => setActiveTab(t)}
+                  key={tabKey}
+                  onClick={() => setActiveTab(tabKey)}
                   className={`relative px-4 py-3 text-sm font-medium transition-colors duration-200 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black after:transform after:transition-transform after:duration-200 ${
-                    isActive 
-                      ? 'text-black after:scale-x-100' 
+                    isActive
+                      ? 'text-black after:scale-x-100'
                       : 'text-gray-600 hover:text-black after:scale-x-0 hover:after:scale-x-100'
                   }`}
                 >
-                  {t}
+                  {tabLabels[tabKey]}
                 </button>
               );
             })}
@@ -885,7 +895,7 @@ export function Detail({
               }}
               className="rounded-lg px-6 py-2 text-sm text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
             >
-              커스텀 주문하기
+              {t('product:detailPage.customOrderButton')}
             </button>
           ) : (
             <div className="flex gap-2">
@@ -898,7 +908,7 @@ export function Detail({
                     : 'hover:bg-gray-50'
                 }`}
               >
-                {!p.isInStock ? '품절' : addingToCart ? '담는 중...' : '장바구니'}
+                {!p.isInStock ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('common:cart')}
               </button>
               <button
                 onClick={buyNow}
@@ -909,7 +919,7 @@ export function Detail({
                     : 'bg-black hover:bg-gray-800'
                 }`}
               >
-                구매하기
+                {t('product:detailPage.buyNowMobile')}
               </button>
             </div>
           )}

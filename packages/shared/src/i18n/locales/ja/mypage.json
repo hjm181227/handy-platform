@@ -77,5 +77,45 @@
     "orders": "注文管理",
     "stats": "統計",
     "settings": "販売者設定"
-  }
+  },
+  "roles": {
+    "seller": "販売者",
+    "admin": "管理者"
+  },
+  "stats": {
+    "snaps": "スナップ",
+    "followers": "フォロワー",
+    "following": "フォロー中",
+    "ordersAndShipping": "注文/配送",
+    "shipping": "配送中",
+    "unit": "件",
+    "couponUnit": "枚"
+  },
+  "actions": {
+    "viewProfile": "プロフィール表示",
+    "realtimeCustomerOrders": "リアルタイム顧客注文確認"
+  },
+  "nailSize": {
+    "myNailSize": "マイネイルサイズ",
+    "measurementComplete": "測定完了 · 左手/右手",
+    "measurementIncomplete": "測定未完了 · {{count}}/10",
+    "noMeasurement": "測定履歴がありません · 測定する"
+  },
+  "sections": {
+    "sellerService": "販売者サービス",
+    "ordersAndReturns": "注文・配送 / 返品・交換",
+    "reviewsAndLikes": "レビュー・いいね",
+    "benefitsAndPayment": "特典・お支払い",
+    "customerServiceAndSettings": "サポート・設定"
+  },
+  "defaultUser": "ユーザー",
+  "customOrderManagement": "カスタム注文管理",
+  "claims": "返品・交換履歴",
+  "cancelHistory": "キャンセル履歴",
+  "notifications": "通知・プッシュ設定",
+  "goToSellerCenter": "販売者センターへ移動",
+  "applyAsSeller": "販売者申請",
+  "myReviewManagement": "マイレビュー管理",
+  "likesWishlist": "いいね（ウィッシュリスト）",
+  "editAccountInfo": "会員情報修正"
 }

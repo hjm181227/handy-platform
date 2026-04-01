@@ -245,5 +245,84 @@
     "generalError": "검색 중 오류가 발생했습니다.",
     "resultDesc": "'{{query}}'에 대한 검색 결과",
     "allResults": "전체 결과"
+  },
+  "detailPage": {
+    "tabs": {
+      "info": "상세정보",
+      "reviews": "리뷰",
+      "qa": "Q&A",
+      "shipping": "배송/반품"
+    },
+    "info": {
+      "nailShape": "네일 쉐입",
+      "nailLength": "네일 길이",
+      "productionTime": "제작 소요시간"
+    },
+    "review": {
+      "totalCount": "총 {{count}}개의 리뷰",
+      "ratingUnit": "점",
+      "sortRating": "평점순",
+      "clearFilter": "필터 해제",
+      "loading": "리뷰를 불러오는 중...",
+      "noRatings": "{{rating}}점 리뷰가 없습니다.",
+      "anonymous": "익명",
+      "verified": "구매인증",
+      "imageAlt": "리뷰 이미지 {{index}}",
+      "helpful": "도움이 됐어요",
+      "sellerReply": "판매자 답변"
+    },
+    "qa": {
+      "title": "상품 문의하기",
+      "subtitle": "궁금한 점이 있으시면 언제든 문의해주세요.",
+      "buttonLabel": "문의하기",
+      "q1": "사이즈가 맞지 않으면 교환 가능한가요?",
+      "a1": "네, 구매 후 7일 이내에 미사용 제품에 한해 교환이 가능합니다. 고객센터로 연락 주시면 안내해드리겠습니다.",
+      "q2": "얼마나 오래 착용할 수 있나요?",
+      "a2": "개인차가 있지만 일반적으로 2-3주 정도 착용 가능합니다. 관리 상태에 따라 더 오래 사용하실 수도 있어요.",
+      "q3": "제거할 때 손톱이 상하지 않나요?",
+      "a3": "전용 리무버를 사용하시면 손톱에 무리 없이 안전하게 제거할 수 있습니다."
+    },
+    "shipping": {
+      "period": "배송기간",
+      "processingTime": "주문 후 1-2일 내 발송",
+      "area": "배송지역",
+      "areaDesc": "전국 (제주도, 도서산간 추가비용)",
+      "carrier": "택배사",
+      "carriers": "CJ대한통운, 로젠택배",
+      "fee": "배송비",
+      "freeShippingDesc": "무료배송 (30,000원 이상 구매시)"
+    },
+    "returns": {
+      "period": "기간",
+      "periodDesc": "상품 수령 후 7일 이내",
+      "conditions": "조건",
+      "conditionsDesc": "미사용, 원래 포장상태 유지",
+      "cost": "비용",
+      "costDesc": "단순변심: 고객부담",
+      "reasons": "불가사유",
+      "reasonsDesc": "사용 후, 포장 훼손, 개봉 후 시간 경과",
+      "caution": "주의사항",
+      "caution1": "네일 제품 특성상 개봉 후 교환/반품이 제한될 수 있습니다",
+      "caution2": "사이즈 확인 후 주문해주세요",
+      "caution3": "배송 중 파손 시 즉시 고객센터로 연락바랍니다"
+    },
+    "option": {
+      "shape": "쉐입",
+      "length": "길이",
+      "notEditable": "(변경 불가)"
+    },
+    "customOrderButton": "커스텀 주문하기",
+    "addingToCart": "담는 중...",
+    "liked": "찜됨",
+    "unliked": "찜하기",
+    "sizing": "사이징",
+    "sizingAppPrompt": "HANDY 앱에서 사이즈를 편리하게 측정하고 저장할 수 있습니다!",
+    "buyNowMobile": "구매하기",
+    "buyNowError": "바로구매 처리 중 오류가 발생했습니다.",
+    "navigationError": "페이지 이동 기능이 설정되지 않았습니다.",
+    "shareUnsupported": "공유를 지원하지 않는 브라우저입니다.",
+    "linkCopied": "링크가 복사되었어요!",
+    "contactCustomerService": "고객센터 연락하기",
+    "backButton": "← 뒤로가기"
   }
 }
