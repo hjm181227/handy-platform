@@ -131,8 +131,8 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
               key={plan.planId}
               plan={plan}
               isCurrent={isActive && currentPlan === plan.planId}
-              onSelect={() => handleSubscribe(plan.planId)}
-              disabled={subscribing || (isActive && currentPlan === plan.planId)}
+              onSelect={() => onGo('/design-tool/subscription')}
+              disabled={isActive && currentPlan === plan.planId}
               isPopular={plan.planId === 'pro'}
             />
           ))}
