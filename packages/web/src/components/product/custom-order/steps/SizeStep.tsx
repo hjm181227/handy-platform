@@ -1,18 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Save, Pencil, Check, Ruler, ScanLine, CircleAlert } from 'lucide-react';
 import { OrderStepLayout, OrderStepButton } from '../common';
 import { FingerSizes, HandSizes } from '../../../../hooks/useCustomOrderFlow';
 import { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import navigateService from '@handy-platform/shared/src/services/navigate/NavigateService.web';
-
-// 손가락 한글명
-const FINGER_NAMES: Record<keyof FingerSizes, string> = {
-  thumb: '엄지',
-  index: '검지',
-  middle: '중지',
-  ring: '약지',
-  pinky: '소지',
-};
 
 // 손가락 순서
 const FINGER_ORDER: (keyof FingerSizes)[] = ['thumb', 'index', 'middle', 'ring', 'pinky'];
@@ -47,6 +39,7 @@ export function SizeStep({
   stepIndex,
   totalSteps,
 }: SizeStepProps) {
+  const { t } = useTranslation(['product', 'common', 'nail']);
   const [mode, setMode] = useState<'saved' | 'manual'>('saved');
   const [activeHand, setActiveHand] = useState<'left' | 'right'>('left');
 
@@ -150,15 +143,15 @@ export function SizeStep({
       <div className="w-14 h-14 bg-[#F5F5F5] rounded-2xl flex items-center justify-center mb-3">
         <Ruler className="w-7 h-7 text-[#D0C9C3]" />
       </div>
-      <p className="text-[15px] font-semibold text-[#131211] mb-1">측정된 사이즈가 없어요</p>
-      <p className="text-[13px] text-[#A39E99] mb-4">AI 측정으로 정확한 사이즈를 확인해보세요</p>
+      <p className="text-[15px] font-semibold text-[#131211] mb-1">{t('product:customOrder.noSavedSize')}</p>
+      <p className="text-[13px] text-[#A39E99] mb-4">{t('product:customOrder.noSavedSizeDesc')}</p>
       <button
         type="button"
         onClick={handleMeasure}
         className="flex items-center gap-2 px-5 h-10 border border-[#131211] rounded-xl text-[14px] font-semibold text-[#131211] hover:bg-gray-50 transition-colors"
       >
         <ScanLine className="w-4 h-4" />
-        사이즈 측정하기
+        {t('product:customOrder.measureSize')}
       </button>
     </div>
   );
@@ -180,7 +173,7 @@ export function SizeStep({
               key={finger}
               className="text-xs font-medium text-[#131211] bg-[#F5F5F5] px-3 py-1.5 rounded-xl"
             >
-              {FINGER_NAMES[finger]}: {value}mm
+              {t(`nail:finger.${finger}`)}: {value}mm
             </span>
           ))}
         </div>
@@ -192,7 +185,7 @@ export function SizeStep({
           <div className="flex items-center gap-1.5 mb-2">
             <CircleAlert className="w-4 h-4 text-[#E85A6B]" />
             <span className="text-[13px] font-semibold text-[#E85A6B]">
-              나머지 {status.missing.length}개 손가락 미측정
+              {t('product:customOrder.remainingFingers', { count: status.missing.length })}
             </span>
           </div>
           <div className="flex gap-2 flex-wrap mb-3">
@@ -201,7 +194,7 @@ export function SizeStep({
                 key={finger}
                 className="text-xs font-medium text-[#A39E99] border border-[#D0C9C3] px-3 py-1.5 rounded-xl"
               >
-                {FINGER_NAMES[finger]}: --
+                {t(`nail:finger.${finger}`)}: --
               </span>
             ))}
           </div>
@@ -211,7 +204,7 @@ export function SizeStep({
             className="flex items-center justify-center gap-2 w-full h-10 border-[1.5px] border-[#E85A6B] rounded-xl text-[13px] font-semibold text-[#E85A6B] hover:bg-red-50 transition-colors"
           >
             <ScanLine className="w-4 h-4" />
-            나머지 손가락 측정하기
+            {t('product:customOrder.measureRemaining')}
           </button>
         </div>
       )}
@@ -228,9 +221,9 @@ export function SizeStep({
     // Partial 또는 Complete
     return (
       <div className="space-y-3">
-        {renderHandSection('leftHand', '왼손', leftStatus)}
+        {renderHandSection('leftHand', t('product:customOrder.leftHand'), leftStatus)}
         <div className="border-t border-[#F5F5F5]" />
-        {renderHandSection('rightHand', '오른손', rightStatus)}
+        {renderHandSection('rightHand', t('product:customOrder.rightHand'), rightStatus)}
       </div>
     );
   };
@@ -240,8 +233,8 @@ export function SizeStep({
       currentStep={stepIndex}
       totalSteps={totalSteps}
       onBack={onBack}
-      title="사이즈를 알려주세요"
-      subtitle="정확한 사이즈로 딱 맞는 네일을 받아보세요"
+      title={t('product:customOrder.sizeQuestion')}
+      subtitle={t('product:customOrder.sizeSubtitle')}
     >
       {/* 저장된 사이즈 카드 — 항상 표시 */}
       <div className="mb-5">
@@ -262,9 +255,9 @@ export function SizeStep({
               <Save className="w-5 h-5 text-[#A39E99]" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-[#131211]">저장된 사이즈 사용</p>
+              <p className="font-bold text-[#131211]">{t('product:customOrder.useSavedSize')}</p>
               <p className="text-sm text-[#A39E99] mt-0.5">
-                이전에 측정한 사이즈를 사용합니다
+                {t('product:customOrder.useSavedSizeDesc')}
               </p>
             </div>
             <CheckCircle checked={mode === 'saved'} />
@@ -298,9 +291,9 @@ export function SizeStep({
               <Pencil className="w-5 h-5 text-[#A39E99]" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-[#131211]">직접 입력</p>
+              <p className="font-bold text-[#131211]">{t('product:customOrder.manualInput')}</p>
               <p className="text-sm text-[#A39E99] mt-0.5">
-                각 손가락의 사이즈를 직접 입력해주세요
+                {t('product:customOrder.manualInputDesc')}
               </p>
             </div>
             <CheckCircle checked={mode === 'manual'} />
@@ -324,7 +317,7 @@ export function SizeStep({
                 }
               `}
             >
-              왼손
+              {t('product:customOrder.leftHand')}
             </button>
             <button
               type="button"
@@ -337,7 +330,7 @@ export function SizeStep({
                 }
               `}
             >
-              오른손
+              {t('product:customOrder.rightHand')}
             </button>
           </div>
 
@@ -346,7 +339,7 @@ export function SizeStep({
             {FINGER_ORDER.map((finger) => (
               <div key={finger} className="flex items-center gap-3">
                 <span className="w-10 text-[15px] font-semibold text-[#131211]">
-                  {FINGER_NAMES[finger]}
+                  {t(`nail:finger.${finger}`)}
                 </span>
                 <div className="flex-1 flex items-center bg-[#F5F5F5] rounded-xl h-12 px-4">
                   <input
@@ -365,7 +358,7 @@ export function SizeStep({
 
           {/* 안내 문구 */}
           <p className="text-[13px] text-[#A39E99] text-center mb-4">
-            네일 너비(가로)를 mm 단위로 입력해주세요
+            {t('product:customOrder.sizeInputHint')}
           </p>
         </>
       )}
@@ -376,7 +369,7 @@ export function SizeStep({
           onClick={onNext}
           disabled={!canProceed}
         >
-          {canProceed ? '다음' : '사이즈를 모두 입력해주세요'}
+          {canProceed ? t('product:customOrder.next') : t('product:customOrder.enterAllSizes')}
         </OrderStepButton>
       </div>
     </OrderStepLayout>

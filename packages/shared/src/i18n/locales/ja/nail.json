@@ -5,7 +5,9 @@
     "SQUARE": "スクエア",
     "OVAL": "オーバル",
     "COFFIN": "コフィン",
-    "STILETTO": "スティレット"
+    "STILETTO": "スティレット",
+    "SQUOVAL": "スクオーバル",
+    "BALLERINA": "バレリーナ"
   },
   "length": {
     "SHORT": "ショート",

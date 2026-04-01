@@ -1,18 +1,7 @@
-import { NAIL_SHAPES, NAIL_SHAPE_NAME, NailShape } from '@handy-platform/shared';
+import { useTranslation } from 'react-i18next';
+import { NAIL_SHAPES, NailShape } from '@handy-platform/shared';
 import { OrderStepLayout, OrderStepButton, NailShapeIcon } from '../common';
 import { FaCheck, FaLock } from 'react-icons/fa';
-
-// 쉐입별 설명 (네일 업계 용어)
-const SHAPE_DESCRIPTIONS: Record<NailShape, string> = {
-  ROUND: '손톱 끝을 따라 자연스럽게 둥글린 클래식한 모양',
-  SQUARE: '양 끝이 직각으로 떨어지는 모던한 모양',
-  OVAL: '손가락이 길어 보이는 우아한 타원형',
-  ALMOND: '끝이 뾰족하면서 부드러운 아몬드 모양',
-  STILETTO: '날카롭게 뾰족한 대담한 스타일',
-  COFFIN: '끝이 평평한 관 모양, 트렌디한 스타일',
-  SQUOVAL: '스퀘어와 오벌의 장점을 합친 모양',
-  BALLERINA: '코핀과 유사하나 더 우아하고 여성스러운 형태',
-};
 
 interface ShapeStepProps {
   shape: NailShape;
@@ -33,20 +22,28 @@ export function ShapeStep({
   totalSteps,
   fixed,
 }: ShapeStepProps) {
+  const { t } = useTranslation(['product', 'common', 'nail']);
+
+  // 쉐입별 설명을 i18n에서 가져오기
+  const getShapeDescription = (s: NailShape) => t(`product:customOrder.shapeDesc_${s}`);
+
+  // 쉐입 이름을 i18n에서 가져오기
+  const getShapeName = (s: NailShape) => t(`nail:shape.${s}`);
+
   return (
     <OrderStepLayout
       currentStep={stepIndex}
       totalSteps={totalSteps}
       onBack={onBack}
-      title="어떤 모양을 원하세요?"
-      subtitle={fixed ? '이 상품은 쉐입이 고정되어 있어요' : '원하는 네일 쉐입을 선택해주세요'}
+      title={t('product:customOrder.shapeQuestion')}
+      subtitle={fixed ? t('product:customOrder.shapeSubtitleFixed') : t('product:customOrder.shapeSubtitle')}
     >
       {/* 고정 쉐입 안내 */}
       {fixed && (
         <div className="bg-gray-50 rounded-xl p-4 mb-4 flex items-center gap-3">
           <FaLock className="text-gray-400 w-4 h-4 flex-shrink-0" />
           <p className="text-sm text-gray-600">
-            이 상품은 <span className="font-semibold text-gray-900">{NAIL_SHAPE_NAME[shape]}</span> 쉐입으로만 주문 가능합니다
+            {t('product:customOrder.shapeFixed', { shape: getShapeName(shape) })}
           </p>
         </div>
       )}
@@ -85,12 +82,12 @@ export function ShapeStep({
               </div>
 
               {/* 쉐입 이름 */}
-              <span className="font-semibold text-sm">{NAIL_SHAPE_NAME[s]}</span>
+              <span className="font-semibold text-sm">{getShapeName(s)}</span>
 
               {/* 설명 (선택된 경우에만 표시) */}
               {isSelected && (
                 <span className="text-xs mt-1 text-pink-100 text-center line-clamp-2">
-                  {SHAPE_DESCRIPTIONS[s]}
+                  {getShapeDescription(s)}
                 </span>
               )}
             </button>
@@ -101,16 +98,16 @@ export function ShapeStep({
       {/* 선택된 쉐입 설명 */}
       <div className="bg-pink-50 rounded-xl p-4 mt-4">
         <p className="text-sm text-pink-800">
-          <span className="font-semibold">{NAIL_SHAPE_NAME[shape]}</span>
+          <span className="font-semibold">{getShapeName(shape)}</span>
           <span className="mx-2">·</span>
-          {SHAPE_DESCRIPTIONS[shape]}
+          {getShapeDescription(shape)}
         </p>
       </div>
 
       {/* 하단 버튼 */}
       <div className="sticky bottom-0 bg-white pt-4 pb-6 -mx-5 px-5 border-t mt-6">
         <OrderStepButton onClick={onNext}>
-          다음
+          {t('product:customOrder.next')}
         </OrderStepButton>
       </div>
     </OrderStepLayout>

@@ -5,7 +5,9 @@
     "SQUARE": "Square",
     "OVAL": "Oval",
     "COFFIN": "Coffin",
-    "STILETTO": "Stiletto"
+    "STILETTO": "Stiletto",
+    "SQUOVAL": "Squoval",
+    "BALLERINA": "Ballerina"
   },
   "length": {
     "SHORT": "Short",

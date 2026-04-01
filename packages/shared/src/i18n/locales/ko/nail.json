@@ -5,7 +5,9 @@
     "SQUARE": "스퀘어",
     "OVAL": "오벌",
     "COFFIN": "코핀",
-    "STILETTO": "스틸레토"
+    "STILETTO": "스틸레토",
+    "SQUOVAL": "스퀘오벌",
+    "BALLERINA": "발레리나"
   },
   "length": {
     "SHORT": "숏",

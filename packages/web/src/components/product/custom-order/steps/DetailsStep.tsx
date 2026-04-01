@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaPlus, FaTimes, FaImage } from 'react-icons/fa';
 import { OrderStepLayout, OrderStepButton } from '../common';
 
@@ -29,6 +30,7 @@ export function DetailsStep({
   stepIndex,
   totalSteps,
 }: DetailsStepProps) {
+  const { t } = useTranslation(['product', 'common', 'nail']);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 파일 첨부 핸들러
@@ -50,38 +52,38 @@ export function DetailsStep({
       currentStep={stepIndex}
       totalSteps={totalSteps}
       onBack={onBack}
-      title="어떤 스타일을 원하세요?"
-      subtitle="원하는 컬러나 디자인을 자유롭게 알려주세요"
+      title={t('product:customOrder.styleQuestion')}
+      subtitle={t('product:customOrder.styleSubtitle')}
     >
       <div className="space-y-6 flex-1">
         {/* 원하는 컬러 */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            원하는 컬러
+            {t('product:customOrder.desiredColor')}
           </label>
           <input
             type="text"
             value={desiredColor}
             onChange={(e) => onUpdateColor(e.target.value)}
-            placeholder="예: 연한 핑크, 베이지, 빨간색"
+            placeholder={t('product:customOrder.colorPlaceholder')}
             className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base
                      focus:ring-2 focus:ring-black focus:border-transparent
                      transition-all placeholder:text-gray-400"
           />
           <p className="text-xs text-gray-500 mt-2">
-            정확한 색상명 또는 느낌을 자유롭게 입력해주세요
+            {t('product:customOrder.colorHint')}
           </p>
         </div>
 
         {/* 요청사항 */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            요청사항
+            {t('product:customOrder.requestNotesLabel')}
           </label>
           <textarea
             value={request}
             onChange={(e) => onUpdateRequest(e.target.value)}
-            placeholder="용도, 원하는 느낌, 참고 이미지 설명 등을 자세하게 작성해주시면 더 좋아요!"
+            placeholder={t('product:customOrder.requestDetailPlaceholder')}
             rows={4}
             className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base resize-none
                      focus:ring-2 focus:ring-black focus:border-transparent
@@ -92,8 +94,8 @@ export function DetailsStep({
         {/* 참고 이미지 첨부 */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            참고 이미지
-            <span className="text-gray-400 font-normal ml-1">(선택)</span>
+            {t('product:customOrder.refImageLabel')}
+            <span className="text-gray-400 font-normal ml-1">({t('product:customOrder.refImageOptional')})</span>
           </label>
 
           {/* 첨부된 파일 목록 */}
@@ -137,7 +139,7 @@ export function DetailsStep({
                      hover:border-gray-400 hover:bg-gray-50 transition-colors"
           >
             <FaImage className="w-5 h-5" />
-            <span>참고 이미지 추가</span>
+            <span>{t('product:customOrder.addRefImage')}</span>
           </button>
           <input
             ref={fileInputRef}
@@ -148,7 +150,7 @@ export function DetailsStep({
             className="hidden"
           />
           <p className="text-xs text-gray-500 mt-2 text-center">
-            원하는 디자인의 참고 이미지를 첨부해주세요
+            {t('product:customOrder.refImageHint')}
           </p>
         </div>
       </div>
@@ -156,7 +158,7 @@ export function DetailsStep({
       {/* 하단 버튼 */}
       <div className="sticky bottom-0 bg-white pt-4 pb-6 -mx-5 px-5 border-t mt-6">
         <OrderStepButton onClick={onNext}>
-          다음
+          {t('product:customOrder.next')}
         </OrderStepButton>
       </div>
     </OrderStepLayout>

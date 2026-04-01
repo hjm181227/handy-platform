@@ -1,19 +1,13 @@
-import { NAIL_LENGTHS, NAIL_LENGTH_NAME, NailLength } from '@handy-platform/shared';
+import { useTranslation } from 'react-i18next';
+import { NAIL_LENGTHS, NailLength } from '@handy-platform/shared';
 import { OrderStepLayout, OrderStepButton, NailLengthBar } from '../common';
 import { FaCheck, FaLock } from 'react-icons/fa';
 
-// 길이별 설명 (네일 업계 용어)
-const LENGTH_DESCRIPTIONS: Record<NailLength, string> = {
-  SHORT: '손톱 끝에서 2~3mm 정도, 일상생활에 편리하고 자연스러워요',
-  MEDIUM: '손톱 끝에서 5~7mm 정도, 가장 인기있는 길이로 세련된 느낌',
-  LONG: '손톱 끝에서 10mm 이상, 화려한 네일아트에 적합해요',
-};
-
-// 길이별 추천 상황
-const LENGTH_RECOMMENDATIONS: Record<NailLength, string[]> = {
-  SHORT: ['일상 생활', '직장인', '첫 네일'],
-  MEDIUM: ['데일리룩', '특별한 날', '인기 선택'],
-  LONG: ['파티룩', '웨딩', '포토슈팅'],
+// 길이별 추천 태그 키 매핑
+const LENGTH_TAG_KEYS: Record<NailLength, string[]> = {
+  SHORT: ['lengthTag_dailyLife', 'lengthTag_officeWorker', 'lengthTag_firstNail'],
+  MEDIUM: ['lengthTag_dailyLook', 'lengthTag_specialDay', 'lengthTag_popularChoice'],
+  LONG: ['lengthTag_partyLook', 'lengthTag_wedding', 'lengthTag_photoShoot'],
 };
 
 interface LengthStepProps {
@@ -35,20 +29,28 @@ export function LengthStep({
   totalSteps,
   fixed,
 }: LengthStepProps) {
+  const { t } = useTranslation(['product', 'common', 'nail']);
+
+  // 길이 이름을 i18n에서 가져오기
+  const getLengthName = (l: NailLength) => t(`nail:length.${l}`);
+
+  // 길이별 설명을 i18n에서 가져오기
+  const getLengthDescription = (l: NailLength) => t(`product:customOrder.lengthDesc_${l}`);
+
   return (
     <OrderStepLayout
       currentStep={stepIndex}
       totalSteps={totalSteps}
       onBack={onBack}
-      title="길이는 어느 정도로 할까요?"
-      subtitle={fixed ? '이 상품은 길이가 고정되어 있어요' : '선호하는 네일 길이를 선택해주세요'}
+      title={t('product:customOrder.lengthQuestion')}
+      subtitle={fixed ? t('product:customOrder.lengthSubtitleFixed') : t('product:customOrder.lengthSubtitle')}
     >
       {/* 고정 길이 안내 */}
       {fixed && (
         <div className="bg-gray-50 rounded-xl p-4 mb-4 flex items-center gap-3">
           <FaLock className="text-gray-400 w-4 h-4 flex-shrink-0" />
           <p className="text-sm text-gray-600">
-            이 상품은 <span className="font-semibold text-gray-900">{NAIL_LENGTH_NAME[length]}</span> 길이로만 주문 가능합니다
+            {t('product:customOrder.lengthFixed', { length: getLengthName(length) })}
           </p>
         </div>
       )}
@@ -88,15 +90,15 @@ export function LengthStep({
                 {/* 텍스트 정보 */}
                 <div className="flex-1 pr-8">
                   <p className={`font-semibold ${isSelected ? 'text-pink-700' : 'text-gray-900'}`}>
-                    {NAIL_LENGTH_NAME[l]}
+                    {getLengthName(l)}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">{LENGTH_DESCRIPTIONS[l]}</p>
+                  <p className="text-sm text-gray-500 mt-1">{getLengthDescription(l)}</p>
 
                   {/* 추천 태그 */}
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {LENGTH_RECOMMENDATIONS[l].map((tag) => (
+                    {LENGTH_TAG_KEYS[l].map((tagKey) => (
                       <span
-                        key={tag}
+                        key={tagKey}
                         className={`
                           text-xs px-2 py-0.5 rounded-full
                           ${isSelected
@@ -105,7 +107,7 @@ export function LengthStep({
                           }
                         `}
                       >
-                        {tag}
+                        {t(`product:customOrder.${tagKey}`)}
                       </span>
                     ))}
                   </div>
@@ -119,7 +121,7 @@ export function LengthStep({
       {/* 하단 버튼 */}
       <div className="sticky bottom-0 bg-white pt-4 pb-6 -mx-5 px-5 border-t mt-6">
         <OrderStepButton onClick={onNext}>
-          다음
+          {t('product:customOrder.next')}
         </OrderStepButton>
       </div>
     </OrderStepLayout>
