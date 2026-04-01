@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 
 interface SnapCommentsProps {
@@ -6,6 +7,7 @@ interface SnapCommentsProps {
 }
 
 export default function SnapComments({ snapUuid }: SnapCommentsProps) {
+  const { t } = useTranslation(['common']);
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -71,10 +73,10 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return '방금 전';
-    if (diffMins < 60) return `${diffMins}분 전`;
-    if (diffHours < 24) return `${diffHours}시간 전`;
-    if (diffDays < 7) return `${diffDays}일 전`;
+    if (diffMins < 1) return t('common:snap.justNow');
+    if (diffMins < 60) return t('common:snap.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('common:snap.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('common:snap.daysAgo', { count: diffDays });
     return date.toLocaleDateString('ko-KR');
   };
 
@@ -103,14 +105,14 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
             onClick={() => setReplyTo({ uuid: comment.commentUuid, nickname: comment.author?.nickname || '' })}
             className="text-[10px] text-gray-400 hover:text-gray-600"
           >
-            답글
+            {t('common:snap.reply')}
           </button>
           {comment.isOwner && (
             <button
               onClick={() => handleDelete(comment.commentUuid)}
               className="text-[10px] text-gray-400 hover:text-red-500"
             >
-              삭제
+              {t('common:delete')}
             </button>
           )}
         </div>
@@ -129,7 +131,7 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
             <div className="inline-block w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
           </div>
         ) : rootComments.length === 0 ? (
-          <p className="text-center text-xs text-gray-400 py-4">아직 댓글이 없습니다.</p>
+          <p className="text-center text-xs text-gray-400 py-4">{t('common:snap.noComments')}</p>
         ) : (
           rootComments.map(c => renderComment(c))
         )}
@@ -139,7 +141,7 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
       <form onSubmit={handleSubmit} className="mt-3">
         {replyTo && (
           <div className="flex items-center gap-2 mb-1.5 text-xs text-[#E85A6B]">
-            <span>@{replyTo.nickname}에게 답글</span>
+            <span>{t('common:snap.replyTo', { nickname: replyTo.nickname })}</span>
             <button type="button" onClick={() => setReplyTo(null)} className="text-gray-400 hover:text-gray-600">
               ✕
             </button>
@@ -150,7 +152,7 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
             type="text"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="댓글을 입력하세요..."
+            placeholder={t('common:snap.commentPlaceholder')}
             className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-400"
           />
           <button
@@ -158,7 +160,7 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
             disabled={!newComment.trim() || submitting}
             className="px-4 py-2 bg-[#E85A6B] text-white text-sm rounded-full hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {submitting ? '...' : '게시'}
+            {submitting ? '...' : t('common:snap.post')}
           </button>
         </div>
       </form>

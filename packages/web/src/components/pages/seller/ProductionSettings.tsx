@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../../services/apiService';
 import { SellerLayout } from '../../layout/SellerLayout';
 import { useAlert } from '../../common';
@@ -12,6 +13,7 @@ interface ProductionSettingsProps {
 }
 
 export function ProductionSettings({ onGo }: ProductionSettingsProps) {
+  const { t } = useTranslation('seller');
   const { alert, error: showError } = useAlert();
   const [settings, setSettings] = useState<ProductionSettingsType>({
     orderCapacity: 10,
@@ -66,7 +68,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
       }
     } catch (err: any) {
       console.error('생산 설정 로드 실패:', err);
-      setError('생산 설정을 불러오는데 실패했습니다.');
+      setError(t('productionSettings.settingsLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -122,13 +124,13 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
       setOriginalSettings(settings);
       setValidationErrors([]);
       
-      await alert('생산 설정이 저장되었습니다.', { 
+      await alert(t('productionSettings.saveSuccess'), {
         variant: 'success',
-        title: '설정 저장 완료'
+        title: t('productionSettings.saveCompleteTitle')
       });
     } catch (err: any) {
       console.error('생산 설정 저장 실패:', err);
-      setError('설정 저장에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
+      setError(t('productionSettings.saveFailed', { error: err.message || '' }));
     } finally {
       setSaving(false);
     }
@@ -146,25 +148,25 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
 
 
   return (
-    <SellerLayout title="생산량 설정" onGo={onGo}>
+    <SellerLayout title={t('productionSettings.title')} onGo={onGo}>
       {loading ? (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">설정을 불러오는 중...</p>
+            <p className="text-gray-600">{t('productionSettings.loadingSettings')}</p>
           </div>
         </div>
       ) : !settings ? (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center max-w-md w-full">
             <div className="text-red-500 text-xl mb-4">⚠️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">데이터를 불러올 수 없습니다</h3>
-            <p className="text-gray-600 mb-6">설정 데이터를 불러오는 중 오류가 발생했습니다.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('productionSettings.cannotLoadData')}</h3>
+            <p className="text-gray-600 mb-6">{t('productionSettings.loadError')}</p>
             <button
               onClick={loadSettings}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         </div>
@@ -176,13 +178,13 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">설정 로드 실패</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('productionSettings.loadFailed')}</h3>
             <p className="text-red-600 mb-6 leading-relaxed">{error}</p>
             <button
               onClick={loadSettings}
               className="bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium shadow-sm"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         </div>
@@ -194,7 +196,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-medium">저장되지 않은 변경사항이 있습니다</span>
+              <span className="text-sm font-medium">{t('productionSettings.unsavedChanges')}</span>
             </div>
           )}
 
@@ -206,7 +208,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-red-800 mb-2">입력 오류</h3>
+                  <h3 className="font-semibold text-red-800 mb-2">{t('productionSettings.validationError')}</h3>
                   <ul className="text-red-700 text-sm space-y-1.5">
                     {validationErrors.map((error, index) => (
                       <li key={index} className="flex items-start gap-2">
@@ -238,7 +240,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
               disabled={!hasChanges || saving}
               className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              초기화
+              {t('common:reset')}
             </button>
             <button
               onClick={handleSave}
@@ -248,10 +250,10 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
               {saving ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  저장 중...
+                  {t('productForm.saving')}
                 </div>
               ) : (
-                '저장'
+                t('common:save')
               )}
             </button>
           </div>
@@ -259,8 +261,8 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
           {/* 생산 능력 설정 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">생산 능력 설정</h2>
-            <p className="text-sm text-gray-600 mt-1">동시에 처리 가능한 주문 수와 제작 기간을 설정하세요</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('productionSettings.capacitySettings')}</h2>
+            <p className="text-sm text-gray-600 mt-1">{t('productionSettings.capacitySettingsDesc')}</p>
           </div>
 
           <div className="p-6 space-y-8">
@@ -275,9 +277,9 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900">
-                      적정 생산량
+                      {t('productionSettings.optimalCapacity')}
                     </label>
-                    <p className="text-xs text-gray-500">동시에 처리 가능한 최대 주문 수</p>
+                    <p className="text-xs text-gray-500">{t('productionSettings.optimalCapacityDesc')}</p>
                   </div>
                 </div>
 
@@ -292,7 +294,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       className="flex-1 border-2 border-gray-200 rounded-lg px-4 py-3 text-center text-lg font-semibold focus:border-blue-500 focus:ring-0 transition-colors duration-200"
                       placeholder="10"
                     />
-                    <div className="text-sm text-gray-600 font-medium">개</div>
+                    <div className="text-sm text-gray-600 font-medium">{t('dashboard.itemUnit')}</div>
                   </div>
                 </div>
 
@@ -303,7 +305,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                     <p className="text-xs text-amber-700">
-                      진행 중인 주문이 적정 생산량의 90% 초과 시 고객에게 지연 안내가 자동으로 표시됩니다
+                      {t('productionSettings.capacityWarning')}
                     </p>
                   </div>
                 </div>
@@ -319,9 +321,9 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900">
-                      평균 제작 소요일
+                      {t('productionSettings.avgProcessingDays')}
                     </label>
-                    <p className="text-xs text-gray-500">주문부터 완제품까지 걸리는 시간</p>
+                    <p className="text-xs text-gray-500">{t('productionSettings.avgProcessingDaysDesc')}</p>
                   </div>
                 </div>
 
@@ -336,7 +338,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       className="w-32 border-2 border-gray-200 rounded-lg px-4 py-3 text-center text-lg font-semibold focus:border-orange-500 focus:ring-0 transition-colors duration-200"
                       placeholder="3"
                     />
-                    <div className="text-sm text-gray-600 font-medium">일</div>
+                    <div className="text-sm text-gray-600 font-medium">{t('productionSettings.dayUnit')}</div>
                   </div>
                 </div>
               </div>
@@ -347,8 +349,8 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
         {/* 주문 접수 설정 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">주문 접수 설정</h2>
-            <p className="text-sm text-gray-600 mt-1">신규 주문 접수 여부를 관리하세요</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('productionSettings.orderSettings')}</h2>
+            <p className="text-sm text-gray-600 mt-1">{t('productionSettings.orderSettingsDesc')}</p>
           </div>
           
           <div className="p-6">
@@ -364,11 +366,11 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">주문 접수 활성화</h3>
+                  <h3 className="font-semibold text-gray-900">{t('productionSettings.orderAcceptEnabled')}</h3>
                   <p className="text-sm text-gray-600">
-                    {settings?.isAvailableForOrders 
-                      ? '현재 새로운 주문을 받고 있습니다' 
-                      : '현재 새로운 주문을 받지 않습니다'
+                    {settings?.isAvailableForOrders
+                      ? t('productionSettings.acceptingOrders')
+                      : t('productionSettings.notAcceptingOrders')
                     }
                   </p>
                 </div>
@@ -392,10 +394,9 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <div>
-                    <p className="text-amber-800 font-medium">주의사항</p>
+                    <p className="text-amber-800 font-medium">{t('productionSettings.orderDisableWarningTitle')}</p>
                     <p className="text-amber-700 text-sm mt-1">
-                      주문 접수를 비활성화하면 고객들이 새로운 주문을 할 수 없습니다. 
-                      기존 진행 중인 주문은 영향을 받지 않습니다.
+                      {t('productionSettings.orderDisableWarning')}
                     </p>
                   </div>
                 </div>
@@ -407,8 +408,8 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
         {/* 특별 안내사항 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">특별 안내사항</h2>
-            <p className="text-sm text-gray-600 mt-1">고객에게 전달할 중요한 정보를 입력하세요</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('productionSettings.specialNotice')}</h2>
+            <p className="text-sm text-gray-600 mt-1">{t('productionSettings.specialNoticeDesc')}</p>
           </div>
           
           <div className="p-6">
@@ -417,7 +418,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                 <textarea
                   value={settings?.specialNotice ?? ''}
                   onChange={(e) => handleSettingsChange('specialNotice', e.target.value)}
-                  placeholder="예: 현재 주문이 많아 배송이 평소보다 2-3일 더 지연될 수 있습니다."
+                  placeholder={t('productionSettings.specialNoticePlaceholder')}
                   className="w-full border-2 border-gray-200 rounded-lg px-4 py-4 h-32 resize-none focus:border-blue-500 focus:ring-0 transition-colors duration-200 placeholder-gray-400"
                   maxLength={500}
                 />
@@ -431,7 +432,7 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  <span>고객 주문 페이지에 표시됩니다</span>
+                  <span>{t('productionSettings.displayedOnOrderPage')}</span>
                 </div>
                 <span className={`text-sm font-medium ${
                   (settings?.specialNotice ?? '').length > 400 
@@ -440,14 +441,14 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
                       ? 'text-amber-500' 
                       : 'text-gray-500'
                 }`}>
-                  {(settings?.specialNotice ?? '').length}/500자
+                  {t('productionSettings.charCount', { count: (settings?.specialNotice ?? '').length })}
                 </span>
               </div>
               
               {(settings?.specialNotice ?? '').length > 400 && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-700 text-sm">
-                    글자 수가 많습니다. 간결하게 작성하는 것을 권장합니다.
+                    {t('productionSettings.tooLongWarning')}
                   </p>
                 </div>
               )}

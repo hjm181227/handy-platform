@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import SnapCard from '../snap/SnapCard';
 import SnapDetailModal from '../snap/SnapDetailModal';
@@ -13,6 +14,7 @@ interface UserProfilePageProps {
 }
 
 export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 'grid' }: UserProfilePageProps) {
+  const { t } = useTranslation(['mypage', 'common']);
   const { currentUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [snaps, setSnaps] = useState<any[]>([]);
@@ -110,9 +112,9 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
   if (!profile) {
     return (
       <div className="handy-page-content max-w-4xl mx-auto text-center py-20">
-        <p className="text-gray-500">유저를 찾을 수 없습니다.</p>
+        <p className="text-gray-500">{t('mypage:profile.userNotFound')}</p>
         <button onClick={() => onGo('/')} className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">
-          홈으로 돌아가기
+          {t('mypage:profile.goHome')}
         </button>
       </div>
     );
@@ -150,15 +152,15 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
             <div className="flex gap-6 mt-3">
               <button onClick={() => handleViewChange('grid')} className="text-center">
                 <span className="font-bold text-gray-900">{profile.snapsCount || 0}</span>
-                <span className="text-xs text-gray-500 ml-1">스냅</span>
+                <span className="text-xs text-gray-500 ml-1">{t('mypage:profile.snaps')}</span>
               </button>
               <button onClick={() => handleViewChange('followers')} className="text-center">
                 <span className="font-bold text-gray-900">{profile.followerCount || 0}</span>
-                <span className="text-xs text-gray-500 ml-1">팔로워</span>
+                <span className="text-xs text-gray-500 ml-1">{t('mypage:profile.followers')}</span>
               </button>
               <button onClick={() => handleViewChange('following')} className="text-center">
                 <span className="font-bold text-gray-900">{profile.followingCount || 0}</span>
-                <span className="text-xs text-gray-500 ml-1">팔로잉</span>
+                <span className="text-xs text-gray-500 ml-1">{t('mypage:profile.following')}</span>
               </button>
             </div>
           </div>
@@ -178,7 +180,7 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
                   : 'text-[#A39E99] font-medium'
               }`}
             >
-              {view === 'grid' ? '스냅' : view === 'followers' ? '팔로워' : '팔로잉'}
+              {view === 'grid' ? t('mypage:profile.snaps') : view === 'followers' ? t('mypage:profile.followers') : t('mypage:profile.following')}
             </button>
           ))}
         </div>
@@ -200,7 +202,7 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-gray-400">아직 스냅이 없습니다.</p>
+              <p className="text-gray-400">{t('mypage:profile.noSnaps')}</p>
             </div>
           )}
 
@@ -210,7 +212,7 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
                 onClick={loadMore}
                 className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-sm"
               >
-                더보기
+                {t('mypage:profile.loadMore')}
               </button>
             </div>
           )}
@@ -226,7 +228,7 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
             </div>
           ) : followList.length === 0 ? (
             <p className="text-center text-gray-400 py-8">
-              {activeView === 'followers' ? '아직 팔로워가 없습니다.' : '아직 팔로우한 유저가 없습니다.'}
+              {activeView === 'followers' ? t('mypage:profile.noFollowers') : t('mypage:profile.noFollowing')}
             </p>
           ) : (
             followList.map(user => (

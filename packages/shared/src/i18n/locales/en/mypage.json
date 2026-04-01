@@ -1,17 +1,5 @@
 {
   "title": "My Page",
-  "profile": {
-    "title": "Profile",
-    "edit": "Edit Profile",
-    "profileImage": "Profile Photo",
-    "changeImage": "Change Photo",
-    "nickname": "Nickname",
-    "email": "Email",
-    "phone": "Phone",
-    "bio": "Bio",
-    "bioPlaceholder": "Tell us about yourself",
-    "saved": "Profile saved"
-  },
   "menu": {
     "orders": "Orders",
     "wishlist": "Wishlist",
@@ -117,5 +105,29 @@
   "applyAsSeller": "Apply as Seller",
   "myReviewManagement": "My Reviews",
   "likesWishlist": "Likes (Wishlist)",
-  "editAccountInfo": "Edit Account Info"
+  "editAccountInfo": "Edit Account Info",
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit Profile",
+    "profileImage": "Profile Photo",
+    "changeImage": "Change Photo",
+    "nickname": "Nickname",
+    "email": "Email",
+    "phone": "Phone",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell us about yourself",
+    "saved": "Profile saved",
+    "userNotFound": "User not found.",
+    "goHome": "Go Home",
+    "snaps": "Snaps",
+    "followers": "Followers",
+    "following": "Following",
+    "noSnaps": "No snaps yet.",
+    "noFollowers": "No followers yet.",
+    "noFollowing": "Not following anyone yet.",
+    "loadMore": "Load More",
+    "follow": "Follow",
+    "followingBtn": "Following",
+    "unfollow": "Unfollow"
+  }
 }

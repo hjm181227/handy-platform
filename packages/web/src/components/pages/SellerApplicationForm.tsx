@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { sellerApplicationService } from '../../services/apiService';
 import { SellerApplicationData, SellerApplication } from '@handy-platform/shared';
 
@@ -7,6 +8,7 @@ interface SellerApplicationFormProps {
 }
 
 const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) => {
+  const { t } = useTranslation('seller');
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<SellerApplication | null>(null);
@@ -81,53 +83,53 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
     // 필수 필드 검증
     if (!formData.brandName.trim()) {
-      newErrors['brandName'] = '브랜드명을 입력해주세요';
+      newErrors['brandName'] = t('application.validationBrandName');
     }
     if (!formData.businessNumber.trim()) {
-      newErrors['businessNumber'] = '사업자등록번호를 입력해주세요';
+      newErrors['businessNumber'] = t('application.validationBusinessNumber');
     }
     if (!formData.contactEmail.trim()) {
-      newErrors['contactEmail'] = '연락처 이메일을 입력해주세요';
+      newErrors['contactEmail'] = t('application.validationContactEmail');
     }
     if (!formData.contactPhone.trim()) {
-      newErrors['contactPhone'] = '연락처 전화번호를 입력해주세요';
+      newErrors['contactPhone'] = t('application.validationContactPhone');
     }
 
     // 사업자 주소 검증
     if (!formData.businessAddress?.street.trim()) {
-      newErrors['businessAddress.street'] = '사업자 주소를 입력해주세요';
+      newErrors['businessAddress.street'] = t('application.validationStreetAddress');
     }
     if (!formData.businessAddress?.city.trim()) {
-      newErrors['businessAddress.city'] = '사업자 시/구를 입력해주세요';
+      newErrors['businessAddress.city'] = t('application.validationCity');
     }
     if (!formData.businessAddress?.state.trim()) {
-      newErrors['businessAddress.state'] = '사업자 시/도를 입력해주세요';
+      newErrors['businessAddress.state'] = t('application.validationState');
     }
     if (!formData.businessAddress?.zipCode.trim()) {
-      newErrors['businessAddress.zipCode'] = '사업자 우편번호를 입력해주세요';
+      newErrors['businessAddress.zipCode'] = t('application.validationZipCode');
     }
 
     // 계좌 정보 검증
     if (!formData.bankAccount.bankName.trim()) {
-      newErrors['bankAccount.bankName'] = '은행명을 입력해주세요';
+      newErrors['bankAccount.bankName'] = t('application.validationBankName');
     }
     if (!formData.bankAccount.accountNumber.trim()) {
-      newErrors['bankAccount.accountNumber'] = '계좌번호를 입력해주세요';
+      newErrors['bankAccount.accountNumber'] = t('application.validationAccountNumber');
     }
     if (!formData.bankAccount.accountHolder.trim()) {
-      newErrors['bankAccount.accountHolder'] = '예금주명을 입력해주세요';
+      newErrors['bankAccount.accountHolder'] = t('application.validationAccountHolder');
     }
 
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.contactEmail && !emailRegex.test(formData.contactEmail)) {
-      newErrors['contactEmail'] = '올바른 이메일 형식을 입력해주세요';
+      newErrors['contactEmail'] = t('application.validationEmailFormat');
     }
 
     // 사업자등록번호 형식 검증 (숫자와 하이픈만)
     const businessNumberRegex = /^[0-9-]+$/;
     if (formData.businessNumber && !businessNumberRegex.test(formData.businessNumber)) {
-      newErrors['businessNumber'] = '사업자등록번호는 숫자와 하이픈만 입력 가능합니다';
+      newErrors['businessNumber'] = t('application.validationBusinessNumberFormat');
     }
 
     setErrors(newErrors);
@@ -153,14 +155,14 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
       
       await sellerApplicationService.submitApplication(submitData);
       
-      alert('판매자 신청이 성공적으로 제출되었습니다. 검토 후 연락드리겠습니다.');
+      alert(t('application.submitSuccess'));
       
       // 신청 상태 새로고침
       checkApplicationStatus();
       
     } catch (error: any) {
       console.error('Application submission failed:', error);
-      const errorMessage = error?.message || '신청 제출에 실패했습니다. 다시 시도해주세요.';
+      const errorMessage = error?.message || t('application.submitFailed');
       alert(errorMessage);
     } finally {
       setSubmitLoading(false);
@@ -172,7 +174,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-          <p className="text-gray-600">신청 상태를 확인하고 있습니다...</p>
+          <p className="text-gray-600">{t('application.checkingStatus')}</p>
         </div>
       </div>
     );
@@ -185,7 +187,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4">
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">판매자 신청 현황</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('application.applicationStatus')}</h1>
             
             <div className="border rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -195,27 +197,27 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   application.status === 'approved' ? 'bg-green-100 text-green-800' :
                   'bg-red-100 text-red-800'
                 }`}>
-                  {application.status === 'pending' ? '승인 대기중' :
-                   application.status === 'approved' ? '승인됨' : '거부됨'}
+                  {application.status === 'pending' ? t('application.statusPending') :
+                   application.status === 'approved' ? t('application.statusApproved') : t('application.statusRejected')}
                 </span>
               </div>
               
               <div className="text-sm text-gray-600 space-y-2">
-                <p><span className="font-medium">신청일:</span> {application.createdAt ? new Date(application.createdAt).toLocaleDateString('ko-KR') : ''}</p>
-                <p><span className="font-medium">최종 업데이트:</span> {application.updatedAt ? new Date(application.updatedAt).toLocaleDateString('ko-KR') : ''}</p>
+                <p><span className="font-medium">{t('application.applicationDate')}:</span> {application.createdAt ? new Date(application.createdAt).toLocaleDateString() : ''}</p>
+                <p><span className="font-medium">{t('application.lastUpdate')}:</span> {application.updatedAt ? new Date(application.updatedAt).toLocaleDateString() : ''}</p>
                 
                 {application.status === 'pending' && (
                   <div className="mt-4 p-3 bg-yellow-50 rounded-md">
-                    <p className="text-sm font-medium text-yellow-800">승인 대기중</p>
+                    <p className="text-sm font-medium text-yellow-800">{t('application.pendingReview')}</p>
                     <p className="text-sm text-yellow-700 mt-1">
-                      관리자가 신청서를 검토 중입니다. 수정이 필요하시면 아래 '수정하기' 버튼을 눌러주세요.
+                      {t('application.pendingReviewDesc')}
                     </p>
                   </div>
                 )}
                 
                 {application.status === 'rejected' && application.rejectionReason && (
                   <div className="mt-4 p-3 bg-red-50 rounded-md">
-                    <p className="text-sm font-medium text-red-800">거부 사유:</p>
+                    <p className="text-sm font-medium text-red-800">{t('application.rejectionReason')}</p>
                     <p className="text-sm text-red-700 mt-1">{application.rejectionReason}</p>
                   </div>
                 )}
@@ -227,7 +229,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                 onClick={() => onGo('/')}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
-                홈으로 이동
+                {t('application.goHome')}
               </button>
               
               {application.status === 'pending' && (
@@ -259,7 +261,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   }}
                   className="flex-1 px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B] transition-colors"
                 >
-                  수정하기
+                  {t('application.editApplication')}
                 </button>
               )}
               
@@ -274,7 +276,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   }}
                   className="flex-1 px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B] transition-colors"
                 >
-                  재신청하기
+                  {t('application.reapply')}
                 </button>
               )}
               
@@ -283,7 +285,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                   onClick={() => onGo('/seller')}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 >
-                  판매자 센터로 이동
+                  {t('application.goToSellerCenter')}
                 </button>
               )}
             </div>
@@ -299,19 +301,19 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
         <div className="bg-white rounded-xl shadow-sm">
           {/* 헤더 */}
           <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">판매자 신청</h1>
-            <p className="text-gray-600 mt-1">네일아트 상품을 판매하기 위한 정보를 입력해주세요</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('application.title')}</h1>
+            <p className="text-gray-600 mt-1">{t('application.subtitle')}</p>
           </div>
 
           {/* 폼 */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* 기본 정보 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('application.basicInfo')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="brandName" className="block text-sm font-medium text-gray-700 mb-2">
-                    브랜드명/회사명 <span className="text-red-500">*</span>
+                    {t('application.brandName')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -321,7 +323,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['brandName'] ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="홍길동 네일"
+                    placeholder={t('application.brandNamePlaceholder')}
                   />
                   {errors['brandName'] && (
                     <p className="text-red-500 text-sm mt-1">{errors['brandName']}</p>
@@ -330,7 +332,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="representativeName" className="block text-sm font-medium text-gray-700 mb-2">
-                    대표자명
+                    {t('application.representativeName')}
                   </label>
                   <input
                     type="text"
@@ -338,7 +340,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     value={formData.representativeName}
                     onChange={(e) => handleInputChange('representativeName', '', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
-                    placeholder="홍길동"
+                    placeholder={t('application.representativeNamePlaceholder')}
                   />
                 </div>
               </div>
@@ -347,15 +349,15 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
             {/* 사업자 정보 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                사업자 정보
+                {t('application.businessInfo')}
                 <span className="text-xs font-normal text-gray-500 ml-2">
-                  사업자 등록증에 기재된 내용과 동일하게 작성해주세요
+                  {t('application.businessInfoNote')}
                 </span>
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="businessNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                    사업자등록번호 <span className="text-red-500">*</span>
+                    {t('application.businessNumber')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -374,7 +376,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 mb-2">
-                    사업자 형태
+                    {t('application.businessType')}
                   </label>
                   <select
                     id="businessType"
@@ -382,15 +384,15 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     onChange={(e) => handleInputChange('businessType', '', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
                   >
-                    <option value="개인사업자">개인사업자</option>
-                    <option value="법인사업자">법인사업자</option>
+                    <option value="개인사업자">{t('application.individualBusiness')}</option>
+                    <option value="법인사업자">{t('application.corporateBusiness')}</option>
                   </select>
                 </div>
               </div>
 
               <div className="mt-4">
                 <label htmlFor="businessCategory" className="block text-sm font-medium text-gray-700 mb-2">
-                  업종
+                  {t('application.businessCategory')}
                 </label>
                 <input
                   type="text"
@@ -404,7 +406,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
               <div className="mt-4">
                 <label htmlFor="businessSector" className="block text-sm font-medium text-gray-700 mb-2">
-                  업태
+                  {t('application.businessSector')}
                 </label>
                 <input
                   type="text"
@@ -419,11 +421,11 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
             {/* 연락처 정보 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">연락처 정보</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('application.contactInfo')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                    연락처 이메일 <span className="text-red-500">*</span>
+                    {t('application.contactEmail')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -442,7 +444,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-2">
-                    연락처 전화번호 <span className="text-red-500">*</span>
+                    {t('application.contactPhone')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -463,12 +465,12 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
             {/* 사업자 주소 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">사업자 주소</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('application.businessAddress')}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label htmlFor="businessAddress.street" className="block text-sm font-medium text-gray-700 mb-2">
-                    사업자 주소 <span className="text-red-500">*</span>
+                    {t('application.streetAddress')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -487,7 +489,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="businessAddress.city" className="block text-sm font-medium text-gray-700 mb-2">
-                    시/구 <span className="text-red-500">*</span>
+                    {t('application.city')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -506,7 +508,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="businessAddress.state" className="block text-sm font-medium text-gray-700 mb-2">
-                    시/도 <span className="text-red-500">*</span>
+                    {t('application.state')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -525,7 +527,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="businessAddress.zipCode" className="block text-sm font-medium text-gray-700 mb-2">
-                    우편번호 <span className="text-red-500">*</span>
+                    {t('application.zipCode')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -544,7 +546,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="businessAddress.country" className="block text-sm font-medium text-gray-700 mb-2">
-                    국가
+                    {t('application.country')}
                   </label>
                   <input
                     type="text"
@@ -560,11 +562,11 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
             {/* 계좌 정보 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">정산 계좌 정보</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('application.settlementInfo')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="bankAccount.bankName" className="block text-sm font-medium text-gray-700 mb-2">
-                    은행명 <span className="text-red-500">*</span>
+                    {t('application.bankName')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -583,7 +585,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div>
                   <label htmlFor="bankAccount.accountHolder" className="block text-sm font-medium text-gray-700 mb-2">
-                    예금주명 <span className="text-red-500">*</span>
+                    {t('application.accountHolder')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -593,7 +595,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E85A6B] ${
                       errors['bankAccount.accountHolder'] ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="홍길동"
+                    placeholder={t('application.accountHolderPlaceholder')}
                   />
                   {errors['bankAccount.accountHolder'] && (
                     <p className="text-red-500 text-sm mt-1">{errors['bankAccount.accountHolder']}</p>
@@ -602,7 +604,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
 
                 <div className="md:col-span-2">
                   <label htmlFor="bankAccount.accountNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                    계좌번호 <span className="text-red-500">*</span>
+                    {t('application.accountNumber')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -625,13 +627,13 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
             <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-md p-4">
               <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 bg-[#E85A6B] rounded-full"></span>
-                안내 사항
+                {t('application.noticeTitle')}
               </h4>
               <ul className="text-sm text-[#D14A5B] space-y-1">
-                <li>• 신청서 제출 후 1-3 영업일 내에 검토 결과를 연락드립니다.</li>
-                <li>• 추가 서류가 필요한 경우 별도로 안내해드립니다.</li>
-                <li>• 허위 정보 기재 시 신청이 거부될 수 있습니다.</li>
-                <li>• 승인 후 판매자 센터에서 상품 등록이 가능합니다.</li>
+                <li>• {t('application.notice1')}</li>
+                <li>• {t('application.notice2')}</li>
+                <li>• {t('application.notice3')}</li>
+                <li>• {t('application.notice4')}</li>
               </ul>
             </div>
 
@@ -642,7 +644,7 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                 onClick={() => onGo('/')}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
-                취소
+                {t('common:cancel')}
               </button>
               <button
                 type="submit"
@@ -652,10 +654,10 @@ const SellerApplicationForm: React.FC<SellerApplicationFormProps> = ({ onGo }) =
                 {submitLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    제출 중...
+                    {t('application.submitting')}
                   </div>
                 ) : (
-                  '신청서 제출'
+                  t('application.submitForm')
                 )}
               </button>
             </div>

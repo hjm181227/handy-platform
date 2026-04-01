@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService, imageService } from '../../services/apiService';
 import { User } from '@handy-platform/shared';
 import { PageHeader } from '../layout/PageHeader';
@@ -57,6 +58,7 @@ const InfoItem = ({
 
 // 1:1 문의 페이지
 export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('common');
   const [inquiries] = useState<Array<{
     id: number;
     title: string;
@@ -69,28 +71,34 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 
   const [showNewInquiry, setShowNewInquiry] = useState(false);
   const [newInquiry, setNewInquiry] = useState({
-    category: "상품",
+    category: t('support.categoryProduct'),
     title: "",
     content: ""
   });
 
-  const categories = ["상품", "배송", "교환/반품", "결제", "기타"];
+  const categories = [
+    t('support.categoryProduct'),
+    t('support.categoryShipping'),
+    t('support.categoryReturnExchange'),
+    t('support.categoryPayment'),
+    t('support.categoryOther'),
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("문의가 등록되었습니다. 빠른 시일 내에 답변드리겠습니다.");
+    alert(t('support.inquirySubmitted'));
     setShowNewInquiry(false);
-    setNewInquiry({ category: "상품", title: "", content: "" });
+    setNewInquiry({ category: t('support.categoryProduct'), title: "", content: "" });
   };
 
   if (showNewInquiry) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <PageHeader onBack={() => setShowNewInquiry(false)} title="1:1 문의 작성" />
+        <PageHeader onBack={() => setShowNewInquiry(false)} title={t('support.contactWriteTitle')} />
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div className="bg-white rounded-lg border p-4">
-            <label className="block text-sm font-medium mb-2">문의 분류</label>
-            <select 
+            <label className="block text-sm font-medium mb-2">{t('support.inquiryCategory')}</label>
+            <select
               value={newInquiry.category}
               onChange={(e) => setNewInquiry({...newInquiry, category: e.target.value})}
               className="w-full p-2 border rounded-lg"
@@ -102,24 +110,24 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
           </div>
 
           <div className="bg-white rounded-lg border p-4">
-            <label className="block text-sm font-medium mb-2">제목</label>
+            <label className="block text-sm font-medium mb-2">{t('support.inquiryTitle')}</label>
             <input
               type="text"
               value={newInquiry.title}
               onChange={(e) => setNewInquiry({...newInquiry, title: e.target.value})}
               className="w-full p-2 border rounded-lg"
-              placeholder="문의 제목을 입력하세요"
+              placeholder={t('support.inquiryTitlePlaceholder')}
               required
             />
           </div>
 
           <div className="bg-white rounded-lg border p-4">
-            <label className="block text-sm font-medium mb-2">문의 내용</label>
+            <label className="block text-sm font-medium mb-2">{t('support.inquiryContent')}</label>
             <textarea
               value={newInquiry.content}
               onChange={(e) => setNewInquiry({...newInquiry, content: e.target.value})}
               className="w-full p-2 border rounded-lg h-32 resize-none"
-              placeholder="문의하실 내용을 자세히 작성해 주세요"
+              placeholder={t('support.inquiryContentPlaceholder')}
               required
             />
           </div>
@@ -128,7 +136,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
             type="submit"
             className="w-full bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B]"
           >
-            문의 등록
+            {t('support.submitInquiry')}
           </button>
         </form>
       </div>
@@ -137,16 +145,16 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader title="1:1 문의" onBack={() => onGo("/my")} />
-      
+      <PageHeader title={t('support.contactTitle')} onBack={() => onGo("/my")} />
+
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-medium">문의 내역</h3>
-          <button 
+          <h3 className="font-medium">{t('support.inquiryHistory')}</h3>
+          <button
             onClick={() => setShowNewInquiry(true)}
             className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#D14A5B]"
           >
-            문의하기
+            {t('support.newInquiry')}
           </button>
         </div>
 
@@ -157,8 +165,8 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
                 <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
               </svg>
             </div>
-            <h3 className="text-base font-medium text-gray-600 mb-1">문의 내역이 없습니다</h3>
-            <p className="text-sm text-gray-400">궁금한 점이 있으시면 문의하기를 눌러주세요</p>
+            <h3 className="text-base font-medium text-gray-600 mb-1">{t('support.noInquiries')}</h3>
+            <p className="text-sm text-gray-400">{t('support.noInquiriesHint')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -168,7 +176,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">{inquiry.category}</span>
                     <span className={`text-xs px-2 py-1 rounded ${
-                      inquiry.status === '답변완료' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                      inquiry.status === t('support.answered') ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                     }`}>
                       {inquiry.status}
                     </span>
@@ -181,7 +189,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
                   <div className="text-sm text-gray-700 mb-3">{inquiry.content}</div>
                   {inquiry.answer && (
                     <div className="bg-[#FFF1F2] border-l-4 border-blue-400 p-3">
-                      <div className="font-medium text-sm text-[#D14A5B] mb-1">답변</div>
+                      <div className="font-medium text-sm text-[#D14A5B] mb-1">{t('support.answer')}</div>
                       <div className="text-sm text-[#E85A6B]">{inquiry.answer}</div>
                     </div>
                   )}
@@ -197,10 +205,17 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 
 // FAQ 페이지
 export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
-  const [activeCategory, setActiveCategory] = useState("주문/배송");
+  const { t } = useTranslation('common');
+  const [activeCategory, setActiveCategory] = useState(t('support.faqCategoryOrder'));
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
-  const categories = ["주문/배송", "교환/반품", "결제", "상품", "회원"];
+  const categories = [
+    t('support.faqCategoryOrder'),
+    t('support.faqCategoryReturn'),
+    t('support.faqCategoryPayment'),
+    t('support.faqCategoryProduct'),
+    t('support.faqCategoryMember'),
+  ];
   
   const faqs = {
     "주문/배송": [
@@ -228,7 +243,7 @@ export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader onBack={() => onGo("/my")} title="자주 묻는 질문" />
+      <PageHeader onBack={() => onGo("/my")} title={t('support.faqTitle')} />
       
       {/* 카테고리 탭 */}
       <div className="bg-white border-b">
@@ -281,6 +296,7 @@ export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 알림/푸시 설정 페이지
 export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('common');
   const [settings, setSettings] = useState({
     orderUpdates: true,
     promotions: true,
@@ -325,48 +341,48 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader onBack={() => onGo("/my")} title="알림 설정" />
-      
+      <PageHeader onBack={() => onGo("/my")} title={t('support.notificationTitle')} />
+
       <div className="p-4 space-y-4">
         <NotificationItem
-          title="주문/배송 알림"
-          description="주문 완료, 배송 시작, 배송 완료 알림"
+          title={t('support.notifOrderUpdates')}
+          description={t('support.notifOrderUpdatesDesc')}
           enabled={settings.orderUpdates}
           onToggle={() => handleToggle('orderUpdates')}
         />
-        
+
         <NotificationItem
-          title="프로모션 알림"
-          description="할인, 쿠폰, 이벤트 정보 알림"
+          title={t('support.notifPromotions')}
+          description={t('support.notifPromotionsDesc')}
           enabled={settings.promotions}
           onToggle={() => handleToggle('promotions')}
         />
-        
+
         <NotificationItem
-          title="신상품 알림"
-          description="새로운 상품 출시 알림"
+          title={t('support.notifNewProducts')}
+          description={t('support.notifNewProductsDesc')}
           enabled={settings.newProducts}
           onToggle={() => handleToggle('newProducts')}
         />
-        
+
         <NotificationItem
-          title="리뷰 알림"
-          description="리뷰 작성 요청 및 답글 알림"
+          title={t('support.notifReviews')}
+          description={t('support.notifReviewsDesc')}
           enabled={settings.reviews}
           onToggle={() => handleToggle('reviews')}
         />
-        
+
         <NotificationItem
-          title="마케팅 알림"
-          description="맞춤형 상품 추천 및 광고 알림"
+          title={t('support.notifMarketing')}
+          description={t('support.notifMarketingDesc')}
           enabled={settings.marketing}
           onToggle={() => handleToggle('marketing')}
         />
-        
+
         <div className="pt-4 border-t">
           <NotificationItem
-            title="야간 알림 차단"
-            description="오후 10시~오전 8시 알림 차단"
+            title={t('support.notifNightBlock')}
+            description={t('support.notifNightBlockDesc')}
             enabled={settings.nightMode}
             onToggle={() => handleToggle('nightMode')}
           />
@@ -378,6 +394,7 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 회원정보 수정 페이지
 export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('common');
   const [userInfo, setUserInfo] = useState({
     name: "",
     nickname: "",
@@ -415,12 +432,12 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
     // 이미지 타입 검증
     if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드할 수 있습니다.');
+      alert(t('support.profileImageOnly'));
       return;
     }
     // 5MB 제한
     if (file.size > 5 * 1024 * 1024) {
-      alert('이미지 크기는 5MB 이하만 가능합니다.');
+      alert(t('support.profileImageSizeLimit'));
       return;
     }
 
@@ -454,7 +471,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
       }
     } catch (err) {
       console.error('Avatar upload failed:', err);
-      alert('프로필 이미지 변경에 실패했습니다.');
+      alert(t('support.profileImageFailed'));
     } finally {
       setAvatarUploading(false);
       // input 초기화 (같은 파일 재선택 가능하도록)
@@ -501,16 +518,16 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
           stack: error.stack
         });
 
-        let errorMessage = '사용자 정보를 불러오는데 실패했습니다.';
+        let errorMessage = t('support.loadUserFailed');
 
         if (error.status === 401) {
-          errorMessage = '로그인이 만료되었습니다. 다시 로그인해주세요.';
+          errorMessage = t('support.loginExpired');
         } else if (error.status === 403) {
-          errorMessage = '접근 권한이 없습니다.';
+          errorMessage = t('support.noPermission');
         } else if (error.status >= 500) {
-          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          errorMessage = t('support.serverError');
         } else if (!navigator.onLine) {
-          errorMessage = '인터넷 연결을 확인해주세요.';
+          errorMessage = t('support.checkInternet');
         }
 
         setError(errorMessage);
@@ -543,12 +560,12 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
     const nickname = userInfo.nickname.trim();
 
     if (!nickname) {
-      setNicknameError("닉네임을 입력해주세요.");
+      setNicknameError(t('support.nicknameRequired'));
       return;
     }
 
     if (nickname.length < 2 || nickname.length > 10) {
-      setNicknameError("닉네임은 2~10자여야 합니다.");
+      setNicknameError(t('support.nicknameLength'));
       return;
     }
 
@@ -576,13 +593,13 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
       } else if (data.success && !data.available) {
         setNicknameChecked(true);
         setNicknameAvailable(false);
-        setNicknameError("이미 사용 중인 닉네임입니다.");
+        setNicknameError(t('support.nicknameTaken'));
       } else {
-        setNicknameError(data.error?.message || "닉네임 확인에 실패했습니다.");
+        setNicknameError(data.error?.message || t('support.nicknameCheckFailed'));
       }
     } catch (err) {
       console.error('닉네임 체크 실패:', err);
-      setNicknameError("닉네임 확인 중 오류가 발생했습니다.");
+      setNicknameError(t('support.nicknameCheckError'));
     } finally {
       setNicknameCheckLoading(false);
     }
@@ -591,32 +608,32 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   const handleSave = async () => {
     // 입력 검증
     if (!userInfo.name.trim()) {
-      alert("이름을 입력해주세요.");
+      alert(t('support.nameRequired'));
       return;
     }
 
     // 닉네임 검증
     if (userInfo.nickname.trim()) {
       if (userInfo.nickname.length < 2 || userInfo.nickname.length > 10) {
-        alert("닉네임은 2~10자여야 합니다.");
+        alert(t('support.nicknameLength'));
         return;
       }
       // 닉네임이 변경되었는데 중복 체크를 안 했으면
       if (userInfo.nickname !== originalNickname && (!nicknameChecked || !nicknameAvailable)) {
-        alert("닉네임 중복 확인을 해주세요.");
+        alert(t('support.nicknameCheckRequired'));
         return;
       }
     }
 
     if (!userInfo.phone.trim()) {
-      alert("연락처를 입력해주세요.");
+      alert(t('support.phoneRequired'));
       return;
     }
 
     // 간단한 휴대폰 번호 형식 검증
     const phoneRegex = /^010-\d{4}-\d{4}$/;
     if (!phoneRegex.test(userInfo.phone)) {
-      alert("연락처는 010-0000-0000 형식으로 입력해주세요.");
+      alert(t('support.phoneFormat'));
       return;
     }
 
@@ -658,7 +675,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
       setIsEditing(false);
       setOriginalNickname(userInfo.nickname.trim());
       setNicknameChecked(false);
-      alert("회원정보가 성공적으로 수정되었습니다.");
+      alert(t('support.updateSuccess'));
     } catch (error: any) {
       console.error('🚨 회원정보 수정 실패:', error);
       console.error('🚨 수정 시도 데이터:', updateData);
@@ -668,18 +685,18 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         stack: error.stack
       });
 
-      let errorMessage = "회원정보 수정에 실패했습니다. 다시 시도해주세요.";
+      let errorMessage = t('support.updateFailed');
 
       if (error.status === 401) {
-        errorMessage = "로그인이 만료되었습니다. 다시 로그인해주세요.";
+        errorMessage = t('support.loginExpired');
       } else if (error.status === 400) {
-        errorMessage = error.message || "입력 정보를 확인해주세요.";
+        errorMessage = error.message || t('support.checkInput');
       } else if (error.status === 403) {
-        errorMessage = "수정 권한이 없습니다.";
+        errorMessage = t('support.noEditPermission');
       } else if (error.status >= 500) {
-        errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        errorMessage = t('support.serverError');
       } else if (!navigator.onLine) {
-        errorMessage = "인터넷 연결을 확인해주세요.";
+        errorMessage = t('support.checkInternet');
       }
 
       alert(errorMessage);
@@ -696,11 +713,11 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
+        <PageHeader onBack={() => onGo("/my")} title={t('support.settingsTitle')} />
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B] mx-auto mb-2"></div>
-            <p className="text-gray-500">사용자 정보를 불러오는 중...</p>
+            <p className="text-gray-500">{t('support.loadingUserInfo')}</p>
           </div>
         </div>
       </div>
@@ -711,7 +728,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
+        <PageHeader onBack={() => onGo("/my")} title={t('support.settingsTitle')} />
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
@@ -719,7 +736,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               onClick={() => window.location.reload()}
               className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg hover:bg-[#D14A5B]"
             >
-              다시 시도
+              {t('retry')}
             </button>
           </div>
         </div>
@@ -729,7 +746,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader onBack={() => onGo("/my")} title="회원정보 수정" />
+      <PageHeader onBack={() => onGo("/my")} title={t('support.settingsTitle')} />
 
       <div className="p-4">
         {/* 사용자 요약 정보 */}
@@ -742,7 +759,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               className="relative shrink-0"
             >
               {userInfo.avatar ? (
-                <img src={userInfo.avatar} alt="프로필 이미지" className="w-16 h-16 rounded-full border object-cover" />
+                <img src={userInfo.avatar} alt={t('support.profileImage')} className="w-16 h-16 rounded-full border object-cover" />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-400">
                   {(userInfo.nickname || userInfo.name || '?').charAt(0)}
@@ -766,10 +783,10 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex-1">
               <h2 className="text-lg font-semibold">{userInfo.name}</h2>
               <div className="text-sm text-gray-600">
-                {userInfo.membershipLevel} 등급 • 포인트: {userInfo.points.toLocaleString()}P
+                {userInfo.membershipLevel} {t('support.memberLevel')} • {t('support.pointLabel')}: {userInfo.points.toLocaleString()}P
               </div>
               <div className="text-xs text-gray-500">
-                총 주문: {userInfo.totalOrders}회
+                {t('support.totalOrders')}: {userInfo.totalOrders}{t('support.totalOrdersUnit')}
               </div>
             </div>
           </div>
@@ -777,19 +794,19 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
         <div className="bg-white rounded-lg border">
           <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="font-medium">기본 정보</h3>
+            <h3 className="font-medium">{t('support.basicInfo')}</h3>
             <button
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
               disabled={loading}
               className="text-sm text-[#E85A6B] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "저장 중..." : isEditing ? "저장" : "수정"}
+              {loading ? t('support.saving') : isEditing ? t('save') : t('edit')}
             </button>
           </div>
           
           <div className="p-4">
             <InfoItem
-              label="이름"
+              label={t('support.labelName')}
               value={userInfo.name}
               field="name"
               isEditing={isEditing}
@@ -798,7 +815,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             />
             {/* 닉네임 필드 - 중복확인 버튼 포함 */}
             <div className="flex items-center justify-between py-3 border-b">
-              <div className="text-sm text-gray-600 min-w-[80px]">닉네임</div>
+              <div className="text-sm text-gray-600 min-w-[80px]">{t('support.labelNickname')}</div>
               {isEditing ? (
                 <div className="flex items-center gap-2">
                   <div className="relative">
@@ -808,7 +825,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                       onChange={(e) => handleNicknameChange(e.target.value)}
                       disabled={loading}
                       maxLength={10}
-                      placeholder="2~10자"
+                      placeholder={t('support.nicknamePlaceholder')}
                       className={`text-sm border rounded px-2 py-1 disabled:bg-gray-100 ${
                         nicknameChecked && nicknameAvailable ? 'border-green-500' : ''
                       } ${nicknameError ? 'border-red-500' : ''}`}
@@ -821,7 +838,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                       disabled={loading || nicknameCheckLoading || !userInfo.nickname.trim()}
                       className="px-2 py-1 rounded bg-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
                     >
-                      {nicknameCheckLoading ? "확인중" : "중복확인"}
+                      {nicknameCheckLoading ? t('support.nicknameChecking') : t('support.nicknameCheck')}
                     </button>
                   )}
                   {nicknameChecked && nicknameAvailable && userInfo.nickname !== originalNickname && (
@@ -836,7 +853,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               <div className="text-xs text-red-500 text-right -mt-2 mb-2">{nicknameError}</div>
             )}
             <InfoItem
-              label="이메일"
+              label={t('support.labelEmail')}
               value={userInfo.email}
               field="email"
               editable={false}
@@ -845,7 +862,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               onChange={handleInputChange}
             />
             <InfoItem
-              label="연락처"
+              label={t('support.labelPhone')}
               value={userInfo.phone}
               field="phone"
               isEditing={isEditing}
@@ -853,7 +870,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               onChange={handleInputChange}
             />
             <InfoItem
-              label="출생년도"
+              label={t('support.labelBirthYear')}
               value={userInfo.birthYear}
               field="birthYear"
               isEditing={isEditing}
@@ -861,17 +878,17 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
               onChange={handleInputChange}
             />
             <InfoItem
-              label="성별"
+              label={t('support.labelGender')}
               value={userInfo.gender}
               field="gender"
               type="select"
-              options={["남성", "여성", "선택안함"]}
+              options={[t('support.genderMale'), t('support.genderFemale'), t('support.genderNone')]}
               isEditing={isEditing}
               loading={loading}
               onChange={handleInputChange}
             />
             <InfoItem
-              label="주소"
+              label={t('support.labelAddress')}
               value={userInfo.address}
               field="address"
               isEditing={isEditing}
@@ -883,11 +900,11 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
         <div className="bg-white rounded-lg border mt-4">
           <div className="p-4 border-b">
-            <h3 className="font-medium">개인정보 동의</h3>
+            <h3 className="font-medium">{t('support.privacyConsent')}</h3>
           </div>
           <div className="p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm">마케팅 정보 수신 동의</span>
+              <span className="text-sm">{t('support.marketingConsent')}</span>
               <button
                 onClick={() => setUserInfo(prev => ({ ...prev, marketingConsent: !prev.marketingConsent }))}
                 disabled={loading}
@@ -908,34 +925,34 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             onClick={() => alert("비밀번호 변경 페이지로 이동")}
             className="w-full bg-white border rounded-lg p-4 text-left hover:bg-gray-50"
           >
-            <div className="font-medium">비밀번호 변경</div>
-            <div className="text-sm text-gray-600">계정 보안을 위해 정기적으로 변경하세요</div>
+            <div className="font-medium">{t('support.changePassword')}</div>
+            <div className="text-sm text-gray-600">{t('support.changePasswordDesc')}</div>
           </button>
 
           {userInfo.role !== 'seller' && (
             <button
               onClick={() => {
-                if (confirm("판매자로 전환하시겠습니까? 승인 후 상품 등록 및 판매가 가능합니다.")) {
+                if (confirm(t('support.switchToSellerConfirm'))) {
                   onGo("/seller/register");
                 }
               }}
               className="w-full bg-white border border-[#E85A6B]/20 rounded-lg p-4 text-left hover:bg-[#FFF1F2]"
             >
-              <div className="font-medium text-[#E85A6B]">판매자 전환</div>
-              <div className="text-sm text-gray-600">상품을 판매하고 수익을 창출하세요</div>
+              <div className="font-medium text-[#E85A6B]">{t('support.switchToSeller')}</div>
+              <div className="text-sm text-gray-600">{t('support.switchToSellerDesc')}</div>
             </button>
           )}
 
           <button
             onClick={() => {
-              if (confirm("정말 탈퇴하시겠습니까? 탈퇴 시 모든 데이터가 삭제됩니다.")) {
+              if (confirm(t('support.deleteAccountConfirm'))) {
                 alert("탈퇴 처리가 완료되었습니다.");
               }
             }}
             className="w-full bg-white border border-red-200 rounded-lg p-4 text-left hover:bg-red-50"
           >
-            <div className="font-medium text-red-600">회원 탈퇴</div>
-            <div className="text-sm text-gray-600">탈퇴 시 모든 정보가 삭제됩니다</div>
+            <div className="font-medium text-red-600">{t('support.deleteAccount')}</div>
+            <div className="text-sm text-gray-600">{t('support.deleteAccountDesc')}</div>
           </button>
         </div>
       </div>

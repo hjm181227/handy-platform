@@ -58,6 +58,20 @@
     "disputeResolution": "紛争解決基準",
     "companyInfo": "エルモセアル | 代表者: キム・ドンヒョン | 住所: 京畿道龍仁市器興区公世路150-29, B01-G160号 | 通信販売業届出番号: 2024-龍仁器興-2437 | 事業者登録番号: 106-16-34319 | 電話: 010-9611-1711",
     "eventPreparing": "イベント準備中です",
-    "eventComingSoon": "新しいイベントをお楽しみに！"
+    "eventComingSoon": "新しいイベントをお楽しみに！",
+    "aboutCompany": "会社紹介",
+    "aboutBusiness": "ビジネス紹介",
+    "aboutNewsroom": "ニュースルーム",
+    "aboutCareers": "採用情報",
+    "aboutNotice": "お知らせ",
+    "partnerInquiry": "パートナーお問い合わせ",
+    "companyName": "会社名",
+    "contactPerson": "担当者名",
+    "contactPhone": "電話番号",
+    "contactEmail": "メールアドレス",
+    "inquiryContent": "お問い合わせ内容",
+    "submitInquiry": "お問い合わせ送信",
+    "inquirySubmitted": "お問い合わせを受け付けました。できるだけ早くご連絡いたします。",
+    "important": "重要"
   }
 }

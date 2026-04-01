@@ -10,6 +10,7 @@ import koMypage from './locales/ko/mypage.json';
 import koNav from './locales/ko/nav.json';
 import koError from './locales/ko/error.json';
 import koNail from './locales/ko/nail.json';
+import koSeller from './locales/ko/seller.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -20,6 +21,7 @@ import enMypage from './locales/en/mypage.json';
 import enNav from './locales/en/nav.json';
 import enError from './locales/en/error.json';
 import enNail from './locales/en/nail.json';
+import enSeller from './locales/en/seller.json';
 
 // Japanese
 import jaCommon from './locales/ja/common.json';
@@ -30,6 +32,7 @@ import jaMypage from './locales/ja/mypage.json';
 import jaNav from './locales/ja/nav.json';
 import jaError from './locales/ja/error.json';
 import jaNail from './locales/ja/nail.json';
+import jaSeller from './locales/ja/seller.json';
 
 const resources = {
   ko: {
@@ -41,6 +44,7 @@ const resources = {
     nav: koNav,
     error: koError,
     nail: koNail,
+    seller: koSeller,
   },
   en: {
     common: enCommon,
@@ -51,6 +55,7 @@ const resources = {
     nav: enNav,
     error: enError,
     nail: enNail,
+    seller: enSeller,
   },
   ja: {
     common: jaCommon,
@@ -61,6 +66,7 @@ const resources = {
     nav: jaNav,
     error: jaError,
     nail: jaNail,
+    seller: jaSeller,
   },
 };
 

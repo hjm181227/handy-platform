@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SellerLayout } from '../layout/SellerLayout';
 import { money } from '../../utils';
 import { categoryOptions } from '../../utils/categoryUtils';
@@ -22,6 +23,7 @@ import { CouponManagement } from './seller/CouponManagement';
 
 // 판매자 센터 메인 대시보드
 export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('seller');
   const [ dashboardData, setDashboardData ] = useState({
     sales: {
       today: 0,
@@ -105,7 +107,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         });
       } catch (error) {
         console.error('Failed to load dashboard:', error);
-        setError('대시보드 데이터를 불러오는데 실패했습니다.');
+        setError(t('dashboard.loadFailed'));
       } finally {
         setIsLoading(false);
       }
@@ -119,13 +121,13 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
   if (isLoading) {
     return (
-      <SellerLayout title="판매자 센터" onGo={onGo}>
+      <SellerLayout title={t('dashboard.title')} onGo={onGo}>
         <div className="space-y-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div
                 className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">대시보드 데이터를 불러오는 중...</p>
+              <p className="text-gray-600">{t('dashboard.loadingData')}</p>
             </div>
           </div>
         </div>
@@ -135,19 +137,19 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
   if (error) {
     return (
-      <SellerLayout title="판매자 센터" onGo={onGo}>
+      <SellerLayout title={t('dashboard.title')} onGo={onGo}>
         <div className="space-y-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
               <FaExclamationTriangle className="w-6 h-6 text-red-500 mr-3" />
               <div>
-                <h3 className="text-red-800 font-medium">오류 발생</h3>
+                <h3 className="text-red-800 font-medium">{t('dashboard.errorOccurred')}</h3>
                 <p className="text-red-700 text-sm mt-1">{error}</p>
                 <button
                   onClick={() => window.location.reload()}
                   className="text-red-600 underline text-sm mt-2 hover:text-red-800"
                 >
-                  페이지 새로고침
+                  {t('dashboard.refreshPage')}
                 </button>
               </div>
             </div>
@@ -158,13 +160,13 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
   }
 
   return (
-    <SellerLayout title="판매자 센터" onGo={onGo}>
+    <SellerLayout title={t('dashboard.title')} onGo={onGo}>
       <div className="space-y-6">
         {/* 상단 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
             <div>
-              <p className="text-sm text-gray-600">오늘 매출</p>
+              <p className="text-sm text-gray-600">{t('dashboard.todaySales')}</p>
               <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}</p>
             </div>
             <div className="w-12 h-12 bg-[#FFF1F2] rounded-full flex items-center justify-center flex-shrink-0">
@@ -174,10 +176,10 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
             <div>
-              <p className="text-sm text-gray-600">이달 매출</p>
+              <p className="text-sm text-gray-600">{t('dashboard.monthSales')}</p>
               <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.month)}</p>
               <p className={`text-sm ${Number(salesGrowth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Number(salesGrowth) >= 0 ? '+' : ''}{salesGrowth}% vs 지난달
+                {Number(salesGrowth) >= 0 ? '+' : ''}{salesGrowth}% {t('dashboard.vsLastMonth')}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -187,8 +189,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
             <div>
-              <p className="text-sm text-gray-600">처리 대기 주문</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardData.orders.pending}건</p>
+              <p className="text-sm text-gray-600">{t('dashboard.pendingOrders')}</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData.orders.pending}{t('dashboard.countUnit')}</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
               <FaClipboardList className="w-6 h-6 text-orange-600" />
@@ -197,9 +199,9 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
             <div>
-              <p className="text-sm text-gray-600">등록 상품</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardData.products.total}개</p>
-              <p className="text-sm text-gray-600">활성: {dashboardData.products.active}개</p>
+              <p className="text-sm text-gray-600">{t('dashboard.registeredProducts')}</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData.products.total}{t('dashboard.itemUnit')}</p>
+              <p className="text-sm text-gray-600">{t('dashboard.activeCount', { count: dashboardData.products.active })}</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
               <FaBox className="w-6 h-6 text-purple-600" />
@@ -209,14 +211,14 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
         {/* 빠른 액션 버튼 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">빠른 액션</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('dashboard.quickActions')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => onGo('/seller/products/new')}
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#E85A6B] hover:bg-[#FFF1F2] transition-colors"
             >
               <FaPlus className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm font-medium">상품 등록</span>
+              <span className="text-sm font-medium">{t('dashboard.registerProduct')}</span>
             </button>
 
             <button
@@ -224,7 +226,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
             >
               <FaClipboardList className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm font-medium">주문 관리</span>
+              <span className="text-sm font-medium">{t('dashboard.orderManagement')}</span>
             </button>
 
             <button
@@ -232,7 +234,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
             >
               <MdDashboard className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm font-medium">매출 분석</span>
+              <span className="text-sm font-medium">{t('dashboard.salesAnalytics')}</span>
             </button>
 
             <button
@@ -240,7 +242,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
             >
               <FaWallet className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm font-medium">정산 관리</span>
+              <span className="text-sm font-medium">{t('dashboard.settlementManagement')}</span>
             </button>
           </div>
         </div>
@@ -248,30 +250,30 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         {/* 최근 주문 현황 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">최근 주문 현황</h3>
+            <h3 className="text-lg font-semibold">{t('dashboard.recentOrders')}</h3>
             <button
               onClick={() => onGo('/seller/orders')}
               className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
             >
-              전체 보기
+              {t('dashboard.viewAll')}
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-yellow-50 rounded-lg">
               <p className="text-2xl font-bold text-yellow-600">{dashboardData.orders.pending}</p>
-              <p className="text-sm text-gray-600">처리 대기</p>
+              <p className="text-sm text-gray-600">{t('dashboard.pendingLabel')}</p>
             </div>
             <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
               <p className="text-2xl font-bold text-[#E85A6B]">{dashboardData.orders.processing}</p>
-              <p className="text-sm text-gray-600">처리 중</p>
+              <p className="text-sm text-gray-600">{t('dashboard.processingLabel')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{dashboardData.orders.shipped}</p>
-              <p className="text-sm text-gray-600">배송 중</p>
+              <p className="text-sm text-gray-600">{t('dashboard.shippingLabel')}</p>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-2xl font-bold text-gray-600">{dashboardData.orders.delivered}</p>
-              <p className="text-sm text-gray-600">배송 완료</p>
+              <p className="text-sm text-gray-600">{t('dashboard.deliveredLabel')}</p>
             </div>
           </div>
         </div>
@@ -279,26 +281,26 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         {/* 상품 현황 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">상품 현황</h3>
+            <h3 className="text-lg font-semibold">{t('dashboard.productStatus')}</h3>
             <button
               onClick={() => onGo('/seller/products')}
               className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
             >
-              전체 보기
+              {t('dashboard.viewAll')}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
               <p className="text-2xl font-bold text-[#E85A6B]">{dashboardData.products.total}</p>
-              <p className="text-sm text-gray-600">전체 상품</p>
+              <p className="text-sm text-gray-600">{t('dashboard.totalProducts')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{dashboardData.products.active}</p>
-              <p className="text-sm text-gray-600">판매 중</p>
+              <p className="text-sm text-gray-600">{t('dashboard.onSale')}</p>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-2xl font-bold text-gray-600">{dashboardData.products.inactive}</p>
-              <p className="text-sm text-gray-600">비활성</p>
+              <p className="text-sm text-gray-600">{t('dashboard.inactive')}</p>
             </div>
           </div>
         </div>
@@ -309,6 +311,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
 
 // 상품 관리 페이지
 export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('seller');
   const [ filter, setFilter ] = useState('all');
   const [ searchQuery, setSearchQuery ] = useState('');
   const [ products, setProducts ] = useState<any[]>([]);
@@ -371,7 +374,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
           console.error('Failed to load seller products:', apiError);
           // API 오류 시 사용자에게 알림
-          setError('상품 목록을 불러오는데 실패했습니다.');
+          setError(t('products.loadFailed'));
 
           // 개발 중에는 샘플 데이터 사용
           console.warn('Using sample data for development');
@@ -416,7 +419,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
         }
       } catch (error) {
         console.error('Failed to load products:', error);
-        setError('상품 목록을 불러오는데 실패했습니다.');
+        setError(t('products.loadFailed'));
       } finally {
         isLoadingRef.current = false;
         setIsLoading(false);
@@ -441,11 +444,11 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">판매중</span>;
+        return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{t('products.onSale')}</span>;
       case 'inactive':
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">비활성</span>;
+        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">{t('products.inactive')}</span>;
       default:
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">알 수 없음</span>;
+        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">{t('products.unknown')}</span>;
     }
   };
 
@@ -476,11 +479,11 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       setProductToDelete(null);
 
       // 성공 메시지
-      alert('상품이 성공적으로 삭제되었습니다.');
+      alert(t('products.deleteSuccess'));
 
     } catch (error) {
       console.error('Product delete failed:', error);
-      const errorMessage = error instanceof Error ? error.message : '상품 삭제에 실패했습니다.';
+      const errorMessage = error instanceof Error ? error.message : t('products.deleteFailed');
       alert(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -493,7 +496,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   };
 
   return (
-    <SellerLayout title="상품 관리" onGo={onGo}>
+    <SellerLayout title={t('products.title')} onGo={onGo}>
       <div className="space-y-6">
         {/* 상단 액션 바 */}
         <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -501,7 +504,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <div className="relative">
               <input
                 type="text"
-                placeholder="상품명으로 검색..."
+                placeholder={t('products.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
@@ -518,9 +521,9 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               onChange={(e) => setFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
             >
-              <option value="all">전체 상품</option>
-              <option value="active">판매중</option>
-              <option value="inactive">비활성</option>
+              <option value="all">{t('products.allProducts')}</option>
+              <option value="active">{t('products.onSale')}</option>
+              <option value="inactive">{t('products.inactive')}</option>
             </select>
           </div>
 
@@ -529,13 +532,13 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               onClick={() => window.location.reload()}
               disabled={isLoading}
               className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 flex items-center gap-2"
-              title="새로고침"
+              title={t('products.refresh')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              새로고침
+              {t('products.refresh')}
             </button>
 
             <button
@@ -545,7 +548,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              상품 등록
+              {t('products.registerProduct')}
             </button>
           </div>
         </div>
@@ -557,7 +560,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex justify-center items-center py-12">
               <div className="flex items-center gap-3">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
-                <span className="text-gray-600">상품 목록을 불러오는 중...</span>
+                <span className="text-gray-600">{t('products.loadingProducts')}</span>
               </div>
             </div>
           )}
@@ -570,14 +573,14 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <p className="text-lg font-medium">오류가 발생했습니다</p>
+                <p className="text-lg font-medium">{t('products.errorOccurred')}</p>
                 <p className="text-sm text-gray-600 mt-1">{error}</p>
               </div>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
               >
-                다시 시도
+                {t('common:retry')}
               </button>
             </div>
           )}
@@ -589,17 +592,17 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.productHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가격
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.priceHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.statusHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">판매량
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.salesHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">조회수
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.viewsHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.actionsHeader')}
                     </th>
                   </tr>
                   </thead>
@@ -641,19 +644,19 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                             onClick={() => onGo(`/seller/products/${product.productUuid}/edit`)}
                             className="text-[#E85A6B] hover:text-blue-900"
                           >
-                            수정
+                            {t('products.edit')}
                           </button>
                           <button
                             onClick={() => onGo(`/seller/products/${product.productUuid}/analytics`)}
                             className="text-green-600 hover:text-green-900"
                           >
-                            분석
+                            {t('products.analytics')}
                           </button>
                           <button
                             onClick={() => handleDeleteClick(product)}
                             className="text-red-600 hover:text-red-900"
                           >
-                            삭제
+                            {t('products.deleteProduct')}
                           </button>
                         </div>
                       </td>
@@ -671,8 +674,8 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                           d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                   </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">상품이 없습니다</h3>
-                  <p className="mt-1 text-sm text-gray-500">새 상품을 등록해보세요.</p>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">{t('products.noProducts')}</h3>
+                  <p className="mt-1 text-sm text-gray-500">{t('products.noProductsDesc')}</p>
                   <div className="mt-6">
                     <button
                       onClick={() => onGo('/seller/products/new')}
@@ -682,7 +685,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                       </svg>
-                      상품 등록
+                      {t('products.registerProduct')}
                     </button>
                   </div>
                 </div>
@@ -704,19 +707,19 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">상품 삭제</h3>
+                <h3 className="text-lg font-medium text-gray-900">{t('products.deleteTitle')}</h3>
               </div>
             </div>
 
             <div className="mb-4">
               <p className="text-sm text-gray-500">
-                상품을 삭제하시겠습니까?
+                {t('products.deleteConfirm')}
               </p>
               <p className="text-sm font-medium text-gray-900 mt-2">
                 "{productToDelete.name}"
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                이 작업은 되돌릴 수 없습니다.
+                {t('products.deleteIrreversible')}
               </p>
             </div>
 
@@ -726,7 +729,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 disabled={isDeleting}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               >
-                취소
+                {t('common:cancel')}
               </button>
               <button
                 onClick={handleDeleteConfirm}
@@ -736,10 +739,10 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 {isDeleting ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    삭제 중...
+                    {t('products.deleting')}
                   </div>
                 ) : (
-                  '삭제'
+                  t('common:delete')
                 )}
               </button>
             </div>
@@ -760,6 +763,7 @@ interface DetailImage {
 
 // 네일팁 전용 상품 등록/수정 페이지 (서버 API 스펙 완전 일치)
 export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) => void; productUuid?: string }) {
+  const { t } = useTranslation('seller');
   const isEdit = !!productUuid;
   const [ formData, setFormData ] = useState({
     // 상품 유형
@@ -894,7 +898,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
 
         } catch (error) {
           console.error('Failed to load product data:', error);
-          setError('상품 정보를 불러오는데 실패했습니다.');
+          setError(t('productForm.loadFailed'));
         } finally {
           setIsLoading(false);
         }
@@ -915,7 +919,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         setCustomOrders(availableOrders);
         setShowOrderModal(true);
       } else {
-        alert('주문서 목록을 불러오는데 실패했습니다.');
+        alert(t('productForm.orderFormLoadFailed'));
       }
     } catch (error) {
       console.error('Failed to load custom order requests:', error);
@@ -951,15 +955,15 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           stockQuantity: '0', // 커스텀 상품은 재고 0
         }));
         setShowOrderModal(false);
-        alert('주문서 정보가 적용되었습니다.');
+        alert(t('productForm.orderFormApplied'));
       }
     } catch (error: any) {
       console.error('Failed to get prefill data:', error);
       // 이미 등록된 주문서 에러 처리
       if (error?.data?.error === 'This custom order request is already registered as a product') {
-        alert('이 주문서는 이미 상품으로 등록되어 있습니다.');
+        alert(t('productForm.orderFormAlreadyRegistered'));
       } else {
-        alert('주문서 정보를 불러오는데 실패했습니다.');
+        alert(t('productForm.orderFormPrefillFailed'));
       }
     } finally {
       setLoadingOrders(false);
@@ -974,30 +978,30 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
     try {
       // 1. 입력 데이터 검증 (서버 API 스펙에 맞게)
       if (!formData.name || formData.name.length < 2 || formData.name.length > 200) {
-        throw new Error('상품명은 2~200자 이내로 입력해주세요.');
+        throw new Error(t('productForm.nameValidation'));
       }
       if (!formData.description || formData.description.length < 10 || formData.description.length > 2000) {
-        throw new Error('상품 설명은 10~2000자 이내로 입력해주세요.');
+        throw new Error(t('productForm.descValidation'));
       }
       if (!formData.price || parseInt(formData.price) <= 0) {
-        throw new Error('가격을 올바르게 입력해주세요.');
+        throw new Error(t('productForm.priceValidation'));
       }
       if (!formData.mainImageUrl) {
-        throw new Error('대표 이미지를 등록해주세요.');
+        throw new Error(t('productForm.mainImageValidation'));
       }
       if (parseInt(formData.processingDays) < 0 || parseInt(formData.processingDays) > 365) {
-        throw new Error('제작 소요일은 0~365일 이내로 입력해주세요.');
+        throw new Error(t('productForm.processingDaysValidation'));
       }
 
       // 네일 카테고리 검증
       if (formData.nailCategories.style.length > 3) {
-        throw new Error('스타일은 최대 3개까지 선택할 수 있습니다.');
+        throw new Error(t('productForm.styleMaxValidation'));
       }
       if (formData.nailCategories.color.length > 3) {
-        throw new Error('색상은 최대 3개까지 선택할 수 있습니다.');
+        throw new Error(t('productForm.colorMaxValidation'));
       }
       if (formData.tags.length > 20) {
-        throw new Error('태그는 최대 20개까지 등록할 수 있습니다.');
+        throw new Error(t('productForm.tagsMaxValidation'));
       }
 
       // 2. 상품 데이터 구성
@@ -1056,12 +1060,12 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
 
       // 4. 성공 처리
       console.log(isEdit ? '상품 수정 성공:' : '상품 등록 성공:', response);
-      alert(isEdit ? '상품이 성공적으로 수정되었습니다.' : '상품이 성공적으로 등록되었습니다.');
+      alert(isEdit ? t('productForm.editSuccess') : t('productForm.createSuccess'));
       onGo('/seller/products');
 
     } catch (error) {
       // 5. 에러 처리
-      const errorMessage = error instanceof Error ? error.message : (isEdit ? '상품 수정에 실패했습니다.' : '상품 등록에 실패했습니다.');
+      const errorMessage = error instanceof Error ? error.message : (isEdit ? t('productForm.editFailed') : t('productForm.createFailed'));
       setError(errorMessage);
       console.error(isEdit ? '상품 수정 실패:' : '상품 등록 실패:', error);
       alert(errorMessage);
@@ -1125,7 +1129,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         mainImage: file,
         mainImageUrl: URL.createObjectURL(file) // 로컬 미리보기
       });
-      alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+      alert(t('productForm.imageUploadFailed'));
     } finally {
       setMainImageUploading(false);
     }
@@ -1202,7 +1206,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
       newFailedImages.add(newImages.length - 1);
       setFailedImages(newFailedImages);
 
-      alert('상세 이미지 업로드에 실패했습니다. 나중에 재시도할 수 있습니다.');
+      alert(t('productForm.detailImageUploadFailed'));
     } finally {
       setDetailImageUploading(false);
     }
@@ -1272,7 +1276,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
 
     } catch (error) {
       console.error(`Retry upload failed for image ${index}:`, error);
-      alert('이미지 재업로드에 실패했습니다. 다시 시도해주세요.');
+      alert(t('productForm.retryImageUploadFailed'));
     } finally {
       setDetailImageUploading(false);
     }
@@ -1397,13 +1401,13 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
   };
 
   return (
-    <SellerLayout title={isEdit ? "상품 수정" : "상품 등록"} onGo={onGo}>
+    <SellerLayout title={isEdit ? t('productForm.editTitle') : t('productForm.createTitle')} onGo={onGo}>
       {/* 로딩 상태 */}
       {isLoading && (
         <div className="flex justify-center items-center py-12">
           <div className="flex items-center gap-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
-            <span className="text-gray-600">상품 정보를 불러오는 중...</span>
+            <span className="text-gray-600">{t('productForm.loadingProduct')}</span>
           </div>
         </div>
       )}
@@ -2158,7 +2162,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             disabled={isSubmitting}
             className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? '저장 중...' : isEdit ? '수정 완료' : '등록 완료'}
+            {isSubmitting ? t('productForm.saving') : isEdit ? t('productForm.editComplete') : t('productForm.registerComplete')}
           </button>
         </div>
         </form>

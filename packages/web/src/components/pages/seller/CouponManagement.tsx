@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../../services/apiService';
 import { SellerLayout } from '../../layout/SellerLayout';
 import { useAlert } from '../../common';
@@ -65,6 +66,7 @@ const initialFormData: CouponFormData = {
 };
 
 export function CouponManagement({ onGo }: CouponManagementProps) {
+  const { t } = useTranslation('seller');
   const { alert, confirm } = useAlert();
   const [coupons, setCoupons] = useState<SellerCoupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
       setCoupons(couponsData);
     } catch (err: any) {
       console.error('쿠폰 목록 로드 실패:', err);
-      setError('쿠폰 목록을 불러오는데 실패했습니다.');
+      setError(t('coupons.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -104,23 +106,23 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
   // 쿠폰 생성/수정
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      await alert('쿠폰명을 입력해주세요.', { variant: 'error' });
+      await alert(t('coupons.nameRequired'), { variant: 'error' });
       return;
     }
 
     if (!formData.code?.trim()) {
-      await alert('쿠폰 코드를 입력해주세요.', { variant: 'error' });
+      await alert(t('coupons.codeRequired'), { variant: 'error' });
       return;
     }
 
     // Validate coupon code format (alphanumeric only)
     if (!/^[A-Z0-9]+$/.test(formData.code)) {
-      await alert('쿠폰 코드는 영문 대문자와 숫자만 사용할 수 있습니다.', { variant: 'error' });
+      await alert(t('coupons.codeFormat'), { variant: 'error' });
       return;
     }
 
     if (formData.discountType !== 'free_shipping' && formData.discountValue <= 0) {
-      await alert('할인 값을 입력해주세요.', { variant: 'error' });
+      await alert(t('coupons.discountRequired'), { variant: 'error' });
       return;
     }
 
@@ -129,10 +131,10 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
       if (editingCoupon) {
         await webApiService.seller.updateCoupon(editingCoupon.couponUuid, formData);
-        await alert('쿠폰이 수정되었습니다.', { variant: 'success' });
+        await alert(t('coupons.couponUpdated'), { variant: 'success' });
       } else {
         await webApiService.seller.createCoupon(formData);
-        await alert('쿠폰이 생성되었습니다.', { variant: 'success' });
+        await alert(t('coupons.couponCreated'), { variant: 'success' });
       }
 
       setShowModal(false);
@@ -141,7 +143,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
       loadCoupons();
     } catch (err: any) {
       console.error('쿠폰 저장 실패:', err);
-      await alert('쿠폰 저장에 실패했습니다: ' + (err.message || '알 수 없는 오류'), { variant: 'error' });
+      await alert(t('coupons.saveFailed', { error: err.message || '' }), { variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -149,9 +151,9 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
   // 쿠폰 상태 변경
   const handleToggleStatus = async (coupon: SellerCoupon) => {
-    const action = coupon.isActive ? '비활성화' : '활성화';
-    const confirmed = await confirm(`이 쿠폰을 ${action}하시겠습니까?`, {
-      title: `쿠폰 ${action}`,
+    const action = coupon.isActive ? t('coupons.deactivate') : t('coupons.activate');
+    const confirmed = await confirm(t('coupons.toggleConfirm', { action }), {
+      title: t('coupons.toggleTitle', { action }),
       confirmText: action,
     });
 
@@ -159,19 +161,19 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
     try {
       await webApiService.seller.updateCouponStatus(coupon.couponUuid, !coupon.isActive);
-      await alert(`쿠폰이 ${action}되었습니다.`, { variant: 'success' });
+      await alert(t('coupons.toggleSuccess', { action }), { variant: 'success' });
       loadCoupons();
     } catch (err: any) {
       console.error('쿠폰 상태 변경 실패:', err);
-      await alert('상태 변경에 실패했습니다.', { variant: 'error' });
+      await alert(t('coupons.toggleFailed'), { variant: 'error' });
     }
   };
 
   // 쿠폰 삭제
   const handleDelete = async (coupon: SellerCoupon) => {
-    const confirmed = await confirm('이 쿠폰을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.', {
-      title: '쿠폰 삭제',
-      confirmText: '삭제',
+    const confirmed = await confirm(t('coupons.deleteConfirm'), {
+      title: t('coupons.deleteTitle'),
+      confirmText: t('common:delete'),
       variant: 'danger',
     });
 
@@ -179,11 +181,11 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
     try {
       await webApiService.seller.deleteCoupon(coupon.couponUuid);
-      await alert('쿠폰이 삭제되었습니다.', { variant: 'success' });
+      await alert(t('coupons.deleteSuccess'), { variant: 'success' });
       loadCoupons();
     } catch (err: any) {
       console.error('쿠폰 삭제 실패:', err);
-      await alert('쿠폰 삭제에 실패했습니다.', { variant: 'error' });
+      await alert(t('coupons.deleteFailed'), { variant: 'error' });
     }
   };
 
@@ -227,7 +229,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
       case 'fixed_amount':
         return `${coupon.discountValue.toLocaleString()}원`;
       case 'free_shipping':
-        return '무료배송';
+        return t('coupons.freeShippingLabel');
       default:
         return '-';
     }
@@ -239,22 +241,22 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
     const endDate = new Date(coupon.validity.endDate);
 
     if (endDate < now) {
-      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">만료됨</span>;
+      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">{t('coupons.statusExpired')}</span>;
     }
     if (!coupon.isActive) {
-      return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">비활성</span>;
+      return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">{t('coupons.statusInactive')}</span>;
     }
-    return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">활성</span>;
+    return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">{t('coupons.statusActive')}</span>;
   };
 
   return (
-    <SellerLayout title="쿠폰 관리" onGo={onGo}>
+    <SellerLayout title={t('coupons.title')} onGo={onGo}>
       <div className="space-y-6">
         {/* 헤더 */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">쿠폰 관리</h1>
-            <p className="text-sm text-gray-600 mt-1">고객에게 제공할 쿠폰을 관리하세요</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('coupons.title')}</h1>
+            <p className="text-sm text-gray-600 mt-1">{t('coupons.subtitle')}</p>
           </div>
           <button
             onClick={handleCreate}
@@ -263,17 +265,17 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            새 쿠폰 만들기
+            {t('coupons.createCoupon')}
           </button>
         </div>
 
         {/* 필터 탭 */}
         <div className="flex gap-2 border-b border-gray-200">
           {[
-            { key: 'all', label: '전체' },
-            { key: 'active', label: '활성' },
-            { key: 'inactive', label: '비활성' },
-            { key: 'expired', label: '만료됨' },
+            { key: 'all', label: t('coupons.all') },
+            { key: 'active', label: t('coupons.active') },
+            { key: 'inactive', label: t('coupons.inactiveTab') },
+            { key: 'expired', label: t('coupons.expired') },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -301,7 +303,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">쿠폰 목록을 불러오는 중...</p>
+              <p className="text-gray-600">{t('coupons.loadingCoupons')}</p>
             </div>
           </div>
         ) : coupons.length === 0 ? (
@@ -312,13 +314,13 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">등록된 쿠폰이 없습니다</h3>
-            <p className="text-gray-600 mb-6">새 쿠폰을 만들어 고객에게 할인 혜택을 제공하세요</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('coupons.noCoupons')}</h3>
+            <p className="text-gray-600 mb-6">{t('coupons.noCouponsDesc')}</p>
             <button
               onClick={handleCreate}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              첫 쿠폰 만들기
+              {t('coupons.createFirst')}
             </button>
           </div>
         ) : (
@@ -328,12 +330,12 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">쿠폰명 / 코드</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">할인</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">유효기간</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">발급/사용</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">상태</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">액션</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.couponNameCode')}</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.discount')}</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.validPeriod')}</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.issuedUsed')}</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.status')}</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">{t('coupons.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -348,7 +350,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-blue-600">{formatDiscount(coupon)}</div>
                         {coupon.maxDiscountAmount && (
-                          <div className="text-xs text-gray-500">최대 {coupon.maxDiscountAmount.toLocaleString()}원</div>
+                          <div className="text-xs text-gray-500">{t('coupons.maxDiscount', { amount: coupon.maxDiscountAmount.toLocaleString() })}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -379,7 +381,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           <button
                             onClick={() => handleToggleStatus(coupon)}
                             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                            title={coupon.isActive ? '비활성화' : '활성화'}
+                            title={coupon.isActive ? t('coupons.deactivate') : t('coupons.activate')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path
@@ -393,7 +395,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           <button
                             onClick={() => handleEdit(coupon)}
                             className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="수정"
+                            title={t('common:edit')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -402,7 +404,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           <button
                             onClick={() => handleDelete(coupon)}
                             className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="삭제"
+                            title={t('common:delete')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -426,7 +428,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
-                {editingCoupon ? '쿠폰 수정' : '새 쿠폰 만들기'}
+                {editingCoupon ? t('coupons.editCoupon') : t('coupons.createCoupon')}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -441,22 +443,22 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
             <div className="p-6 space-y-6">
               {/* 기본 정보 */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">기본 정보</h3>
+                <h3 className="font-semibold text-gray-900">{t('coupons.basicInfo')}</h3>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    쿠폰명 <span className="text-red-500">*</span>
+                    {t('coupons.couponName')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="예: 신규 회원 10% 할인"
+                    placeholder={t('coupons.couponNamePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    쿠폰 코드 <span className="text-red-500">*</span>
+                    {t('coupons.couponCode')} <span className="text-red-500">*</span>
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -472,28 +474,28 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
                       className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
-                      자동 생성
+                      {t('coupons.autoGenerate')}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">고객이 입력할 쿠폰 코드입니다. 영문 대문자와 숫자만 사용 가능합니다.</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('coupons.couponCodeDesc')}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">설명</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.descriptionLabel')}</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20 resize-none"
-                    placeholder="쿠폰에 대한 설명을 입력하세요"
+                    placeholder={t('coupons.descriptionPlaceholder')}
                   />
                 </div>
               </div>
 
               {/* 할인 설정 */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">할인 설정</h3>
+                <h3 className="font-semibold text-gray-900">{t('coupons.discountSettings')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">할인 유형</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.discountType')}</label>
                     <select
                       value={formData.discountType}
                       onChange={(e) =>
@@ -501,15 +503,15 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       }
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="percentage">정률 할인 (%)</option>
-                      <option value="fixed_amount">정액 할인 (원)</option>
-                      <option value="free_shipping">무료 배송</option>
+                      <option value="percentage">{t('coupons.percentageDiscount')}</option>
+                      <option value="fixed_amount">{t('coupons.fixedDiscount')}</option>
+                      <option value="free_shipping">{t('coupons.freeShipping')}</option>
                     </select>
                   </div>
                   {formData.discountType !== 'free_shipping' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        할인 값 {formData.discountType === 'percentage' ? '(%)' : '(원)'}
+                        {t('coupons.discountValue')} {formData.discountType === 'percentage' ? t('coupons.percentageUnit') : t('coupons.fixedUnit')}
                       </label>
                       <input
                         type="number"
@@ -525,7 +527,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                 <div className="grid grid-cols-2 gap-4">
                   {formData.discountType === 'percentage' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">최대 할인 금액 (원)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.maxDiscountAmount')}</label>
                       <input
                         type="number"
                         value={formData.maxDiscountAmount || ''}
@@ -533,12 +535,12 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           setFormData({ ...formData, maxDiscountAmount: e.target.value ? Number(e.target.value) : undefined })
                         }
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="제한 없음"
+                        placeholder={t('coupons.noLimit')}
                       />
                     </div>
                   )}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">최소 주문 금액 (원)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.minOrderAmount')}</label>
                     <input
                       type="number"
                       value={formData.minimumOrderAmount || ''}
@@ -546,7 +548,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                         setFormData({ ...formData, minimumOrderAmount: e.target.value ? Number(e.target.value) : undefined })
                       }
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      placeholder="제한 없음"
+                      placeholder={t('coupons.noLimit')}
                     />
                   </div>
                 </div>
@@ -554,12 +556,12 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
               {/* 적용 대상 */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">적용 대상</h3>
+                <h3 className="font-semibold text-gray-900">{t('coupons.applyTarget')}</h3>
                 <div className="flex gap-4">
                   {[
-                    { value: 'product', label: '일반 상품' },
-                    { value: 'quote', label: '견적 상품' },
-                    { value: 'both', label: '모두' },
+                    { value: 'product', label: t('coupons.regularProduct') },
+                    { value: 'quote', label: t('coupons.quoteProduct') },
+                    { value: 'both', label: t('coupons.bothProducts') },
                   ].map((option) => (
                     <label key={option.value} className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -578,10 +580,10 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
               {/* 유효 기간 */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">유효 기간</h3>
+                <h3 className="font-semibold text-gray-900">{t('coupons.validityPeriod')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">시작일</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.startDate')}</label>
                     <input
                       type="date"
                       value={formData.validity.startDate}
@@ -592,7 +594,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">종료일</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.endDate')}</label>
                     <input
                       type="date"
                       value={formData.validity.endDate}
@@ -607,10 +609,10 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
 
               {/* 발급 제한 */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">발급 제한</h3>
+                <h3 className="font-semibold text-gray-900">{t('coupons.issueLimits')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">총 발급 수량</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.totalIssueCount')}</label>
                     <input
                       type="number"
                       value={formData.limits?.totalCount || ''}
@@ -625,7 +627,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">1인당 사용 제한</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.perUserLimit')}</label>
                     <input
                       type="number"
                       value={formData.limits?.perUserLimit || ''}
@@ -645,8 +647,8 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
               {/* 공개 설정 */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h3 className="font-medium text-gray-900">공개 쿠폰</h3>
-                  <p className="text-sm text-gray-600">공개 시 고객이 직접 다운로드 가능</p>
+                  <h3 className="font-medium text-gray-900">{t('coupons.publicCoupon')}</h3>
+                  <p className="text-sm text-gray-600">{t('coupons.publicCouponDesc')}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -665,7 +667,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
               >
-                취소
+                {t('common:cancel')}
               </button>
               <button
                 onClick={handleSubmit}
@@ -675,12 +677,12 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                 {saving ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    저장 중...
+                    {t('productForm.saving')}
                   </>
                 ) : editingCoupon ? (
-                  '수정 완료'
+                  t('coupons.editComplete')
                 ) : (
-                  '쿠폰 생성'
+                  t('coupons.createComplete')
                 )}
               </button>
             </div>

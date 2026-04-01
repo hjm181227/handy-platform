@@ -1,17 +1,5 @@
 {
   "title": "마이페이지",
-  "profile": {
-    "title": "프로필",
-    "edit": "프로필 수정",
-    "profileImage": "프로필 사진",
-    "changeImage": "사진 변경",
-    "nickname": "닉네임",
-    "email": "이메일",
-    "phone": "연락처",
-    "bio": "소개",
-    "bioPlaceholder": "자기소개를 입력해주세요",
-    "saved": "프로필이 저장되었습니다"
-  },
   "menu": {
     "orders": "주문 내역",
     "wishlist": "위시리스트",
@@ -117,5 +105,29 @@
   "applyAsSeller": "판매자 신청하기",
   "myReviewManagement": "내 리뷰 관리",
   "likesWishlist": "좋아요(위시리스트)",
-  "editAccountInfo": "회원정보 수정"
+  "editAccountInfo": "회원정보 수정",
+  "profile": {
+    "title": "프로필",
+    "edit": "프로필 수정",
+    "profileImage": "프로필 사진",
+    "changeImage": "사진 변경",
+    "nickname": "닉네임",
+    "email": "이메일",
+    "phone": "연락처",
+    "bio": "소개",
+    "bioPlaceholder": "자기소개를 입력해주세요",
+    "saved": "프로필이 저장되었습니다",
+    "userNotFound": "유저를 찾을 수 없습니다.",
+    "goHome": "홈으로 돌아가기",
+    "snaps": "스냅",
+    "followers": "팔로워",
+    "following": "팔로잉",
+    "noSnaps": "아직 스냅이 없습니다.",
+    "noFollowers": "아직 팔로워가 없습니다.",
+    "noFollowing": "아직 팔로우한 유저가 없습니다.",
+    "loadMore": "더보기",
+    "follow": "팔로우",
+    "followingBtn": "팔로잉",
+    "unfollow": "언팔로우"
+  }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../../services/apiService';
 import { SellerLayout } from '../../layout/SellerLayout';
 import { ProductionHistory } from '@handy-platform/shared';
@@ -9,6 +10,7 @@ interface ProductionStatusProps {
 }
 
 export function ProductionStatus({ onGo }: ProductionStatusProps) {
+  const { t } = useTranslation('seller');
   const [historyData, setHistoryData] = useState<ProductionHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +27,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
       setHistoryData(response.data.history || []);
     } catch (err: any) {
       console.error('생산 히스토리 로드 실패:', err);
-      setError('생산 현황을 불러오는데 실패했습니다.');
+      setError(t('production.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -103,14 +105,14 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
 
   if (loading) {
     return (
-      <SellerLayout title="생산 현황" onGo={onGo}>
+      <SellerLayout title={t('production.title')} onGo={onGo}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">생산 현황 로딩 중</h3>
-            <p className="text-gray-600">잠시만 기다려주세요...</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('production.loading')}</h3>
+            <p className="text-gray-600">{t('common:pleaseWait')}</p>
           </div>
         </div>
       </SellerLayout>
@@ -119,7 +121,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
 
   if (error) {
     return (
-      <SellerLayout title="생산 현황" onGo={onGo}>
+      <SellerLayout title={t('production.title')} onGo={onGo}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center max-w-md w-full">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -127,13 +129,13 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">오류 발생</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('production.errorOccurred')}</h3>
             <p className="text-red-600 mb-6">{error}</p>
             <button
               onClick={() => loadProductionHistory(selectedYear)}
               className="bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         </div>
@@ -142,7 +144,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
   }
 
   return (
-    <SellerLayout title="생산 현황" onGo={onGo}>
+    <SellerLayout title={t('production.title')} onGo={onGo}>
       <div className="space-y-6">
         {/* 페이지 헤더 */}
         <div className="flex items-center justify-between">
@@ -151,7 +153,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
             className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <FaArrowLeft className="w-4 h-4" />
-            <span className="font-medium">생산 관리로 돌아가기</span>
+            <span className="font-medium">{t('production.backToProduction')}</span>
           </button>
 
           <div className="flex items-center gap-3">
@@ -162,7 +164,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
               className="border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {availableYears.map(year => (
-                <option key={year} value={year}>{year}년</option>
+                <option key={year} value={year}>{t('production.yearLabel', { year })}</option>
               ))}
             </select>
 
@@ -177,7 +179,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
                 }`}
               >
                 <FaChartBar className="w-4 h-4" />
-                차트
+                {t('production.chart')}
               </button>
               <button
                 onClick={() => setViewMode('table')}
@@ -188,7 +190,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
                 }`}
               >
                 <FaTable className="w-4 h-4" />
-                표
+                {t('production.table')}
               </button>
             </div>
           </div>
@@ -197,32 +199,32 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
         {/* 연간 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="text-sm text-gray-600 mb-2">총 주문수</div>
+            <div className="text-sm text-gray-600 mb-2">{t('production.totalOrders')}</div>
             <div className="text-3xl font-bold text-blue-600">{yearlySummary.totalOrders.toLocaleString()}</div>
-            <div className="text-sm text-gray-500 mt-1">개</div>
+            <div className="text-sm text-gray-500 mt-1">{t('production.itemUnit')}</div>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="text-sm text-gray-600 mb-2">총 생산 가능량</div>
+            <div className="text-sm text-gray-600 mb-2">{t('production.totalCapacity')}</div>
             <div className="text-3xl font-bold text-green-600">{yearlySummary.totalCapacity.toLocaleString()}</div>
-            <div className="text-sm text-gray-500 mt-1">개</div>
+            <div className="text-sm text-gray-500 mt-1">{t('production.itemUnit')}</div>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="text-sm text-gray-600 mb-2">평균 가동률</div>
+            <div className="text-sm text-gray-600 mb-2">{t('production.avgUtilization')}</div>
             <div className={`text-3xl font-bold ${getUtilizationColor(yearlySummary.avgUtilization)}`}>
               {yearlySummary.avgUtilization.toFixed(1)}%
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              {yearlySummary.avgUtilization >= 90 ? '매우 높음' : yearlySummary.avgUtilization >= 70 ? '높음' : '적정'}
+              {yearlySummary.avgUtilization >= 90 ? t('production.veryHigh') : yearlySummary.avgUtilization >= 70 ? t('production.high') : t('production.normal')}
             </div>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="text-sm text-gray-600 mb-2">최고 주문 월</div>
-            <div className="text-3xl font-bold text-purple-600">{yearlySummary.peakMonth}월</div>
+            <div className="text-sm text-gray-600 mb-2">{t('production.peakMonth')}</div>
+            <div className="text-3xl font-bold text-purple-600">{t('production.monthLabel', { month: yearlySummary.peakMonth })}</div>
             <div className="text-sm text-gray-500 mt-1">
-              {yearlySummary.peakOrders.toLocaleString()}개 주문
+              {t('production.ordersUnit', { count: yearlySummary.peakOrders.toLocaleString() })}
             </div>
           </div>
         </div>
@@ -230,8 +232,8 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
         {/* 차트/표 뷰 */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{selectedYear}년 월별 생산 현황</h2>
-            <p className="text-gray-600">월별 주문량과 생산 가능량을 비교하여 가동률을 확인하세요</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('production.monthlyStatus', { year: selectedYear })}</h2>
+            <p className="text-gray-600">{t('production.monthlyStatusDesc')}</p>
           </div>
 
           {viewMode === 'chart' ? (
@@ -240,11 +242,11 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
               {monthlyStats.map((stat) => (
                 <div key={stat.month} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-900">{stat.month}월</span>
+                    <span className="text-sm font-semibold text-gray-900">{t('production.monthLabel', { month: stat.month })}</span>
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">{stat.totalOrders.toLocaleString()}</span>
                       <span className="text-gray-400"> / </span>
-                      <span>{stat.totalCapacity.toLocaleString()}개</span>
+                      <span>{stat.totalCapacity.toLocaleString()}{t('production.itemUnit')}</span>
                       <span className={`ml-2 font-semibold ${getUtilizationColor(stat.utilizationRate)}`}>
                         ({stat.utilizationRate.toFixed(1)}%)
                       </span>
@@ -273,10 +275,10 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left p-4 font-semibold text-gray-900">월</th>
-                    <th className="text-right p-4 font-semibold text-gray-900">주문수</th>
-                    <th className="text-right p-4 font-semibold text-gray-900">생산 가능량</th>
-                    <th className="text-right p-4 font-semibold text-gray-900">가동률</th>
+                    <th className="text-left p-4 font-semibold text-gray-900">{t('production.monthHeader')}</th>
+                    <th className="text-right p-4 font-semibold text-gray-900">{t('production.ordersHeader')}</th>
+                    <th className="text-right p-4 font-semibold text-gray-900">{t('production.capacityHeader')}</th>
+                    <th className="text-right p-4 font-semibold text-gray-900">{t('production.utilizationHeader')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -287,9 +289,9 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
                         index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                       }`}
                     >
-                      <td className="p-4 font-medium text-gray-900">{stat.month}월</td>
-                      <td className="text-right p-4 text-gray-700">{stat.totalOrders.toLocaleString()}개</td>
-                      <td className="text-right p-4 text-gray-700">{stat.totalCapacity.toLocaleString()}개</td>
+                      <td className="p-4 font-medium text-gray-900">{t('production.monthLabel', { month: stat.month })}</td>
+                      <td className="text-right p-4 text-gray-700">{stat.totalOrders.toLocaleString()}{t('production.itemUnit')}</td>
+                      <td className="text-right p-4 text-gray-700">{stat.totalCapacity.toLocaleString()}{t('production.itemUnit')}</td>
                       <td className="text-right p-4">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getUtilizationColor(stat.utilizationRate)} ${getUtilizationBgColor(stat.utilizationRate)}`}>
                           {stat.utilizationRate.toFixed(1)}%
@@ -307,34 +309,34 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
         {historyData.length === 0 && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
             <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">생산 데이터가 없습니다</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('production.noData')}</h3>
             <p className="text-gray-600 mb-6">
-              {selectedYear}년에 대한 생산 히스토리가 없습니다.
+              {t('production.noDataDesc', { year: selectedYear })}
             </p>
             <button
               onClick={() => onGo('/seller/production/settings')}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              생산 설정하기
+              {t('production.configureProduction')}
             </button>
           </div>
         )}
 
         {/* 가동률 범례 */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">가동률 기준</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">{t('production.utilizationLegend')}</h3>
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-700">70% 미만: <span className="font-medium">적정</span></span>
+              <span className="text-sm text-gray-700">{t('production.under70')} <span className="font-medium">{t('production.normal')}</span></span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-yellow-500 rounded"></div>
-              <span className="text-sm text-gray-700">70-90%: <span className="font-medium">높음</span></span>
+              <span className="text-sm text-gray-700">{t('production.range70to90')} <span className="font-medium">{t('production.high')}</span></span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-700">90% 이상: <span className="font-medium">매우 높음</span></span>
+              <span className="text-sm text-gray-700">{t('production.over90')} <span className="font-medium">{t('production.veryHigh')}</span></span>
             </div>
           </div>
         </div>

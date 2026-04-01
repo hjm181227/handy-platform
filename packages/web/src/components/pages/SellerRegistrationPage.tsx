@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import { PageHeader } from '../layout/PageHeader';
 
@@ -81,6 +82,7 @@ const CheckboxField = ({
 );
 
 export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('seller');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
@@ -133,51 +135,51 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
     const newErrors: {[key: string]: string} = {};
 
     if (!formData.businessName.trim()) {
-      newErrors.businessName = '상호명을 입력해주세요.';
+      newErrors.businessName = t('registration.validationBusinessName');
     }
 
     if (!formData.businessRegistrationNumber.trim()) {
-      newErrors.businessRegistrationNumber = '사업자등록번호를 입력해주세요.';
+      newErrors.businessRegistrationNumber = t('registration.validationBusinessNumber');
     } else if (!/^\d{3}-\d{2}-\d{5}$/.test(formData.businessRegistrationNumber)) {
-      newErrors.businessRegistrationNumber = '올바른 사업자등록번호 형식을 입력해주세요. (000-00-00000)';
+      newErrors.businessRegistrationNumber = t('registration.validationBusinessNumberFormat');
     }
 
     if (!formData.representativeName.trim()) {
-      newErrors.representativeName = '대표자명을 입력해주세요.';
+      newErrors.representativeName = t('registration.validationRepresentativeName');
     }
 
     if (!formData.contactPhone.trim()) {
-      newErrors.contactPhone = '연락처를 입력해주세요.';
+      newErrors.contactPhone = t('registration.validationContactPhone');
     } else if (!/^010-\d{4}-\d{4}$/.test(formData.contactPhone)) {
-      newErrors.contactPhone = '올바른 연락처 형식을 입력해주세요. (010-0000-0000)';
+      newErrors.contactPhone = t('registration.validationContactPhoneFormat');
     }
 
     if (!formData.businessAddress.trim()) {
-      newErrors.businessAddress = '사업장 주소를 입력해주세요.';
+      newErrors.businessAddress = t('registration.validationBusinessAddress');
     }
 
     if (!formData.bankName.trim()) {
-      newErrors.bankName = '은행명을 입력해주세요.';
+      newErrors.bankName = t('registration.validationBankName');
     }
 
     if (!formData.accountNumber.trim()) {
-      newErrors.accountNumber = '계좌번호를 입력해주세요.';
+      newErrors.accountNumber = t('registration.validationAccountNumber');
     }
 
     if (!formData.accountHolder.trim()) {
-      newErrors.accountHolder = '예금주명을 입력해주세요.';
+      newErrors.accountHolder = t('registration.validationAccountHolder');
     }
 
     if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = '판매자 이용약관에 동의해주세요.';
+      newErrors.agreeToTerms = t('registration.validationAgreeToTerms');
     }
 
     if (!formData.agreeToPrivacy) {
-      newErrors.agreeToPrivacy = '개인정보 처리방침에 동의해주세요.';
+      newErrors.agreeToPrivacy = t('registration.validationAgreeToPrivacy');
     }
 
     if (!formData.agreeToCommission) {
-      newErrors.agreeToCommission = '수수료 정책에 동의해주세요.';
+      newErrors.agreeToCommission = t('registration.validationAgreeToCommission');
     }
 
     setErrors(newErrors);
@@ -187,11 +189,11 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
   // 폼 제출
   const handleSubmit = async () => {
     if (!validateForm()) {
-      alert('입력 정보를 확인해주세요.');
+      alert(t('registration.checkInput'));
       return;
     }
 
-    if (!confirm('판매자 신청을 제출하시겠습니까? 검토 후 승인 결과를 알려드립니다.')) {
+    if (!confirm(t('registration.submitConfirm'))) {
       return;
     }
 
@@ -203,11 +205,11 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
       // 임시로 성공 처리
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      alert('판매자 신청이 완료되었습니다. 검토 후 승인 결과를 알려드리겠습니다.');
+      alert(t('registration.submitSuccess'));
       onGo('/my');
     } catch (error) {
       console.error('판매자 신청 실패:', error);
-      alert('판매자 신청에 실패했습니다. 다시 시도해주세요.');
+      alert(t('registration.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -216,9 +218,9 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <PageHeader title="판매자 전환 신청" onBack={() => onGo('/my/settings')} />
+        <PageHeader title={t('registration.title')} onBack={() => onGo('/my/settings')} />
         <div className="flex items-center justify-center py-20">
-          <div className="animate-pulse text-gray-600">로딩 중...</div>
+          <div className="animate-pulse text-gray-600">{t('registration.loading')}</div>
         </div>
       </div>
     );
@@ -228,22 +230,22 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
   if (user?.role === 'seller') {
     return (
       <div className="min-h-screen bg-gray-50">
-        <PageHeader title="판매자 센터" onBack={() => onGo('/my/settings')} />
+        <PageHeader title={t('registration.sellerCenterTitle')} onBack={() => onGo('/my/settings')} />
         <div className="max-w-md mx-auto px-4 py-12">
           <div className="bg-white rounded-lg border p-8 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-green-600 text-3xl">verified</span>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">이미 판매자입니다</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('registration.alreadySeller')}</h2>
             <p className="text-gray-600 mb-6">
-              이미 판매자 권한이 있습니다.<br />
-              판매자 센터에서 상품을 관리하세요.
+              {t('registration.alreadySellerDesc')}<br />
+              {t('registration.manageProducts')}
             </p>
             <button
               onClick={() => onGo('/seller')}
               className="w-full bg-[#E85A6B] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#D14A5B]"
             >
-              판매자 센터로 이동
+              {t('registration.goToSellerCenter')}
             </button>
           </div>
         </div>
@@ -253,7 +255,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader title="판매자 전환 신청" onBack={() => onGo('/my/settings')} />
+      <PageHeader title={t('registration.title')} onBack={() => onGo('/my/settings')} />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* 안내 섹션 */}
@@ -261,12 +263,12 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
           <div className="flex items-start gap-3">
             <div className="text-[#E85A6B] text-xl">ℹ️</div>
             <div>
-              <h3 className="font-medium text-blue-900 mb-2">판매자 신청 안내</h3>
+              <h3 className="font-medium text-blue-900 mb-2">{t('registration.guideTitle')}</h3>
               <ul className="text-sm text-[#D14A5B] space-y-1">
-                <li>• 신청 후 2-3일 내 검토 완료</li>
-                <li>• 승인 후 상품 등록 및 판매 가능</li>
-                <li>• 판매 수수료: 5% (부가세 별도)</li>
-                <li>• 정산은 매월 말일 기준</li>
+                <li>• {t('registration.guideReview')}</li>
+                <li>• {t('registration.guideApproval')}</li>
+                <li>• {t('registration.guideCommission')}</li>
+                <li>• {t('registration.guideSettlement')}</li>
               </ul>
             </div>
           </div>
@@ -274,56 +276,56 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
 
         {/* 기본 정보 */}
         <div className="bg-white rounded-lg border p-6">
-          <h2 className="text-lg font-semibold mb-4">기본 정보</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('registration.basicInfo')}</h2>
           <div className="space-y-4">
             <FormField
-              label="사업 형태"
-              value={formData.businessType === 'individual' ? '개인사업자' : '법인사업자'}
+              label={t('registration.businessType')}
+              value={formData.businessType === 'individual' ? t('registration.individualBusiness') : t('registration.corporateBusiness')}
               onChange={() => {}}
               disabled
             />
 
             <FormField
-              label="상호명"
+              label={t('registration.businessName')}
               value={formData.businessName}
               onChange={(value) => setFormData(prev => ({ ...prev, businessName: value }))}
-              placeholder="예: 핸디 네일샵"
+              placeholder={t('registration.businessNamePlaceholder')}
               required
               error={errors.businessName}
             />
 
             <FormField
-              label="사업자등록번호"
+              label={t('registration.businessNumber')}
               value={formData.businessRegistrationNumber}
               onChange={(value) => setFormData(prev => ({ ...prev, businessRegistrationNumber: value }))}
-              placeholder="000-00-00000"
+              placeholder={t('registration.businessNumberPlaceholder')}
               required
               error={errors.businessRegistrationNumber}
             />
 
             <FormField
-              label="대표자명"
+              label={t('registration.representativeName')}
               value={formData.representativeName}
               onChange={(value) => setFormData(prev => ({ ...prev, representativeName: value }))}
-              placeholder="홍길동"
+              placeholder={t('registration.representativeNamePlaceholder')}
               required
               error={errors.representativeName}
             />
 
             <FormField
-              label="연락처"
+              label={t('registration.contactPhone')}
               value={formData.contactPhone}
               onChange={(value) => setFormData(prev => ({ ...prev, contactPhone: value }))}
-              placeholder="010-0000-0000"
+              placeholder={t('registration.contactPhonePlaceholder')}
               required
               error={errors.contactPhone}
             />
 
             <FormField
-              label="사업장 주소"
+              label={t('registration.businessAddress')}
               value={formData.businessAddress}
               onChange={(value) => setFormData(prev => ({ ...prev, businessAddress: value }))}
-              placeholder="서울시 강남구 테헤란로 123"
+              placeholder={t('registration.businessAddressPlaceholder')}
               required
               error={errors.businessAddress}
             />
@@ -332,31 +334,31 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
 
         {/* 정산 정보 */}
         <div className="bg-white rounded-lg border p-6">
-          <h2 className="text-lg font-semibold mb-4">정산 계좌 정보</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('registration.settlementInfo')}</h2>
           <div className="space-y-4">
             <FormField
-              label="은행명"
+              label={t('registration.bankName')}
               value={formData.bankName}
               onChange={(value) => setFormData(prev => ({ ...prev, bankName: value }))}
-              placeholder="국민은행"
+              placeholder={t('registration.bankNamePlaceholder')}
               required
               error={errors.bankName}
             />
 
             <FormField
-              label="계좌번호"
+              label={t('registration.accountNumber')}
               value={formData.accountNumber}
               onChange={(value) => setFormData(prev => ({ ...prev, accountNumber: value }))}
-              placeholder="123456-78-901234"
+              placeholder={t('registration.accountNumberPlaceholder')}
               required
               error={errors.accountNumber}
             />
 
             <FormField
-              label="예금주명"
+              label={t('registration.accountHolder')}
               value={formData.accountHolder}
               onChange={(value) => setFormData(prev => ({ ...prev, accountHolder: value }))}
-              placeholder="홍길동"
+              placeholder={t('registration.representativeNamePlaceholder')}
               required
               error={errors.accountHolder}
             />
@@ -365,10 +367,10 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
 
         {/* 약관 동의 */}
         <div className="bg-white rounded-lg border p-6">
-          <h2 className="text-lg font-semibold mb-4">약관 동의</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('registration.termsAgreement')}</h2>
           <div className="space-y-4">
             <CheckboxField
-              label="판매자 이용약관에 동의합니다."
+              label={t('registration.agreeToTerms')}
               checked={formData.agreeToTerms}
               onChange={(checked) => setFormData(prev => ({ ...prev, agreeToTerms: checked }))}
               required
@@ -376,7 +378,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
             {errors.agreeToTerms && <p className="text-sm text-red-600 ml-7">{errors.agreeToTerms}</p>}
 
             <CheckboxField
-              label="개인정보 처리방침에 동의합니다."
+              label={t('registration.agreeToPrivacy')}
               checked={formData.agreeToPrivacy}
               onChange={(checked) => setFormData(prev => ({ ...prev, agreeToPrivacy: checked }))}
               required
@@ -384,7 +386,7 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
             {errors.agreeToPrivacy && <p className="text-sm text-red-600 ml-7">{errors.agreeToPrivacy}</p>}
 
             <CheckboxField
-              label="판매 수수료 정책에 동의합니다."
+              label={t('registration.agreeToCommission')}
               checked={formData.agreeToCommission}
               onChange={(checked) => setFormData(prev => ({ ...prev, agreeToCommission: checked }))}
               required
@@ -400,11 +402,11 @@ export function SellerRegistrationPage({ onGo }: { onGo: (to: string) => void })
             disabled={submitting}
             className="w-full bg-[#E85A6B] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#D14A5B] disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {submitting ? '신청 중...' : '판매자 신청하기'}
+            {submitting ? t('registration.submitting') : t('registration.submitApplication')}
           </button>
 
           <p className="text-xs text-gray-500 mt-3 text-center">
-            신청 후 2-3일 내 검토를 거쳐 승인 결과를 안내해드립니다.
+            {t('registration.submitNote')}
           </p>
         </div>
       </div>

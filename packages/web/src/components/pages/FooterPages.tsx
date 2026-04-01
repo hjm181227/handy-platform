@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PrivacyPolicy, TermsOfService } from './PolicyPages';
 
 // 공통 컴포넌트
@@ -30,8 +31,9 @@ const PageLayout = ({
 
 // 회사 소개 관련 페이지들
 export function AboutCompanyPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('nav');
   return (
-    <PageLayout title="회사 소개" onBack={() => onGo("/")}>
+    <PageLayout title={t('footer.aboutCompany')} onBack={() => onGo("/")}>
       <div className="bg-white rounded-lg p-6 space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-4">HANDY</h2>
@@ -74,8 +76,9 @@ export function AboutCompanyPage({ onGo }: { onGo: (to: string) => void }) {
 }
 
 export function AboutBusinessPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('nav');
   return (
-    <PageLayout title="비즈니스 소개" onBack={() => onGo("/")}>
+    <PageLayout title={t('footer.aboutBusiness')} onBack={() => onGo("/")}>
       <div className="bg-white rounded-lg p-6 space-y-6">
         <div>
           <h2 className="text-xl font-bold mb-4">사업 영역</h2>
@@ -100,6 +103,7 @@ export function AboutBusinessPage({ onGo }: { onGo: (to: string) => void }) {
 }
 
 export function AboutNewsroomPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('nav');
   const news = [
     { date: "2024-08-15", title: "핸디 플러스 멤버십 서비스 출시", category: "서비스" },
     { date: "2024-08-01", title: "여름 시즌 신제품 컬렉션 론칭", category: "제품" },
@@ -107,7 +111,7 @@ export function AboutNewsroomPage({ onGo }: { onGo: (to: string) => void }) {
   ];
 
   return (
-    <PageLayout title="뉴스룸" onBack={() => onGo("/")}>
+    <PageLayout title={t('footer.aboutNewsroom')} onBack={() => onGo("/")}>
       <div className="space-y-4">
         {news.map((item, index) => (
           <div key={index} className="bg-white rounded-lg border p-4">
@@ -124,6 +128,7 @@ export function AboutNewsroomPage({ onGo }: { onGo: (to: string) => void }) {
 }
 
 export function AboutCareersPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('nav');
   const positions = [
     { title: "프론트엔드 개발자", department: "개발팀", type: "정규직", location: "경기도 용인" },
     { title: "제품 기획자", department: "기획팀", type: "정규직", location: "경기도 용인" },
@@ -131,7 +136,7 @@ export function AboutCareersPage({ onGo }: { onGo: (to: string) => void }) {
   ];
 
   return (
-    <PageLayout title="채용 정보" onBack={() => onGo("/")}>
+    <PageLayout title={t('footer.aboutCareers')} onBack={() => onGo("/")}>
       <div className="space-y-6">
         <div className="bg-white rounded-lg p-6">
           <h2 className="text-xl font-bold mb-4">함께 성장할 동료를 찾습니다</h2>
@@ -160,6 +165,7 @@ export function AboutCareersPage({ onGo }: { onGo: (to: string) => void }) {
 }
 
 export function AboutNoticePage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('nav');
   const notices = [
     { date: "2024-08-18", title: "추석 연휴 배송 및 고객센터 운영 안내", important: true },
     { date: "2024-08-15", title: "개인정보처리방침 개정 안내", important: false },
@@ -167,13 +173,13 @@ export function AboutNoticePage({ onGo }: { onGo: (to: string) => void }) {
   ];
 
   return (
-    <PageLayout title="공지사항" onBack={() => onGo("/")}>
+    <PageLayout title={t('footer.aboutNotice')} onBack={() => onGo("/")}>
       <div className="space-y-3">
         {notices.map((notice, index) => (
           <div key={index} className="bg-white rounded-lg border p-4">
             <div className="flex items-center gap-2 mb-1">
               {notice.important && (
-                <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">중요</span>
+                <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">{t('footer.important')}</span>
               )}
               <span className="text-xs text-gray-500">{notice.date}</span>
             </div>
@@ -187,6 +193,7 @@ export function AboutNoticePage({ onGo }: { onGo: (to: string) => void }) {
 
 // 파트너 지원 페이지들
 export function PartnerInquiryPage({ onGo, type }: { onGo: (to: string) => void; type: string }) {
+  const { t } = useTranslation('nav');
   const titles: { [key: string]: string } = {
     "입점 문의": "입점 문의",
     "광고/제휴 문의": "광고/제휴 문의",
@@ -197,41 +204,41 @@ export function PartnerInquiryPage({ onGo, type }: { onGo: (to: string) => void;
   };
 
   return (
-    <PageLayout title={titles[type] || "파트너 문의"} onBack={() => onGo("/")}>
+    <PageLayout title={titles[type] || t('footer.partnerInquiry')} onBack={() => onGo("/")}>
       <div className="bg-white rounded-lg p-6">
         <form className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">회사명</label>
-            <input type="text" className="w-full p-2 border rounded-lg" placeholder="회사명을 입력하세요" />
+            <label className="block text-sm font-medium mb-2">{t('footer.companyName')}</label>
+            <input type="text" className="w-full p-2 border rounded-lg" placeholder={t('footer.companyName')} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">담당자명</label>
-            <input type="text" className="w-full p-2 border rounded-lg" placeholder="담당자명을 입력하세요" />
+            <label className="block text-sm font-medium mb-2">{t('footer.contactPerson')}</label>
+            <input type="text" className="w-full p-2 border rounded-lg" placeholder={t('footer.contactPerson')} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">연락처</label>
-            <input type="tel" className="w-full p-2 border rounded-lg" placeholder="연락처를 입력하세요" />
+            <label className="block text-sm font-medium mb-2">{t('footer.contactPhone')}</label>
+            <input type="tel" className="w-full p-2 border rounded-lg" placeholder={t('footer.contactPhone')} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">이메일</label>
-            <input type="email" className="w-full p-2 border rounded-lg" placeholder="이메일을 입력하세요" />
+            <label className="block text-sm font-medium mb-2">{t('footer.contactEmail')}</label>
+            <input type="email" className="w-full p-2 border rounded-lg" placeholder={t('footer.contactEmail')} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">문의 내용</label>
-            <textarea 
-              className="w-full p-2 border rounded-lg h-32 resize-none" 
-              placeholder="구체적인 문의 내용을 작성해 주세요"
+            <label className="block text-sm font-medium mb-2">{t('footer.inquiryContent')}</label>
+            <textarea
+              className="w-full p-2 border rounded-lg h-32 resize-none"
+              placeholder={t('footer.inquiryContent')}
             />
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="w-full bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B]"
             onClick={(e) => {
               e.preventDefault();
-              alert("문의가 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.");
+              alert(t('footer.inquirySubmitted'));
             }}
           >
-            문의 접수
+            {t('footer.submitInquiry')}
           </button>
         </form>
       </div>

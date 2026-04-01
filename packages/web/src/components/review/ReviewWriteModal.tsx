@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DetailedReview } from '@handy-platform/shared';
 import { reviewService, imageService } from '../../services/apiService';
 
@@ -38,6 +39,7 @@ export function ReviewWriteModal({
   existingReview,
   mode
 }: ReviewWriteModalProps) {
+  const { t } = useTranslation(['product', 'common']);
   const [rating, setRating] = useState<number>(existingReview?.rating || 0);
   const [content, setContent] = useState<string>(existingReview?.content || '');
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -78,7 +80,7 @@ export function ReviewWriteModal({
     for (const file of filesToAdd) {
       // 파일 크기 체크 (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setError('이미지 파일 크기는 5MB 이하여야 합니다.');
+        setError(t('product:review.imageSizeError'));
         continue;
       }
 
@@ -133,7 +135,7 @@ export function ReviewWriteModal({
       return presignedResponse.imageUrl;
     } catch (err) {
       console.error('Image upload failed:', err);
-      throw new Error('이미지 업로드에 실패했습니다.');
+      throw new Error(t('product:review.imageUploadFailed'));
     }
   };
 
@@ -150,7 +152,7 @@ export function ReviewWriteModal({
         : productUuidObj;
     }
     if (!targetProductId) {
-      setError('상품 정보를 찾을 수 없습니다. 다시 시도해주세요.');
+      setError(t('product:review.productNotFound'));
       return;
     }
 
@@ -195,7 +197,7 @@ export function ReviewWriteModal({
         // 서버 스펙: reviewUuid 사용 - reviewUuid > uuid > _id > id 우선순위로 추출
         const reviewId = (existingReview as any).reviewUuid || (existingReview as any).uuid || (existingReview as any)._id || existingReview.id;
         if (!reviewId) {
-          setError('리뷰 정보를 찾을 수 없습니다.');
+          setError(t('product:review.reviewNotFound'));
           return;
         }
         await reviewService.updateReview(targetProductId, reviewId, reviewData);
@@ -207,7 +209,7 @@ export function ReviewWriteModal({
       onClose();
     } catch (err: any) {
       console.error('Review submit failed:', err);
-      setError(err.message || '리뷰 등록에 실패했습니다. 다시 시도해주세요.');
+      setError(err.message || t('product:review.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -244,12 +246,12 @@ export function ReviewWriteModal({
 
   const getRatingText = (r: number) => {
     switch (r) {
-      case 1: return '별로예요';
-      case 2: return '그저 그래요';
-      case 3: return '보통이에요';
-      case 4: return '좋아요';
-      case 5: return '최고예요!';
-      default: return '별점을 선택해주세요';
+      case 1: return t('product:review.ratingBad');
+      case 2: return t('product:review.ratingPoor');
+      case 3: return t('product:review.ratingAverage');
+      case 4: return t('product:review.ratingGood');
+      case 5: return t('product:review.ratingExcellent');
+      default: return t('product:review.selectRating');
     }
   };
 
@@ -267,7 +269,7 @@ export function ReviewWriteModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-purple-50">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <span className="text-xl">✍️</span>
-            {mode === 'create' ? '리뷰 작성' : '리뷰 수정'}
+            {mode === 'create' ? t('product:review.writeTitle') : t('product:review.editTitle')}
           </h2>
           <button
             onClick={onClose}
@@ -308,7 +310,7 @@ export function ReviewWriteModal({
           {/* 별점 선택 */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              상품은 어떠셨나요?
+              {t('product:review.howWasProduct')}
             </label>
             <div className="flex flex-col items-center gap-2">
               {renderStars()}
@@ -321,19 +323,19 @@ export function ReviewWriteModal({
           {/* 리뷰 내용 */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              리뷰 내용
+              {t('product:review.content')}
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="상품에 대한 솔직한 리뷰를 작성해주세요. (최소 10자)"
+              placeholder={t('product:review.contentPlaceholder')}
               className="w-full h-32 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
               disabled={submitting}
               maxLength={MAX_CONTENT_LENGTH}
             />
             <div className="flex justify-between mt-2">
               <p className={`text-xs ${content.length < MIN_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-400'}`}>
-                {content.length < MIN_CONTENT_LENGTH && `최소 ${MIN_CONTENT_LENGTH}자 이상 작성해주세요`}
+                {content.length < MIN_CONTENT_LENGTH && t('product:review.minLengthWarning', { min: MIN_CONTENT_LENGTH })}
               </p>
               <p className={`text-xs ${content.length > MAX_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-400'}`}>
                 {content.length} / {MAX_CONTENT_LENGTH}
@@ -344,7 +346,7 @@ export function ReviewWriteModal({
           {/* 이미지 업로드 */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              사진 첨부 <span className="text-gray-400 font-normal">(선택, 최대 {MAX_IMAGES}장)</span>
+              {t('product:review.attachPhoto')} <span className="text-gray-400 font-normal">({t('product:review.attachPhotoOptional', { max: MAX_IMAGES })})</span>
             </label>
 
             <div className="flex gap-3 flex-wrap">
@@ -353,7 +355,7 @@ export function ReviewWriteModal({
                 <div key={index} className="relative w-20 h-20">
                   <img
                     src={img.url}
-                    alt={`리뷰 이미지 ${index + 1}`}
+                    alt={t('product:review.imageAltReview', { index: index + 1 })}
                     className="w-full h-full object-cover rounded-lg"
                   />
                   {img.uploading && (
@@ -386,7 +388,7 @@ export function ReviewWriteModal({
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span className="text-xs mt-1">추가</span>
+                  <span className="text-xs mt-1">{t('product:review.addImage')}</span>
                 </button>
               )}
             </div>
@@ -401,7 +403,7 @@ export function ReviewWriteModal({
             />
 
             <p className="text-xs text-gray-400 mt-2">
-              이미지 파일 최대 5MB, JPG/PNG/GIF 형식
+              {t('product:review.imageFormatHint')}
             </p>
           </div>
 
@@ -420,7 +422,7 @@ export function ReviewWriteModal({
             disabled={submitting}
             className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium disabled:opacity-50"
           >
-            취소
+            {t('common:cancel')}
           </button>
           <button
             onClick={handleSubmit}
@@ -430,10 +432,10 @@ export function ReviewWriteModal({
             {submitting ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>등록 중...</span>
+                <span>{t('product:review.submitting')}</span>
               </>
             ) : (
-              <span>{mode === 'create' ? '리뷰 등록' : '수정 완료'}</span>
+              <span>{mode === 'create' ? t('product:review.submitCreate') : t('product:review.submitEdit')}</span>
             )}
           </button>
         </div>

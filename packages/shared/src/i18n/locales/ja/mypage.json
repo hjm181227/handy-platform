@@ -1,17 +1,5 @@
 {
   "title": "マイページ",
-  "profile": {
-    "title": "プロフィール",
-    "edit": "プロフィール編集",
-    "profileImage": "プロフィール写真",
-    "changeImage": "写真を変更",
-    "nickname": "ニックネーム",
-    "email": "メールアドレス",
-    "phone": "電話番号",
-    "bio": "自己紹介",
-    "bioPlaceholder": "自己紹介を入力してください",
-    "saved": "プロフィールを保存しました"
-  },
   "menu": {
     "orders": "注文履歴",
     "wishlist": "ウィッシュリスト",
@@ -117,5 +105,29 @@
   "applyAsSeller": "販売者申請",
   "myReviewManagement": "マイレビュー管理",
   "likesWishlist": "いいね（ウィッシュリスト）",
-  "editAccountInfo": "会員情報修正"
+  "editAccountInfo": "会員情報修正",
+  "profile": {
+    "title": "プロフィール",
+    "edit": "プロフィール編集",
+    "profileImage": "プロフィール写真",
+    "changeImage": "写真を変更",
+    "nickname": "ニックネーム",
+    "email": "メールアドレス",
+    "phone": "電話番号",
+    "bio": "自己紹介",
+    "bioPlaceholder": "自己紹介を入力してください",
+    "saved": "プロフィールを保存しました",
+    "userNotFound": "ユーザーが見つかりません。",
+    "goHome": "ホームに戻る",
+    "snaps": "スナップ",
+    "followers": "フォロワー",
+    "following": "フォロー中",
+    "noSnaps": "まだスナップがありません。",
+    "noFollowers": "まだフォロワーがいません。",
+    "noFollowing": "まだフォローしているユーザーがいません。",
+    "loadMore": "もっと見る",
+    "follow": "フォロー",
+    "followingBtn": "フォロー中",
+    "unfollow": "フォロー解除"
+  }
 }

@@ -58,6 +58,20 @@
     "disputeResolution": "Dispute Resolution",
     "companyInfo": "Hermosear | CEO: Kim Donghyun | Address: B01-G160, 150-29 Gongse-ro, Giheung-gu, Yongin-si, Gyeonggi-do | Mail Order License: 2024-Yongin Giheung-2437 | Business No: 106-16-34319 | Tel: 010-9611-1711",
     "eventPreparing": "Events coming soon",
-    "eventComingSoon": "Stay tuned for new events!"
+    "eventComingSoon": "Stay tuned for new events!",
+    "aboutCompany": "About Us",
+    "aboutBusiness": "Our Business",
+    "aboutNewsroom": "Newsroom",
+    "aboutCareers": "Careers",
+    "aboutNotice": "Notices",
+    "partnerInquiry": "Partner Inquiry",
+    "companyName": "Company Name",
+    "contactPerson": "Contact Person",
+    "contactPhone": "Phone",
+    "contactEmail": "Email",
+    "inquiryContent": "Inquiry Details",
+    "submitInquiry": "Submit Inquiry",
+    "inquirySubmitted": "Your inquiry has been submitted. We will contact you shortly.",
+    "important": "Important"
   }
 }

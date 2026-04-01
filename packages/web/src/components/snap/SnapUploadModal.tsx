@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService, imageService } from '../../services/apiService';
 import type { SnapCreateRequest, SnapNailCategories } from '@handy-platform/shared';
 
@@ -19,66 +20,74 @@ interface UploadingImage {
 
 // Nail category options (matching backend constants)
 export const NAIL_STYLES = [
-  { value: 'new', label: '신상' },
-  { value: 'simple', label: '심플' },
-  { value: 'luxury', label: '화려' },
-  { value: 'art', label: '아트' },
-  { value: 'trendy', label: '트렌디' },
-  { value: 'classic', label: '클래식' },
-  { value: 'season', label: '시즌' },
-  { value: 'theme', label: '테마' },
-  { value: 'kitsch', label: '키치' },
-  { value: 'natural', label: '네츄럴' },
+  { value: 'new', labelKey: 'product:categoryFilter.style_new' },
+  { value: 'simple', labelKey: 'product:categoryFilter.style_simple' },
+  { value: 'luxury', labelKey: 'product:categoryFilter.style_fancy' },
+  { value: 'art', labelKey: 'product:categoryFilter.style_art' },
+  { value: 'trendy', labelKey: 'product:categoryFilter.style_trendy' },
+  { value: 'classic', labelKey: 'product:categoryFilter.style_classic' },
+  { value: 'season', labelKey: 'product:categoryFilter.style_season' },
+  { value: 'theme', labelKey: 'product:categoryFilter.style_theme' },
+  { value: 'kitsch', labelKey: 'product:categoryFilter.style_kitsch' },
+  { value: 'natural', labelKey: 'product:categoryFilter.style_natural' },
 ];
 
 export const NAIL_COLORS = [
-  { value: 'red', label: '레드' },
-  { value: 'pink', label: '핑크' },
-  { value: 'blue', label: '블루' },
-  { value: 'green', label: '그린' },
-  { value: 'neutral', label: '뉴트럴' },
-  { value: 'black-white', label: '블랙/화이트' },
+  { value: 'red', labelKey: 'product:categoryFilter.color_red' },
+  { value: 'pink', labelKey: 'product:categoryFilter.color_pink' },
+  { value: 'blue', labelKey: 'product:categoryFilter.color_blue' },
+  { value: 'green', labelKey: 'product:categoryFilter.color_green' },
+  { value: 'neutral', labelKey: 'product:categoryFilter.color_neutral' },
+  { value: 'black-white', labelKey: 'product:categoryFilter.color_blackWhite' },
 ];
 
 export const NAIL_TEXTURES = [
-  { value: 'glitter', label: '글리터' },
-  { value: 'chrome-metal', label: '크롬/메탈' },
-  { value: 'matte', label: '매트' },
-  { value: 'velvet', label: '벨벳' },
-  { value: 'gel', label: '젤' },
-  { value: 'magnetic', label: '자석' },
+  { value: 'glitter', labelKey: 'product:categoryFilter.texture_glitter' },
+  { value: 'chrome-metal', labelKey: 'product:categoryFilter.texture_chrome' },
+  { value: 'matte', labelKey: 'product:categoryFilter.texture_matte' },
+  { value: 'velvet', labelKey: 'product:categoryFilter.texture_velvet' },
+  { value: 'gel', labelKey: 'product:categoryFilter.texture_gel' },
+  { value: 'magnetic', labelKey: 'product:categoryFilter.texture_magnet' },
 ];
 
 export const NAIL_TPOS = [
-  { value: 'daily', label: '데일리' },
-  { value: 'party', label: '파티' },
-  { value: 'wedding', label: '웨딩' },
-  { value: 'performance', label: '공연' },
-  { value: 'special-day', label: 'Special Day' },
+  { value: 'daily', labelKey: 'product:categoryFilter.tpo_daily' },
+  { value: 'party', labelKey: 'product:categoryFilter.tpo_party' },
+  { value: 'wedding', labelKey: 'product:categoryFilter.tpo_wedding' },
+  { value: 'performance', labelKey: 'product:categoryFilter.tpo_performance' },
+  { value: 'special-day', labelKey: 'product:categoryFilter.tpo_special' },
 ];
 
 export const NAIL_NATIONS = [
-  { value: 'kr', label: 'K네일' },
-  { value: 'jp', label: 'J네일' },
-  { value: 'us', label: 'A네일' },
+  { value: 'kr', labelKey: 'nail:design.solid' }, // K네일 - using a fallback, these are brand-specific
+  { value: 'jp', labelKey: 'nail:design.solid' },
+  { value: 'us', labelKey: 'nail:design.solid' },
 ];
 
+// Keep nation labels as-is since they are special brand terms
+const NAIL_NATION_LABELS: Record<string, string> = {
+  kr: 'K네일',
+  jp: 'J네일',
+  us: 'A네일',
+};
+
 export const NAIL_SHAPES = [
-  { value: 'ROUND', label: '라운드' },
-  { value: 'ALMOND', label: '아몬드' },
-  { value: 'OVAL', label: '오벌' },
-  { value: 'STILETTO', label: '스틸레토' },
-  { value: 'SQUARE', label: '스퀘어' },
-  { value: 'COFFIN', label: '코핀' },
+  { value: 'ROUND', labelKey: 'nail:shape.ROUND' },
+  { value: 'ALMOND', labelKey: 'nail:shape.ALMOND' },
+  { value: 'OVAL', labelKey: 'nail:shape.OVAL' },
+  { value: 'STILETTO', labelKey: 'nail:shape.STILETTO' },
+  { value: 'SQUARE', labelKey: 'nail:shape.SQUARE' },
+  { value: 'COFFIN', labelKey: 'nail:shape.COFFIN' },
 ];
 
 export const NAIL_LENGTHS = [
-  { value: 'SHORT', label: '숏' },
-  { value: 'MEDIUM', label: '미디움' },
-  { value: 'LONG', label: '롱' },
+  { value: 'SHORT', labelKey: 'nail:length.SHORT' },
+  { value: 'MEDIUM', labelKey: 'nail:length.MEDIUM' },
+  { value: 'LONG', labelKey: 'nail:length.LONG' },
 ];
 
 const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useTranslation(['common', 'product', 'nail']);
   const [step, setStep] = useState<1 | 2>(1); // 1: images, 2: details
   const [images, setImages] = useState<UploadingImage[]>([]);
   const [title, setTitle] = useState('');
@@ -195,7 +204,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
         updatedImages[i] = { ...updatedImages[i], uploading: false, uploaded: true, imageUrl };
         setImages([...updatedImages]);
       } catch (err) {
-        updatedImages[i] = { ...updatedImages[i], uploading: false, error: '업로드 실패' };
+        updatedImages[i] = { ...updatedImages[i], uploading: false, error: t('common:snap.uploadFailed') };
         setImages([...updatedImages]);
         allSuccess = false;
       }
@@ -206,14 +215,14 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
   const handleNextStep = async () => {
     if (images.length === 0) {
-      setError('이미지를 1장 이상 추가해주세요.');
+      setError(t('common:snap.addImageMin'));
       return;
     }
     setError('');
 
     const success = await uploadAllImages();
     if (!success) {
-      setError('일부 이미지 업로드에 실패했습니다. 실패한 이미지를 삭제하고 다시 시도해주세요.');
+      setError(t('common:snap.partialUploadFailed'));
       return;
     }
 
@@ -280,7 +289,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
       handleClose();
       onSuccess();
     } catch (err: any) {
-      setError(err.message || '스냅 등록에 실패했습니다.');
+      setError(err.message || t('common:snap.snapSubmitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -305,7 +314,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
               </button>
             )}
             <h2 className="text-lg font-bold text-gray-900">
-              {step === 1 ? '사진 선택' : '스냅 정보'}
+              {step === 1 ? t('common:snap.selectPhotos') : t('common:snap.snapInfo')}
             </h2>
           </div>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
@@ -324,7 +333,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
           {step === 1 && (
             <div>
               <p className="text-sm text-gray-500 mb-4">
-                최대 10장까지 업로드할 수 있어요. 첫 번째 사진이 대표 이미지로 사용됩니다.
+                {t('common:snap.uploadHint')}
               </p>
 
               {/* Image Grid */}
@@ -350,14 +359,14 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                     )}
                     {img.error && (
                       <div className="absolute inset-0 bg-red-500/30 flex items-center justify-center">
-                        <span className="text-white text-xs font-medium bg-red-500 px-2 py-1 rounded">실패</span>
+                        <span className="text-white text-xs font-medium bg-red-500 px-2 py-1 rounded">{t('common:snap.failed')}</span>
                       </div>
                     )}
 
                     {/* First image badge */}
                     {idx === 0 && (
                       <div className="absolute top-1.5 right-1.5 bg-[#E85A6B] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        대표
+                        {t('common:snap.representative')}
                       </div>
                     )}
 
@@ -427,7 +436,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                 disabled={images.length === 0 || images.some(i => i.uploading)}
                 className="w-full py-3 bg-[#E85A6B] text-white font-medium rounded-xl hover:bg-[#D14A5B] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {images.some(i => i.uploading) ? '업로드 중...' : '다음'}
+                {images.some(i => i.uploading) ? t('common:snap.uploading') : t('common:next')}
               </button>
             </div>
           )}
@@ -446,26 +455,26 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">제목 (선택)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common:snap.titleOptional')}</label>
                 <input
                   type="text"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   maxLength={100}
-                  placeholder="네일 아트 이름이나 설명"
+                  placeholder={t('common:snap.titlePlaceholder')}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">설명 (선택)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common:snap.descriptionOptional')}</label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   maxLength={500}
                   rows={3}
-                  placeholder="네일 아트에 대한 설명을 적어주세요"
+                  placeholder={t('common:snap.descriptionPlaceholder')}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] resize-none"
                 />
                 <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/500</p>
@@ -473,14 +482,14 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">태그 (최대 10개)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common:snap.tagsLabel')}</label>
                 <div className="flex gap-2 mb-2">
                   <input
                     type="text"
                     value={tagInput}
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
-                    placeholder="#태그 입력 후 엔터"
+                    placeholder={t('common:snap.tagPlaceholder')}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
                   />
                   <button
@@ -488,7 +497,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                     disabled={!tagInput.trim() || tags.length >= 10}
                     className="px-3 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50"
                   >
-                    추가
+                    {t('product:review.addImage')}
                   </button>
                 </div>
                 {tags.length > 0 && (
@@ -509,59 +518,63 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
               {/* Nail Categories */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-800">네일 카테고리 (선택)</h3>
+                <h3 className="text-sm font-semibold text-gray-800">{t('common:snap.nailCategories')}</h3>
 
                 {/* Style */}
                 <CategoryChipGroup
-                  label="스타일"
-                  options={NAIL_STYLES}
+                  label={t('product:categoryType.style')}
+                  options={NAIL_STYLES.map(o => ({ value: o.value, label: t(o.labelKey) }))}
                   selected={selectedStyles}
                   onToggle={v => toggleMultiSelect(v, selectedStyles, setSelectedStyles)}
                   max={3}
+                  maxLabel={t('common:snap.maxItems', { max: 3 })}
                 />
 
                 {/* Color */}
                 <CategoryChipGroup
-                  label="컬러"
-                  options={NAIL_COLORS}
+                  label={t('product:categoryType.color')}
+                  options={NAIL_COLORS.map(o => ({ value: o.value, label: t(o.labelKey) }))}
                   selected={selectedColors}
                   onToggle={v => toggleMultiSelect(v, selectedColors, setSelectedColors)}
                   max={3}
+                  maxLabel={t('common:snap.maxItems', { max: 3 })}
                 />
 
                 {/* Texture */}
                 <CategoryChipGroup
-                  label="텍스처"
-                  options={NAIL_TEXTURES}
+                  label={t('product:categoryType.texture')}
+                  options={NAIL_TEXTURES.map(o => ({ value: o.value, label: t(o.labelKey) }))}
                   selected={selectedTextures}
                   onToggle={v => toggleMultiSelect(v, selectedTextures, setSelectedTextures)}
                   max={3}
+                  maxLabel={t('common:snap.maxItems', { max: 3 })}
                 />
 
                 {/* TPO */}
                 <CategoryChipGroup
                   label="TPO"
-                  options={NAIL_TPOS}
+                  options={NAIL_TPOS.map(o => ({ value: o.value, label: t(o.labelKey) }))}
                   selected={selectedTpos}
                   onToggle={v => toggleMultiSelect(v, selectedTpos, setSelectedTpos)}
                   max={3}
+                  maxLabel={t('common:snap.maxItems', { max: 3 })}
                 />
 
                 {/* Nation */}
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">네일 스타일</p>
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">{t('common:snap.nailStyle')}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {NAIL_NATIONS.map(opt => (
+                    {Object.entries(NAIL_NATION_LABELS).map(([value, label]) => (
                       <button
-                        key={opt.value}
-                        onClick={() => setSelectedNation(selectedNation === opt.value ? '' : opt.value)}
+                        key={value}
+                        onClick={() => setSelectedNation(selectedNation === value ? '' : value)}
                         className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
-                          selectedNation === opt.value
+                          selectedNation === value
                             ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
                             : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
                         }`}
                       >
-                        {opt.label}
+                        {label}
                       </button>
                     ))}
                   </div>
@@ -569,7 +582,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
                 {/* Shape */}
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">네일 모양</p>
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">{t('common:snap.nailShape')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {NAIL_SHAPES.map(opt => (
                       <button
@@ -581,7 +594,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                             : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
                         }`}
                       >
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </button>
                     ))}
                   </div>
@@ -589,7 +602,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
                 {/* Length */}
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-1.5">네일 길이</p>
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">{t('common:snap.nailLength')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {NAIL_LENGTHS.map(opt => (
                       <button
@@ -601,7 +614,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                             : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
                         }`}
                       >
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </button>
                     ))}
                   </div>
@@ -617,10 +630,10 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    등록 중...
+                    {t('common:snap.snapSubmitting')}
                   </span>
                 ) : (
-                  '스냅 등록'
+                  t('common:snap.snapSubmit')
                 )}
               </button>
             </div>
@@ -638,12 +651,13 @@ interface CategoryChipGroupProps {
   selected: string[];
   onToggle: (value: string) => void;
   max: number;
+  maxLabel: string;
 }
 
-const CategoryChipGroup: React.FC<CategoryChipGroupProps> = ({ label, options, selected, onToggle, max }) => (
+const CategoryChipGroup: React.FC<CategoryChipGroupProps> = ({ label, options, selected, onToggle, max, maxLabel }) => (
   <div>
     <p className="text-xs font-medium text-gray-600 mb-1.5">
-      {label} <span className="text-gray-400">(최대 {max}개)</span>
+      {label} <span className="text-gray-400">({maxLabel})</span>
     </p>
     <div className="flex flex-wrap gap-1.5">
       {options.map(opt => (

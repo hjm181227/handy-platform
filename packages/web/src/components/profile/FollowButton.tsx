@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { followService } from '../../services/apiService';
 
 interface FollowButtonProps {
@@ -16,6 +17,7 @@ export default function FollowButton({
   size = 'md',
   className = '',
 }: FollowButtonProps) {
+  const { t } = useTranslation('mypage');
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
@@ -56,8 +58,8 @@ export default function FollowButton({
         disabled={loading}
         className={`${sizeClasses} rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors disabled:opacity-50 group ${className}`}
       >
-        <span className="group-hover:hidden">팔로잉</span>
-        <span className="hidden group-hover:inline">언팔로우</span>
+        <span className="group-hover:hidden">{t('profile.followingBtn')}</span>
+        <span className="hidden group-hover:inline">{t('profile.unfollow')}</span>
       </button>
     );
   }
@@ -68,7 +70,7 @@ export default function FollowButton({
       disabled={loading}
       className={`${sizeClasses} rounded-full bg-[#E85A6B] text-white font-medium hover:bg-[#D14A5B] transition-colors disabled:opacity-50 ${className}`}
     >
-      팔로우
+      {t('profile.follow')}
     </button>
   );
 }

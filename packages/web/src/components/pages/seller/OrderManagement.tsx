@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SellerLayout } from '../../layout/SellerLayout';
 import { webApiService } from '../../../services/apiService';
 import { useAlert } from '../../common';
@@ -20,18 +21,28 @@ interface OrderFilter {
   sortBy?: 'create-desc' | 'create-asc' | 'price-desc' | 'price-asc';
 }
 
-const ORDER_STATUS_MAP = {
-  pending: { label: '대기중', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-  confirmed: { label: '확인됨', color: 'bg-blue-100 text-blue-800', icon: '✓' },
-  processing: { label: '처리중', color: 'bg-purple-100 text-purple-800', icon: '🔄' },
-  shipped: { label: '배송중', color: 'bg-green-100 text-green-800', icon: '🚛' },
-  delivered: { label: '완료', color: 'bg-gray-100 text-gray-800', icon: '📦' },
-  cancelled: { label: '취소됨', color: 'bg-red-100 text-red-800', icon: '❌' },
+const ORDER_STATUS_COLORS = {
+  pending: { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+  confirmed: { color: 'bg-blue-100 text-blue-800', icon: '✓' },
+  processing: { color: 'bg-purple-100 text-purple-800', icon: '🔄' },
+  shipped: { color: 'bg-green-100 text-green-800', icon: '🚛' },
+  delivered: { color: 'bg-gray-100 text-gray-800', icon: '📦' },
+  cancelled: { color: 'bg-red-100 text-red-800', icon: '❌' },
 } as const;
 
 
 export function OrderManagement({ onGo }: OrderManagementProps) {
+  const { t } = useTranslation('seller');
   const { alert, confirm, error: showError, resetRetryCounter } = useAlert();
+
+  const ORDER_STATUS_MAP = {
+    pending: { label: t('orders.statusPending'), ...ORDER_STATUS_COLORS.pending },
+    confirmed: { label: t('orders.statusConfirmed'), ...ORDER_STATUS_COLORS.confirmed },
+    processing: { label: t('orders.statusProcessing'), ...ORDER_STATUS_COLORS.processing },
+    shipped: { label: t('orders.statusShipped'), ...ORDER_STATUS_COLORS.shipped },
+    delivered: { label: t('orders.statusDelivered'), ...ORDER_STATUS_COLORS.delivered },
+    cancelled: { label: t('orders.statusCancelled'), ...ORDER_STATUS_COLORS.cancelled },
+  } as const;
   const [orders, setOrders] = useState<SellerOrder[]>([]);
   const [loading, setLoading] = useState(true);  // 초기 페이지 로딩
   const [searchLoading, setSearchLoading] = useState(false);  // 검색/필터 로딩
@@ -96,7 +107,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
       }
     } catch (err: any) {
       console.error('주문 목록 로드 실패:', err);
-      setError('주문 목록을 불러오는데 실패했습니다.');
+      setError(t('orders.loadFailed'));
     } finally {
       if (isInitialLoad) {
         setLoading(false);
@@ -190,14 +201,14 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
           carrierName: carrierInfo.name,
           trackingNumber,
           shippingDate: new Date().toISOString(),
-          note: `배송 시작됨 (${carrierInfo.name}: ${trackingNumber})`
+          note: t('orders.shippingStartedNote', { carrier: carrierInfo.name, tracking: trackingNumber })
         });
       } else {
         // 일반 상태 업데이트
         await webApiService.seller.updateOrderStatus(orderId, {
           status,
-          note: status === 'confirmed' ? '주문이 확인되었습니다.' : 
-                status === 'cancelled' ? '주문이 취소되었습니다.' : undefined
+          note: status === 'confirmed' ? t('orders.orderConfirmedNote') :
+                status === 'cancelled' ? t('orders.orderCancelledNote') : undefined
         });
       }
 
@@ -208,14 +219,14 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
       await loadOrders();
       
       // 성공 알림
-      await alert(`주문 상태가 ${ORDER_STATUS_MAP[status as keyof typeof ORDER_STATUS_MAP]?.label || status}(으)로 변경되었습니다.`, {
+      await alert(t('orders.statusChangeSuccess', { status: ORDER_STATUS_MAP[status as keyof typeof ORDER_STATUS_MAP]?.label || status }), {
         variant: 'success',
-        title: '상태 변경 완료'
+        title: t('orders.statusChangeComplete')
       });
     } catch (err: any) {
       console.error('주문 상태 업데이트 실패:', err);
       const result = await showError(err, {
-        title: '주문 상태 변경 실패',
+        title: t('orders.statusChangeFailed'),
         showRetry: true
       });
       
@@ -227,12 +238,12 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
   };
 
   return (
-    <SellerLayout title="주문 관리" onGo={onGo}>
+    <SellerLayout title={t('orders.title')} onGo={onGo}>
       {loading ? (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">주문 목록을 불러오는 중...</p>
+            <p className="text-gray-600">{t('orders.loadingOrders')}</p>
           </div>
         </div>
       ) : error ? (
@@ -243,13 +254,13 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">데이터 로드 실패</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('orders.dataLoadFailed')}</h3>
             <p className="text-red-600 mb-6 leading-relaxed">{error}</p>
             <button
               onClick={() => loadOrders()}
               className="bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium shadow-sm"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         </div>
@@ -259,7 +270,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             {/* 주문 상태 필터 (최상단) */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3">주문 상태</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">{t('orders.orderStatus')}</label>
               <div className="flex flex-wrap gap-2">
                 {/* 전체 버튼 */}
                 <button
@@ -270,7 +281,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  전체
+                  {t('orders.all')}
                 </button>
 
                 {/* 상태별 토글 버튼 */}
@@ -308,14 +319,14 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                     })}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200 min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm"
                   >
-                    <option value="orderNumber">주문번호</option>
-                    <option value="productName">상품명</option>
+                    <option value="orderNumber">{t('orders.orderNumber')}</option>
+                    <option value="productName">{t('orders.productName')}</option>
                   </select>
 
                   <div className="relative flex-1">
                     <input
                       type="text"
-                      placeholder={tempFilter.searchType === 'orderNumber' ? '주문번호를 입력하세요...' : '상품명을 입력하세요...'}
+                      placeholder={tempFilter.searchType === 'orderNumber' ? t('orders.orderNumberPlaceholder') : t('orders.productNamePlaceholder')}
                       value={tempFilter.searchQuery}
                       onChange={(e) => handleTempFilterChange({ searchQuery: e.target.value })}
                       className="w-full pl-8 pr-3 py-1.5 sm:pl-9 sm:pr-4 sm:py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200 text-xs sm:text-sm"
@@ -333,10 +344,10 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                     onChange={(e) => handleTempFilterChange({ sortBy: e.target.value as any })}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200 text-xs sm:text-sm"
                   >
-                    <option value="create-desc">최신순</option>
-                    <option value="create-asc">오래된순</option>
-                    <option value="price-desc">높은 금액순</option>
-                    <option value="price-asc">낮은 금액순</option>
+                    <option value="create-desc">{t('orders.sortNewest')}</option>
+                    <option value="create-asc">{t('orders.sortOldest')}</option>
+                    <option value="price-desc">{t('orders.sortPriceHigh')}</option>
+                    <option value="price-asc">{t('orders.sortPriceLow')}</option>
                   </select>
 
                   {/* 적용 버튼 - 필터 아이콘으로 변경 */}
@@ -348,14 +359,14 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                     {searchLoading ? (
                       <>
                         <div className="animate-spin rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 border-b-2 border-white"></div>
-                        적용 중...
+                        {t('orders.applying')}
                       </>
                     ) : (
                       <>
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
-                        적용
+                        {t('common:apply')}
                       </>
                     )}
                   </button>
@@ -370,7 +381,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
             {searchLoading ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">검색 중...</p>
+                <p className="text-gray-600">{t('orders.searching')}</p>
               </div>
             ) : orders.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
@@ -379,11 +390,11 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">주문이 없습니다</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('orders.noOrders')}</h3>
                 <p className="text-gray-500">
                   {appliedFilter.status?.length || appliedFilter.searchQuery.trim()
-                    ? '검색 조건에 맞는 주문이 없습니다.' 
-                    : '아직 들어온 주문이 없습니다.'}
+                    ? t('orders.noFilteredOrders')
+                    : t('orders.noOrdersYet')}
                 </p>
               </div>
             ) : (
@@ -399,11 +410,11 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <span className="text-sm font-medium text-gray-700">
-                        전체 선택 ({orders.length}개)
+                        {t('orders.selectAll', { count: orders.length })}
                       </span>
                       {selectedOrders.size > 0 && (
                         <span className="text-sm text-blue-600 font-medium">
-                          • {selectedOrders.size}개 선택됨
+                          • {t('orders.selectedCount', { count: selectedOrders.size })}
                         </span>
                       )}
                     </label>
@@ -412,10 +423,10 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                     {selectedOrders.size > 0 && (
                       <div className="flex gap-2">
                         <button className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium">
-                          일괄 확인
+                          {t('orders.batchConfirm')}
                         </button>
                         <button className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
-                          일괄 배송 처리
+                          {t('orders.batchShip')}
                         </button>
                       </div>
                     )}
@@ -449,7 +460,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                   disabled={appliedFilter.page === 1 || searchLoading}
                   className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
-                  이전
+                  {t('common:prev')}
                 </button>
                 
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -475,7 +486,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                   disabled={appliedFilter.page === totalPages || searchLoading}
                   className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
-                  다음
+                  {t('common:next')}
                 </button>
               </div>
             </div>

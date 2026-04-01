@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Footer FAQ와 동일한 FAQ 데이터
 const faqs = [
@@ -77,6 +78,7 @@ const faqs = [
 ];
 
 export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation('common');
   // const tel = "1544-7199"; // 고객센터 연결 제거
   const email = "hermosear98@gmail.com";
   const mailto = `mailto:${email}?subject=${encodeURIComponent("[HANDY] 문의")}&body=${encodeURIComponent("안녕하세요, 문의드립니다.\n\n주문번호:\n내용:")}`;
@@ -131,17 +133,17 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
       <h1 className="text-2xl font-semibold tracking-tight">HELP</h1>
-      <p className="text-sm text-gray-600">문의 유형을 선택하거나 FAQ에서 빠르게 답을 찾으세요.</p>
+      <p className="text-sm text-gray-600">{t('support.helpSubtitle')}</p>
 
       {/* 핵심 액션 */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <ActionBtn icon={<MailI/>}  label="이메일 보내기" href={mailto} />
-        <ActionBtn icon={<ChatI/>}  label="1:1 상담 연결" onClick={openChat} />
+        <ActionBtn icon={<MailI/>}  label={t('support.sendEmail')} href={mailto} />
+        <ActionBtn icon={<ChatI/>}  label={t('support.liveChat')} onClick={openChat} />
       </div>
 
       {/* 운영 정보 / 안내 */}
       <div className="mt-3 rounded-lg bg-gray-100 px-4 py-3 text-xs text-gray-700">
-        상담시간: 평일 09:00 ~ 18:00 (점심시간 12:00 ~ 13:00) · 토/일/공휴일 휴무
+        {t('support.csHours')}
       </div>
 
       {/* 검색 */}
@@ -153,7 +155,7 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
           <input
             value={query}
             onChange={e=>setQuery(e.target.value)}
-            placeholder="FAQ 검색 (예: 반품, 영수증, 배송)"
+            placeholder={t('support.faqSearch')}
             className="w-full text-sm outline-none border-0 focus:outline-none focus:border-0 focus:ring-0"
           />
         </div>
@@ -164,18 +166,18 @@ export function HelpPage({ onGo }: { onGo: (to: string) => void }) {
         {filtered.map((f, i) => <FAQItem key={i} f={f} />)}
         {filtered.length === 0 && (
           <div className="rounded-lg border bg-white px-4 py-6 text-center text-sm text-gray-500">
-            검색 결과가 없습니다. 키워드를 바꿔보거나 1:1 상담을 이용하세요.
+            {t('support.noFaqResults')}
           </div>
         )}
       </div>
 
       {/* 추가 안내 */}
       <div className="mt-6 rounded-xl bg-gradient-to-r from-zinc-900 to-gray-800 p-5 text-white">
-        <div className="text-[15px] font-semibold">해결이 안 되시나요?</div>
-        <p className="mt-1 text-sm text-white/80">주문 번호를 준비하시면 더 빠르게 도와드릴 수 있어요.</p>
+        <div className="text-[15px] font-semibold">{t('support.needMoreHelp')}</div>
+        <p className="mt-1 text-sm text-white/80">{t('support.prepareOrderNumber')}</p>
         <div className="mt-3 flex gap-2">
-          <a href={mailto} className="rounded-full bg-white px-4 py-1.5 text-sm text-black">이메일 문의</a>
-          <button onClick={openChat} className="rounded-full bg-white/10 px-4 py-1.5 text-sm">1:1 상담</button>
+          <a href={mailto} className="rounded-full bg-white px-4 py-1.5 text-sm text-black">{t('support.emailInquiry')}</a>
+          <button onClick={openChat} className="rounded-full bg-white/10 px-4 py-1.5 text-sm">{t('support.liveConsult')}</button>
         </div>
       </div>
     </div>
