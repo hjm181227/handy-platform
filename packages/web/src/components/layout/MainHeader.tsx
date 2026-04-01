@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toQ } from '../../utils';
 import { webApiService } from '../../services/apiService';
 import { User, SearchIcon, CartIcon, QRIcon } from '@handy-platform/shared';
@@ -27,6 +28,7 @@ export function MainHeader({
   onCategoryOpen?: () => void;
   onChat?: () => void;
 }) {
+  const { t } = useTranslation(['nav', 'common', 'mypage', 'product']);
   const [q,setQ]=useState("");
 
   // 🔍 디버깅: cartCount 변경 감지
@@ -223,7 +225,7 @@ export function MainHeader({
                   onChange={e=>handleSearchInputChange(e.target.value)}
                   onFocus={handleSearchInputFocus}
                   onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
-                  placeholder="검색어를 입력하세요"
+                  placeholder={t('common:searchPlaceholder')}
                   className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
@@ -252,12 +254,12 @@ export function MainHeader({
                 {recentSearches.length > 0 && (
                   <div className="p-3 border-b border-gray-100">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-gray-500">최근 검색어</span>
+                      <span className="text-xs font-medium text-gray-500">{t('nav:header.recentSearches')}</span>
                       <button
                         onClick={clearRecentSearches}
                         className="text-xs text-gray-400 hover:text-gray-600"
                       >
-                        전체삭제
+                        {t('nav:header.deleteAll')}
                       </button>
                     </div>
                     <div className="space-y-1">
@@ -291,9 +293,9 @@ export function MainHeader({
 
                 {/* 인기 검색어 또는 추천 검색어 */}
                 <div className="p-3">
-                  <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                  <span className="text-xs font-medium text-gray-500 mb-2 block">{t('nav:header.recommendedSearches')}</span>
                   <div className="space-y-1">
-                    {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일', '네일스티커', '베이스코트', '탑코트', '글리터', '홀로그램'].map((keyword, index) => (
+                    {(t('common:searchKeywords', { returnObjects: true }) as string[]).map((keyword: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => handleRecentSearchClick(keyword)}
@@ -317,7 +319,7 @@ export function MainHeader({
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      '<span className="text-[#D14A5B]">{q}</span>' 검색
+                      {t('nav:header.searchFor', { query: q })}
                     </button>
                   </div>
                 )}
@@ -330,7 +332,7 @@ export function MainHeader({
               // 로딩 상태
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
-                <span className="text-sm text-gray-900">인증 확인 중...</span>
+                <span className="text-sm text-gray-900">{t('common:verifying')}</span>
               </div>
             ) : user ? (
               // 로그인 상태
@@ -375,7 +377,7 @@ export function MainHeader({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        마이페이지
+                        {t('mypage:title')}
                       </button>
 
                       {/* 판매자 사용자에게만 판매자 센터 메뉴 표시 */}
@@ -392,7 +394,7 @@ export function MainHeader({
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
-                          판매자 센터
+                          {t('mypage:seller.dashboard')}
                         </button>
                       )}
 
@@ -411,7 +413,7 @@ export function MainHeader({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                          어드민 센터
+                          {t('common:adminCenter')}
                         </button>
                       )}
 
@@ -428,7 +430,7 @@ export function MainHeader({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
                         </svg>
-                        로그아웃
+                        {t('common:logout')}
                       </button>
                     </div>
                   )}
@@ -440,7 +442,7 @@ export function MainHeader({
                 onClick={handleLogin}
                 className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
               >
-                로그인/회원가입
+                {t('common:login')}/{t('common:signup')}
               </button>
             )}
 
@@ -450,7 +452,7 @@ export function MainHeader({
             >
               <span className="flex items-center gap-1">
                 <ShoppingBag size={16} />
-                <span className="hidden sm:inline">장바구니</span>
+                <span className="hidden sm:inline">{t('product:cart.title')}</span>
                 {cartCount > 0 && (
                   <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                     {cartCount > 99 ? '99+' : cartCount}
@@ -477,7 +479,7 @@ export function MainHeader({
                 }}
                 className={getLinkClassName(x.to)}
               >
-                {x.label}
+                {x.labelKey ? t(x.labelKey) : x.label}
               </a>
             ))}
           </div>
@@ -508,7 +510,7 @@ export function MainHeader({
               <button
                 onClick={onChat}
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
-                aria-label="채팅"
+                aria-label={t('nav:header.chat')}
               >
                 <MessageCircle size={20} />
               </button>
@@ -535,7 +537,7 @@ export function MainHeader({
             <button
               onClick={() => onCategoryOpen?.()}
               className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-              aria-label="카테고리"
+              aria-label={t('nav:header.category')}
             >
               <Menu size={20} />
             </button>
@@ -546,7 +548,7 @@ export function MainHeader({
                   onChange={e=>handleSearchInputChange(e.target.value)}
                   onFocus={handleSearchInputFocus}
                   onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
-                  placeholder="검색어를 입력하세요"
+                  placeholder={t('common:searchPlaceholder')}
                   className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
@@ -576,12 +578,12 @@ export function MainHeader({
               {recentSearches.length > 0 && (
                 <div className="p-3 border-b border-gray-100">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-500">최근 검색어</span>
+                    <span className="text-xs font-medium text-gray-500">{t('nav:header.recentSearches')}</span>
                     <button
                       onClick={clearRecentSearches}
                       className="text-xs text-gray-400 hover:text-gray-600"
                     >
-                      전체삭제
+                      {t('nav:header.deleteAll')}
                     </button>
                   </div>
                   <div className="space-y-1">
@@ -615,9 +617,9 @@ export function MainHeader({
 
               {/* 모바일 추천 검색어 */}
               <div className="p-3">
-                <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                <span className="text-xs font-medium text-gray-500 mb-2 block">{t('nav:header.recommendedSearches')}</span>
                 <div className="flex flex-wrap gap-2">
-                  {['네일아트', '젤네일', '매니큐어', '핸드크림', '큐티클오일', '네일스티커', '베이스코트', '탑코트'].map((keyword, index) => (
+                  {(t('common:searchKeywords', { returnObjects: true }) as string[]).slice(0, 8).map((keyword: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => handleRecentSearchClick(keyword)}
@@ -638,7 +640,7 @@ export function MainHeader({
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    '<span className="text-[#D14A5B]">{q}</span>' 검색
+                    {t('nav:header.searchFor', { query: q })}
                   </button>
                 </div>
               )}
@@ -663,7 +665,7 @@ export function MainHeader({
                 }}
                 className={getLinkClassName(x.to, true)}
               >
-                {x.label}
+                {x.labelKey ? t(x.labelKey) : x.label}
               </a>
             ))}
           </div>

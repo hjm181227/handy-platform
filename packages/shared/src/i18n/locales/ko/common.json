@@ -111,5 +111,13 @@
   "confirmingOrder": "주문 정보를 확인하고 있습니다...",
   "orderLoadFailedDesc": "올바르지 않은 주문 번호입니다.",
   "recommendedKeywords": "추천 검색어",
-  "cart": "장바구니"
+  "cart": "장바구니",
+  "home": {
+    "customOrderTitle": "커스텀 네일 주문서 작성",
+    "customOrderDesc": "나만의 디자인을 요청하고 여러 브랜드의 견적을 받아보세요",
+    "newProducts": "신상 제품",
+    "productCount": "{{count}}개 상품",
+    "seeMore": "더보기"
+  },
+  "searchKeywords": ["네일아트", "젤네일", "매니큐어", "핸드크림", "큐티클오일", "네일스티커", "베이스코트", "탑코트", "글리터", "홀로그램"]
 }

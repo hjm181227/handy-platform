@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMiniRouter } from './utils';
 import { webApiService, brandService } from './services/apiService';
 import type { Product, Brand } from '@handy-platform/shared';
@@ -1074,11 +1075,12 @@ function HomeContent({
   brands,
   loadingBrands,
 }: HomeContentProps) {
+  const { t } = useTranslation('common');
   return (
     <>
       <EventBanners onGo={nav} />
 
-      {/* 커스텀 네일 주문서 작성 CTA */}
+      {/* Custom Order CTA */}
       <div className="mx-auto max-w-7xl px-4 mt-4">
         <button
           onClick={() => nav('/custom-order/new')}
@@ -1089,8 +1091,8 @@ function HomeContent({
         >
           <div className="flex items-center justify-between px-5 py-4">
             <div className="flex flex-col items-start gap-1">
-              <span className="text-white text-[15px] font-bold">커스텀 네일 주문서 작성</span>
-              <span className="text-white/80 text-xs">나만의 디자인을 요청하고 여러 브랜드의 견적을 받아보세요</span>
+              <span className="text-white text-[15px] font-bold">{t('home.customOrderTitle')}</span>
+              <span className="text-white/80 text-xs">{t('home.customOrderDesc')}</span>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -1102,7 +1104,7 @@ function HomeContent({
       </div>
 
       <SectionRow
-        title="신상 제품"
+        title={t('home.newProducts')}
         items={newProducts}
         loading={loadingNewProducts}
         onOpen={openProduct}
@@ -1126,13 +1128,13 @@ function HomeContent({
               <div className="mb-3 flex items-baseline justify-between">
                 <div className="flex items-center gap-2">
                   <h2 className="text-base md:text-lg font-semibold">{brand.brandName}</h2>
-                  <span className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</span>
+                  <span className="text-xs text-gray-500">{t('home.productCount', { count: brand.stats.totalProducts })}</span>
                 </div>
                 <button
                   onClick={() => nav(`/brand/${encodeURIComponent(brand.sellerUuid)}`)}
                   className="text-xs text-gray-500 hover:text-blue-600"
                 >
-                  더보기
+                  {t('home.seeMore')}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">

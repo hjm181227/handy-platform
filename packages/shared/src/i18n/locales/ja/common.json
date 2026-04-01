@@ -111,5 +111,13 @@
   "confirmingOrder": "注文情報を確認中...",
   "orderLoadFailedDesc": "無効な注文番号です。",
   "recommendedKeywords": "おすすめ検索",
-  "cart": "カート"
+  "cart": "カート",
+  "home": {
+    "customOrderTitle": "カスタムネイルオーダー作成",
+    "customOrderDesc": "オリジナルデザインをリクエストして、様々なブランドから見積もりを受け取りましょう",
+    "newProducts": "新着商品",
+    "productCount": "{{count}}件の商品",
+    "seeMore": "もっと見る"
+  },
+  "searchKeywords": ["ネイルアート", "ジェルネイル", "マニキュア", "ハンドクリーム", "キューティクルオイル", "ネイルシール", "ベースコート", "トップコート", "ラメ", "ホログラム"]
 }

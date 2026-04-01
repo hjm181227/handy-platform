@@ -111,5 +111,13 @@
   "confirmingOrder": "Confirming your order...",
   "orderLoadFailedDesc": "Invalid order number.",
   "recommendedKeywords": "Recommended",
-  "cart": "Cart"
+  "cart": "Cart",
+  "home": {
+    "customOrderTitle": "Create Custom Nail Order",
+    "customOrderDesc": "Request your own design and get quotes from various brands",
+    "newProducts": "New Arrivals",
+    "productCount": "{{count}} products",
+    "seeMore": "See more"
+  },
+  "searchKeywords": ["nail art", "gel nails", "manicure", "hand cream", "cuticle oil", "nail stickers", "base coat", "top coat", "glitter", "holographic"]
 }

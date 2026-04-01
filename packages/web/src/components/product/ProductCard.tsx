@@ -1,4 +1,5 @@
 import { Product } from '@handy-platform/shared';
+import { useTranslation } from 'react-i18next';
 import { Badge, Stars } from '../ui';
 import { money } from '../../utils';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
@@ -21,6 +22,7 @@ export function ProductCard({
   isLiked?: boolean;
   isLoading?: boolean;
 }) {
+  const { t } = useTranslation('common');
   // 로딩 스켈레톤 렌더링
   if (isLoading) {
     return (
@@ -73,7 +75,7 @@ export function ProductCard({
         <div className="absolute left-2 top-2 flex gap-1">
           {p.isNewProduct && <Badge tone="blue">NEW</Badge>}
           {p.isFeatured && <Badge tone="red">HOT</Badge>}
-          {p.discountRate && p.discountRate > 0 && <Badge tone="red">할인</Badge>}
+          {p.discountRate && p.discountRate > 0 && <Badge tone="red">{t('discount')}</Badge>}
         </div>
       </div>
       <div className="mt-1 space-y-0.5">
