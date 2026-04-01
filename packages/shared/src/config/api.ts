@@ -518,6 +518,7 @@ export const API_ENDPOINTS = {
     PLANS: '/api/design-tool/plans',
     SUBSCRIBE: '/api/design-tool/subscribe',
     APPROVE: '/api/design-tool/approve',
+    BILLING_CONFIRM: '/api/design-tool/billing/confirm',
     CANCEL: '/api/design-tool/cancel',
     CHANGE_PLAN: '/api/design-tool/change-plan',
     ADMIN_ACCESS: (userUuid: string) => `/api/design-tool/admin/${userUuid}/access`,

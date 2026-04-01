@@ -7,6 +7,7 @@ interface PaymentSession {
   amount: number;
   clientKey: string;
   orderName: string;
+  customerKey: string;
 }
 
 interface UseDesignToolAccessReturn {
@@ -16,6 +17,7 @@ interface UseDesignToolAccessReturn {
   error: string | null;
   subscribe: (planId: DesignToolPlanId, paymentMethod?: string) => Promise<PaymentSession | null>;
   approve: (paymentKey: string, orderId: string, amount: number) => Promise<boolean>;
+  confirmBilling: (authKey: string, customerKey: string, orderId: string) => Promise<boolean>;
   cancel: () => Promise<boolean>;
   changePlan: (planId: DesignToolPlanId) => Promise<PaymentSession | boolean>;
   refresh: () => Promise<void>;
@@ -108,6 +110,24 @@ export function useDesignToolAccess(autoFetch = true): UseDesignToolAccessReturn
     }
   }, []);
 
+  const confirmBilling = useCallback(async (authKey: string, customerKey: string, orderId: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await designToolService.confirmBilling({ authKey, customerKey, orderId });
+      if (response.success && response.subscription) {
+        setAccess(response.subscription);
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      setError(err.message || '빌링 확인에 실패했습니다.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const cancel = useCallback(async (): Promise<boolean> => {
     try {
       setLoading(true);
@@ -149,5 +169,5 @@ export function useDesignToolAccess(autoFetch = true): UseDesignToolAccessReturn
     }
   }, []);
 
-  return { access, plans, loading, error, subscribe, approve, cancel, changePlan, refresh };
+  return { access, plans, loading, error, subscribe, approve, confirmBilling, cancel, changePlan, refresh };
 }

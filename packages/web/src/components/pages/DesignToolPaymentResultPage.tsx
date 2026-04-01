@@ -8,10 +8,10 @@ interface DesignToolPaymentResultPageProps {
 }
 
 export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentResultPageProps) {
-  const { approve } = useDesignToolAccess(false);
+  const { confirmBilling } = useDesignToolAccess(false);
   const [status, setStatus] = useState<'processing' | 'completed' | 'failed'>('processing');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const approvedRef = useRef(false);
+  const confirmedRef = useRef(false);
 
   useEffect(() => {
     if (type === 'fail') {
@@ -21,32 +21,32 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
       return;
     }
 
-    if (approvedRef.current) return;
-    approvedRef.current = true;
+    if (confirmedRef.current) return;
+    confirmedRef.current = true;
 
     const params = new URLSearchParams(window.location.search);
-    const paymentKey = params.get('paymentKey');
+    const authKey = params.get('authKey');
+    const customerKey = params.get('customerKey');
     const orderId = params.get('orderId');
-    const amount = Number(params.get('amount'));
 
-    if (!paymentKey || !orderId || !amount) {
+    if (!authKey || !customerKey) {
       setStatus('failed');
-      setErrorMessage('결제 정보가 올바르지 않습니다.');
+      setErrorMessage('결제 인증 정보가 올바르지 않습니다.');
       return;
     }
 
-    const approvePayment = async () => {
-      const success = await approve(paymentKey, orderId, amount);
+    const confirmPayment = async () => {
+      const success = await confirmBilling(authKey, customerKey, orderId || '');
       if (success) {
         setStatus('completed');
       } else {
         setStatus('failed');
-        setErrorMessage('결제 승인에 실패했습니다. 고객센터에 문의해주세요.');
+        setErrorMessage('정기구독 등록에 실패했습니다. 고객센터에 문의해주세요.');
       }
     };
 
-    approvePayment();
-  }, [type, approve]);
+    confirmPayment();
+  }, [type, confirmBilling]);
 
   if (status === 'processing') {
     return (
@@ -62,8 +62,8 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">결제 완료!</h2>
-        <p className="text-gray-500 mb-8">프로 플랜이 활성화되었습니다.</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">정기구독 등록 완료!</h2>
+        <p className="text-gray-500 mb-8">프로 플랜 정기구독이 활성화되었습니다.</p>
         <button
           onClick={() => onGo('/design-tool/subscription')}
           className="w-full py-3 bg-pink-500 text-white rounded-xl font-semibold hover:bg-pink-600"

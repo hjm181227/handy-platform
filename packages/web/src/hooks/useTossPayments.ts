@@ -214,3 +214,40 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
     requestPayment,
   };
 }
+
+/**
+ * Toss 빌링키 발급 요청 (정기구독용)
+ * 위젯 없이 Toss 결제창을 직접 호출하여 카드 등록 후 authKey를 받는다.
+ * 성공 시 successUrl로 리다이렉트 (query: authKey, customerKey)
+ */
+export interface TossBillingAuthRequest {
+  clientKey: string;
+  customerKey: string;
+  amount: number;
+  orderId: string;
+  orderName: string;
+  successUrl: string;
+  failUrl: string;
+}
+
+export async function requestTossBillingAuth(options: TossBillingAuthRequest): Promise<void> {
+  const { clientKey, customerKey, amount, orderId, orderName, successUrl, failUrl } = options;
+
+  if (!clientKey) {
+    throw new Error('토스페이먼츠 클라이언트 키가 설정되지 않았습니다.');
+  }
+
+  const tossPayments = await loadTossPayments(clientKey);
+
+  // SDK v2: payment() 인스턴스를 통해 빌링 인증 요청
+  const payment = tossPayments.payment({ customerKey });
+
+  await (payment as any).requestBillingAuth({
+    method: '카드',
+    amount: { currency: 'KRW', value: amount },
+    orderId,
+    orderName,
+    successUrl,
+    failUrl,
+  });
+}
