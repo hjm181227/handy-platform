@@ -94,7 +94,8 @@
     "ordersAndReturns": "Orders & Shipping / Returns",
     "reviewsAndLikes": "Reviews & Likes",
     "benefitsAndPayment": "Benefits & Payment",
-    "customerServiceAndSettings": "Support & Settings"
+    "customerServiceAndSettings": "Support & Settings",
+    "designTool": "Design Tool"
   },
   "defaultUser": "User",
   "customOrderManagement": "Custom Order Management",
@@ -106,6 +107,8 @@
   "myReviewManagement": "My Reviews",
   "likesWishlist": "Likes (Wishlist)",
   "editAccountInfo": "Edit Account Info",
+  "openDesignTool": "Open Design Tool",
+  "subscriptionManagement": "Subscription Management",
   "profile": {
     "title": "Profile",
     "edit": "Edit Profile",

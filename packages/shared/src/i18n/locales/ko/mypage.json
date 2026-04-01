@@ -94,7 +94,8 @@
     "ordersAndReturns": "주문·배송 / 반품·교환",
     "reviewsAndLikes": "리뷰·좋아요",
     "benefitsAndPayment": "혜택 / 결제",
-    "customerServiceAndSettings": "고객센터 / 설정"
+    "customerServiceAndSettings": "고객센터 / 설정",
+    "designTool": "디자인 툴"
   },
   "defaultUser": "사용자",
   "customOrderManagement": "커스텀 주문 관리",
@@ -106,6 +107,8 @@
   "myReviewManagement": "내 리뷰 관리",
   "likesWishlist": "좋아요(위시리스트)",
   "editAccountInfo": "회원정보 수정",
+  "openDesignTool": "디자인 툴 열기",
+  "subscriptionManagement": "구독 관리",
   "profile": {
     "title": "프로필",
     "edit": "프로필 수정",

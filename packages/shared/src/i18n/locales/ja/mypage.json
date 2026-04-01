@@ -94,7 +94,8 @@
     "ordersAndReturns": "注文・配送 / 返品・交換",
     "reviewsAndLikes": "レビュー・いいね",
     "benefitsAndPayment": "特典・お支払い",
-    "customerServiceAndSettings": "サポート・設定"
+    "customerServiceAndSettings": "サポート・設定",
+    "designTool": "デザインツール"
   },
   "defaultUser": "ユーザー",
   "customOrderManagement": "カスタム注文管理",
@@ -106,6 +107,8 @@
   "myReviewManagement": "マイレビュー管理",
   "likesWishlist": "いいね（ウィッシュリスト）",
   "editAccountInfo": "会員情報修正",
+  "openDesignTool": "デザインツールを開く",
+  "subscriptionManagement": "サブスクリプション管理",
   "profile": {
     "title": "プロフィール",
     "edit": "プロフィール編集",

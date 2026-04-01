@@ -512,9 +512,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           </Section>
 
           {/* 디자인 툴 */}
-          <Section title="디자인 툴">
-            <LinkRow title="디자인 툴 열기" to="/design-tool" />
-            <LinkRow title="구독 관리" to="/design-tool/subscription" />
+          <Section title={t('mypage:sections.designTool')}>
+            <LinkRow title={t('mypage:openDesignTool')} to="/design-tool" />
+            <LinkRow title={t('mypage:subscriptionManagement')} to="/design-tool/subscription" />
           </Section>
 
           {/* Menu Section 2 */}
