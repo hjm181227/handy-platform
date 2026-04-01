@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import type { EventBanner } from '@handy-platform/shared';
 
 export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
+  const { t } = useTranslation(['nav']);
   const [banners, setBanners] = useState<EventBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -176,8 +178,8 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-lg font-medium text-gray-600">이벤트 준비중입니다</p>
-            <p className="text-sm text-gray-400 mt-1">곧 새로운 이벤트를 만나보세요!</p>
+            <p className="text-lg font-medium text-gray-600">{t('nav:footer.eventPreparing')}</p>
+            <p className="text-sm text-gray-400 mt-1">{t('nav:footer.eventComingSoon')}</p>
           </div>
           </div>
         </div>

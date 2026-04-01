@@ -1,9 +1,11 @@
 import { Product } from '@handy-platform/shared';
+import { useTranslation } from 'react-i18next';
 import { ProductCard } from './ProductCard';
 
 export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLike, onGo, likedProducts = [] }:{
   title:string; items:Product[]; loading?: boolean; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; onGo?:(path:string)=>void; likedProducts?: string[];
 }) {
+  const { t } = useTranslation('common');
   // 로딩 스켈레톤 카드 렌더링
   const renderLoadingSkeleton = () => (
     <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
@@ -24,7 +26,7 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
     <section className="mx-auto max-w-7xl px-4 mt-6">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-base md:text-lg font-semibold">{title}</h2>
-        <a href="#" onClick={(e)=>e.preventDefault()} className="text-xs text-gray-500">더보기</a>
+        <a href="#" onClick={(e)=>e.preventDefault()} className="text-xs text-gray-500">{t('seeMore')}</a>
       </div>
       {loading ? renderLoadingSkeleton() : (
         <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">

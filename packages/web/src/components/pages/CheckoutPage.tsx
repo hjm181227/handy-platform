@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Star, FileText, Pencil } from 'lucide-react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
@@ -21,6 +22,7 @@ interface CheckoutPageProps {
 }
 
 export function CheckoutPage({ onGo }: CheckoutPageProps) {
+  const { t } = useTranslation(['common', 'order']);
   const { alert } = useAlert();
   const [cart, setCart] = useState<Cart | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
@@ -154,7 +156,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               console.log('📦 [CheckoutPage] Direct purchase mode:', checkoutData.directItem);
             } else {
               console.error('❌ [CheckoutPage] No checkoutData found for direct mode');
-              throw new Error('바로구매 정보를 찾을 수 없습니다.');
+              throw new Error(t('order:checkout.directPurchaseNotFound'));
             }
           } catch (err) {
             console.error('❌ [CheckoutPage] Failed to load direct purchase data:', err);
@@ -167,7 +169,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           // 견적서 기반 주문: URL 파라미터에서 quoteUuid 읽기
           const quoteUuid = new URLSearchParams(window.location.search).get('quoteUuid');
           if (!quoteUuid) {
-            throw new Error('견적서 정보를 찾을 수 없습니다.');
+            throw new Error(t('order:checkout.quoteNotFound'));
           }
 
           // 이전에 생성된 세션이 있으면 재사용 (이탈 후 재진입 대응)
@@ -271,23 +273,23 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       } else {
         // 에러 코드별 사용자 친화적 메시지
         const errorCode = result.errorCode || result.error?.code;
-        let errorMessage = result.error?.message || result.error || '주문 정보를 불러올 수 없습니다.';
+        let errorMessage = result.error?.message || result.error || t('order:payment.orderLoadError');
 
         switch (errorCode) {
           case 'CART_EMPTY':
-            errorMessage = '장바구니가 비어있습니다. 상품을 먼저 추가해주세요.';
+            errorMessage = t('order:checkout.cartEmpty');
             break;
           case 'PRODUCT_NOT_FOUND':
-            errorMessage = '상품을 찾을 수 없습니다. 상품이 삭제되었거나 판매가 중단되었을 수 있습니다.';
+            errorMessage = t('order:checkout.productNotAvailable');
             break;
           case 'CUSTOM_REQUEST_NOT_FOUND':
-            errorMessage = '맞춤제작 요청을 찾을 수 없습니다.';
+            errorMessage = t('order:checkout.customRequestNotFound');
             break;
           case 'INVALID_CUSTOM_REQUEST_STATUS':
-            errorMessage = '맞춤제작 요청이 아직 견적 승인 단계가 아닙니다.';
+            errorMessage = t('order:checkout.invalidCustomStatus');
             break;
           case 'INITIALIZATION_ERROR':
-            errorMessage = '체크아웃 초기화 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+            errorMessage = t('order:checkout.initError');
             break;
         }
 
@@ -296,7 +298,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Initialize failed:', err);
-      const errorMessage = err.message || '체크아웃 초기화에 실패했습니다.';
+      const errorMessage = err.message || t('order:checkout.initFailed');
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -442,7 +444,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       console.log('✅ [CheckoutPage] New address selected, auto-validation will trigger');
     } catch (err: any) {
       console.error('Address selection failed:', err);
-      setError(err.message || '배송지 선택에 실패했습니다.');
+      setError(err.message || t('order:checkout.addressSelectionFailed'));
     } finally {
       setProcessing(false);
     }
@@ -520,14 +522,14 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setShowAddressForm(false);
       setEditingAddressId(null);
 
-      await alert('배송지가 수정되었습니다.', {
+      await alert(t('order:checkout.addressUpdated'), {
         variant: 'success',
-        title: '수정 완료'
+        title: t('order:checkout.updateComplete')
       });
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Address update failed:', err);
-      setError(err.message || '배송지 수정에 실패했습니다.');
+      setError(err.message || t('order:checkout.addressUpdateFailed'));
       await alert(err.message, { variant: 'error' });
     } finally {
       setProcessing(false);
@@ -558,13 +560,13 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   // ✅ 테스트 결제 (스테이징 전용 - 결제 스킵)
   const handleTestPayment = async () => {
     if (!cart) {
-      setError('체크아웃 정보가 없습니다.');
+      setError(t('order:checkout.noCheckoutInfo'));
       return;
     }
 
     if (!selectedAddressId) {
-      setError('배송지를 선택해주세요.');
-      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      setError(t('order:checkout.selectAddressFirst'));
+      await alert(t('order:checkout.selectAddressFirst'), { variant: 'error' });
       return;
     }
 
@@ -584,7 +586,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       );
 
       if (!prepareResponse.success || !prepareResponse.data?.orderId) {
-        throw new Error(prepareResponse.error || '주문 생성에 실패했습니다.');
+        throw new Error(prepareResponse.error || t('order:checkout.orderCreateFailed'));
       }
 
       const orderId = prepareResponse.data.orderId;
@@ -602,13 +604,13 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         // 주문 완료 페이지로 이동
         onGo(`/order-complete?orderId=${orderId}`);
       } else {
-        throw new Error(skipResponse.error || '결제 스킵에 실패했습니다.');
+        throw new Error(skipResponse.error || t('order:checkout.skipPaymentFailed'));
       }
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Test payment failed:', err);
-      setError(err.message || '테스트 결제 처리 중 오류가 발생했습니다.');
-      await alert(err.message || '테스트 결제에 실패했습니다.', { variant: 'error' });
+      setError(err.message || t('order:checkout.testPaymentError'));
+      await alert(err.message || t('order:checkout.testPaymentFailed'), { variant: 'error' });
     } finally {
       setProcessing(false);
     }
@@ -617,27 +619,27 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   // ✅ 결제 준비 및 토스페이먼츠 결제 요청
   const handlePayment = async () => {
     if (!cart || !order) {
-      setError('체크아웃 정보가 없습니다.');
+      setError(t('order:checkout.noCheckoutInfo'));
       return;
     }
 
     if (!selectedAddressId) {
-      setError('배송지를 선택해주세요.');
-      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      setError(t('order:checkout.selectAddressFirst'));
+      await alert(t('order:checkout.selectAddressFirst'), { variant: 'error' });
       return;
     }
 
     // ✅ validate 확인 (배송지가 검증되었는지 확인)
     if ((cart as any).status !== 'validated') {
-      setError('배송지를 먼저 선택해주세요.');
-      await alert('배송지를 선택해주세요.', { variant: 'error' });
+      setError(t('order:checkout.addressValidationRequired'));
+      await alert(t('order:checkout.selectAddressFirst'), { variant: 'error' });
       return;
     }
 
     // ✅ 토스 위젯 준비 확인
     if (!tossWidgetReady) {
-      setError('결제 수단을 선택해주세요.');
-      await alert('결제 수단을 선택해주세요.', { variant: 'error' });
+      setError(t('order:checkout.selectPaymentFirst'));
+      await alert(t('order:checkout.selectPaymentFirst'), { variant: 'error' });
       return;
     }
 
@@ -658,21 +660,21 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       );
 
       if (!prepareResponse.success || !prepareResponse.data?.orderId) {
-        throw new Error(prepareResponse.error || '주문 생성에 실패했습니다.');
+        throw new Error(prepareResponse.error || t('order:checkout.orderCreateFailed'));
       }
 
       const orderId = prepareResponse.data.orderId;
 
       // 2. 주문명 생성
       const orderName = cart.items.length > 1
-        ? `${cart.items[0].product?.name || '상품'} 외 ${cart.items.length - 1}건`
-        : cart.items[0].product?.name || '상품';
+        ? t('order:checkout.productAndMore', { name: cart.items[0].product?.name || t('order:checkout.productLabel'), count: cart.items.length - 1 })
+        : cart.items[0].product?.name || t('order:checkout.productLabel');
 
       console.log('💳 [CheckoutPage] Requesting Toss payment:', { orderId, orderName });
 
       // 3. 토스페이먼츠 결제 요청
       if (!tossWidgetRef.current) {
-        throw new Error('결제 위젯이 준비되지 않았습니다.');
+        throw new Error(t('order:checkout.paymentWidgetNotReady'));
       }
 
       await tossWidgetRef.current.requestPayment({
@@ -686,7 +688,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Payment failed:', err);
-      setError(err.message || '결제 처리 중 오류가 발생했습니다.');
+      setError(err.message || t('order:payment.errorProcessingPayment'));
     } finally {
       setProcessing(false);
     }
@@ -697,8 +699,8 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">주문 정보를 준비하고 있습니다...</p>
-          <p className="text-sm text-gray-500 mt-2">장바구니를 불러오는 중</p>
+          <p className="text-gray-600 font-medium">{t('order:checkout.preparing')}</p>
+          <p className="text-sm text-gray-500 mt-2">{t('order:checkout.loadingCart')}</p>
         </div>
       </div>
     );
@@ -709,13 +711,13 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
           <div className="text-red-500 text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold mb-2">주문을 진행할 수 없습니다</h2>
+          <h2 className="text-xl font-bold mb-2">{t('order:checkout.cannotProceed')}</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => onGo('/cart')}
             className="w-full bg-[#FF073A] text-white py-2 px-4 rounded-lg hover:bg-[#E0062F]"
           >
-            장바구니로 돌아가기
+            {t('common:goToCart')}
           </button>
         </div>
       </div>
@@ -732,9 +734,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               onClick={() => onGo('/cart')}
               className="text-gray-400 hover:text-gray-600"
             >
-              ← 뒤로
+              {t('order:checkout.backToCart')}
             </button>
-            <h1 className="text-xl font-bold">주문/결제</h1>
+            <h1 className="text-xl font-bold">{t('order:checkout.title')}</h1>
           </div>
         </div>
       </div>
@@ -745,7 +747,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           <div className="lg:col-span-2 space-y-6">
             {/* 주문 상품 */}
             <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-lg font-semibold mb-4">주문 상품</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('order:checkout.orderSummary')}</h2>
               {cart?.items ? cart.items.map((item, index) => {
                 console.log('🛒 Checkout item:', item);
                 return (
@@ -764,10 +766,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium">{item.product?.name || '상품명 없음'}</h3>
+                      <h3 className="font-medium">{item.product?.name || t('order:checkout.noProductName')}</h3>
                       {item.product?.brand && (
                         <div className="text-xs text-gray-500 mt-1">
-                          브랜드: {item.product.brand}
+                          {t('order:checkout.brandLabel')}: {item.product.brand}
                         </div>
                       )}
                       {item.options && Object.keys(item.options).length > 0 && (
@@ -801,7 +803,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                         </div>
                       )}
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-gray-600">수량: {item?.quantity || 1}개</span>
+                        <span className="text-gray-600">{t('order:payment.quantityUnit', { count: item?.quantity || 1 })}</span>
                         <span className="font-semibold">{money(item?.price || 0)}</span>
                       </div>
                     </div>
@@ -809,7 +811,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 );
               }) : (
                 <div className="text-center text-gray-500 py-8">
-                  장바구니에 상품이 없습니다.
+                  {t('order:checkout.emptyCart')}
                 </div>
               )}
             </div>
@@ -819,20 +821,20 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               <div className="bg-[#FFF1F2] rounded-lg border border-[#E85A6B]/20 p-6">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <span className="text-[#E85A6B]">⏱️</span>
-                  제작 및 배송 안내
+                  {t('order:checkout.productionInfo')}
                 </h2>
 
                 {/* 제작 소요 기간 */}
                 <div className="mb-4">
                   <div className="text-sm font-medium text-gray-700 mb-2">
-                    총 제작 소요 기간: <span className="text-[#E85A6B] font-bold">{cart.productionInfo.estimatedProductionTime}일</span>
+                    {t('order:checkout.totalProductionTime')}: <span className="text-[#E85A6B] font-bold">{cart.productionInfo.estimatedProductionTime}{t('order:checkout.daysUnit')}</span>
                   </div>
                   <div className="text-sm text-gray-600">
-                    예상 배송일: {new Date(cart.productionInfo.earliestDeliveryDate).toLocaleDateString('ko-KR', {
+                    {t('order:checkout.estimatedDelivery')}: {new Date(cart.productionInfo.earliestDeliveryDate).toLocaleDateString('ko-KR', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
-                    })} 이후
+                    })} {t('order:checkout.afterDate')}
                   </div>
                 </div>
 
@@ -840,19 +842,19 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 {cart.productionInfo.productionSchedule && cart.productionInfo.productionSchedule.length > 0 && (
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-gray-700 mb-2">
-                      판매자별 제작 일정:
+                      {t('order:checkout.sellerSchedule')}:
                     </div>
                     {cart.productionInfo.productionSchedule.map((schedule, index) => (
                       <div key={index} className="bg-white rounded-lg p-3 text-sm">
                         <div className="flex justify-between items-center">
                           <div>
-                            <span className="font-medium">{schedule.sellerName || `판매자 ${index + 1}`}</span>
-                            <span className="text-gray-500 ml-2">({schedule.itemCount}개 상품)</span>
+                            <span className="font-medium">{schedule.sellerName || `${t('order:checkout.sellerLabel')} ${index + 1}`}</span>
+                            <span className="text-gray-500 ml-2">({t('order:checkout.itemCount', { count: schedule.itemCount })})</span>
                           </div>
-                          <span className="text-[#E85A6B] font-medium">{schedule.processingDays}일 소요</span>
+                          <span className="text-[#E85A6B] font-medium">{t('order:checkout.daysRequired', { days: schedule.processingDays })}</span>
                         </div>
                         <div className="text-gray-600 mt-1">
-                          예상 완성일: {new Date(schedule.estimatedCompletionDate).toLocaleDateString('ko-KR', {
+                          {t('order:checkout.estimatedCompletion')}: {new Date(schedule.estimatedCompletionDate).toLocaleDateString('ko-KR', {
                             month: 'long',
                             day: 'numeric'
                           })}
@@ -866,10 +868,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 {cart.shippingEstimate && (
                   <div className="mt-4 pt-4 border-t border-[#E85A6B]/20">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-700">예상 배송비</span>
+                      <span className="text-gray-700">{t('order:checkout.estimatedShipping')}</span>
                       <span className="font-semibold text-[#E85A6B]">
                         {cart.shippingEstimate.estimatedCost === 0
-                          ? '무료 배송'
+                          ? t('order:checkout.freeShipping')
                           : `${money(cart.shippingEstimate.estimatedCost)}`}
                       </span>
                     </div>
@@ -886,13 +888,13 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             {/* 배송지 정보 */}
             <div className="bg-white rounded-lg border p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">배송지 정보</h2>
+                <h2 className="text-lg font-semibold">{t('order:payment.shippingInfo')}</h2>
                 {!showAddressForm && (
                   <button
                     onClick={handleAddNewAddress}
                     className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium"
                   >
-                    + 배송지 추가
+                    {t('order:shipping.addNewShort')}
                   </button>
                 )}
               </div>
@@ -901,13 +903,13 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               {savedAddresses.length === 0 && !showAddressForm && (
                 <div className="text-center py-8">
                   <div className="text-gray-400 text-4xl mb-4">📍</div>
-                  <h3 className="text-lg font-medium text-gray-600 mb-2">등록된 배송지가 없습니다</h3>
-                  <p className="text-gray-500 mb-4">주문을 완료하려면 배송지를 추가해주세요.</p>
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">{t('order:checkout.noAddressesCheckout')}</h3>
+                  <p className="text-gray-500 mb-4">{t('order:checkout.addAddressPrompt')}</p>
                   <button
                     onClick={() => onGo('/my/shipping-address')}
                     className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
                   >
-                    배송지 관리 페이지에서 추가하기 →
+                    {t('order:checkout.goToAddressPage')}
                   </button>
                 </div>
               )}
@@ -937,7 +939,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                           />
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <span className="font-medium text-gray-900">
-                              [{address.addressName || '배송지'}]
+                              [{address.addressName || t('order:checkout.addressLabel')}]
                             </span>
                             <span className="text-sm text-gray-600 truncate">
                               {address.roadAddress}
@@ -945,7 +947,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                             {address.isDefault && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full font-medium flex-shrink-0">
                                 <Star className="w-3 h-3 fill-current" />
-                                기본
+                                {t('order:checkout.defaultLabel')}
                               </span>
                             )}
                           </div>
@@ -959,12 +961,12 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-base text-gray-900">
-                                    {address.addressName || '배송지'}
+                                    {address.addressName || t('order:checkout.addressLabel')}
                                   </span>
                                   {address.isDefault && (
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full font-medium">
                                       <Star className="w-3 h-3 fill-current" />
-                                      기본 배송지
+                                      {t('order:checkout.defaultAddress')}
                                     </span>
                                   )}
                                 </div>
@@ -976,7 +978,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                                   className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-[#E85A6B] hover:bg-[#FFF1F2] rounded-md transition-colors"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
-                                  수정
+                                  {t('order:checkout.editLabel')}
                                 </button>
                               </div>
 
@@ -1017,7 +1019,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                     <ShippingAddressForm
-                      title={editingAddressId ? "배송지 수정" : "새 배송지 추가"}
+                      title={editingAddressId ? t('order:shipping.editTitle') : t('order:shipping.addTitle')}
                       initialData={editingAddressId ? {
                         ...shippingAddress,
                         savedAddressIndex: parseInt(editingAddressId)
@@ -1110,17 +1112,17 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           {/* 주문 요약 */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg border p-6 sticky top-6">
-              <h2 className="text-lg font-semibold mb-4">주문 요약</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('order:checkout.summary')}</h2>
 
               {order && (
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span>상품금액</span>
+                    <span>{t('order:checkout.itemTotal')}</span>
                     <span>{money(order.totalPrice)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>배송비</span>
-                    <span>{order.shippingCost > 0 ? money(order.shippingCost) : '무료'}</span>
+                    <span>{t('order:checkout.shipping')}</span>
+                    <span>{order.shippingCost > 0 ? money(order.shippingCost) : t('common:free')}</span>
                   </div>
                   {appliedCoupon && (
                     <div className="flex justify-between text-[#E85A6B]">
@@ -1128,20 +1130,20 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                         </svg>
-                        쿠폰 할인
+                        {t('order:checkout.couponDiscount')}
                       </span>
                       <span>-{money(appliedCoupon.discountAmount)}</span>
                     </div>
                   )}
                   {order.totalDiscount > 0 && !appliedCoupon && (
                     <div className="flex justify-between text-red-500">
-                      <span>할인</span>
+                      <span>{t('order:checkout.discount')}</span>
                       <span>-{money(order.totalDiscount)}</span>
                     </div>
                   )}
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
-                    <span>총 결제금액</span>
+                    <span>{t('order:checkout.finalAmount')}</span>
                     <span className="text-[#E85A6B]">{money(order.finalPrice)}</span>
                   </div>
                 </div>
@@ -1158,7 +1160,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 disabled={processing || !validateCheckout()}
                 className="w-full mt-6 bg-[#FF073A] text-white font-semibold py-3 rounded-lg hover:bg-[#E0062F] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {processing ? '결제 중...' : `${money(order?.finalPrice || 0)} 결제하기`}
+                {processing ? t('order:checkout.processingPayment') : `${money(order?.finalPrice || 0)} ${t('order:checkout.placeOrder')}`}
               </button>
 
               {/* 스테이징 환경 전용: 테스트 결제 버튼 */}
@@ -1168,18 +1170,18 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   disabled={processing || !(selectedAddressId || validateShipping())}
                   className="w-full mt-3 bg-orange-500 text-white font-semibold py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {processing ? '처리 중...' : '🧪 테스트 결제 (결제 스킵)'}
+                  {processing ? t('order:checkout.testProcessing') : t('order:checkout.testPayment')}
                 </button>
               )}
 
               <p className="text-xs text-gray-500 text-center mt-3">
-                결제 진행 시 주문 내용 확인 및 서비스 약관에 동의한 것으로 간주됩니다.
+                {t('order:checkout.paymentAgreement')}
               </p>
 
               {/* 스테이징 환경 안내 */}
               {isStaging && (
                 <p className="text-xs text-orange-600 text-center mt-2 bg-orange-50 p-2 rounded">
-                  🧪 스테이징 환경: 테스트 결제 버튼을 사용하면 실제 결제 없이 주문이 완료됩니다.
+                  {t('order:checkout.stagingNotice')}
                 </p>
               )}
             </div>

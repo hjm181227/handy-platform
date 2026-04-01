@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, Sparkles, Palette, Crown, ArrowLeft } from 'lucide-react';
 import { useDesignToolAccess } from '../../hooks/useDesignToolAccess';
 import { isAuthenticated } from '../../services/apiService';
@@ -10,6 +11,8 @@ interface DesignToolPageProps {
 }
 
 export function DesignToolPage({ onGo }: DesignToolPageProps) {
+  const { t } = useTranslation('common');
+
   // 진입 경로에 따라 뒤로가기 목적지 결정
   const backPath = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -54,7 +57,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
       }
     } catch (err: any) {
       console.error('[DesignToolPage] Payment failed:', err);
-      setPaymentError(err.message || '결제 요청에 실패했습니다.');
+      setPaymentError(err.message || t('designTool.paymentError'));
     } finally {
       setSubscribing(false);
     }
@@ -70,7 +73,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
         <button onClick={() => onGo(backPath)} className="p-2 hover:bg-gray-100 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">디자인 툴</h1>
+        <h1 className="text-xl font-bold">{t('designTool.title')}</h1>
       </div>
 
       {/* Hero Section */}
@@ -80,7 +83,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-3">HANDY Design Tool</h1>
         <p className="text-gray-500 text-lg max-w-xl mx-auto">
-          나만의 네일 디자인을 만들어보세요. AI 기반 디자인 도구로 쉽고 빠르게 커스텀 네일아트를 제작할 수 있습니다.
+          {t('designTool.subtitle')}
         </p>
       </div>
 
@@ -91,11 +94,11 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
             <Crown className="w-5 h-5 text-pink-500" />
             <div>
               <p className="font-semibold text-gray-900">
-                현재 {currentPlan === 'pro' ? '프로' : '무료'} 플랜 이용 중
+                {t('designTool.currentPlan', { plan: currentPlan === 'pro' ? 'Pro' : 'Free' })}
               </p>
               {access?.expiresAt && (
                 <p className="text-sm text-gray-500">
-                  만료일: {new Date(access.expiresAt).toLocaleDateString('ko-KR')}
+                  {t('designTool.expiresAt', { date: new Date(access.expiresAt).toLocaleDateString() })}
                 </p>
               )}
             </div>
@@ -104,7 +107,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
             onClick={() => onGo('/design-tool/subscription')}
             className="text-sm text-pink-600 font-medium hover:underline"
           >
-            구독 관리
+            {t('designTool.subscriptionManagement')}
           </button>
         </div>
       )}
@@ -138,22 +141,22 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
 
       {/* 기능 상세 섹션 */}
       <div className="border-t border-gray-100 pt-12">
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">주요 기능</h2>
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">{t('designTool.mainFeatures')}</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <FeatureCard
             icon={<Palette className="w-6 h-6" />}
-            title="직관적 디자인 에디터"
-            description="드래그 앤 드롭으로 간편하게 네일 디자인을 제작할 수 있습니다."
+            title={t('designTool.feature1Title')}
+            description={t('designTool.feature1Desc')}
           />
           <FeatureCard
             icon={<Sparkles className="w-6 h-6" />}
-            title="AI 디자인 추천"
-            description="트렌드 분석 기반 AI가 최적의 디자인을 추천해드립니다."
+            title={t('designTool.feature2Title')}
+            description={t('designTool.feature2Desc')}
           />
           <FeatureCard
             icon={<Crown className="w-6 h-6" />}
-            title="커스텀 주문 연동"
-            description="완성된 디자인으로 바로 커스텀 주문을 요청할 수 있습니다."
+            title={t('designTool.feature3Title')}
+            description={t('designTool.feature3Desc')}
           />
         </div>
       </div>
@@ -174,6 +177,8 @@ function PlanCard({
   disabled: boolean;
   isPopular: boolean;
 }) {
+  const { t } = useTranslation('common');
+
   return (
     <div
       className={`relative rounded-2xl border-2 p-6 transition-all ${
@@ -185,7 +190,7 @@ function PlanCard({
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-            추천
+            {t('designTool.recommended')}
           </span>
         </div>
       )}
@@ -194,9 +199,9 @@ function PlanCard({
         <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
         <div className="mt-2">
           <span className="text-3xl font-bold text-gray-900">
-            {plan.price === 0 ? '무료' : `₩${plan.price.toLocaleString()}`}
+            {plan.price === 0 ? t('designTool.free') : `₩${plan.price.toLocaleString()}`}
           </span>
-          {plan.price > 0 && <span className="text-gray-500 text-sm">/월</span>}
+          {plan.price > 0 && <span className="text-gray-500 text-sm">{t('designTool.perMonth')}</span>}
         </div>
       </div>
 
@@ -220,7 +225,7 @@ function PlanCard({
               : 'bg-gray-900 text-white hover:bg-gray-800'
         }`}
       >
-        {isCurrent ? '현재 플랜' : plan.price === 0 ? '무료로 시작하기' : '구독하기'}
+        {isCurrent ? t('designTool.currentPlanButton') : plan.price === 0 ? t('designTool.freeStart') : t('designTool.subscribe')}
       </button>
     </div>
   );

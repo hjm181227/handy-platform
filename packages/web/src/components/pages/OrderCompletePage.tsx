@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAlert } from '../common';
 import { webApiService } from '../../services/apiService';
 import { money } from '../../utils';
@@ -10,6 +11,7 @@ interface OrderCompletePageProps {
 }
 
 export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
+  const { t } = useTranslation(['common', 'order']);
   const { alert, error: showError } = useAlert();
   const [order, setOrder] = useState<CustomerOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,13 +34,13 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
         setOrder((response as any).order);
       } else {
         console.error('❌ [OrderCompletePage] Invalid response structure:', response);
-        throw new Error((response as any).message || '주문 정보를 불러올 수 없습니다.');
+        throw new Error((response as any).message || t('order:payment.orderLoadError'));
       }
     } catch (err: any) {
       console.error('❌ [OrderCompletePage] Order loading failed:', err);
-      setError(err.message || '주문 조회에 실패했습니다.');
+      setError(err.message || t('common:orderLoadFailed'));
       await showError(err, {
-        title: '주문 조회 실패',
+        title: t('common:orderLoadFailed'),
         showRetry: true
       });
     } finally {
@@ -59,7 +61,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">주문 정보를 확인하고 있습니다...</p>
+          <p className="text-gray-600">{t('common:confirmingOrder')}</p>
         </div>
       </div>
     );
@@ -70,13 +72,13 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
           <div className="text-red-500 text-4xl mb-4">❌</div>
-          <h2 className="text-xl font-bold mb-2">주문 정보를 찾을 수 없습니다</h2>
-          <p className="text-gray-600 mb-6">{error || '올바르지 않은 주문 번호입니다.'}</p>
+          <h2 className="text-xl font-bold mb-2">{t('common:orderNotFound')}</h2>
+          <p className="text-gray-600 mb-6">{error || t('common:orderLoadFailedDesc')}</p>
           <button
             onClick={() => onGo('/')}
             className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
           >
-            홈으로 돌아가기
+            {t('common:goHome')}
           </button>
         </div>
       </div>
@@ -91,45 +93,45 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-green-500 text-3xl">✓</span>
           </div>
-          <h1 className="text-2xl font-bold mb-2">주문이 완료되었습니다!</h1>
+          <h1 className="text-2xl font-bold mb-2">{t('order:complete.message')}</h1>
           <p className="text-gray-600">
-            주문번호: <span className="font-semibold text-black">{order.orderNumber}</span>
+            {t('common:orderNumberLabel')}: <span className="font-semibold text-black">{order.orderNumber}</span>
           </p>
         </div>
 
         {/* 주문 요약 */}
         <div className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">주문 정보</h2>
-          
+          <h2 className="text-lg font-semibold mb-4">{t('order:checkout.orderSummary')}</h2>
+
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-gray-600">주문일시</span>
+              <span className="text-gray-600">{t('order:payment.orderDate')}</span>
               <span>{new Date(order.createdAt).toLocaleString('ko-KR')}</span>
             </div>
             
             <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-gray-600">결제금액</span>
+              <span className="text-gray-600">{t('order:payment.paymentAmount')}</span>
               <span className="text-lg font-bold text-[#E85A6B]">{money(order.totalAmount)}</span>
             </div>
             
             <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-gray-600">결제방법</span>
+              <span className="text-gray-600">{t('order:payment.paymentMethod')}</span>
               <span>
-                {order.paymentMethod === 'CREDIT_CARD' && '신용카드'}
-                {order.paymentMethod === 'KAKAO_PAY' && '카카오페이'}
-                {order.paymentMethod === 'NAVER_PAY' && '네이버페이'}
+                {order.paymentMethod === 'CREDIT_CARD' && t('order:payment.creditCard')}
+                {order.paymentMethod === 'KAKAO_PAY' && t('order:payment.kakaoPay')}
+                {order.paymentMethod === 'NAVER_PAY' && t('order:payment.naverPay')}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">주문상태</span>
+              <span className="text-gray-600">{t('order:payment.orderStatus')}</span>
               <span className="px-2 py-1 bg-[#FFF1F2] text-[#D14A5B] text-sm font-medium rounded-full">
-                {order.status === 'pending' && '결제대기'}
-                {order.status === 'confirmed' && '결제완료'}
-                {order.status === 'processing' && '제작중'}
-                {order.status === 'shipped' && '배송중'}
-                {order.status === 'delivered' && '배송완료'}
-                {order.status === 'cancelled' && '주문취소'}
+                {order.status === 'pending' && t('order:status.pending')}
+                {order.status === 'confirmed' && t('order:status.confirmed')}
+                {order.status === 'processing' && t('order:status.preparing')}
+                {order.status === 'shipped' && t('order:status.shipped')}
+                {order.status === 'delivered' && t('order:status.delivered')}
+                {order.status === 'cancelled' && t('order:status.cancelled')}
               </span>
             </div>
           </div>
@@ -137,7 +139,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
 
         {/* 주문 상품 */}
         <div className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">주문 상품</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('order:payment.orderItems')}</h2>
           <div className="space-y-4">
             {order.items.map((item, index) => (
               <div key={index} className="flex gap-4 py-4 border-b last:border-b-0">
@@ -164,7 +166,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
                     </div>
                   )}
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-gray-600">수량: {item.quantity}개</span>
+                    <span className="text-gray-600">{t('order:payment.quantityUnit', { count: item.quantity })}</span>
                     <span className="font-semibold">{money(item.price * item.quantity)}</span>
                   </div>
                 </div>
@@ -176,16 +178,16 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
         {/* 배송지 정보 */}
         {order.shippingAddress && (
           <div className="bg-white rounded-lg border p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">배송지 정보</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('order:payment.shippingInfo')}</h2>
             <div className="space-y-2 text-sm">
-              <div><strong>받는 분:</strong> {order.shippingAddress.recipientName}</div>
-              <div><strong>연락처:</strong> {order.shippingAddress.recipientPhone}</div>
+              <div><strong>{t('order:shipping.recipient')}:</strong> {order.shippingAddress.recipientName}</div>
+              <div><strong>{t('order:shipping.phone')}:</strong> {order.shippingAddress.recipientPhone}</div>
               <div>
-                <strong>주소:</strong> ({order.shippingAddress.postcode}) {order.shippingAddress.roadAddress}
+                <strong>{t('order:shipping.address')}:</strong> ({order.shippingAddress.postcode}) {order.shippingAddress.roadAddress}
                 {order.shippingAddress.detailAddress && `, ${order.shippingAddress.detailAddress}`}
               </div>
               {order.shippingAddress.deliveryNote && (
-                <div><strong>배송메모:</strong> {order.shippingAddress.deliveryNote}</div>
+                <div><strong>{t('order:shipping.deliveryMemo')}:</strong> {order.shippingAddress.deliveryNote}</div>
               )}
             </div>
           </div>
@@ -208,13 +210,13 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
             onClick={() => onGo('/my/orders')}
             className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors font-medium"
           >
-            주문 내역 보기
+            {t('order:complete.goToOrders')}
           </button>
           <button
             onClick={() => onGo('/')}
             className="flex-1 bg-[#E85A6B] text-white py-3 px-6 rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
           >
-            쇼핑 계속하기
+            {t('order:complete.continueShopping')}
           </button>
         </div>
 

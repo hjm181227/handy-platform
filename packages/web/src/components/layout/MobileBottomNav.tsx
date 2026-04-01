@@ -1,5 +1,6 @@
 import React from 'react';
 import { LayoutGrid, Camera, House, Heart, User, Search, ShoppingBag, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { BOTTOM_TABS, type BottomTab } from '../../config/navigationConfig';
@@ -22,6 +23,7 @@ const ICON_MAP: Record<BottomTab['iconName'], React.ComponentType<any>> = {
 };
 
 export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBottomNavProps) {
+  const { t } = useTranslation(['nav', 'common']);
   const { currentUser } = useAuth();
   const { openLogin } = useAuthModal();
 
@@ -46,7 +48,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
         paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))'
       }}
       role="navigation"
-      aria-label="하단 네비게이션"
+      aria-label={t('nav:header.navigation')}
     >
       <div className="flex justify-around items-center" style={{ paddingTop: 8, paddingBottom: 8 }}>
         {BOTTOM_TABS.map((tab) => {
@@ -57,7 +59,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
           if (tab.isSpecial) {
             const isSnapActive = currentPath.startsWith('/snap');
             const specialPath = isSnapActive ? '/snap/new' : '/custom-order/new';
-            const specialLabel = isSnapActive ? '스냅 업로드' : '커스텀 주문서 작성';
+            const specialLabel = isSnapActive ? t('nav:bottom.snapUpload') : t('nav:bottom.customOrder');
             return (
               <button
                 key="special-plus"
@@ -88,7 +90,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
               onClick={() => handleTabClick(tab)}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200"
               style={{ WebkitTapHighlightColor: 'transparent', gap: 4 }}
-              aria-label={`${tab.label}로 이동`}
+              aria-label={t('nav:header.goTo', { label: tab.labelKey ? t(tab.labelKey) : tab.label })}
               aria-current={active ? 'page' : undefined}
             >
               <Icon
@@ -96,7 +98,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
                 style={{ color }}
               />
               <span style={{ color, fontSize: 10, fontWeight: active ? 600 : 500 }}>
-                {tab.label}
+                {tab.labelKey ? t(tab.labelKey) : tab.label}
               </span>
             </button>
           );

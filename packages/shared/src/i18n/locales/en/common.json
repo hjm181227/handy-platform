@@ -325,5 +325,39 @@
     "prepareOrderNumber": "Have your order number ready for faster assistance.",
     "emailInquiry": "Email Inquiry",
     "liveConsult": "Live Chat"
+  },
+  "designTool": {
+    "title": "Design Tool",
+    "subtitle": "Create your own nail designs. Easily and quickly create custom nail art with AI-powered design tools.",
+    "currentPlan": "Currently on {{plan}} plan",
+    "expiresAt": "Expires: {{date}}",
+    "subscriptionManagement": "Manage Subscription",
+    "mainFeatures": "Key Features",
+    "recommended": "Recommended",
+    "free": "Free",
+    "perMonth": "/mo",
+    "currentPlanButton": "Current Plan",
+    "freeStart": "Start for Free",
+    "subscribe": "Subscribe",
+    "paymentError": "Payment request failed.",
+    "feature1Title": "Intuitive Design Editor",
+    "feature1Desc": "Create nail designs easily with drag and drop.",
+    "feature2Title": "AI Design Recommendations",
+    "feature2Desc": "AI recommends optimal designs based on trend analysis.",
+    "feature3Title": "Custom Order Integration",
+    "feature3Desc": "Place custom orders directly from your completed designs.",
+    "payment": {
+      "processing": "Processing payment...",
+      "pleaseWait": "Please wait a moment.",
+      "subscriptionComplete": "Subscription Complete!",
+      "subscriptionActivated": "Your Pro plan subscription has been activated.",
+      "goToSubscription": "Go to Subscription Management",
+      "paymentFailed": "Payment Failed",
+      "retry": "Try Again",
+      "goHome": "Go Home",
+      "authError": "Payment authentication information is invalid.",
+      "registrationFailed": "Subscription registration failed. Please contact customer support.",
+      "defaultError": "Payment failed."
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, X, Settings, Bell, ArrowLeft, Home, ShoppingBag, UserCircle, MessageCircle } from 'lucide-react';
 
 interface MobilePageHeaderProps {
@@ -44,7 +45,7 @@ export function MobilePageHeader({
   showBack,
   showHome,
   showSearchBar,
-  searchPlaceholder = '검색어를 입력하세요',
+  searchPlaceholder,
   showSearch,
   showCart,
   showProfile,
@@ -63,6 +64,8 @@ export function MobilePageHeader({
   onChat,
   onGo
 }: MobilePageHeaderProps) {
+  const { t } = useTranslation(['nav', 'common', 'product']);
+  const resolvedPlaceholder = searchPlaceholder || t('common:searchPlaceholder');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -146,7 +149,7 @@ export function MobilePageHeader({
             <button
               onClick={handleSearchClose}
               className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
-              aria-label="검색 닫기"
+              aria-label={t('nav:header.closeSearch')}
             >
               <ArrowLeft size={20} className="text-gray-700" />
             </button>
@@ -155,14 +158,14 @@ export function MobilePageHeader({
             <IconButton
               icon={ArrowLeft}
               onClick={onBack}
-              ariaLabel="뒤로가기"
+              ariaLabel={t('nav:header.back')}
             />
           )}
           {!isSearchActive && showHome && (
             <IconButton
               icon={Home}
               onClick={onHome}
-              ariaLabel="홈으로"
+              ariaLabel={t('nav:header.home')}
             />
           )}
           {title && !isSearchBarVisible && (
@@ -182,7 +185,7 @@ export function MobilePageHeader({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSearchSuggestions(true)}
-                  placeholder={searchPlaceholder}
+                  placeholder={resolvedPlaceholder}
                   className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
@@ -209,7 +212,7 @@ export function MobilePageHeader({
             {showSearchSuggestions && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border z-50 max-h-60 overflow-y-auto">
                 <div className="p-3">
-                  <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                  <span className="text-xs font-medium text-gray-500 mb-2 block">{t('nav:header.recommendedSearches')}</span>
                   <div className="flex flex-wrap gap-2">
                     {['네일아트', '젤네일', '매니큐어', '핸드크림'].map((keyword, index) => (
                       <button
@@ -238,7 +241,7 @@ export function MobilePageHeader({
               <IconButton
                 icon={MessageCircle}
                 onClick={onChat}
-                ariaLabel="채팅"
+                ariaLabel={t('nav:header.chat')}
               />
             )}
             {showNotification && (
@@ -246,7 +249,7 @@ export function MobilePageHeader({
                 <IconButton
                   icon={Bell}
                   onClick={onNotification}
-                  ariaLabel="알림"
+                  ariaLabel={t('nav:header.notification')}
                 />
                 {notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 pointer-events-none">
@@ -259,14 +262,14 @@ export function MobilePageHeader({
               <IconButton
                 icon={Search}
                 onClick={handleSearchToggle}
-                ariaLabel="검색"
+                ariaLabel={t('nav:header.search')}
               />
             )}
             {showProfile && (
               <IconButton
                 icon={UserCircle}
                 onClick={onProfile}
-                ariaLabel="프로필"
+                ariaLabel={t('nav:header.profile')}
               />
             )}
             {showCart && (
@@ -274,14 +277,14 @@ export function MobilePageHeader({
                 icon={ShoppingBag}
                 onClick={onCart}
                 badge={cartCount}
-                ariaLabel="장바구니"
+                ariaLabel={t('nav:header.cart')}
               />
             )}
             {showSettings && (
               <IconButton
                 icon={Settings}
                 onClick={onSettings}
-                ariaLabel="설정"
+                ariaLabel={t('nav:header.settings')}
               />
             )}
           </div>

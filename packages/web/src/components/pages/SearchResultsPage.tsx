@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService, brandService } from '../../services/apiService';
 import { TitleBar, ProductGrid } from '../product/ProductGrid';
 import { SortDropdown, parseSortValue, PRODUCT_SORT_OPTIONS } from '../common/SortDropdown';
@@ -14,6 +15,7 @@ interface SearchResultsPageProps {
 }
 
 export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedProducts = [] }: SearchResultsPageProps) {
+  const { t } = useTranslation(['product', 'common']);
   // 상품 검색 상태
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
@@ -52,7 +54,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
             </div>
             <div>
               <h3 className="font-semibold text-sm">{brand.brandName}</h3>
-              <p className="text-xs text-gray-500">{brand.stats.totalProducts}개 상품</p>
+              <p className="text-xs text-gray-500">{t('product:search.productCount', { count: brand.stats.totalProducts })}</p>
             </div>
           </div>
           {isHot && (
@@ -69,7 +71,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[#E85A6B] font-medium">{brand.stats.totalOrders}</span>
-            <span>주문</span>
+            <span>{t('product:search.orders')}</span>
           </div>
         </div>
 
@@ -77,7 +79,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           onClick={() => window.location.href = `/brand/${encodeURIComponent(brand.sellerUuid)}`}
           className="w-full rounded-md bg-gray-900 text-white py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
         >
-          브랜드 보기
+          {t('product:search.viewBrand')}
         </button>
       </div>
     );
@@ -144,7 +146,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
       } else {
         setProducts([]);
         if (productResponse.error) {
-          setError(`검색 중 오류가 발생했습니다: ${productResponse.error}`);
+          setError(`${t('product:search.generalError')}: ${productResponse.error}`);
         }
       }
       setProductsLoading(false);
@@ -157,13 +159,13 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
 
       // 사용자 친화적 에러 메시지 설정
       if (error.message?.includes('fetch')) {
-        setError('네트워크 연결을 확인해주세요.');
+        setError(t('product:search.networkError'));
       } else if (error.status === 400) {
-        setError('검색어가 올바르지 않습니다.');
+        setError(t('product:search.invalidQuery'));
       } else if (error.status >= 500) {
-        setError('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        setError(t('product:search.serverError'));
       } else {
-        setError('검색 중 오류가 발생했습니다.');
+        setError(t('product:search.generalError'));
       }
     }
   };
@@ -187,12 +189,12 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
   if (loading && !hasSearched) {
     return (
       <>
-        <TitleBar title={`검색: ${searchQuery || "전체"}`} desc="검색 중..." />
+        <TitleBar title={`${t('product:search.title')}: ${searchQuery || t('product:search.viewAll')}`} desc={`${t('product:search.searching')}`} />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 text-lg">검색 중입니다...</p>
-            <p className="text-gray-400 text-sm mt-2">잠시만 기다려주세요</p>
+            <p className="text-gray-600 text-lg">{t('product:search.searching')}</p>
+            <p className="text-gray-400 text-sm mt-2">{t('product:search.pleaseWait')}</p>
           </div>
         </div>
       </>
@@ -203,7 +205,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
   if (error) {
     return (
       <>
-        <TitleBar title={`검색: ${searchQuery || "전체"}`} desc="검색 오류" />
+        <TitleBar title={`${t('product:search.title')}: ${searchQuery || t('product:search.viewAll')}`} desc={t('product:search.error')} />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -211,20 +213,20 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">검색 오류</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('product:search.error')}</h3>
             <p className="text-gray-600 text-center mb-6 max-w-md">{error}</p>
             <div className="flex gap-3">
               <button
                 onClick={handleRetry}
                 className="px-6 py-2.5 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
               >
-                다시 시도
+                {t('common:retry')}
               </button>
               <button
                 onClick={() => window.location.href = '/'}
                 className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
-                홈으로 가기
+                {t('product:search.goHome')}
               </button>
             </div>
           </div>
@@ -238,8 +240,8 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
     return (
       <>
         <TitleBar
-          title={`검색: ${searchQuery || "전체"}`}
-          desc={searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다` : "등록된 결과가 없습니다"}
+          title={`${t('product:search.title')}: ${searchQuery || t('product:search.viewAll')}`}
+          desc={searchQuery ? t('product:search.noResultsFor', { query: searchQuery }) : t('product:search.noResultsGeneral')}
         />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center py-12">
@@ -248,15 +250,15 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">검색 결과 없음</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('product:search.noResults')}</h3>
             <p className="text-gray-600 text-center mb-6 max-w-md">
               {searchQuery ? (
                 <>
-                  '<span className="font-medium text-gray-900">{searchQuery}</span>'에 대한 검색 결과가 없습니다.
-                  <br />다른 키워드로 다시 검색해보세요.
+                  {t('product:search.noResultsFor', { query: searchQuery })}
+                  <br />{t('product:search.tryOtherKeywords')}
                 </>
               ) : (
-                '등록된 결과가 없습니다.'
+                t('product:search.noResultsGeneral')
               )}
             </p>
             <div className="flex gap-3">
@@ -265,14 +267,14 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
                   onClick={() => performSearch('')}
                   className="px-6 py-2.5 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
                 >
-                  전체 보기
+                  {t('product:search.viewAll')}
                 </button>
               )}
               <button
                 onClick={() => window.location.href = '/'}
                 className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
-                홈으로 가기
+                {t('product:search.goHome')}
               </button>
             </div>
           </div>
@@ -283,13 +285,13 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
 
   // 검색 결과 표시
   const titleDesc = searchQuery
-    ? `'${searchQuery}'에 대한 검색 결과`
-    : '전체 결과';
+    ? t('product:search.resultDesc', { query: searchQuery })
+    : t('product:search.allResults');
 
   return (
     <>
       <TitleBar
-        title={`검색: ${searchQuery || "전체"}`}
+        title={`${t('product:search.title')}: ${searchQuery || t('product:search.viewAll')}`}
         desc={titleDesc}
       />
 
@@ -299,20 +301,20 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           <div className="flex items-center gap-4 text-sm flex-1">
             {searchQuery && (
               <span className="text-gray-600">
-                검색어: <span className="font-semibold text-gray-900">'{searchQuery}'</span>
+                {t('product:search.searchKeyword')}: <span className="font-semibold text-gray-900">'{searchQuery}'</span>
               </span>
             )}
             <span className="text-gray-600">
-              총 <span className="font-semibold text-[#E85A6B]">{totalCount}개</span> 결과
+              {t('product:search.totalResults', { count: totalCount })}
             </span>
             {hasBrands && (
               <span className="text-gray-500">
-                브랜드 <span className="font-medium text-gray-700">{brands.length}개</span>
+                {t('product:search.brandCount', { count: brands.length })}
               </span>
             )}
             {hasProducts && (
               <span className="text-gray-500">
-                상품 <span className="font-medium text-gray-700">{products.length}개</span>
+                {t('product:search.productCount', { count: products.length })}
               </span>
             )}
           </div>
@@ -324,7 +326,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               onClick={() => performSearch('')}
               className="text-sm text-[#E85A6B] hover:text-[#D14A5B] hover:underline"
             >
-              전체 보기
+              {t('product:search.viewAll')}
             </button>
           )}
         </div>
@@ -336,15 +338,15 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           <section className="mb-12">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span>브랜드</span>
-                <span className="text-lg font-medium text-gray-500">({brands.length}개)</span>
+                <span>{t('common:brand')}</span>
+                <span className="text-lg font-medium text-gray-500">({t('product:search.brandCount', { count: brands.length })})</span>
               </h2>
               {brands.length > 6 && (
                 <button
                   onClick={() => window.location.href = '/brands'}
                   className="text-sm text-[#E85A6B] hover:text-[#D14A5B] hover:underline"
                 >
-                  브랜드 전체 보기 →
+                  {t('product:search.viewAllBrands')} →
                 </button>
               )}
             </div>
@@ -362,8 +364,8 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span>상품</span>
-                <span className="text-lg font-medium text-gray-500">({products.length}개)</span>
+                <span>{t('product:search.title')}</span>
+                <span className="text-lg font-medium text-gray-500">({t('product:search.productCount', { count: products.length })})</span>
               </h2>
             </div>
 
@@ -382,22 +384,22 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
         {totalCount > 0 && totalCount < 5 && (
           <div className="mt-8">
             <div className="bg-[#FFF1F2] rounded-lg p-6 text-center">
-              <h4 className="text-lg font-medium text-blue-900 mb-2">더 많은 결과를 찾고 계신가요?</h4>
+              <h4 className="text-lg font-medium text-blue-900 mb-2">{t('product:search.wantMore')}</h4>
               <p className="text-[#E85A6B] mb-4">
-                다양한 키워드로 검색하거나 카테고리를 둘러보세요.
+                {t('product:search.trySuggestion')}
               </p>
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => performSearch('')}
                   className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors text-sm font-medium"
                 >
-                  전체 보기
+                  {t('product:search.viewAll')}
                 </button>
                 <button
                   onClick={() => window.location.href = '/brands'}
                   className="px-4 py-2 border border-blue-300 text-[#E85A6B] rounded-lg hover:bg-[#E85A6B]/10 transition-colors text-sm font-medium"
                 >
-                  브랜드 둘러보기
+                  {t('product:search.browseBrands')}
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RankedProductCard } from '../product/RankedProductCard';
 
 type PeriodType = 'weekly' | 'monthly';
@@ -57,6 +58,7 @@ export function RankingPage({
   onLike?: (id: string) => void;
   likedProducts?: string[];
 }) {
+  const { t } = useTranslation(['product', 'common']);
   const [activePeriod, setActivePeriod] = useState<PeriodType>('weekly');
   const [rankings, setRankings] = useState<RankingProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,12 +79,12 @@ export function RankingPage({
         setRankings(data.data.rankings);
         setMeta(data.data.meta);
       } else {
-        setError(data.error || '랭킹 데이터를 불러올 수 없습니다.');
+        setError(data.error || t('common:loadFailed'));
         setRankings([]);
       }
     } catch (err: any) {
       console.error('Failed to fetch rankings:', err);
-      setError('랭킹 데이터를 불러오는 중 오류가 발생했습니다.');
+      setError(t('common:errorOccurred'));
       setRankings([]);
     } finally {
       setLoading(false);
@@ -128,9 +130,9 @@ export function RankingPage({
       {/* 페이지 헤더 (데스크톱) */}
       <div className="mx-auto max-w-7xl px-4 py-4 border-b hidden md:block">
         <div>
-          <h1 className="text-xl font-semibold">랭킹</h1>
+          <h1 className="text-xl font-semibold">{t('product:ranking.title')}</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {activePeriod === 'weekly' ? '주간' : '월간'} 판매 랭킹
+            {activePeriod === 'weekly' ? t('product:ranking.weeklyRanking') : t('product:ranking.monthlyRanking')}
             {meta && ` (${getPeriodLabel()})`}
           </p>
         </div>
@@ -147,7 +149,7 @@ export function RankingPage({
                 : 'bg-white border hover:bg-gray-50'
             }`}
           >
-            주간 베스트
+            {t('product:ranking.weeklyBest')}
           </button>
           <button
             onClick={() => setActivePeriod('monthly')}
@@ -157,7 +159,7 @@ export function RankingPage({
                 : 'bg-white border hover:bg-gray-50'
             }`}
           >
-            월간 베스트
+            {t('product:ranking.monthlyBest')}
           </button>
         </div>
       </div>
@@ -193,7 +195,7 @@ export function RankingPage({
               onClick={() => fetchRankings(activePeriod)}
               className="mt-4 px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         ) : rankings.length === 0 ? (
@@ -204,8 +206,8 @@ export function RankingPage({
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-600 mb-2">랭킹 데이터가 없습니다</h3>
-            <p className="text-sm text-gray-500">아직 집계된 판매 데이터가 없습니다.</p>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">{t('product:ranking.noData')}</h3>
+            <p className="text-sm text-gray-500">{t('product:ranking.noDataDesc')}</p>
           </div>
         ) : (
           <>
@@ -283,7 +285,7 @@ export function RankingPage({
 
             {/* 전체 랭킹 그리드 */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">전체 랭킹</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('product:ranking.allRanking')}</h2>
               <div className="flex flex-wrap -mx-2">
                 {rankings.map((item) => {
                   const product = mapRankingToProduct(item);

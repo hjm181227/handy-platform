@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ActionButton {
   icon: React.ReactNode;
@@ -43,6 +44,7 @@ export function PageHeader({
   borderBottom = true,
   children
 }: PageHeaderProps) {
+  const { t } = useTranslation(['nav', 'common']);
   return (
     <header
       className={`
@@ -62,7 +64,7 @@ export function PageHeader({
               <button
                 onClick={onBack}
                 className="text-gray-600 hover:bg-gray-100 p-1 rounded transition-colors flex-shrink-0"
-                aria-label="뒤로가기"
+                aria-label={t('nav:header.back')}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -102,7 +104,7 @@ export function PageHeader({
                 <button
                   onClick={onClose}
                   className="text-gray-600 hover:bg-gray-100 p-1 rounded transition-colors"
-                  aria-label="닫기"
+                  aria-label={t('common:close')}
                 >
                   <svg
                     viewBox="0 0 24 24"

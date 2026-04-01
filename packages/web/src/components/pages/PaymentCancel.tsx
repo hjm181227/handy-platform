@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { purchaseApiService } from '../../services/purchaseApiService';
 
 interface PaymentCancelProps {
@@ -6,6 +7,7 @@ interface PaymentCancelProps {
 }
 
 export function PaymentCancel({ onGo }: PaymentCancelProps) {
+  const { t } = useTranslation(['common', 'order']);
   const [isLoading, setIsLoading] = useState(true);
   const [orderInfo, setOrderInfo] = useState<{
     orderId?: string;
@@ -61,20 +63,20 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
           <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold mb-2">결제가 취소되었습니다</h2>
+          <h2 className="text-xl font-bold mb-2">{t('common:paymentCancelledTitle')}</h2>
           <p className="text-gray-600 mb-4">
-            결제를 취소하셨습니다.
+            {t('common:paymentCancelled')}
           </p>
 
           {orderInfo.orderId && (
             <p className="text-sm text-gray-500 mb-6">
-              주문번호: {orderInfo.orderId}
+              {t('common:orderNumberLabel')}: {orderInfo.orderId}
             </p>
           )}
 
           <div className="flex items-center justify-center gap-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#E85A6B]"></div>
-            <p className="text-sm">체크아웃 페이지로 이동 중...</p>
+            <p className="text-sm">{t('common:redirecting')}</p>
           </div>
         </div>
       </div>
@@ -85,9 +87,9 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
         <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
-        <h2 className="text-xl font-bold mb-2">결제가 취소되었습니다</h2>
+        <h2 className="text-xl font-bold mb-2">{t('common:paymentCancelledTitle')}</h2>
         <p className="text-gray-600 mb-6">
-          결제를 취소하셨습니다. 다시 시도하거나 다른 결제 방법을 선택해주세요.
+          {t('common:paymentCancelledDesc')}
         </p>
 
         <div className="space-y-3">
@@ -95,19 +97,19 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
             onClick={() => onGo('/checkout')}
             className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
           >
-            결제 다시 시도
+            {t('common:retryPayment')}
           </button>
           <button
             onClick={() => onGo('/cart')}
             className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50"
           >
-            장바구니로 돌아가기
+            {t('common:goToCart')}
           </button>
           <button
             onClick={() => onGo('/')}
             className="w-full text-gray-500 py-2 px-4 rounded-lg hover:bg-gray-50"
           >
-            홈으로
+            {t('common:goToHome')}
           </button>
         </div>
       </div>

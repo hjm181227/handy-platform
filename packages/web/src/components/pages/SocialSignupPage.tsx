@@ -4,12 +4,14 @@
  * 이 페이지로 직접 접근한 사용자는 로그인 페이지로 리다이렉트됩니다.
  */
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import { getSocialAuthState, clearSocialAuthState } from '../../utils/socialAuthState';
 import { TermsAgreement, TermsState, validateTerms, getDefaultTermsState } from '../common/TermsAgreement';
 import { getErrorMessageFromApiError } from '@handy-platform/shared';
 
 export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
+  const { t } = useTranslation(['auth', 'common']);
   const [socialState, setSocialState] = useState(getSocialAuthState());
   const [agree, setAgree] = useState<TermsState>(getDefaultTermsState());
   const [loading, setLoading] = useState(false);
@@ -72,7 +74,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
     e?.preventDefault();
     
     if (!socialState) {
-      setError('소셜 로그인 정보가 없습니다. 다시 시도해주세요.');
+      setError(t('auth:social.socialInfoMissing'));
       return;
     }
 
@@ -112,7 +114,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
       // 인증 상태 변경 이벤트 발생
       window.dispatchEvent(new CustomEvent('authStateChanged'));
 
-      alert(`환영합니다, ${response.user?.name}님!`);
+      alert(t('auth:social.welcomeUserAlert', { name: response.user?.name }));
       onGo('/');
 
     } catch (error: any) {
@@ -137,23 +139,23 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
     return (
       <div className="mx-auto max-w-md px-4 py-6">
         <div className="rounded-lg bg-gray-100 px-4 py-3 text-[15px] font-semibold">
-          소셜 회원가입
+          {t('common:signup')}
         </div>
         <div className="mt-8 text-center">
           {!isInitialized ? (
             <>
-              <div className="text-lg">페이지를 준비하고 있습니다...</div>
-              <div className="mt-2 text-sm text-gray-600">잠시만 기다려주세요</div>
+              <div className="text-lg">{t('auth:social.preparingPage')}</div>
+              <div className="mt-2 text-sm text-gray-600">{t('auth:social.pleaseWait')}</div>
             </>
           ) : (
             <>
-              <div className="text-lg">소셜 로그인 정보를 찾을 수 없습니다</div>
-              <div className="mt-2 text-sm text-gray-600">3초 후 로그인 페이지로 이동합니다</div>
+              <div className="text-lg">{t('auth:social.socialInfoNotFound')}</div>
+              <div className="mt-2 text-sm text-gray-600">{t('auth:social.redirectingToLogin')}</div>
               <button
                 onClick={() => onGo('/login')}
                 className="mt-4 rounded-lg bg-[#E85A6B] px-4 py-2 text-white hover:bg-[#D14A5B]"
               >
-                지금 이동하기
+                {t('auth:social.goNow')}
               </button>
             </>
           )}
@@ -163,16 +165,16 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
   }
 
   const providerName = {
-    kakao: '카카오',
+    kakao: 'Kakao',
     google: 'Google',
-    naver: 'NAVER',
+    naver: 'Naver',
     apple: 'Apple'
   }[socialState.userInfo.provider] || socialState.userInfo.provider;
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
       <div className="rounded-lg bg-gray-100 px-4 py-3 text-[15px] font-semibold">
-        {providerName} 회원가입
+        {t('auth:social.providerSignup', { provider: providerName })}
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -184,12 +186,12 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
 
         {/* 추가 정보 입력 */}
         <div className="space-y-3">
-          <div className="text-sm font-semibold text-gray-800">추가 정보 (선택사항)</div>
+          <div className="text-sm font-semibold text-gray-800">{t('auth:social.additionalInfo')}</div>
           <input
             type="tel"
             value={additionalInfo.phone}
             onChange={(e) => setAdditionalInfo(prev => ({ ...prev, phone: e.target.value }))}
-            placeholder="휴대폰 번호 (선택)"
+            placeholder={t('auth:social.phonePlaceholderOptional')}
             className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-[#E85A6B]"
             disabled={loading}
           />
@@ -201,8 +203,8 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
           onAgreeChange={setAgree}
           loading={loading}
           userInfo={socialState.userInfo}
-          title="회원가입 약관 동의"
-          description={`${providerName} 계정으로 가입하려면 아래 약관에 동의해주세요.`}
+          title={t('auth:social.termsAgreementTitle')}
+          description={t('auth:social.termsAgreementDescription', { provider: providerName })}
         />
 
         {/* 회원가입 완료 버튼 */}
@@ -211,7 +213,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
           disabled={loading}
           className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {loading ? '가입 중...' : '회원가입 완료'}
+          {loading ? t('auth:signup.signingUp') : t('auth:signup.signupComplete')}
         </button>
 
         {/* 취소 버튼 */}
@@ -221,7 +223,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
           disabled={loading}
           className="w-full rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          취소
+          {t('common:cancel')}
         </button>
       </form>
     </div>

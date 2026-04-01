@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import SnapCard from '../snap/SnapCard';
 import SnapDetailModal from '../snap/SnapDetailModal';
@@ -9,6 +10,7 @@ interface DiscoverPageProps {
 }
 
 export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
+  const { t } = useTranslation(['product', 'common']);
   const [snaps, setSnaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [popularTags, setPopularTags] = useState<Array<{ tag: string; count: number }>>([]);
@@ -64,8 +66,8 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
     <div className="handy-page-content max-w-7xl">
       {/* 헤더 */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">탐색</h1>
-        <p className="mt-1 text-sm text-gray-500">트렌디한 네일 디자인을 발견하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('product:discover.title')}</h1>
+        <p className="mt-1 text-sm text-gray-500">{t('product:discover.subtitle')}</p>
       </div>
 
       {/* 정렬 + 태그 필터 */}
@@ -75,13 +77,13 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
             onClick={() => setSortBy('popular')}
             className={`px-4 py-2 text-sm rounded-full transition-colors ${sortBy === 'popular' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            인기순
+            {t('product:discover.popular')}
           </button>
           <button
             onClick={() => setSortBy('newest')}
             className={`px-4 py-2 text-sm rounded-full transition-colors ${sortBy === 'newest' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            최신순
+            {t('product:discover.newest')}
           </button>
         </div>
 
@@ -91,15 +93,15 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
               onClick={() => setActiveTag(null)}
               className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${!activeTag ? 'bg-[#E85A6B] text-white' : 'bg-[#FFF1F2] text-[#E85A6B] hover:bg-[#E85A6B]/10'}`}
             >
-              전체
+              {t('product:discover.all')}
             </button>
-            {popularTags.map(t => (
+            {popularTags.map(tag => (
               <button
-                key={t.tag}
-                onClick={() => setActiveTag(t.tag)}
-                className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${activeTag === t.tag ? 'bg-[#E85A6B] text-white' : 'bg-[#FFF1F2] text-[#E85A6B] hover:bg-[#E85A6B]/10'}`}
+                key={tag.tag}
+                onClick={() => setActiveTag(tag.tag)}
+                className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${activeTag === tag.tag ? 'bg-[#E85A6B] text-white' : 'bg-[#FFF1F2] text-[#E85A6B] hover:bg-[#E85A6B]/10'}`}
               >
-                #{t.tag}
+                #{tag.tag}
               </button>
             ))}
           </div>
@@ -132,7 +134,7 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
       {/* 빈 상태 */}
       {!loading && snaps.length === 0 && (
         <div className="text-center py-20">
-          <p className="text-gray-500">스냅이 아직 없습니다.</p>
+          <p className="text-gray-500">{t('product:discover.noSnaps')}</p>
         </div>
       )}
 
@@ -143,7 +145,7 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
             onClick={() => setPage(prev => prev + 1)}
             className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-sm font-medium"
           >
-            더보기
+            {t('product:discover.loadMore')}
           </button>
         </div>
       )}

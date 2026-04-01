@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import type { Product } from '@handy-platform/shared';
 import { ProductCard } from '../product/ProductCard';
@@ -11,13 +12,7 @@ interface NewProductsPageProps {
   likedProducts: string[];
 }
 
-// 정렬 옵션
-const sortOptions = [
-  { value: 'createdAt', label: '최신순' },
-  { value: 'price-asc', label: '가격 낮은순' },
-  { value: 'price-desc', label: '가격 높은순' },
-  { value: 'rating', label: '평점순' }
-];
+const sortOptionValues = ['createdAt', 'price-asc', 'price-desc', 'rating'] as const;
 
 export function NewProductsPage({
   onGo,
@@ -26,6 +21,17 @@ export function NewProductsPage({
   onLike,
   likedProducts
 }: NewProductsPageProps) {
+  const { t } = useTranslation(['product', 'common']);
+
+  const sortOptions = sortOptionValues.map(value => ({
+    value,
+    label: {
+      'createdAt': t('product:newProducts.sortLatest'),
+      'price-asc': t('product:newProducts.sortPriceAsc'),
+      'price-desc': t('product:newProducts.sortPriceDesc'),
+      'rating': t('product:newProducts.sortRating'),
+    }[value]
+  }));
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -92,11 +98,11 @@ export function NewProductsPage({
           setHasMore(newProducts.length === ITEMS_PER_PAGE);
         }
       } else {
-        setError('상품을 불러오는데 실패했습니다.');
+        setError(t('common:loadFailed'));
       }
     } catch (err: any) {
       console.error('Failed to fetch new products:', err);
-      setError(err.message || '상품을 불러오는 중 오류가 발생했습니다.');
+      setError(err.message || t('common:errorOccurred'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -140,8 +146,8 @@ export function NewProductsPage({
       {/* 페이지 헤더 (데스크톱) */}
       <div className="bg-white border-b hidden md:block">
         <div className="mx-auto max-w-7xl px-4 py-4">
-          <h1 className="text-xl font-semibold">신상품</h1>
-          <p className="text-sm text-gray-600 mt-1">방금 등록된 따끈따끈한 새 상품</p>
+          <h1 className="text-xl font-semibold">{t('product:newProducts.title')}</h1>
+          <p className="text-sm text-gray-600 mt-1">{t('product:newProducts.subtitle')}</p>
         </div>
       </div>
 
@@ -151,7 +157,7 @@ export function NewProductsPage({
           <div className="flex items-center justify-between">
             {/* 상품 수 */}
             <span className="text-sm text-gray-500 font-medium">
-              {totalItems > 0 ? `${totalItems.toLocaleString()}개 상품` : ''}
+              {totalItems > 0 ? t('product:newProducts.productCount', { count: totalItems.toLocaleString() }) : ''}
             </span>
 
             {/* 필터 칩 */}
@@ -197,7 +203,7 @@ export function NewProductsPage({
               onClick={() => fetchProducts(1, false)}
               className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
             >
-              다시 시도
+              {t('common:retry')}
             </button>
           </div>
         ) : products.length === 0 ? (
@@ -208,12 +214,12 @@ export function NewProductsPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
             </div>
-            <p className="text-gray-500 mb-2">아직 신상품이 없습니다.</p>
+            <p className="text-gray-500 mb-2">{t('product:newProducts.noProducts')}</p>
             <button
               onClick={() => onGo('/')}
               className="text-[#E85A6B] hover:underline text-sm"
             >
-              홈으로 가기
+              {t('product:newProducts.goHome')}
             </button>
           </div>
         ) : (
@@ -242,11 +248,11 @@ export function NewProductsPage({
               {loadingMore && (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 border-2 border-[#E85A6B]/20 border-t-[#E85A6B] rounded-full animate-spin" />
-                  <span className="text-sm text-gray-500">불러오는 중...</span>
+                  <span className="text-sm text-gray-500">{t('product:newProducts.loadingMore')}</span>
                 </div>
               )}
               {!hasMore && products.length > 0 && (
-                <p className="text-sm text-gray-400">모든 상품을 불러왔습니다.</p>
+                <p className="text-sm text-gray-400">{t('product:newProducts.allLoaded')}</p>
               )}
             </div>
           </>

@@ -14,6 +14,7 @@ import { getWebURL, logWebUrlInfo } from '../config/webUrl';
 import WebViewBridge from '../components/WebViewBridge';
 import { WebView } from 'react-native-webview';
 import { useNativeScreen } from '../contexts/NativeScreenProvider';
+import { i18n } from '@handy-platform/shared';
 
 
 const HomeScreen: React.FC = () => {
@@ -98,7 +99,7 @@ const HomeScreen: React.FC = () => {
           // 첫 번째 뒤로가기 - 토스트 메시지
           lastBackPressed.current = currentTime;
           if (Platform.OS === 'android') {
-            ToastAndroid.show('한 번 더 누르면 종료됩니다', ToastAndroid.SHORT);
+            ToastAndroid.show(i18n.t('common:pressBackAgainToExit') || 'Press back again to exit', ToastAndroid.SHORT);
           }
           return true;
         }
@@ -113,7 +114,10 @@ const HomeScreen: React.FC = () => {
 
     // URL 변경에 따른 특별한 처리가 필요한 경우
     if (navState.url.includes('/checkout/success')) {
-      Alert.alert('주문 완료', '주문이 성공적으로 완료되었습니다!');
+      Alert.alert(
+        i18n.t('order:complete.title') || 'Order Complete',
+        i18n.t('order:complete.message') || 'Your order has been placed successfully!'
+      );
     }
   };
 

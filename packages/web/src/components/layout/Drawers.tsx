@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Drawer } from '../ui';
 import { CartContent } from '../cart/CartContent';
 import type { User } from '@handy-platform/shared';
@@ -43,6 +44,7 @@ export function CategoryDrawer({
   onClose: () => void;
   onGo: (to: string) => void;
 }) {
+  const { t } = useTranslation(['nav']);
   const G = {
     style: [
       { label: "신상", icon: "✨" },
@@ -121,11 +123,11 @@ export function CategoryDrawer({
       <div className="flex h-full flex-col">
         <div className="border-b p-4">
           <div className="flex items-center justify-between">
-            <h2 id="drawer-title" className="text-lg font-semibold">카테고리</h2>
+            <h2 id="drawer-title" className="text-lg font-semibold">{t('nav:header.category')}</h2>
             <button 
               onClick={onClose} 
               className="text-black hover:text-gray-700 transition-colors duration-200 p-1"
-              aria-label="카테고리 닫기"
+              aria-label={t('nav:header.closeCategory')}
             >
               ✕
             </button>

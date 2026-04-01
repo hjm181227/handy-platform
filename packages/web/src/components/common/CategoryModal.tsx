@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import type { CategoryData, CategoryItem, Brand } from '@handy-platform/shared';
 import { FaTimes, FaSearch } from 'react-icons/fa';
@@ -23,6 +24,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
   const [selectedType, setSelectedType] = useState<string>('style'); // 왼쪽 사이드바에서 선택된 타입
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const { t } = useTranslation(['common', 'product']);
 
   // 브랜드 관련 상태
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -76,11 +78,11 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
       if (response.success && response.data) {
         setCategoryData(response.data);
       } else {
-        setError('카테고리를 불러올 수 없습니다.');
+        setError(t('common:loadFailed'));
       }
     } catch (err: any) {
       console.error('Failed to load categories:', err);
-      setError(err.message || '카테고리를 불러오는 중 오류가 발생했습니다.');
+      setError(err.message || t('common:loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -102,11 +104,11 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
       if (response.brands) {
         setBrands(response.brands);
       } else {
-        setBrandsError('브랜드를 불러올 수 없습니다.');
+        setBrandsError(t('common:loadFailed'));
       }
     } catch (err: any) {
       console.error('Failed to load brands:', err);
-      setBrandsError(err.message || '브랜드를 불러오는 중 오류가 발생했습니다.');
+      setBrandsError(err.message || t('common:loadFailed'));
     } finally {
       setBrandsLoading(false);
     }
@@ -183,7 +185,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setShowSearchSuggestions(true)}
-                    placeholder="검색어를 입력하세요"
+                    placeholder={t('common:searchPlaceholder')}
                     className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
                   />
                   <button
@@ -199,7 +201,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               {showSearchSuggestions && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border z-50 max-h-60 overflow-y-auto">
                   <div className="p-3">
-                    <span className="text-xs font-medium text-gray-500 mb-2 block">추천 검색어</span>
+                    <span className="text-xs font-medium text-gray-500 mb-2 block">{t('common:recommendedKeywords')}</span>
                     <div className="flex flex-wrap gap-2">
                       {['네일아트', '젤네일', '매니큐어', '핸드크림'].map((keyword, index) => (
                         <button
@@ -225,7 +227,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               <button
                 onClick={onCart}
                 className="relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
-                aria-label="장바구니"
+                aria-label={t('common:cart')}
               >
                 <FiShoppingBag className="w-5 h-5 text-gray-700" />
                 {cartCount > 0 && (
@@ -240,8 +242,8 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
           {/* 탭 */}
           <div className="flex border-b bg-white">
             {[
-              { key: 'category' as const, label: '카테고리' },
-              { key: 'brand' as const, label: '브랜드' }
+              { key: 'category' as const, label: t('common:category') },
+              { key: 'brand' as const, label: t('common:brand') }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -271,7 +273,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 onClick={loadCategories}
                 className="px-4 py-2 bg-[#E85A5A] text-white rounded-lg hover:bg-[#d64a4a] transition-colors"
               >
-                다시 시도
+                {t('common:retry')}
               </button>
             </div>
           ) : activeTab === 'category' ? (
@@ -281,16 +283,6 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 <div className="w-[80px] border-r border-gray-200 overflow-y-auto flex-shrink-0">
                   <div className="py-4 flex flex-col gap-1">
                     {categoryData.types.map((type) => {
-                      const typeLabels: { [key: string]: string } = {
-                        style: '스타일',
-                        color: '컬러',
-                        texture: '텍스쳐',
-                        shape: '모양',
-                        length: '길이',
-                        tpo: 'TPO',
-                        nation: '국가별'
-                      };
-
                       const categories = categoryData.categories[type];
                       if (!categories || categories.length === 0) return null;
 
@@ -304,7 +296,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                               : 'text-[#666666]'
                           }`}
                         >
-                          {typeLabels[type] || type}
+                          {t(`product:categoryType.${type}`, { defaultValue: type })}
                         </button>
                       );
                     })}
@@ -318,20 +310,10 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     if (!categories || categories.length === 0) {
                       return (
                         <div className="text-center py-12 text-gray-500">
-                          카테고리가 없습니다.
+                          {t('common:noCategories')}
                         </div>
                       );
                     }
-
-                    const typeLabels: { [key: string]: string } = {
-                      style: '스타일',
-                      color: '컬러',
-                      texture: '텍스쳐',
-                      shape: '모양',
-                      length: '길이',
-                      tpo: 'TPO',
-                      nation: '국가별'
-                    };
 
                     return (
                       <div className="flex flex-col gap-4">
@@ -339,7 +321,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                         <div className="flex items-center gap-1.5">
                           <span className="w-[3px] h-[18px] bg-[#E85A5A] rounded-sm"></span>
                           <h3 className="text-base font-bold text-[#333333]">
-                            {typeLabels[selectedType] || selectedType}
+                            {t(`product:categoryType.${selectedType}`, { defaultValue: selectedType })}
                           </h3>
                         </div>
 
@@ -375,7 +357,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               </>
             ) : (
               <div className="text-center py-12 text-gray-500 w-full">
-                카테고리 데이터가 없습니다.
+                {t('common:noCategoryData')}
               </div>
             )
           ) : (
@@ -390,7 +372,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       value={brandSearchQuery}
                       onChange={(e) => setBrandSearchQuery(e.target.value)}
                       onFocus={() => setBrandSearchFocused(true)}
-                      placeholder="브랜드 검색"
+                      placeholder={t('common:brandSearch')}
                       className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm"
                     />
                     <button
@@ -406,7 +388,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       onClick={handleBrandSearchCancel}
                       className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium whitespace-nowrap"
                     >
-                      취소
+                      {t('common:cancel')}
                     </button>
                   )}
                 </div>
@@ -423,12 +405,12 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     onClick={() => loadBrands()}
                     className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
                   >
-                    다시 시도
+                    {t('common:retry')}
                   </button>
                 </div>
               ) : brands.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 w-full">
-                  {brandSearchQuery ? `"${brandSearchQuery}" 검색 결과가 없습니다.` : '등록된 브랜드가 없습니다.'}
+                  {brandSearchQuery ? t('common:noSearchResults', { query: brandSearchQuery }) : t('common:noBrands')}
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
@@ -486,11 +468,11 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-gray-900">카테고리</h2>
+          <h2 className="text-xl font-bold text-gray-900">{t('common:category')}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="닫기"
+            aria-label={t('common:close')}
           >
             <FaTimes className="w-5 h-5 text-gray-600" />
           </button>
@@ -529,7 +511,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 onClick={loadCategories}
                 className="px-4 py-2 bg-[#E85A5A] text-white rounded-lg hover:bg-[#d64a4a] transition-colors"
               >
-                다시 시도
+                {t('common:retry')}
               </button>
             </div>
           ) : activeTab === 'category' ? (
@@ -539,16 +521,6 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 <div className="w-[80px] border-r border-gray-200 overflow-y-auto flex-shrink-0">
                   <div className="py-4 flex flex-col gap-1">
                     {categoryData.types.map((type) => {
-                      const typeLabels: { [key: string]: string } = {
-                        style: '스타일',
-                        color: '컬러',
-                        texture: '텍스쳐',
-                        shape: '모양',
-                        length: '길이',
-                        tpo: 'TPO',
-                        nation: '국가별'
-                      };
-
                       const categories = categoryData.categories[type];
                       if (!categories || categories.length === 0) return null;
 
@@ -562,7 +534,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                               : 'text-[#666666]'
                           }`}
                         >
-                          {typeLabels[type] || type}
+                          {t(`product:categoryType.${type}`, { defaultValue: type })}
                         </button>
                       );
                     })}
@@ -576,20 +548,10 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     if (!categories || categories.length === 0) {
                       return (
                         <div className="text-center py-12 text-gray-500">
-                          카테고리가 없습니다.
+                          {t('common:noCategories')}
                         </div>
                       );
                     }
-
-                    const typeLabels: { [key: string]: string } = {
-                      style: '스타일',
-                      color: '컬러',
-                      texture: '텍스쳐',
-                      shape: '모양',
-                      length: '길이',
-                      tpo: 'TPO',
-                      nation: '국가별'
-                    };
 
                     return (
                       <div className="flex flex-col gap-4">
@@ -597,7 +559,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                         <div className="flex items-center gap-1.5">
                           <span className="w-[3px] h-[18px] bg-[#E85A5A] rounded-sm"></span>
                           <h3 className="text-base font-bold text-[#333333]">
-                            {typeLabels[selectedType] || selectedType}
+                            {t(`product:categoryType.${selectedType}`, { defaultValue: selectedType })}
                           </h3>
                         </div>
 
@@ -633,7 +595,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               </>
             ) : (
               <div className="text-center py-12 text-gray-500 w-full">
-                카테고리 데이터가 없습니다.
+                {t('common:noCategoryData')}
               </div>
             )
           ) : (
@@ -648,7 +610,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       value={brandSearchQuery}
                       onChange={(e) => setBrandSearchQuery(e.target.value)}
                       onFocus={() => setBrandSearchFocused(true)}
-                      placeholder="브랜드 검색"
+                      placeholder={t('common:brandSearch')}
                       className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm"
                     />
                     <button
@@ -664,7 +626,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       onClick={handleBrandSearchCancel}
                       className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium whitespace-nowrap"
                     >
-                      취소
+                      {t('common:cancel')}
                     </button>
                   )}
                 </div>
@@ -681,12 +643,12 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     onClick={() => loadBrands()}
                     className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
                   >
-                    다시 시도
+                    {t('common:retry')}
                   </button>
                 </div>
               ) : brands.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 w-full">
-                  {brandSearchQuery ? `"${brandSearchQuery}" 검색 결과가 없습니다.` : '등록된 브랜드가 없습니다.'}
+                  {brandSearchQuery ? t('common:noSearchResults', { query: brandSearchQuery }) : t('common:noBrands')}
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2 md:gap-3">

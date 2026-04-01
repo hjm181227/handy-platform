@@ -325,5 +325,39 @@
     "prepareOrderNumber": "注文番号をご準備いただくと、より早くサポートいたします。",
     "emailInquiry": "メールで問い合わせ",
     "liveConsult": "1:1相談"
+  },
+  "designTool": {
+    "title": "デザインツール",
+    "subtitle": "オリジナルのネイルデザインを作りましょう。AIベースのデザインツールで簡単にカスタムネイルアートを制作できます。",
+    "currentPlan": "現在 {{plan}} プラン利用中",
+    "expiresAt": "有効期限: {{date}}",
+    "subscriptionManagement": "サブスクリプション管理",
+    "mainFeatures": "主な機能",
+    "recommended": "おすすめ",
+    "free": "無料",
+    "perMonth": "/月",
+    "currentPlanButton": "現在のプラン",
+    "freeStart": "無料で始める",
+    "subscribe": "サブスクリプション登録",
+    "paymentError": "決済リクエストに失敗しました。",
+    "feature1Title": "直感的デザインエディター",
+    "feature1Desc": "ドラッグ＆ドロップで簡単にネイルデザインを制作できます。",
+    "feature2Title": "AIデザインレコメンド",
+    "feature2Desc": "トレンド分析ベースのAIが最適なデザインをおすすめします。",
+    "feature3Title": "カスタムオーダー連携",
+    "feature3Desc": "完成したデザインからそのままカスタムオーダーができます。",
+    "payment": {
+      "processing": "決済処理中...",
+      "pleaseWait": "しばらくお待ちください。",
+      "subscriptionComplete": "定期購読登録完了！",
+      "subscriptionActivated": "プロプラン定期購読が有効になりました。",
+      "goToSubscription": "サブスクリプション管理へ",
+      "paymentFailed": "決済失敗",
+      "retry": "もう一度試す",
+      "goHome": "ホームへ戻る",
+      "authError": "決済認証情報が正しくありません。",
+      "registrationFailed": "定期購読の登録に失敗しました。カスタマーサポートにお問い合わせください。",
+      "defaultError": "決済に失敗しました。"
+    }
   }
 }

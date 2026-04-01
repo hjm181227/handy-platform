@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAlert } from '../common';
 import { cartService, productService } from '../../services/apiService';
 import { Product } from '@handy-platform/shared';
@@ -10,6 +11,7 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailProps) {
+  const { t } = useTranslation(['common', 'product']);
   const { alert, error: showError } = useAlert();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,11 +46,11 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
         
         console.log('Product loaded:', response.data);
       } else {
-        throw new Error('상품을 찾을 수 없습니다.');
+        throw new Error(t('common:productNotFound'));
       }
     } catch (err) {
       console.error('상품 로드 실패:', err);
-      await showError(err, { title: '상품 로드 실패' });
+      await showError(err, { title: t('common:loadFailed') });
       onGo('/'); // 메인 페이지로 이동
     } finally {
       setLoading(false);
@@ -83,19 +85,19 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
       console.log('Add to cart response:', response);
 
       if (response.success) {
-        await alert('장바구니에 추가되었습니다!', {
+        await alert(t('common:addedToCart'), {
           variant: 'success',
-          title: '장바구니 추가 완료'
+          title: t('common:addedToCartTitle')
         });
         
         onAddToCart?.();
       } else {
-        throw new Error(response.error?.message || '장바구니 추가에 실패했습니다.');
+        throw new Error(response.error?.message || t('common:addToCartFailed'));
       }
     } catch (err: any) {
       console.error('장바구니 추가 실패:', err);
       
-      let errorMessage = '장바구니 추가에 실패했습니다.';
+      let errorMessage = t('common:addToCartFailed');
       
       // API 에러 메시지 처리
       if (err.error?.code === 'MONTHLY_CAPACITY_EXCEEDED') {
@@ -104,9 +106,9 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
         errorMessage = err.message;
       }
       
-      await showError(new Error(errorMessage), { 
-        title: '장바구니 추가 실패',
-        showRetry: true 
+      await showError(new Error(errorMessage), {
+        title: t('common:addToCartFailedTitle'),
+        showRetry: true
       });
     } finally {
       setAddingToCart(false);
@@ -137,7 +139,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto"></div>
-          <p className="mt-4 text-gray-600">상품 정보를 불러오는 중...</p>
+          <p className="mt-4 text-gray-600">{t('common:loadingProductInfo')}</p>
         </div>
       </div>
     );
@@ -147,12 +149,12 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">상품을 찾을 수 없습니다</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('common:productNotFound')}</h1>
           <button
             onClick={() => onGo('/')}
             className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
           >
-            홈으로 돌아가기
+            {t('common:goHome')}
           </button>
         </div>
       </div>
@@ -172,7 +174,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-gray-900 truncate">상품 상세</h1>
+          <h1 className="text-lg font-semibold text-gray-900 truncate">{t('common:productDetail')}</h1>
         </div>
       </header>
 
@@ -269,7 +271,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                     </svg>
                   ))}
                   <span className="ml-2 text-sm text-gray-600">
-                    {product.rating.average.toFixed(1)} ({product.rating.count}개 리뷰)
+                    {product.rating.average.toFixed(1)} ({t('common:reviewCount', { count: product.rating.count })})
                   </span>
                 </div>
                 {product.brand && (
@@ -290,7 +292,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                       ₩{product.price.toLocaleString()}
                     </span>
                     <span className="px-2 py-1 bg-red-100 text-red-600 text-sm font-medium rounded">
-                      {product.discountRate}% 할인
+                      {t('product:detail.discountRate', { rate: product.discountRate })}
                     </span>
                   </>
                 )}
@@ -303,13 +305,13 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
             {/* 배송 정보 */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">제작 소요일</span>
-                <span className="text-sm font-medium">{product.processingDays}일</span>
+                <span className="text-sm text-gray-600">{t('common:processingDays')}</span>
+                <span className="text-sm font-medium">{product.processingDays}{t('common:daysUnit')}</span>
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-sm text-gray-600">재고 수량</span>
+                <span className="text-sm text-gray-600">{t('common:stockQuantity')}</span>
                 <span className="text-sm font-medium">
-                  {product.stockQuantity > 0 ? `${product.stockQuantity}개` : '품절'}
+                  {product.stockQuantity > 0 ? t('common:stockCount', { count: product.stockQuantity }) : t('common:outOfStock')}
                 </span>
               </div>
             </div>
@@ -319,7 +321,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    모양
+                    {t('product:categoryType.shape')}
                   </label>
                   <div className="p-2 bg-gray-50 rounded text-sm">
                     {product.nailShape}
@@ -327,7 +329,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    길이
+                    {t('product:categoryType.length')}
                   </label>
                   <div className="p-2 bg-gray-50 rounded text-sm">
                     {product.nailLength}
@@ -337,19 +339,19 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
               
               {/* 네일 옵션 */}
               <div className="p-4 bg-[#FFF1F2] rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">커스터마이징 옵션</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t('common:customizeOptions')}</h4>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="flex justify-between">
-                    <span>길이 커스터마이징:</span>
-                    <span>{product.nailOptions.lengthCustomizable ? '가능' : '불가능'}</span>
+                    <span>{t('common:lengthCustom')}:</span>
+                    <span>{product.nailOptions.lengthCustomizable ? t('common:available') : t('common:unavailable')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>모양 커스터마이징:</span>
-                    <span>{product.nailOptions.shapeCustomizable ? '가능' : '불가능'}</span>
+                    <span>{t('common:shapeCustom')}:</span>
+                    <span>{product.nailOptions.shapeCustomizable ? t('common:available') : t('common:unavailable')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>디자인 커스터마이징:</span>
-                    <span>{product.nailOptions.designCustomizable ? '가능' : '불가능'}</span>
+                    <span>{t('common:designCustom')}:</span>
+                    <span>{product.nailOptions.designCustomizable ? t('common:available') : t('common:unavailable')}</span>
                   </div>
                 </div>
               </div>
@@ -358,7 +360,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
             {/* 수량 선택 */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                수량
+                {t('common:quantity')}
               </label>
               <div className="flex items-center space-x-3">
                 <button
@@ -379,13 +381,13 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
-                <span className="text-sm text-gray-500">재고: {product.stockQuantity}개</span>
+                <span className="text-sm text-gray-500">{t('common:stock')}: {t('common:stockCount', { count: product.stockQuantity })}</span>
               </div>
             </div>
 
             {/* 상품 설명 */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">상품 설명</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('common:description')}</h3>
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                 {product.description}
               </p>
@@ -393,19 +395,19 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
 
             {/* 상품 통계 */}
             <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-3">상품 정보</h4>
+              <h4 className="font-medium text-gray-900 mb-3">{t('common:productInfo')}</h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-lg font-semibold text-gray-900">{product.stats.viewsCount}</div>
-                  <div className="text-sm text-gray-600">조회수</div>
+                  <div className="text-sm text-gray-600">{t('common:views')}</div>
                 </div>
                 <div>
                   <div className="text-lg font-semibold text-gray-900">{product.stats.ordersCount}</div>
-                  <div className="text-sm text-gray-600">주문수</div>
+                  <div className="text-sm text-gray-600">{t('common:orderCount')}</div>
                 </div>
                 <div>
                   <div className="text-lg font-semibold text-gray-900">{product.likesCount}</div>
-                  <div className="text-sm text-gray-600">좋아요</div>
+                  <div className="text-sm text-gray-600">{t('common:likes')}</div>
                 </div>
               </div>
             </div>
@@ -417,7 +419,7 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                 disabled={!product.isInStock || product.stockQuantity === 0 || product.status !== 'active'}
                 className="w-full bg-[#E85A6B] text-white py-4 rounded-lg font-semibold text-lg hover:bg-[#D14A5B] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                바로 구매
+                {t('common:buyNow')}
               </button>
               
               <button
@@ -428,10 +430,10 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
                 {addingToCart ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#E85A6B] mr-2"></div>
-                    장바구니 추가 중...
+                    {t('common:addingToCart')}
                   </div>
                 ) : (
-                  '장바구니 담기'
+                  t('common:addToCart')
                 )}
               </button>
             </div>
@@ -439,13 +441,13 @@ export function ProductDetail({ productId, onAddToCart, onGo }: ProductDetailPro
             {/* 재고 부족 안내 */}
             {(product.stockQuantity === 0 || product.status === 'outOfStock') && (
               <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-center font-medium">재고가 부족합니다</p>
+                <p className="text-red-600 text-center font-medium">{t('common:outOfStockNotice')}</p>
               </div>
             )}
             
             {product.status === 'inactive' && (
               <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <p className="text-gray-600 text-center font-medium">현재 판매 중단된 상품입니다</p>
+                <p className="text-gray-600 text-center font-medium">{t('common:inactiveProduct')}</p>
               </div>
             )}
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import { ShippingAddressForm } from '../common/ShippingAddressForm';
 import type {
@@ -11,6 +12,7 @@ interface ShippingAddressPageProps {
 }
 
 export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
+  const { t } = useTranslation(['common', 'order']);
   const [addresses, setAddresses] = useState<KoreanAddressResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
       }
     } catch (err: any) {
       console.error('배송지 로드 실패:', err);
-      setError(err.message || '배송지를 불러오는데 실패했습니다.');
+      setError(err.message || t('common:loadFailed'));
       setAddresses([]);
     } finally {
       setLoading(false);
@@ -59,7 +61,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
 
     } catch (err: any) {
       console.error('배송지 목록 새로고침 실패:', err);
-      setError(err.message || '배송지 목록 새로고침에 실패했습니다.');
+      setError(err.message || t('common:loadFailed'));
     } finally {
       setSaving(false);
     }
@@ -67,14 +69,14 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
 
   // 배송지 삭제
   const handleDelete = async (addressIndex: number) => {
-    if (!confirm('이 배송지를 삭제하시겠습니까?')) return;
+    if (!confirm(t('order:shipping.deleteConfirm'))) return;
 
     try {
       await webApiService.address.deleteAddress(addressIndex.toString());
       await loadAddresses();
     } catch (err: any) {
       console.error('배송지 삭제 실패:', err);
-      setError('배송지 삭제에 실패했습니다.');
+      setError(t('common:loadFailed'));
     }
   };
 
@@ -85,7 +87,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
       await loadAddresses();
     } catch (err: any) {
       console.error('기본 배송지 설정 실패:', err);
-      setError('기본 배송지 설정에 실패했습니다.');
+      setError(t('common:loadFailed'));
     }
   };
 
@@ -115,7 +117,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-              <p className="text-gray-600">배송지를 불러오는 중...</p>
+              <p className="text-gray-600">{t('order:shipping.loading')}</p>
             </div>
           </div>
         </div>
@@ -137,13 +139,13 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 className="text-lg font-bold">배송지 관리</h1>
+            <h1 className="text-lg font-bold">{t('order:shipping.manage')}</h1>
           </div>
           <button
             onClick={startAdd}
             className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg hover:bg-[#D14A5B] text-sm font-medium"
           >
-            + 새 배송지 추가
+            {t('order:shipping.addNewShort')}
           </button>
         </div>
       </div>
@@ -161,13 +163,13 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
         {addresses.length === 0 ? (
           <div className="bg-white rounded-lg border p-8 text-center">
             <div className="text-gray-400 text-4xl mb-4">📍</div>
-            <h3 className="text-lg font-medium text-gray-600 mb-2">등록된 배송지가 없습니다</h3>
-            <p className="text-gray-500 mb-4">자주 사용하는 배송지를 등록해두면 주문이 더욱 편리해집니다.</p>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">{t('order:shipping.noAddresses')}</h3>
+            <p className="text-gray-500 mb-4">{t('order:shipping.noAddressesDesc')}</p>
             <button
               onClick={startAdd}
               className="bg-[#E85A6B] text-white px-6 py-2 rounded-lg hover:bg-[#D14A5B]"
             >
-              첫 번째 배송지 추가
+              {t('order:shipping.addFirst')}
             </button>
           </div>
         ) : (
@@ -178,11 +180,11 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-lg text-gray-900">
-                        {address.addressName || '배송지'}
+                        {address.addressName || t('order:checkout.addressLabel')}
                       </h3>
                       {address.isDefault && (
                         <span className="bg-[#FFF1F2] text-[#D14A5B] px-2 py-1 rounded-full text-xs font-medium">
-                          기본배송지
+                          {t('order:shipping.defaultAddress')}
                         </span>
                       )}
                     </div>
@@ -194,31 +196,31 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                         onClick={() => handleSetDefault(address.index)}
                         className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
                       >
-                        기본설정
+                        {t('order:shipping.setDefault')}
                       </button>
                     )}
                     <button
                       onClick={() => startEdit(address)}
                       className="text-gray-500 hover:text-gray-700 text-sm font-medium"
                     >
-                      수정
+                      {t('order:shipping.edit')}
                     </button>
                     <button
                       onClick={() => handleDelete(address.index)}
                       className="text-red-500 hover:text-red-700 text-sm font-medium"
                     >
-                      삭제
+                      {t('order:shipping.delete')}
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2 text-gray-700">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500 min-w-16">연락처:</span>
+                    <span className="text-gray-500 min-w-16">{t('order:shipping.phone')}:</span>
                     <span>{address.recipientPhone}</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-gray-500 min-w-16">주소:</span>
+                    <span className="text-gray-500 min-w-16">{t('order:shipping.address')}:</span>
                     <div>
                       <div>({address.postcode}) {address.roadAddress}</div>
                       {address.detailAddress && <div>{address.detailAddress}</div>}
@@ -227,7 +229,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                   </div>
                   {address.deliveryNote && (
                     <div className="flex items-start gap-2">
-                      <span className="text-gray-500 min-w-16">배송메모:</span>
+                      <span className="text-gray-500 min-w-16">{t('order:shipping.deliveryMemo')}:</span>
                       <span className="text-gray-600">{address.deliveryNote}</span>
                     </div>
                   )}
@@ -259,7 +261,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                 onCancel={handleCancelForm}
                 showCancelButton={true}
                 processing={saving}
-                title={editingAddress ? '배송지 수정' : '새 배송지 추가'}
+                title={editingAddress ? t('order:shipping.editTitle') : t('order:shipping.addTitle')}
                 showAddressName={true}
               />
             </div>
