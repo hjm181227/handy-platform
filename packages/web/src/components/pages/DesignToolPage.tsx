@@ -131,8 +131,8 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
               key={plan.planId}
               plan={plan}
               isCurrent={isActive && currentPlan === plan.planId}
-              onSelect={() => onGo('/design-tool/subscription')}
-              disabled={isActive && currentPlan === plan.planId}
+              onSelect={() => handleSubscribe(plan.planId)}
+              disabled={subscribing || (isActive && currentPlan === plan.planId)}
               isPopular={plan.planId === 'pro'}
             />
           ))}
@@ -142,17 +142,19 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
       {/* 기능 상세 섹션 */}
       <div className="border-t border-gray-100 pt-12">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">{t('designTool.mainFeatures')}</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           <FeatureCard
             icon={<Palette className="w-6 h-6" />}
             title={t('designTool.feature1Title')}
             description={t('designTool.feature1Desc')}
           />
+          {/* AI 디자인 추천 기능 — 미개발 상태로 숨김 처리
           <FeatureCard
             icon={<Sparkles className="w-6 h-6" />}
             title={t('designTool.feature2Title')}
             description={t('designTool.feature2Desc')}
           />
+          */}
           <FeatureCard
             icon={<Crown className="w-6 h-6" />}
             title={t('designTool.feature3Title')}
