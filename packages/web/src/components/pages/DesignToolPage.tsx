@@ -198,10 +198,21 @@ function PlanCard({
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
         <div className="mt-2">
-          <span className="text-3xl font-bold text-gray-900">
-            {plan.price === 0 ? t('designTool.free') : `₩${plan.price.toLocaleString()}`}
-          </span>
-          {plan.price > 0 && <span className="text-gray-500 text-sm">{t('designTool.perMonth')}</span>}
+          {plan.price === 0 ? (
+            <span className="text-3xl font-bold text-gray-900">{t('designTool.free')}</span>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-lg text-gray-400 line-through">₩{(35000).toLocaleString()}</span>
+                <span className="text-xs text-gray-400">{t('designTool.perMonth')}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-pink-600">₩{plan.price.toLocaleString()}</span>
+                <span className="text-gray-500 text-sm">{t('designTool.perMonth')}</span>
+                <span className="ml-1 inline-block bg-pink-100 text-pink-600 text-xs font-semibold px-2 py-0.5 rounded-full">{t('designTool.webDiscount')}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
