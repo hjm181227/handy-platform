@@ -15,7 +15,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { SectionRow, TitleBar } from './components/product/ProductGrid';
 import { ProductCard } from './components/product/ProductCard';
 import { Detail } from './components/product/Detail';
-import { CustomOrderFlow } from './components/product/custom-order';
+import { CustomOrderFlow, BrandCustomOrderFlow } from './components/product/custom-order';
 import { EventBanners } from './components/layout/EventBanner';
 
 // Page Components
@@ -316,6 +316,19 @@ export function Router() {
     );
   }
   // ==================== Brand Routes ====================
+  else if (pathname.match(/^\/brand\/(.+)\/custom-order$/)) {
+    const mBrandOrder = pathname.match(/^\/brand\/(.+)\/custom-order$/)!;
+    const brandSellerUuid = decodeURIComponent(mBrandOrder[1]);
+    const brandNameParam = q.get('brandName') || '';
+    screen = (
+      <BrandCustomOrderFlow
+        sellerUuid={brandSellerUuid}
+        brandName={decodeURIComponent(brandNameParam)}
+        onBack={() => nav(`/brand/${brandSellerUuid}`)}
+        onGo={nav}
+      />
+    );
+  }
   else if (pathname.startsWith('/brand/') && pathname.split('/').length === 3) {
     const sellerUuid = pathname.split('/')[2];
     screen = (

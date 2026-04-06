@@ -238,11 +238,13 @@ export function SizeStep({
     >
       {/* 저장된 사이즈 카드 — 항상 표시 */}
       <div className="mb-5">
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => setMode('saved')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setMode('saved'); }}
           className={`
-            w-full text-left rounded-2xl p-5 transition-all
+            w-full text-left rounded-2xl p-5 transition-all cursor-pointer
             ${mode === 'saved'
               ? 'border-2 border-[#131211] bg-white'
               : 'border border-[#E5E0DC] bg-white'
@@ -269,16 +271,18 @@ export function SizeStep({
               {renderSavedContent()}
             </div>
           )}
-        </button>
+        </div>
       </div>
 
       {/* 직접 입력 카드 — 항상 표시 */}
       <div className="mb-5">
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => setMode('manual')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setMode('manual'); }}
           className={`
-            w-full text-left rounded-2xl p-5 transition-all
+            w-full text-left rounded-2xl p-5 transition-all cursor-pointer
             ${mode === 'manual'
               ? 'border-2 border-[#131211] bg-white'
               : 'border border-[#E5E0DC] bg-white'
@@ -298,7 +302,7 @@ export function SizeStep({
             </div>
             <CheckCircle checked={mode === 'manual'} />
           </div>
-        </button>
+        </div>
       </div>
 
       {/* 직접 입력 필드 — manual 모드일 때만 */}

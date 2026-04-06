@@ -4,6 +4,7 @@ import { ProductCard } from '../product/ProductCard';
 import { productService, brandService, imageService } from '../../services/apiService';
 import type { Product, ProductsResponse, BrandDetail, ProductType } from '@handy-platform/shared';
 import { useAuth } from '../../hooks/useAuth';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 import { SortDropdown, PRODUCT_SORT_OPTIONS, parseSortValue } from '../common/SortDropdown';
 
 // 브랜드별 이미지 매핑 및 테마 설정
@@ -99,6 +100,7 @@ export function BrandDetailPage({
 
   // 인증 상태 (useAuth hook 사용)
   const { currentUser, authLoading } = useAuth();
+  const { openLogin } = useAuthModal();
 
   // 이미지 업로드 상태
   const [uploadingProfile, setUploadingProfile] = useState(false);
@@ -747,6 +749,27 @@ export function BrandDetailPage({
           </div>
         </div>
       </div>
+
+      {/* 커스텀 주문하기 버튼 */}
+      {!isOwner && (
+        <div className="mb-6">
+          <button
+            onClick={() => {
+              if (!currentUser) {
+                openLogin();
+                return;
+              }
+              onGo(`/brand/${sellerUuid}/custom-order?brandName=${encodeURIComponent(brandStats.name)}`);
+            }}
+            className="w-full py-4 bg-gradient-to-r from-[#E85A6B] to-pink-500 text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-[#d14a5b] hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            커스텀 주문하기
+          </button>
+        </div>
+      )}
 
       {/* 상품 유형 탭 */}
       <div className="flex gap-2 mb-6">

@@ -30,8 +30,8 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
     };
   }, []);
   const items: {label:string; to:string}[] = [
-    {label: t('nav:gnb.brands'), to:"/brands"},
-    {label: t('nav:gnb.feed').toUpperCase(), to:"/snap"},
+    {label: "BRANDS", to:"/brands"},
+    {label: "SNAP", to:"/snap"},
     {label: "NEWS", to:"/news"},
   ];
   return (
@@ -39,7 +39,7 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
       <div className="mx-auto max-w-7xl h-9 flex items-center justify-between px-4">
         <button onClick={onOpenCategories} className="flex items-center gap-2 text-white font-medium tracking-wide">
           <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/></svg>
-          <span>{t('common:category')}</span>
+          <span>CATEGORY</span>
         </button>
 
         <nav className="hidden lg:flex items-center gap-4">
@@ -55,15 +55,9 @@ export function TopDarkNav({ onOpenCategories, onGo }:{
         </nav>
 
         <div className="flex items-center gap-3">
-          <button onClick={() => onGo("/help")} className="text-white font-medium tracking-wide">{t('mypage:menu.help')}</button>
-          <button onClick={() => onGo("/my")} className="text-white font-medium tracking-wide">{t('nav:bottom.my')}</button>
-          <button onClick={() => onGo("/likes")} className="text-white font-medium tracking-wide">{t('nav:bottom.likes')}</button>
-          {!isLoggedIn && (
-            <>
-              <button onClick={() => onGo("/login")} className="text-white font-medium tracking-wide">{t('common:login')}</button>
-              <button onClick={() => onGo("/signup")} className="text-white font-medium tracking-wide">{t('common:signup')}</button>
-            </>
-          )}
+          <button onClick={() => onGo("/help")} className="text-white font-medium tracking-wide">HELP</button>
+          <button onClick={() => onGo("/my")} className="text-white font-medium tracking-wide">MY</button>
+          <button onClick={() => onGo("/likes")} className="text-white font-medium tracking-wide">LIKE</button>
         </div>
       </div>
     </div>

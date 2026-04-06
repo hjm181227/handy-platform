@@ -14,7 +14,8 @@ const FINGER_NAMES: Record<keyof FingerSizes, string> = {
 
 interface ConfirmStepProps {
   data: CustomOrderFormData;
-  product: Product;
+  product?: Product | null;
+  brandName?: string;
   onSubmit: () => void;
   onBack: () => void;
   onEdit: (step: number) => void;
@@ -27,6 +28,7 @@ interface ConfirmStepProps {
 export function ConfirmStep({
   data,
   product,
+  brandName,
   onSubmit,
   onBack,
   onEdit,
@@ -62,9 +64,9 @@ export function ConfirmStep({
         <div className="bg-gray-50 rounded-xl p-4">
           <p className="text-sm text-gray-500">브랜드</p>
           <p className="font-semibold text-gray-900 mt-1">
-            {product.seller?.companyName || product.brand || '브랜드 정보 없음'}
+            {product?.seller?.companyName || product?.brand || brandName || '브랜드 정보 없음'}
           </p>
-          <p className="text-sm text-gray-600 mt-2">{product.name}</p>
+          {product && <p className="text-sm text-gray-600 mt-2">{product.name}</p>}
         </div>
 
         {/* 쉐입 & 길이 */}
