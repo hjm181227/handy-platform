@@ -29,7 +29,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
   const handleChangePlan = async (planId: DesignToolPlanId) => {
     if (planId === 'pro') {
       // pro 업그레이드는 결제가 필요하므로 결제 페이지로 이동
-      onGo('/design-tool');
+      onGo('/design-tool/subscription');
       return;
     }
     setActionLoading(true);
@@ -93,10 +93,18 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
             <InfoRow label="자동 갱신" value={access?.autoRenew ? '활성' : '비활성'} />
           )}
           {currentPlan && (
-            <InfoRow
-              label="월 요금"
-              value={currentPlan.price === 0 ? '무료' : `₩${currentPlan.price.toLocaleString()}`}
-            />
+            currentPlan.price === 0 ? (
+              <InfoRow label="월 요금" value="무료" />
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">월 요금</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-400 line-through">₩{(35000).toLocaleString()}</span>
+                  <span className="text-sm font-medium text-pink-600">₩{currentPlan.price.toLocaleString()}</span>
+                  <span className="text-xs bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full font-medium">웹 할인</span>
+                </div>
+              </div>
+            )
           )}
         </div>
 
@@ -141,7 +149,9 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                 disabled={actionLoading}
                 className="w-full py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors disabled:opacity-50"
               >
-                {actionLoading ? '처리 중...' : '프로 플랜으로 업그레이드 (₩29,900/월)'}
+                {actionLoading ? '처리 중...' : (
+                  <>프로 플랜으로 업그레이드 (<span className="line-through text-gray-300">₩35,000</span> ₩29,900/월)</>
+                )}
               </button>
             </div>
           )}
@@ -153,7 +163,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 text-center">
           <p className="text-gray-500 mb-4">구독이 취소되었습니다. 만료일까지 서비스를 이용할 수 있습니다.</p>
           <button
-            onClick={() => onGo('/design-tool')}
+            onClick={() => onGo('/design-tool/subscription')}
             className="px-6 py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors"
           >
             다시 구독하기
@@ -166,7 +176,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 text-center">
           <p className="text-gray-500 mb-4">현재 활성 구독이 없습니다.</p>
           <button
-            onClick={() => onGo('/design-tool')}
+            onClick={() => onGo('/design-tool/subscription')}
             className="px-6 py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors"
           >
             플랜 선택하기

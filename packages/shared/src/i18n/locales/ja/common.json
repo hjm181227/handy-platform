@@ -336,6 +336,8 @@
     "recommended": "おすすめ",
     "free": "無料",
     "perMonth": "/月",
+    "regularPrice": "定価",
+    "webDiscount": "Web限定割引価格",
     "currentPlanButton": "現在のプラン",
     "freeStart": "無料で始める",
     "subscribe": "サブスクリプション登録",

@@ -56,9 +56,11 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
       hasShownAlert.current = true;
       console.warn('[RequireAuth] User not authenticated, redirecting to:', fallbackPath);
 
-      // Alert 표시 후 로그인 페이지로 이동
+      // Alert 표시 후 로그인 페이지로 이동 (현재 경로를 returnUrl로 전달)
       alert('로그인이 필요합니다').then(() => {
-        nav(fallbackPath);
+        const currentPath = window.location.pathname + window.location.search;
+        const returnParam = currentPath !== '/' ? `?returnUrl=${encodeURIComponent(currentPath)}` : '';
+        nav(`${fallbackPath}${returnParam}`);
       });
     }
   }, [authLoading, currentUser, fallbackPath, nav, alert, retrying]);

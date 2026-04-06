@@ -14,12 +14,15 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 이미 로그인된 사용자는 홈으로 리다이렉트 & 카카오 SDK 초기화
+  // returnUrl 파라미터에서 로그인 후 이동할 경로 추출
+  const returnUrl = new URLSearchParams(window.location.search).get('returnUrl') || '/';
+
+  // 이미 로그인된 사용자는 리다이렉트 & 카카오 SDK 초기화
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       const isAuthenticated = await webApiService.isAuthenticated();
       if (isAuthenticated) {
-        onGo("/");
+        onGo(returnUrl);
       }
     };
 
@@ -53,7 +56,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       }
 
       window.dispatchEvent(new CustomEvent('authStateChanged'));
-      onGo("/");
+      onGo(returnUrl);
     } catch (error: any) {
       console.error('로그인 실패:', error);
       setError(t('error:INVALID_CREDENTIALS.message'));
@@ -126,7 +129,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
     window.dispatchEvent(new CustomEvent('authStateChanged', {
       detail: { isNewUser: response.isNewUser }
     }));
-    onGo("/");
+    onGo(returnUrl);
 
     // 신규 가입자인 경우 환영 메시지 표시 (선택적)
     if (response.isNewUser) {

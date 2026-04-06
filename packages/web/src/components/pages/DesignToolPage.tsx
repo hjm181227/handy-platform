@@ -131,8 +131,8 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
               key={plan.planId}
               plan={plan}
               isCurrent={isActive && currentPlan === plan.planId}
-              onSelect={() => onGo('/design-tool/subscription')}
-              disabled={isActive && currentPlan === plan.planId}
+              onSelect={() => handleSubscribe(plan.planId)}
+              disabled={subscribing || (isActive && currentPlan === plan.planId)}
               isPopular={plan.planId === 'pro'}
             />
           ))}
@@ -142,17 +142,19 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
       {/* 기능 상세 섹션 */}
       <div className="border-t border-gray-100 pt-12">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">{t('designTool.mainFeatures')}</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           <FeatureCard
             icon={<Palette className="w-6 h-6" />}
             title={t('designTool.feature1Title')}
             description={t('designTool.feature1Desc')}
           />
+          {/* AI 디자인 추천 기능 — 미개발 상태로 숨김 처리
           <FeatureCard
             icon={<Sparkles className="w-6 h-6" />}
             title={t('designTool.feature2Title')}
             description={t('designTool.feature2Desc')}
           />
+          */}
           <FeatureCard
             icon={<Crown className="w-6 h-6" />}
             title={t('designTool.feature3Title')}
@@ -198,10 +200,21 @@ function PlanCard({
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
         <div className="mt-2">
-          <span className="text-3xl font-bold text-gray-900">
-            {plan.price === 0 ? t('designTool.free') : `₩${plan.price.toLocaleString()}`}
-          </span>
-          {plan.price > 0 && <span className="text-gray-500 text-sm">{t('designTool.perMonth')}</span>}
+          {plan.price === 0 ? (
+            <span className="text-3xl font-bold text-gray-900">{t('designTool.free')}</span>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-lg text-gray-400 line-through">₩{(35000).toLocaleString()}</span>
+                <span className="text-xs text-gray-400">{t('designTool.perMonth')}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-pink-600">₩{plan.price.toLocaleString()}</span>
+                <span className="text-gray-500 text-sm">{t('designTool.perMonth')}</span>
+                <span className="ml-1 inline-block bg-pink-100 text-pink-600 text-xs font-semibold px-2 py-0.5 rounded-full">{t('designTool.webDiscount')}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

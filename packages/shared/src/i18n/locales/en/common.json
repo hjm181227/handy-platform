@@ -336,6 +336,8 @@
     "recommended": "Recommended",
     "free": "Free",
     "perMonth": "/mo",
+    "regularPrice": "Regular",
+    "webDiscount": "Web-only discount",
     "currentPlanButton": "Current Plan",
     "freeStart": "Start for Free",
     "subscribe": "Subscribe",

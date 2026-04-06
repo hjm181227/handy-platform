@@ -336,6 +336,8 @@
     "recommended": "추천",
     "free": "무료",
     "perMonth": "/월",
+    "regularPrice": "정가",
+    "webDiscount": "웹 전용 할인가",
     "currentPlanButton": "현재 플랜",
     "freeStart": "무료로 시작하기",
     "subscribe": "구독하기",
