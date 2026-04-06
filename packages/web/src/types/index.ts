@@ -9,7 +9,9 @@ export type {
   ApiResponse,
   PaginationInfo,
   CustomOrderRequest,
-  PrefillProductResponse
+  PrefillProductResponse,
+  BulkCreateProductRequest,
+  BulkCreateResult
 } from '@handy-platform/shared';
 
 // 웹 전용 타입들

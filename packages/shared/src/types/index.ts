@@ -1267,6 +1267,51 @@ export interface BulkOperationResult {
   }>;
 }
 
+// 대량 상품 등록 타입
+export interface BulkCreateProductRequest {
+  name: string;
+  description: string;
+  shortDescription?: string;
+  price: number;
+  salePrice?: number;
+  stockQuantity?: number;
+  processingDays: number;
+  productType?: 'original' | 'custom';
+  nailShape?: string;
+  nailLength?: string;
+  nailCategories?: {
+    style?: string[];
+    color?: string[];
+    texture?: string[];
+    tpo?: string[];
+    nation?: string;
+  };
+  nailOptions?: {
+    lengthCustomizable?: boolean;
+    shapeCustomizable?: boolean;
+    designCustomizable?: boolean;
+  };
+  mainImageUrl: string;
+  detailImages?: Array<{ url: string; description?: string; order: number }>;
+  tags?: string[];
+  isFeatured?: boolean;
+  isNewProduct?: boolean;
+  status?: string;
+}
+
+export interface BulkCreateResult {
+  totalSubmitted: number;
+  totalCreated: number;
+  totalFailed: number;
+  results: Array<{
+    rowIndex: number;
+    success: boolean;
+    productUuid?: string;
+    productName: string;
+    error?: string;
+  }>;
+}
+
 // 배송지 관리 타입
 // 주문 시 사용하는 배송지 (기존)
 export interface ShippingAddress {

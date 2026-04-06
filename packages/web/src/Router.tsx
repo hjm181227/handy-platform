@@ -135,6 +135,7 @@ import {
   ProductionStatus,
   CouponManagement
 } from './components/pages/SellerPages';
+import { BulkProductUpload } from './components/pages/seller/BulkProductUpload';
 
 // Admin Components
 import AdminLayout from './components/admin/AdminLayout';
@@ -832,6 +833,13 @@ export function Router() {
     screen = (
       <RequireAuth>
         <SellerProductForm onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/seller/products/bulk-upload') {
+    screen = (
+      <RequireAuth>
+        <BulkProductUpload onGo={nav} />
       </RequireAuth>
     );
   }

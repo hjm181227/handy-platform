@@ -437,6 +437,8 @@ export const API_ENDPOINTS = {
   BULK_PRODUCTS: {
     OPERATION: '/api/seller/products/bulk',
     STATUS: (operationId: string) => `/api/seller/products/bulk/${operationId}/status`,
+    BULK_CREATE: '/api/seller/products/bulk-create',
+    TEMPLATE: '/api/seller/products/bulk-create/template',
   },
 
   // 리뷰 관리 (판매자용)

@@ -29,7 +29,9 @@ import {
   PaginationInfo,
   SellerCoupon,
   CreateSellerCouponRequest,
-  SellerCouponUsageStats
+  SellerCouponUsageStats,
+  BulkCreateProductRequest,
+  BulkCreateResult
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -968,6 +970,30 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<void>>(API_ENDPOINTS.SELLER.COUPON_DETAIL(couponUuid), {
       method: 'DELETE',
     });
+  }
+
+  // ============================================
+  // 대량 상품 등록
+  // ============================================
+
+  // POST /seller/products/bulk-create - 대량 상품 등록
+  async bulkCreateProducts(products: BulkCreateProductRequest[]): Promise<ApiResponse<BulkCreateResult>> {
+    return this.request<ApiResponse<BulkCreateResult>>(API_ENDPOINTS.BULK_PRODUCTS.BULK_CREATE, {
+      method: 'POST',
+      body: JSON.stringify({ products }),
+    });
+  }
+
+  // GET /seller/products/bulk-create/template - 대량 등록 Excel 템플릿 다운로드
+  async getBulkCreateTemplate(): Promise<Blob> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseURL}${API_ENDPOINTS.BULK_PRODUCTS.TEMPLATE}`, {
+      headers,
+    });
+    if (!response.ok) {
+      throw new Error('템플릿 다운로드에 실패했습니다.');
+    }
+    return response.blob();
   }
 }
 
