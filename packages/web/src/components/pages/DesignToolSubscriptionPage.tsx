@@ -99,7 +99,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">월 요금</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400 line-through">₩{(35000).toLocaleString()}</span>
+                  <span className="text-sm text-gray-400 line-through">₩{(24900).toLocaleString()}</span>
                   <span className="text-sm font-medium text-pink-600">₩{currentPlan.price.toLocaleString()}</span>
                   <span className="text-xs bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full font-medium">웹 할인</span>
                 </div>
@@ -150,7 +150,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                 className="w-full py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors disabled:opacity-50"
               >
                 {actionLoading ? '처리 중...' : (
-                  <>프로 플랜으로 업그레이드 (<span className="line-through text-gray-300">₩35,000</span> ₩29,900/월)</>
+                  <>프로 플랜으로 업그레이드 (<span className="line-through text-gray-300">₩24,900</span> ₩21,900/월)</>
                 )}
               </button>
             </div>
