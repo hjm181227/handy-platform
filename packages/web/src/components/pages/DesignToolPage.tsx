@@ -205,7 +205,7 @@ function PlanCard({
           ) : (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-lg text-gray-400 line-through">₩{(35000).toLocaleString()}</span>
+                <span className="text-lg text-gray-400 line-through">₩{(24900).toLocaleString()}</span>
                 <span className="text-xs text-gray-400">{t('designTool.perMonth')}</span>
               </div>
               <div className="flex items-baseline gap-1">
