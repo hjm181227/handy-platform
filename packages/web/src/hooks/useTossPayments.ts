@@ -244,9 +244,6 @@ export async function requestTossBillingAuth(options: TossBillingAuthRequest): P
 
   await (payment as any).requestBillingAuth({
     method: 'CARD',
-    amount: { currency: 'KRW', value: amount },
-    orderId,
-    orderName,
     successUrl,
     failUrl,
   });
