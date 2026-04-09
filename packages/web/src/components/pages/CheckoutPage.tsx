@@ -73,7 +73,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       if (token) {
         // JWT에서 userId 추출 (간단한 디코딩)
         const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.userId || payload.sub || null;
+        return payload.id || payload.userId || payload.sub || null;
       }
     } catch (e) {
       console.warn('[CheckoutPage] Failed to extract customerKey from token');
