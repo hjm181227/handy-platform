@@ -67,13 +67,14 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
   const initializingRef = useRef(false);
 
   // SDK 초기화 (React 18 StrictMode 호환)
+  // 의존성에서 isReady 제거: isReady 전환 시 cleanup→재초기화 사이클이
+  // widgetsRef를 일시적으로 null로 만들어 setAmount/renderPaymentMethods 사이
+  // race condition 발생 (setAmount가 null 인스턴스에 무시됨 → renderPaymentMethods가
+  // 새 인스턴스에 amount 없이 호출)
   useEffect(() => {
     // 이미 초기화 완료된 경우 스킵
     if (widgetsRef.current) {
       console.log('[useTossPayments] Already initialized, skipping');
-      if (!isReady) {
-        setIsReady(true);
-      }
       return;
     }
 
@@ -91,6 +92,7 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
       return;
     }
 
+    let cancelled = false;
     initializingRef.current = true;
 
     const initializeWidgets = async () => {
@@ -102,8 +104,8 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
         console.log('[useTossPayments] SDK loaded successfully');
 
         // 이미 다른 Effect에서 초기화 완료한 경우 (StrictMode 대응)
-        if (widgetsRef.current) {
-          console.log('[useTossPayments] Widgets already created by another effect, skipping');
+        if (widgetsRef.current || cancelled) {
+          console.log('[useTossPayments] Widgets already created or effect cancelled, skipping');
           initializingRef.current = false;
           return;
         }
@@ -130,6 +132,12 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
         const widgetsInstance = tossPayments.widgets(widgetOptions) as unknown as TossWidgets;
         console.log('[useTossPayments] Widgets instance created');
 
+        if (cancelled) {
+          widgetsInstance.destroy?.().catch(() => {});
+          initializingRef.current = false;
+          return;
+        }
+
         // 상태 업데이트 (StrictMode에서도 항상 실행)
         widgetsRef.current = widgetsInstance;
         setWidgets(widgetsInstance);
@@ -138,7 +146,9 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
       } catch (err: unknown) {
         console.error('[useTossPayments] Initialization failed:', err);
         const errorMessage = err instanceof Error ? err.message : '결제 위젯 초기화에 실패했습니다.';
-        setError(errorMessage);
+        if (!cancelled) {
+          setError(errorMessage);
+        }
       } finally {
         initializingRef.current = false;
       }
@@ -148,6 +158,7 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
 
     // unmount 시 widgets 인스턴스 정리
     return () => {
+      cancelled = true;
       const w = widgetsRef.current;
       if (w) {
         console.log('[useTossPayments] Destroying widgets instance on unmount');
@@ -156,13 +167,12 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
       }
       initializingRef.current = false;
     };
-  }, [clientKey, customerKey, isReady]);
+  }, [clientKey, customerKey]);
 
   // 금액 설정
   const setAmount = useCallback(async (amount: number) => {
     if (!widgetsRef.current) {
-      console.warn('[useTossPayments] Widgets not initialized');
-      return;
+      throw new Error('결제 위젯이 초기화되지 않았습니다.');
     }
 
     try {

@@ -30,6 +30,7 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
   const agreementWidgetRef = useRef<AgreementWidget | null>(null);
 
   const {
+    widgets,
     isReady,
     error: initError,
     setAmount,
@@ -51,9 +52,17 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
     },
   }), [isReady, requestPayment]);
 
+  // 콜백을 ref에 저장하여 effect 의존성에서 제외 (매 렌더마다 새 함수 생성되어 effect 재실행 유발)
+  const onReadyRef = useRef(onReady);
+  const onErrorRef = useRef(onError);
+  const onPaymentMethodSelectRef = useRef(onPaymentMethodSelect);
+  onReadyRef.current = onReady;
+  onErrorRef.current = onError;
+  onPaymentMethodSelectRef.current = onPaymentMethodSelect;
+
   // SDK 준비 후 UI 렌더링
   useEffect(() => {
-    if (!isReady || !amount || isRendered || renderingRef.current) return;
+    if (!isReady || !widgets || !amount || isRendered || renderingRef.current) return;
 
     renderingRef.current = true;
 
@@ -85,10 +94,10 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
         agreementWidgetRef.current = agreementWidget;
 
         // 4. 결제수단 선택 이벤트 리스너
-        if (paymentMethodWidget && onPaymentMethodSelect) {
+        if (paymentMethodWidget && onPaymentMethodSelectRef.current) {
           paymentMethodWidget.on('paymentMethodSelect', (selectedPaymentMethod) => {
             console.log('[TossPaymentWidget] Payment method selected:', selectedPaymentMethod);
-            onPaymentMethodSelect({
+            onPaymentMethodSelectRef.current?.({
               code: selectedPaymentMethod.code,
               type: selectedPaymentMethod.type,
             });
@@ -96,13 +105,13 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
         }
 
         setIsRendered(true);
-        onReady?.();
+        onReadyRef.current?.();
         console.log('[TossPaymentWidget] Render completed');
       } catch (err: unknown) {
         console.error('[TossPaymentWidget] Render failed:', err);
         const errorMessage = err instanceof Error ? err.message : '결제 위젯 렌더링에 실패했습니다.';
         setRenderError(errorMessage);
-        onError?.(errorMessage);
+        onErrorRef.current?.(errorMessage);
       } finally {
         renderingRef.current = false;
       }
@@ -118,7 +127,7 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
       paymentMethodWidgetRef.current = null;
       agreementWidgetRef.current = null;
     };
-  }, [isReady, amount, isRendered, setAmount, renderPaymentMethods, renderAgreement, onReady, onError, onPaymentMethodSelect]);
+  }, [isReady, widgets, amount, isRendered, setAmount, renderPaymentMethods, renderAgreement]);
 
   // 금액 변경 시 업데이트
   useEffect(() => {
