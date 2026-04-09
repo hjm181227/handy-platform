@@ -61,6 +61,18 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
       try {
         console.log('[TossPaymentWidget] Starting render...');
 
+        // DOM 요소가 마운트될 때까지 대기
+        await new Promise<void>((resolve) => {
+          const check = () => {
+            if (document.getElementById('toss-payment-method')) {
+              resolve();
+            } else {
+              requestAnimationFrame(check);
+            }
+          };
+          check();
+        });
+
         // 1. 금액 설정 (렌더링 전 필수)
         await setAmount(amount);
 

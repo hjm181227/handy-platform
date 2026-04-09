@@ -45,7 +45,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
         if (session) {
           const baseUrl = window.location.origin;
           await requestTossBillingAuth({
-            clientKey: session.clientKey || import.meta.env.VITE_TOSS_CLIENT_KEY,
+            clientKey: session.clientKey || import.meta.env.VITE_TOSS_API_CLIENT_KEY,
             customerKey: session.customerKey,
             amount: session.amount,
             orderId: session.orderId,
