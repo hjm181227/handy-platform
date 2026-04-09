@@ -64,16 +64,25 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
   useEffect(() => {
     if (!isReady || !widgets || !amount || isRendered || renderingRef.current) return;
 
+    // 이전 렌더 시도에서 에러가 있었으면 초기화 후 재시도
+    if (renderError) {
+      setRenderError(null);
+    }
+
     renderingRef.current = true;
+    let cancelled = false;
 
     const renderWidgets = async () => {
       try {
         console.log('[TossPaymentWidget] Starting render...');
 
-        // DOM 요소가 마운트될 때까지 대기
-        await new Promise<void>((resolve) => {
+        // DOM 요소가 마운트될 때까지 대기 (타임아웃 포함)
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('DOM element timeout')), 5000);
           const check = () => {
+            if (cancelled) { clearTimeout(timeout); reject(new Error('cancelled')); return; }
             if (document.getElementById('toss-payment-method')) {
+              clearTimeout(timeout);
               resolve();
             } else {
               requestAnimationFrame(check);
@@ -82,16 +91,24 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
           check();
         });
 
+        if (cancelled) return;
+
         // 1. 금액 설정 (렌더링 전 필수)
         await setAmount(amount);
+
+        if (cancelled) return;
 
         // 2. 결제 UI 렌더링
         const paymentMethodWidget = await renderPaymentMethods('#toss-payment-method');
         paymentMethodWidgetRef.current = paymentMethodWidget;
 
+        if (cancelled) return;
+
         // 3. 약관 UI 렌더링
         const agreementWidget = await renderAgreement('#toss-agreement');
         agreementWidgetRef.current = agreementWidget;
+
+        if (cancelled) return;
 
         // 4. 결제수단 선택 이벤트 리스너
         if (paymentMethodWidget && onPaymentMethodSelectRef.current) {
@@ -108,6 +125,7 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
         onReadyRef.current?.();
         console.log('[TossPaymentWidget] Render completed');
       } catch (err: unknown) {
+        if (cancelled) return;
         console.error('[TossPaymentWidget] Render failed:', err);
         const errorMessage = err instanceof Error ? err.message : '결제 위젯 렌더링에 실패했습니다.';
         setRenderError(errorMessage);
@@ -121,13 +139,14 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
 
     // unmount 시 위젯 인스턴스 정리 — 재진입 시 "하나의 결제수단 위젯만" 에러 방지
     return () => {
+      cancelled = true;
       console.log('[TossPaymentWidget] Cleaning up widget instances...');
       paymentMethodWidgetRef.current?.destroy().catch(() => {});
       agreementWidgetRef.current?.destroy().catch(() => {});
       paymentMethodWidgetRef.current = null;
       agreementWidgetRef.current = null;
     };
-  }, [isReady, widgets, amount, isRendered, setAmount, renderPaymentMethods, renderAgreement]);
+  }, [isReady, widgets, amount, isRendered, renderError, setAmount, renderPaymentMethods, renderAgreement]);
 
   // 금액 변경 시 업데이트
   useEffect(() => {

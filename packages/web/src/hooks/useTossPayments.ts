@@ -169,22 +169,19 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
     };
   }, [clientKey, customerKey]);
 
-  // 금액 설정
+  // 금액 설정 — widgetsRef.current가 없으면 throw하여 호출자가 재시도할 수 있게 함
   const setAmount = useCallback(async (amount: number) => {
-    if (!widgetsRef.current) {
-      throw new Error('결제 위젯이 초기화되지 않았습니다.');
+    const w = widgetsRef.current;
+    if (!w) {
+      console.warn('[useTossPayments] setAmount skipped: widgets not initialized');
+      throw new Error('결제 위젯이 아직 초기화되지 않았습니다. 잠시 후 다시 시도해 주세요.');
     }
 
-    try {
-      console.log('[useTossPayments] Setting amount:', amount);
-      await widgetsRef.current.setAmount({
-        currency: 'KRW',
-        value: amount,
-      });
-    } catch (err: unknown) {
-      console.error('[useTossPayments] setAmount failed:', err);
-      throw err;
-    }
+    console.log('[useTossPayments] Setting amount:', amount);
+    await w.setAmount({
+      currency: 'KRW',
+      value: amount,
+    });
   }, []);
 
   // 결제 UI 렌더링
