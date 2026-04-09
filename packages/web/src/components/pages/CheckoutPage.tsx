@@ -352,21 +352,13 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         }
       } catch (error: any) {
         console.error('❌ [CheckoutPage] Auto-validation failed:', error);
-        // 400 에러 = 세션 만료/미발견 가능성 → 캐시 삭제 후 새 세션 생성
-        const status = error?.status || error?.statusCode;
-        const code = error?.code || error?.errorCode || error?.data?.code || '';
-        const isSessionGone = status === 400 || code === 'SESSION_NOT_FOUND' || code === 'SESSION_EXPIRED';
-        if (isSessionGone && sessionStorage.getItem('checkout_session')) {
-          console.log('🔄 [CheckoutPage] Server session lost, clearing cache and re-initializing...');
-          sessionStorage.removeItem('checkout_session');
-          hasLoadedRef.current = false;
-          loadCheckoutData();
-        }
+        // validate 실패는 조용히 처리 — 세션 재생성은 캐시 복원 시점에서 처리됨
       }
     };
 
     validateAddress();
-  }, [shippingAddress, cart?.sessionId]); // shippingAddress 또는 sessionId 변경 시 자동 실행
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shippingAddress]); // sessionId 변경은 의도적으로 제외 — loadCheckoutData 후 중복 실행 방지
 
   useEffect(() => {
     loadCheckoutData();
