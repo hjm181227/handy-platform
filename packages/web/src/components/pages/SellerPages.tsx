@@ -333,6 +333,9 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
   // 상품 목록 로드 (중복 호출 방지)
   useEffect(() => {
+    // effect 시작 시 이전 상태 리셋 (수정 후 복귀 시에도 항상 새로 로드)
+    isLoadingRef.current = false;
+
     const loadProducts = async () => {
       // 이미 로딩 중이면 중복 호출 방지
       if (isLoadingRef.current) {
