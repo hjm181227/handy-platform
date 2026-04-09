@@ -50,7 +50,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
             amount: session.amount,
             orderId: session.orderId,
             orderName: session.orderName,
-            successUrl: `${baseUrl}/design-tool/payment/success`,
+            successUrl: `${baseUrl}/design-tool/payment/success?orderId=${session.orderId}`,
             failUrl: `${baseUrl}/design-tool/payment/fail`,
           });
         }

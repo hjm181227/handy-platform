@@ -239,9 +239,45 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
     },
     {
       id: '8',
-      category: 'return', 
+      category: 'return',
       question: '환불은 언제 완료되나요?',
       answer: '반품 상품 확인 후 3-5영업일 이내에 환불 처리됩니다. 신용카드는 승인취소(2-3일), 계좌이체는 계좌입금(3-5일) 방식으로 진행되며, 결제사별로 환불 시점이 다를 수 있습니다.'
+    },
+    {
+      id: '9',
+      category: 'return',
+      question: '디지털 콘텐츠(무형상품) 환불 규정은 어떻게 되나요?',
+      answer: 'Handy 앱 내에서 구매 가능한 모든 무형상품(Pro Plan 구독, 브러쉬 모음 등 디지털 콘텐츠)에 적용됩니다. 디지털 콘텐츠의 특성상 구매 즉시 서비스가 제공되거나 앱 내에 적용되므로, 관계 법령 및 각 앱 마켓의 정책에 따라 일부 환불이 제한될 수 있습니다.'
+    },
+    {
+      id: '10',
+      category: 'return',
+      question: '구독 상품(Pro Plan) 환불은 어떻게 하나요?',
+      answer: '【미사용 환불】 결제 후 Pro Plan 전용 기능(프리미엄 텍스처 사용, 고해상도 저장 등)을 전혀 사용하지 않은 경우, 결제일로부터 7일 이내에 전액 환불을 요청할 수 있습니다.\n\n【사용 후 취소】 이미 기능을 1회 이상 사용했거나 결제일로부터 7일이 경과한 경우, 당월(또는 당해) 결제 건에 대한 환불은 불가합니다. 이 경우 다음 결제일에 요금이 청구되지 않도록 스토어 설정을 통한 \'구독 취소(자동 갱신 해지)\'만 가능합니다.'
+    },
+    {
+      id: '11',
+      category: 'return',
+      question: '단건 구매 상품(브러쉬 모음, 3D 파츠 등) 환불은 가능한가요?',
+      answer: '상품 결제 후 다운로드를 진행하지 않았거나 앱 내에서 한 번도 사용하지 않은 경우에 한해, 결제일로부터 7일 이내 환불이 가능합니다.\n\n결제 후 해당 에셋을 다운로드했거나, 캔버스(디자인 화면)에 한 번이라도 적용한 이력이 있는 경우에는 디지털 재화의 가치가 훼손된 것으로 간주하여 환불이 불가합니다.'
+    },
+    {
+      id: '12',
+      category: 'return',
+      question: 'Apple App Store(iOS)에서 결제한 디지털 콘텐츠 환불은 어떻게 하나요?',
+      answer: 'Apple의 개인정보 보호 및 결제 정책에 따라 개발사(Handy)가 임의로 결제를 취소하거나 환불을 진행할 권한이 없습니다.\n\n환불을 원하시는 경우, 사용자가 직접 기기의 [설정 > Apple ID > 미디어 및 구입 항목 > 지출 내역] 또는 Apple 문제 신고 센터(reportaproblem.apple.com)를 통해 환불을 접수하셔야 합니다.'
+    },
+    {
+      id: '13',
+      category: 'return',
+      question: 'Google Play Store(Android)에서 결제한 디지털 콘텐츠 환불은 어떻게 하나요?',
+      answer: '【결제 후 48시간 이내】 Google Play 고객센터를 통해 직접 환불을 요청하실 수 있습니다.\n\n【결제 후 48시간 경과】 Handy 고객센터로 \'GPA\'로 시작하는 영수증 주문 번호를 기재하여 문의해 주시면, 당사의 미사용 여부 확인 절차를 거쳐 예외적으로 환불을 도와드립니다.'
+    },
+    {
+      id: '14',
+      category: 'return',
+      question: '디지털 콘텐츠 환불이 불가능한 경우는 어떤 경우인가요?',
+      answer: '다음의 경우 환불이 불가합니다:\n\n1. 사용자의 기기 조작 미숙, 단순 변심으로 인한 경우 (단, 미사용 상태로 7일 이내인 경우는 예외)\n2. 사용자의 귀책사유(이용약관 위반 등)로 인해 계정이 이용 제한되거나 강제 탈퇴 처리된 경우\n3. 무료로 지급받은 프로모션 코드나 이벤트를 통해 획득한 콘텐츠'
     }
   ];
 
@@ -328,7 +364,7 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
                       <span className="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full text-xs font-medium flex items-center justify-center">
                         A
                       </span>
-                      <div className="text-gray-600 leading-relaxed">{faq.answer}</div>
+                      <div className="text-gray-600 leading-relaxed whitespace-pre-line">{faq.answer}</div>
                     </div>
                   </div>
                 )}
