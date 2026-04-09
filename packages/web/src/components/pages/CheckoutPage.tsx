@@ -277,7 +277,8 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       } else {
         // 에러 코드별 사용자 친화적 메시지
         const errorCode = result.errorCode || result.error?.code;
-        let errorMessage = result.error?.message || result.error || t('order:payment.orderLoadError');
+        const rawError = result.error?.message || (typeof result.error === 'string' ? result.error : null);
+        let errorMessage = rawError || t('order:payment.orderLoadError');
 
         switch (errorCode) {
           case 'CART_EMPTY':
@@ -302,7 +303,15 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
     } catch (err: any) {
       console.error('❌ [CheckoutPage] Initialize failed:', err);
-      const errorMessage = err.message || t('order:checkout.initFailed');
+      // ApiError.message가 객체일 수 있음 ([object Object] 방지)
+      let errorMessage = t('order:checkout.initFailed');
+      if (typeof err.message === 'string' && !err.message.includes('[object')) {
+        errorMessage = err.message;
+      } else if (err.details?.message) {
+        errorMessage = err.details.message;
+      } else if (err.code) {
+        errorMessage = `${t('order:checkout.initFailed')} (${err.code})`;
+      }
       setError(errorMessage);
     } finally {
       setLoading(false);

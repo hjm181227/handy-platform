@@ -79,10 +79,15 @@ export async function withRetry<T>(
 }
 
 export function parseApiError(response: Response, data?: any): ApiError {
-  const message = data?.error || data?.message || `API Error: ${response.status} ${response.statusText}`;
+  // data.error가 객체일 수 있음 (백엔드가 { error: { message, code } } 형태로 응답)
+  const rawError = data?.error;
+  const message = (typeof rawError === 'string' ? rawError : rawError?.message)
+    || data?.message
+    || `API Error: ${response.status} ${response.statusText}`;
+  const code = data?.code || (typeof rawError === 'object' ? rawError?.code : undefined);
   const details = data?.details || null;
-  
-  return new ApiError(message, response.status, data?.code, details);
+
+  return new ApiError(message, response.status, code, details);
 }
 
 export function handleApiError(error: unknown): AppError {
