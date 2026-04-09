@@ -49,12 +49,13 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
       }
 
       // 2초 후 체크아웃으로 리다이렉트 (캐시된 세션에서 mode 복원)
+      const allowedModes = ['cart', 'direct', 'custom'];
       const cachedSession = sessionStorage.getItem('checkout_session');
       let checkoutUrl = '/checkout';
       if (cachedSession) {
         try {
           const { mode } = JSON.parse(cachedSession);
-          if (mode && mode !== 'cart') {
+          if (mode && allowedModes.includes(mode) && mode !== 'cart') {
             checkoutUrl = `/checkout?mode=${mode}`;
           }
         } catch { /* ignore */ }
@@ -105,9 +106,10 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
         <div className="space-y-3">
           <button
             onClick={() => {
+              const allowed = ['cart', 'direct', 'custom'];
               const cached = sessionStorage.getItem('checkout_session');
               let url = '/checkout';
-              if (cached) { try { const { mode } = JSON.parse(cached); if (mode && mode !== 'cart') url = `/checkout?mode=${mode}`; } catch {} }
+              if (cached) { try { const { mode } = JSON.parse(cached); if (mode && allowed.includes(mode) && mode !== 'cart') url = `/checkout?mode=${mode}`; } catch {} }
               onGo(url);
             }}
             className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"

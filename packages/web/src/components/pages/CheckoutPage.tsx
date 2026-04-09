@@ -131,12 +131,14 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setError(null);
 
       // ✅ 캐시된 체크아웃 세션 확인 (새로고침/결제 취소 후 재진입 대응)
+      const allowedModes = ['cart', 'direct', 'custom'];
       const cachedSessionStr = sessionStorage.getItem('checkout_session');
       if (cachedSessionStr) {
         try {
           const cached = JSON.parse(cachedSessionStr);
           const isValid = Date.now() - cached.timestamp < 30 * 60 * 1000; // 30분 이내
-          if (isValid && cached.data?.sessionId) {
+          const isModeValid = !cached.mode || allowedModes.includes(cached.mode);
+          if (isValid && isModeValid && cached.data?.sessionId) {
             console.log('♻️ [CheckoutPage] Restoring cached checkout session (mode:', cached.mode, ')');
             const cachedData = cached.data;
             setCart({ sessionId: cachedData.sessionId, ...cachedData } as any);
@@ -664,6 +666,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       if (!prepareResponse.success || !prepareResponse.data?.orderId) {
         throw new Error(prepareResponse.error || t('order:checkout.orderCreateFailed'));
       }
+
+      // 결제 준비 성공 — 세션 캐시 무효화 (리플레이 방지)
+      sessionStorage.removeItem('checkout_session');
 
       const orderId = prepareResponse.data.orderId;
 
