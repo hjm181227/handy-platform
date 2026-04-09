@@ -352,7 +352,16 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         }
       } catch (error: any) {
         console.error('❌ [CheckoutPage] Auto-validation failed:', error);
-        // 검증 실패는 조용히 처리 (사용자가 수동으로 조정 가능)
+        // 400 에러 = 세션 만료/미발견 가능성 → 캐시 삭제 후 새 세션 생성
+        const status = error?.status || error?.statusCode;
+        const code = error?.code || error?.errorCode || error?.data?.code || '';
+        const isSessionGone = status === 400 || code === 'SESSION_NOT_FOUND' || code === 'SESSION_EXPIRED';
+        if (isSessionGone && sessionStorage.getItem('checkout_session')) {
+          console.log('🔄 [CheckoutPage] Server session lost, clearing cache and re-initializing...');
+          sessionStorage.removeItem('checkout_session');
+          hasLoadedRef.current = false;
+          loadCheckoutData();
+        }
       }
     };
 
