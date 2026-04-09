@@ -105,9 +105,11 @@ export function PaymentFail({ onGo }: PaymentFailProps) {
           <button
             onClick={() => {
               const allowed = ['cart', 'direct', 'custom'];
+              let mode = sessionStorage.getItem('checkout_mode') || '';
               const cached = sessionStorage.getItem('checkout_session');
+              if (cached) { try { mode = JSON.parse(cached).mode || mode; } catch {} }
               let url = '/checkout';
-              if (cached) { try { const { mode } = JSON.parse(cached); if (mode && allowed.includes(mode) && mode !== 'cart') url = `/checkout?mode=${mode}`; } catch {} }
+              if (mode && allowed.includes(mode) && mode !== 'cart') url = `/checkout?mode=${mode}`;
               onGo(url);
             }}
             className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"

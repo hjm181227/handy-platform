@@ -614,6 +614,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         console.log('✅ [CheckoutPage] Test payment completed:', skipResponse.data);
         // 체크아웃 캐시 정리
         sessionStorage.removeItem('checkout_session');
+        sessionStorage.removeItem('checkout_mode');
         sessionStorage.removeItem('checkoutData');
         // 주문 완료 페이지로 이동
         onGo(`/order-complete?orderId=${orderId}`);
@@ -677,8 +678,15 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         throw new Error(prepareResponse.error || t('order:checkout.orderCreateFailed'));
       }
 
-      // 결제 준비 성공 — 세션 캐시 무효화 (리플레이 방지)
+      // 결제 준비 성공 — 세션 캐시 무효화 (리플레이 방지), mode만 보존 (결제 실패 시 재시도용)
+      const cachedForMode = sessionStorage.getItem('checkout_session');
       sessionStorage.removeItem('checkout_session');
+      if (cachedForMode) {
+        try {
+          const { mode } = JSON.parse(cachedForMode);
+          if (mode) sessionStorage.setItem('checkout_mode', mode);
+        } catch { /* ignore */ }
+      }
 
       const orderId = prepareResponse.data.orderId;
 
