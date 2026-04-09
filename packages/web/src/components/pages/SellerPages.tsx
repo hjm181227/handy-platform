@@ -323,6 +323,10 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
   const [ productToDelete, setProductToDelete ] = useState<any | null>(null);
   const [ isDeleting, setIsDeleting ] = useState(false);
 
+  // 다중 선택 관련 상태
+  const [ selectedProductUuids, setSelectedProductUuids ] = useState<Set<string>>(new Set());
+  const [ showBulkDeleteModal, setShowBulkDeleteModal ] = useState(false);
+
   // 중복 API 호출 방지용 ref (React StrictMode 대응)
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -495,6 +499,56 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
     setProductToDelete(null);
   };
 
+  // 다중 선택 관련 함수들
+  const toggleSelectProduct = (productUuid: string) => {
+    setSelectedProductUuids(prev => {
+      const next = new Set(prev);
+      if (next.has(productUuid)) {
+        next.delete(productUuid);
+      } else {
+        next.add(productUuid);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProductUuids.size === filteredProducts.length) {
+      setSelectedProductUuids(new Set());
+    } else {
+      setSelectedProductUuids(new Set(filteredProducts.map(p => p.productUuid)));
+    }
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedProductUuids.size === 0) return;
+    setShowBulkDeleteModal(true);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    try {
+      setIsDeleting(true);
+      const uuids = Array.from(selectedProductUuids);
+
+      // 순차적으로 삭제 (서버 부하 방지)
+      for (const uuid of uuids) {
+        await sellerService.deleteProduct(uuid);
+      }
+
+      // 성공 시 목록에서 제거
+      setProducts(prev => prev.filter(p => !selectedProductUuids.has(p.productUuid)));
+      setSelectedProductUuids(new Set());
+      setShowBulkDeleteModal(false);
+      alert(t('products.deleteSuccess'));
+    } catch (error) {
+      console.error('Bulk delete failed:', error);
+      const errorMessage = error instanceof Error ? error.message : t('products.deleteFailed');
+      alert(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <SellerLayout title={t('products.title')} onGo={onGo}>
       <div className="space-y-6">
@@ -528,6 +582,17 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           </div>
 
           <div className="flex gap-2">
+            {selectedProductUuids.size > 0 && (
+              <button
+                onClick={handleBulkDeleteClick}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                선택 삭제 ({selectedProductUuids.size})
+              </button>
+            )}
             <button
               onClick={() => window.location.reload()}
               disabled={isLoading}
@@ -602,6 +667,14 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-3 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={filteredProducts.length > 0 && selectedProductUuids.size === filteredProducts.length}
+                        onChange={toggleSelectAll}
+                        className="h-4 w-4 text-[#E85A6B] rounded border-gray-300 focus:ring-[#E85A6B]"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.productHeader')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.priceHeader')}
@@ -618,7 +691,15 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                   {filteredProducts.map((product) => (
-                    <tr key={product.productUuid} className="hover:bg-gray-50">
+                    <tr key={product.productUuid} className={`hover:bg-gray-50 ${selectedProductUuids.has(product.productUuid) ? 'bg-pink-50' : ''}`}>
+                      <td className="px-3 py-4 w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedProductUuids.has(product.productUuid)}
+                          onChange={() => toggleSelectProduct(product.productUuid)}
+                          className="h-4 w-4 text-[#E85A6B] rounded border-gray-300 focus:ring-[#E85A6B]"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
@@ -759,6 +840,58 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           </div>
         </div>
       )}
+
+      {/* 다중 삭제 확인 모달 */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">{t('products.deleteTitle')}</h3>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-500">
+                선택한 <span className="font-bold text-red-600">{selectedProductUuids.size}개</span>의 상품을 삭제하시겠습니까?
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {t('products.deleteIrreversible')}
+              </p>
+            </div>
+
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {t('common:cancel')}
+              </button>
+              <button
+                onClick={handleBulkDeleteConfirm}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {t('products.deleting')}
+                  </div>
+                ) : (
+                  `${selectedProductUuids.size}개 삭제`
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SellerLayout>
   );
 }
@@ -888,12 +1021,12 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             lengthCustomizable: product.nailOptions?.lengthCustomizable ?? false,
             shapeCustomizable: product.nailOptions?.shapeCustomizable ?? false,
             designCustomizable: product.nailOptions?.designCustomizable ?? false,
-            nailCategories: product.nailCategories || {
-              style: [],
-              color: [],
-              texture: [],
-              tpo: [],
-              nation: 'kr'
+            nailCategories: {
+              style: Array.isArray(product.nailCategories?.style) ? product.nailCategories.style : [],
+              color: Array.isArray(product.nailCategories?.color) ? product.nailCategories.color : [],
+              texture: Array.isArray(product.nailCategories?.texture) ? product.nailCategories.texture : [],
+              tpo: Array.isArray(product.nailCategories?.tpo) ? product.nailCategories.tpo : [],
+              nation: product.nailCategories?.nation || 'kr'
             },
 
             // 이미지
