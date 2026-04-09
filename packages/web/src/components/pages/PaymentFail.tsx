@@ -131,7 +131,12 @@ export function PaymentFail({ onGo }: PaymentFailProps) {
         <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
           <p className="text-sm text-yellow-800">
             <strong>{t('common:needHelp')}</strong><br />
-            {t('common:customerService')}: 1588-0000<br />
+            <a
+              href={`mailto:hermosear98@gmail.com?subject=${encodeURIComponent('[HANDY] 결제 문의')}&body=${encodeURIComponent(`주문번호: ${errorInfo.orderId || ''}\n오류코드: ${errorInfo.code || ''}\n\n문의 내용:\n`)}`}
+              className="text-blue-600 underline hover:text-blue-800"
+            >
+              hermosear98@gmail.com
+            </a><br />
             {t('common:customerServiceHours')}
           </p>
         </div>
