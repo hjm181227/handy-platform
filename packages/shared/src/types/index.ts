@@ -2469,3 +2469,42 @@ export interface PublicCustomOrderListResponse {
     };
   };
 }
+
+// ===== Q&A (상품 문의) =====
+
+export interface ProductQuestion {
+  questionUuid: string;
+  productUuid: string;
+  productName?: string;
+  sellerUuid: string;
+  userUuid: string;
+  userName: string;
+  content: string;
+  isSecret: boolean;
+  status: 'pending' | 'answered' | 'deleted';
+  answer?: {
+    content: string;
+    answeredAt: string;
+    updatedAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuestionsResponse {
+  success: boolean;
+  data: {
+    questions: ProductQuestion[];
+    pagination: PaginationInfo;
+  };
+}
+
+export interface CreateQuestionRequest {
+  content: string;
+  isSecret?: boolean;
+}
+
+export interface UpdateQuestionRequest {
+  content?: string;
+  isSecret?: boolean;
+}
