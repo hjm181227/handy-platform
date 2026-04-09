@@ -189,6 +189,12 @@ export const API_ENDPOINTS = {
       `/api/products/${productId}/reviews/${reviewId}/report`,
     REVIEW_REPLY: (productId: string, reviewId: string) =>
       `/api/products/${productId}/reviews/${reviewId}/reply`,
+
+    // Q&A 시스템
+    QUESTIONS: (productUuid: string) => `/api/products/${productUuid}/questions`,
+    QUESTION_CREATE: (productUuid: string) => `/api/products/${productUuid}/questions`,
+    QUESTION_UPDATE: (questionUuid: string) => `/api/products/questions/${questionUuid}`,
+    QUESTION_DELETE: (questionUuid: string) => `/api/products/questions/${questionUuid}`,
   },
 
   // 장바구니
@@ -393,6 +399,11 @@ export const API_ENDPOINTS = {
     COUPON_DETAIL: (couponUuid: string) => `/api/seller/coupons/${couponUuid}`,     // GET, PUT, DELETE - 쿠폰 상세/수정/삭제
     COUPON_STATUS: (couponUuid: string) => `/api/seller/coupons/${couponUuid}/status`, // PATCH - 활성화/비활성화
     COUPON_USAGE: (couponUuid: string) => `/api/seller/coupons/${couponUuid}/usage`,   // GET - 사용 통계
+
+    // Q&A 관리
+    PRODUCT_QUESTIONS: '/api/seller/product-questions',                              // GET - Q&A 목록 조회
+    PRODUCT_QUESTIONS_STATS: '/api/seller/product-questions/stats',                  // GET - Q&A 통계
+    PRODUCT_QUESTION_ANSWER: (questionUuid: string) => `/api/seller/product-questions/${questionUuid}/answer`, // POST, PUT, DELETE - 답변 관리
   },
 
   // QR 코드

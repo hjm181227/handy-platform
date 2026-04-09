@@ -1,6 +1,8 @@
-apply plugin: "com.android.application"
-apply plugin: "org.jetbrains.kotlin.android"
-apply plugin: "com.facebook.react"
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.facebook.react")
+}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -17,9 +19,8 @@ react {
     //   The cli.js file which is the React Native CLI entrypoint. Default is ../node_modules/react-native/cli.js
     cliFile = file("../../../../node_modules/react-native/cli.js")
 
-    /* Hermes Commands */
-    //   The hermes compiler command to run. Set to the correct path for monorepo structure
-    hermesCommand = "$rootDir/../../../node_modules/react-native/sdks/hermesc/osx-bin/hermesc"
+    // Autolink native libraries with this app
+    autolinkLibrariesWithApp()
 
     /* Variants */
     //   The list of variants to that are debuggable. For those we're going to
@@ -71,7 +72,7 @@ def enableProguardInReleaseBuilds = false
  * give correct results when using with locales other than en-US. Note that
  * this variant is about 6MiB larger per architecture than default.
  */
-def jscFlavor = 'org.webkit:android-jsc:r250231'
+def jscFlavor = 'org.webkit:android-jsc:+'
 
 /**
  * Configure react-native-vector-icons font path for monorepo structure
@@ -101,8 +102,8 @@ android {
         applicationId "com.handyapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 13
-        versionName "1.8.4"
+        versionCode 14
+        versionName "1.9.0"
 
         // NDK ABI 필터 설정 (16KB 페이지 크기 지원)
         ndk {
@@ -146,7 +147,9 @@ android {
 
     packagingOptions {
         jniLibs {
-            useLegacyPackaging = true
+            // 16KB 페이지 크기 지원: false로 설정하면 .so 파일이 압축 저장되고
+            // 설치 시 OS가 올바른 페이지 정렬로 추출함
+            useLegacyPackaging = false
         }
     }
 }
@@ -155,14 +158,15 @@ configurations.all {
     resolutionStrategy {
         // react-native-inappbrowser-reborn pulls alpha version requiring compileSdk 36
         force 'androidx.browser:browser:1.8.0'
+        // Force androidx.core to versions compatible with compileSdk 35 and AGP 8.7.2
+        force 'androidx.core:core:1.15.0'
+        force 'androidx.core:core-ktx:1.15.0'
     }
 }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    // Flipper removed in RN 0.74+ - no longer needed
-    // implementation("com.facebook.react:flipper-integration")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
@@ -171,5 +175,4 @@ dependencies {
     }
 }
 
-apply from: file("../../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 apply from: file("../../../../node_modules/react-native-vector-icons/fonts.gradle")

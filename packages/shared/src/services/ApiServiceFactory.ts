@@ -2,6 +2,7 @@
 import { BaseAuthService, AuthServiceFactory } from './auth/AuthService';
 import { BaseProductService, ProductServiceFactory } from './product/ProductService';
 import { BaseReviewService, ReviewServiceFactory } from './product/ReviewService';
+import { BaseQuestionService, QuestionServiceFactory } from './product/QuestionService';
 import { BaseCartService, CartServiceFactory } from './commerce/CartService';
 import { BaseOrderService, OrderServiceFactory } from './commerce/OrderService';
 import { BasePaymentService, PaymentServiceFactory } from './commerce/PaymentService';
@@ -30,6 +31,7 @@ export interface IntegratedApiService {
   auth: BaseAuthService;
   product: BaseProductService;
   review: BaseReviewService;
+  question: BaseQuestionService;
   cart: BaseCartService;
   order: BaseOrderService;
   payment: BasePaymentService;
@@ -65,6 +67,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public auth: BaseAuthService;
   public product: BaseProductService;
   public review: BaseReviewService;
+  public question: BaseQuestionService;
   public cart: BaseCartService;
   public order: BaseOrderService;
   public payment: BasePaymentService;
@@ -106,6 +109,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.auth = AuthServiceFactory.create(baseURL, getAuthHeaders, onTokenExpired);
     this.product = ProductServiceFactory.create(baseURL, getAuthHeaders);
     this.review = ReviewServiceFactory.create(baseURL, getAuthHeaders);
+    this.question = QuestionServiceFactory.create(baseURL, getAuthHeaders);
     this.cart = CartServiceFactory.create(baseURL, getAuthHeaders);
     this.order = OrderServiceFactory.create(baseURL, getAuthHeaders);
     this.payment = PaymentServiceFactory.create(baseURL, getAuthHeaders);

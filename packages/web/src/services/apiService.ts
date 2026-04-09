@@ -167,6 +167,7 @@ class WebApiService {
   get auth() { return this.apiService.auth; }
   get product() { return this.apiService.product; }
   get review() { return this.apiService.review; }
+  get question() { return this.apiService.question; }
   get cart() { return this.apiService.cart; }
   get order() { return this.apiService.order; }
   get payment() { return this.apiService.payment; }
@@ -320,6 +321,7 @@ export const {
   auth: authService,
   product: productService,
   review: reviewService,
+  question: questionService,
   cart: cartService,
   order: orderService,
   payment: paymentService,
