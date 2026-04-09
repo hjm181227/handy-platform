@@ -53,7 +53,7 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
 
   // SDK 준비 후 UI 렌더링
   useEffect(() => {
-    if (!isReady || isRendered || renderingRef.current) return;
+    if (!isReady || !amount || isRendered || renderingRef.current) return;
 
     renderingRef.current = true;
 
