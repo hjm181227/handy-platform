@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { useTossPayments, TossPaymentRequest } from '../../hooks/useTossPayments';
+import { useTossPayments, TossPaymentRequest, PaymentMethodWidget, AgreementWidget } from '../../hooks/useTossPayments';
 
 interface TossPaymentWidgetProps {
   amount: number;
@@ -26,6 +26,8 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
   const [isRendered, setIsRendered] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
   const renderingRef = useRef(false);
+  const paymentMethodWidgetRef = useRef<PaymentMethodWidget | null>(null);
+  const agreementWidgetRef = useRef<AgreementWidget | null>(null);
 
   const {
     isReady,
@@ -64,9 +66,11 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
 
         // 2. 결제 UI 렌더링
         const paymentMethodWidget = await renderPaymentMethods('#toss-payment-method');
+        paymentMethodWidgetRef.current = paymentMethodWidget;
 
         // 3. 약관 UI 렌더링
-        await renderAgreement('#toss-agreement');
+        const agreementWidget = await renderAgreement('#toss-agreement');
+        agreementWidgetRef.current = agreementWidget;
 
         // 4. 결제수단 선택 이벤트 리스너
         if (paymentMethodWidget && onPaymentMethodSelect) {
@@ -93,6 +97,15 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
     };
 
     renderWidgets();
+
+    // unmount 시 위젯 인스턴스 정리 — 재진입 시 "하나의 결제수단 위젯만" 에러 방지
+    return () => {
+      console.log('[TossPaymentWidget] Cleaning up widget instances...');
+      paymentMethodWidgetRef.current?.destroy().catch(() => {});
+      agreementWidgetRef.current?.destroy().catch(() => {});
+      paymentMethodWidgetRef.current = null;
+      agreementWidgetRef.current = null;
+    };
   }, [isReady, amount, isRendered, setAmount, renderPaymentMethods, renderAgreement, onReady, onError, onPaymentMethodSelect]);
 
   // 금액 변경 시 업데이트

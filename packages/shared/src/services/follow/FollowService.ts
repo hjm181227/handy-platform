@@ -68,9 +68,13 @@ export abstract class BaseFollowService extends BaseApiService {
 
   /**
    * 내 팔로워/팔로잉 수 조회
+   * 비핵심 데이터이므로 재시도 없이 빠르게 실패 (5초 타임아웃)
    */
   async getMyCounts(): Promise<FollowCountsResponse> {
-    return this.request<FollowCountsResponse>(API_ENDPOINTS.FOLLOWS.MY_COUNTS);
+    return this.request<FollowCountsResponse>(API_ENDPOINTS.FOLLOWS.MY_COUNTS, {
+      disableAutoRetry: true,
+      timeout: 5000,
+    });
   }
 }
 

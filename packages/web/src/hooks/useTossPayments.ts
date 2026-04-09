@@ -6,15 +6,16 @@ interface TossWidgets {
   renderPaymentMethods: (options: { selector: string; variantKey?: string }) => Promise<PaymentMethodWidget>;
   renderAgreement: (options: { selector: string; variantKey?: string }) => Promise<AgreementWidget>;
   requestPayment: (options: TossPaymentRequest) => Promise<void>;
+  destroy?: () => Promise<void>;
 }
 
-interface PaymentMethodWidget {
+export interface PaymentMethodWidget {
   on: (event: string, callback: (selectedPaymentMethod: SelectedPaymentMethod) => void) => void;
   getSelectedPaymentMethod: () => Promise<SelectedPaymentMethod>;
   destroy: () => Promise<void>;
 }
 
-interface AgreementWidget {
+export interface AgreementWidget {
   on: (event: string, callback: (status: AgreementStatus) => void) => void;
   destroy: () => Promise<void>;
 }
@@ -145,8 +146,16 @@ export function useTossPayments({ clientKey, customerKey }: UseTossPaymentsOptio
 
     initializeWidgets();
 
-    // StrictMode에서 cleanup이 호출되어도 상태를 초기화하지 않음
-    // widgetsRef로 중복 초기화를 방지
+    // unmount 시 widgets 인스턴스 정리
+    return () => {
+      const w = widgetsRef.current;
+      if (w) {
+        console.log('[useTossPayments] Destroying widgets instance on unmount');
+        w.destroy?.().catch(() => {});
+        widgetsRef.current = null;
+      }
+      initializingRef.current = false;
+    };
   }, [clientKey, customerKey, isReady]);
 
   // 금액 설정
