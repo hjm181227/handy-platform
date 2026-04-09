@@ -130,6 +130,48 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       setLoading(true);
       setError(null);
 
+      // ✅ 캐시된 체크아웃 세션 확인 (새로고침/결제 취소 후 재진입 대응)
+      const cachedSessionStr = sessionStorage.getItem('checkout_session');
+      if (cachedSessionStr) {
+        try {
+          const cached = JSON.parse(cachedSessionStr);
+          const isValid = Date.now() - cached.timestamp < 30 * 60 * 1000; // 30분 이내
+          if (isValid && cached.data?.sessionId) {
+            console.log('♻️ [CheckoutPage] Restoring cached checkout session (mode:', cached.mode, ')');
+            const cachedData = cached.data;
+            setCart({ sessionId: cachedData.sessionId, ...cachedData } as any);
+            const tempOrder: Order = {
+              id: `temp_${Date.now()}`,
+              orderNumber: `ORDER_${Date.now()}`,
+              status: 'pending',
+              paymentStatus: 'pending',
+              totalAmount: cachedData.totals.finalTotal,
+              items: cachedData.items || [],
+              shipping: {
+                id: `shipping_${Date.now()}`,
+                status: 'preparing',
+                trackingNumber: undefined,
+                estimatedDelivery: cachedData.estimatedDeliveryDateRange?.earliest,
+                carrier: { name: 'Standard', code: 'STD' }
+              } as ShippingDetails,
+              createdAt: new Date().toISOString(),
+              totalPrice: cachedData.totals.subtotal,
+              shippingCost: cachedData.totals.shippingCost,
+              totalDiscount: cachedData.totals.discount,
+              finalPrice: cachedData.totals.grandTotal
+            };
+            setOrder(tempOrder);
+            await loadAddresses();
+            return;
+          } else {
+            console.log('⏰ [CheckoutPage] Cached session expired, creating new session');
+            sessionStorage.removeItem('checkout_session');
+          }
+        } catch {
+          sessionStorage.removeItem('checkout_session');
+        }
+      }
+
       // ✅ OrderService를 통한 체크아웃 초기화 (백엔드 스펙 준수)
       // URL 파라미터에서 mode 읽기 (cart / direct / custom)
       const urlParams = new URLSearchParams(window.location.search);
@@ -160,7 +202,6 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             }
           } catch (err) {
             console.error('❌ [CheckoutPage] Failed to load direct purchase data:', err);
-            sessionStorage.removeItem('checkoutData');
             throw err;
           }
           break;
@@ -170,41 +211,6 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
           const quoteUuid = new URLSearchParams(window.location.search).get('quoteUuid');
           if (!quoteUuid) {
             throw new Error(t('order:checkout.quoteNotFound'));
-          }
-
-          // 이전에 생성된 세션이 있으면 재사용 (이탈 후 재진입 대응)
-          const cachedSessionStr = sessionStorage.getItem(`quote_checkout_${quoteUuid}`);
-          if (cachedSessionStr) {
-            try {
-              const cachedData = JSON.parse(cachedSessionStr);
-              console.log('♻️ [CheckoutPage] Resuming cached checkout session for quote:', quoteUuid);
-              setCart({ sessionId: cachedData.sessionId, ...cachedData } as any);
-              const tempOrder: Order = {
-                id: `temp_${Date.now()}`,
-                orderNumber: `ORDER_${Date.now()}`,
-                status: 'pending',
-                paymentStatus: 'pending',
-                totalAmount: cachedData.totals.finalTotal,
-                items: cachedData.items || [],
-                shipping: {
-                  id: `shipping_${Date.now()}`,
-                  status: 'preparing',
-                  trackingNumber: undefined,
-                  estimatedDelivery: cachedData.estimatedDeliveryDateRange?.earliest,
-                  carrier: { name: 'Standard', code: 'STD' }
-                } as ShippingDetails,
-                createdAt: new Date().toISOString(),
-                totalPrice: cachedData.totals.subtotal,
-                shippingCost: cachedData.totals.shippingCost,
-                totalDiscount: cachedData.totals.discount,
-                finalPrice: cachedData.totals.grandTotal
-              };
-              setOrder(tempOrder);
-              await loadAddresses();
-              return;
-            } catch {
-              sessionStorage.removeItem(`quote_checkout_${quoteUuid}`);
-            }
           }
 
           requestBody = { quoteUuid };
@@ -225,18 +231,14 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       const result = response;
 
       if (result.success && result.data) {
-        // ✅ Initialize 성공 - sessionStorage 정리 (다음 주문에 영향 방지)
-        sessionStorage.removeItem('checkoutData');
+        // ✅ Initialize 성공 — 세션 캐시 (새로고침/결제 취소 후 재진입 대비)
+        sessionStorage.setItem('checkout_session', JSON.stringify({
+          mode: checkoutMode,
+          data: result.data,
+          timestamp: Date.now()
+        }));
 
-        // 견적서 기반 체크아웃인 경우 세션 캐시 (이탈 후 재진입 대비)
-        if (checkoutMode === 'custom') {
-          const qUuid = new URLSearchParams(window.location.search).get('quoteUuid');
-          if (qUuid) {
-            sessionStorage.setItem(`quote_checkout_${qUuid}`, JSON.stringify(result.data));
-          }
-        }
-
-        console.log('🗑️ [CheckoutPage] Cleared checkoutData from sessionStorage');
+        console.log('💾 [CheckoutPage] Checkout session cached for recovery');
 
         // ✅ CheckoutData를 cart로 저장 (sessionId 포함)
         setCart({
@@ -598,9 +600,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
       if (skipResponse.success) {
         console.log('✅ [CheckoutPage] Test payment completed:', skipResponse.data);
-        // 견적서 체크아웃 캐시 정리
-        const qParam = new URLSearchParams(window.location.search).get('quoteUuid');
-        if (qParam) sessionStorage.removeItem(`quote_checkout_${qParam}`);
+        // 체크아웃 캐시 정리
+        sessionStorage.removeItem('checkout_session');
+        sessionStorage.removeItem('checkoutData');
         // 주문 완료 페이지로 이동
         onGo(`/order-complete?orderId=${orderId}`);
       } else {

@@ -52,6 +52,10 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           if (!approveResponse.success) {
             throw new Error(approveResponse.error || t('order:payment.approvalFailed'));
           }
+
+          // 결제 확정 — 체크아웃 캐시 정리
+          sessionStorage.removeItem('checkout_session');
+          sessionStorage.removeItem('checkoutData');
         } else if (status && status !== 'completed') {
           // 기존 방식: status 파라미터 확인
           const errorMsg = status === 'fail'

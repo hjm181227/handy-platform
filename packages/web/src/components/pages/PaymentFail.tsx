@@ -103,7 +103,12 @@ export function PaymentFail({ onGo }: PaymentFailProps) {
         
         <div className="space-y-3">
           <button
-            onClick={() => onGo('/checkout')}
+            onClick={() => {
+              const cached = sessionStorage.getItem('checkout_session');
+              let url = '/checkout';
+              if (cached) { try { const { mode } = JSON.parse(cached); if (mode && mode !== 'cart') url = `/checkout?mode=${mode}`; } catch {} }
+              onGo(url);
+            }}
             className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
           >
             {t('common:retryCheckout')}
