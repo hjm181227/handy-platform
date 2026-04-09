@@ -146,7 +146,10 @@ export const TossPaymentWidget = forwardRef<TossPaymentWidgetRef, TossPaymentWid
       paymentMethodWidgetRef.current = null;
       agreementWidgetRef.current = null;
     };
-  }, [isReady, widgets, amount, isRendered, renderError, setAmount, renderPaymentMethods, renderAgreement]);
+    // isRendered, renderError는 effect 내부 guard 용도로만 사용 — dep에 포함하면
+    // 상태 전환 시 cleanup이 실행되어 렌더된 위젯이 destroy됨
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady, widgets, amount, setAmount, renderPaymentMethods, renderAgreement]);
 
   // 금액 변경 시 업데이트
   useEffect(() => {
