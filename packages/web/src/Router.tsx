@@ -718,7 +718,11 @@ export function Router() {
     );
   }
   else if (pathname === '/design-tool/subscription') {
-    screen = <DesignToolPage onGo={nav} />;
+    screen = (
+      <RequireAuth>
+        <DesignToolPage onGo={nav} />
+      </RequireAuth>
+    );
   }
   else if (pathname === '/design-tool/payment/success') {
     screen = (

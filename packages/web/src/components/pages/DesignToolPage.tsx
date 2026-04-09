@@ -126,7 +126,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6 mb-12">
-          {plans.map((plan) => (
+          {[...plans].sort((a, b) => b.price - a.price).map((plan) => (
             <PlanCard
               key={plan.planId}
               plan={plan}
@@ -227,19 +227,19 @@ function PlanCard({
         ))}
       </ul>
 
-      <button
-        onClick={onSelect}
-        disabled={disabled}
-        className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
-          isCurrent
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : isPopular
-              ? 'bg-pink-500 text-white hover:bg-pink-600'
-              : 'bg-gray-900 text-white hover:bg-gray-800'
-        }`}
-      >
-        {isCurrent ? t('designTool.currentPlanButton') : plan.price === 0 ? t('designTool.freeStart') : t('designTool.subscribe')}
-      </button>
+      {plan.price > 0 && (
+        <button
+          onClick={onSelect}
+          disabled={disabled}
+          className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
+            isCurrent
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-pink-500 text-white hover:bg-pink-600'
+          }`}
+        >
+          {isCurrent ? t('designTool.currentPlanButton') : t('designTool.subscribe')}
+        </button>
+      )}
     </div>
   );
 }
