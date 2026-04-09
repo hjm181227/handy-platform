@@ -1,5 +1,7 @@
-import { NailShape, NailLength } from '@handy-platform/shared';
+import { useState, useEffect, useRef } from 'react';
+import { NailShape, NailLength, Brand } from '@handy-platform/shared';
 import { usePublicCustomOrderFlow } from '../../hooks/usePublicCustomOrderFlow';
+import { brandService } from '../../services/apiService';
 import {
   ShapeStep,
   LengthStep,
@@ -326,7 +328,204 @@ function PublicDetailsStep({
   );
 }
 
+// 브랜드 선택 프리스텝: "정해둔 브랜드가 있으신가요?"
+function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
+  onSelectBrand: (sellerUuid: string, brandName: string) => void;
+  onSkip: () => void;
+  onBack: () => void;
+}) {
+  const [hasBrand, setHasBrand] = useState<boolean | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // 브랜드 검색
+  useEffect(() => {
+    if (hasBrand !== true || !searchQuery.trim()) {
+      setBrands([]);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const response = await brandService.getBrands({
+          search: searchQuery.trim(),
+          listNum: '20',
+        });
+        setBrands(response.brands || []);
+      } catch {
+        setBrands([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery, hasBrand]);
+
+  // 초기 브랜드 목록 로드 (O 선택 시)
+  useEffect(() => {
+    if (hasBrand !== true) return;
+    const loadBrands = async () => {
+      try {
+        setLoading(true);
+        const response = await brandService.getBrands({ listNum: '20' });
+        setBrands(response.brands || []);
+      } catch {
+        setBrands([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadBrands();
+  }, [hasBrand]);
+
+  // 질문 화면
+  if (hasBrand === null) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 bg-white z-10 border-b">
+          <div className="flex items-center px-4 h-14">
+            <button onClick={onBack} className="mr-3">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <h1 className="text-lg font-bold">커스텀 주문</h1>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center px-6 pt-20">
+          <div className="w-16 h-16 bg-[#FFF1F2] rounded-full flex items-center justify-center mb-6">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="#E85A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">정해둔 브랜드가 있으신가요?</h2>
+          <p className="text-sm text-gray-500 text-center mb-10">
+            원하는 브랜드가 있으면 해당 브랜드에 직접 주문서를 보낼 수 있어요
+          </p>
+
+          <div className="flex gap-4 w-full max-w-xs">
+            <button
+              onClick={() => setHasBrand(true)}
+              className="flex-1 py-4 rounded-2xl border-2 border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B] font-bold text-lg hover:bg-[#FFE4E8] transition-colors"
+            >
+              O
+            </button>
+            <button
+              onClick={onSkip}
+              className="flex-1 py-4 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 font-bold text-lg hover:bg-gray-50 transition-colors"
+            >
+              X
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-400 mt-4">
+            X를 선택하면 모든 브랜드에 공개 주문서로 등록됩니다
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 브랜드 검색 화면
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="sticky top-0 bg-white z-10 border-b">
+        <div className="flex items-center px-4 h-14">
+          <button onClick={() => setHasBrand(null)} className="mr-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          <h1 className="text-lg font-bold">브랜드 선택</h1>
+        </div>
+      </div>
+
+      <div className="px-4 py-4">
+        {/* 검색창 */}
+        <div className="relative mb-4">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="브랜드명을 검색하세요"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#E85A6B]"
+            autoFocus
+          />
+        </div>
+
+        {/* 브랜드 목록 */}
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+          </div>
+        ) : brands.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-400 text-sm">
+              {searchQuery ? '검색 결과가 없습니다' : '등록된 브랜드가 없습니다'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {brands.map(brand => (
+              <button
+                key={brand.sellerUuid}
+                onClick={() => onSelectBrand(brand.sellerUuid, brand.brandName)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-11 h-11 rounded-full bg-[#FFF1F2] flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {brand.brandProfile ? (
+                    <img
+                      src={brand.brandProfile}
+                      alt={brand.brandName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML = `<span class="text-base font-bold text-[#E85A6B]">${brand.brandName.charAt(0)}</span>`;
+                      }}
+                    />
+                  ) : (
+                    <span className="text-base font-bold text-[#E85A6B]">
+                      {brand.brandName.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{brand.brandName}</p>
+                  <p className="text-xs text-gray-400">
+                    상품 {brand.stats.totalProducts}개 · 주문 {brand.stats.totalOrders}건
+                  </p>
+                </div>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
+                  <path d="M7.5 15l5-5-5-5" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 하단: 공개 주문서로 진행 */}
+        <div className="mt-6 pt-4 border-t">
+          <button
+            onClick={onSkip}
+            className="w-full py-3 text-sm text-gray-500 hover:text-[#E85A6B] transition-colors"
+          >
+            브랜드 없이 공개 주문서로 진행하기 →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PublicCustomOrderPage({ onGo }: { onGo: (to: string) => void }) {
+  const [showBrandPreStep, setShowBrandPreStep] = useState(true);
+
   const {
     currentStep,
     stepIndex,
@@ -347,9 +546,30 @@ export function PublicCustomOrderPage({ onGo }: { onGo: (to: string) => void }) 
     refreshNailSize,
   } = usePublicCustomOrderFlow();
 
+  // 브랜드 선택 → 해당 브랜드의 커스텀 주문 페이지로 이동
+  const handleSelectBrand = (sellerUuid: string, brandName: string) => {
+    onGo(`/brand/${encodeURIComponent(sellerUuid)}/custom-order?brandName=${encodeURIComponent(brandName)}`);
+  };
+
+  // 브랜드 없이 진행 → 기존 공개 주문서 플로우
+  const handleSkipBrand = () => {
+    setShowBrandPreStep(false);
+  };
+
+  // 브랜드 프리스텝 표시
+  if (showBrandPreStep) {
+    return (
+      <BrandPreStep
+        onSelectBrand={handleSelectBrand}
+        onSkip={handleSkipBrand}
+        onBack={() => history.back()}
+      />
+    );
+  }
+
   const handleBack = () => {
     if (currentStep === 'shape') {
-      history.back();
+      setShowBrandPreStep(true); // 첫 단계에서 뒤로가면 브랜드 선택으로
     } else {
       prevStep();
     }

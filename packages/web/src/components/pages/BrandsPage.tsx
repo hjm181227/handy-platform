@@ -94,6 +94,11 @@ export function BrandsPage({
               src={brand.brandProfile}
               alt={brand.brandName}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.parentElement!.innerHTML = `<span class="text-xl font-bold text-[#E85A6B]">${brand.brandName.charAt(0)}</span>`;
+              }}
             />
           ) : (
             <span className="text-xl font-bold text-[#E85A6B]">

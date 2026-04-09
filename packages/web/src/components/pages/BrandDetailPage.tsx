@@ -599,6 +599,11 @@ export function BrandDetailPage({
                         src={brandInfo.brandProfile}
                         alt={brandStats.name}
                         className="w-full h-full rounded-2xl object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.parentElement!.innerHTML = `<span class="text-2xl sm:text-3xl font-bold text-white">${brandStats.name.charAt(0)}</span>`;
+                        }}
                       />
                     ) : (
                       <span className="text-2xl sm:text-3xl font-bold text-white">
