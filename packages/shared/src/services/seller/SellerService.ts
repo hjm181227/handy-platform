@@ -981,6 +981,8 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<BulkCreateResult>>(API_ENDPOINTS.BULK_PRODUCTS.BULK_CREATE, {
       method: 'POST',
       body: JSON.stringify({ products }),
+      timeout: 60000, // 대량 등록은 시간이 오래 걸릴 수 있으므로 60초
+      disableAutoRetry: true, // 중복 등록 방지: 서버가 이미 처리했을 수 있으므로 재시도 금지
     });
   }
 
