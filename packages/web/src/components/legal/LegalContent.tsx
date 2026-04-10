@@ -174,6 +174,19 @@ const PrivacyPolicyKo = () => (
       <h4 className="font-semibold text-gray-800 mb-2">제7조(개인정보 보호책임자)</h4>
       <p>회사는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 이용자의 불만처리 및 피해구제 등을 위하여 개인정보 보호책임자를 지정하고 있습니다.</p>
     </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제8조(구독 서비스 관련 정보 처리)</h4>
+      <p>Pro 멤버십 구독 시 회사는 Google Play 또는 Apple App Store로부터 다음 정보를 수집·처리합니다:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>구매 토큰(purchase token) / 트랜잭션 ID</li>
+        <li>구독 상태(활성/취소/유예/보류/만료)</li>
+        <li>구독 상품 ID 및 결제 주기</li>
+        <li>자동 갱신 여부</li>
+      </ul>
+      <p>해당 정보는 구독 서비스 제공, 결제 검증, 환불 처리, 자동 갱신 관리 목적으로만 사용됩니다.</p>
+      <p>실제 결제 수단(카드번호 등)은 Google/Apple이 직접 처리하며, 회사는 이를 저장하지 않습니다.</p>
+      <p>구독 관련 기록은 전자상거래법에 따라 5년간 보관됩니다.</p>
+    </section>
   </div>
 );
 
@@ -223,6 +236,19 @@ const PrivacyPolicyEn = () => (
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">Article 7 (Chief Privacy Officer)</h4>
       <p>The Company designates a Chief Privacy Officer (CPO) to oversee personal information processing and to handle user complaints and remedies related to personal information.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 8 (Processing of Subscription Service Information)</h4>
+      <p>When a user subscribes to Pro Membership, the Company collects and processes the following information from Google Play or Apple App Store:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Purchase token / Transaction ID</li>
+        <li>Subscription state (active, canceled, grace period, on hold, expired)</li>
+        <li>Product ID and billing cycle</li>
+        <li>Auto-renewal status</li>
+      </ul>
+      <p>This information is used solely for providing the subscription service, payment verification, refund handling, and auto-renewal management.</p>
+      <p>Actual payment credentials (card numbers, etc.) are handled directly by Google/Apple and are not stored by the Company.</p>
+      <p>Subscription records are retained for 5 years in accordance with the Act on Consumer Protection in Electronic Commerce.</p>
     </section>
   </div>
 );
@@ -274,6 +300,195 @@ const PrivacyPolicyJa = () => (
       <h4 className="font-semibold text-gray-800 mb-2">第7条（個人情報保護責任者）</h4>
       <p>会社は個人情報処理に関する業務を総括して責任を負い、個人情報処理に関連する利用者の苦情処理および被害救済等のために個人情報保護責任者を指定しています。</p>
     </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第8条（サブスクリプションサービス関連情報の処理）</h4>
+      <p>Proメンバーシップ登録時、会社はGoogle PlayまたはApple App Storeから以下の情報を収集・処理します：</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>購入トークン（purchase token）／トランザクションID</li>
+        <li>サブスクリプション状態（アクティブ／キャンセル／猶予期間／保留／期限切れ）</li>
+        <li>サブスクリプション商品IDおよび決済周期</li>
+        <li>自動更新の有無</li>
+      </ul>
+      <p>当該情報はサブスクリプションサービスの提供、決済検証、返金処理、自動更新管理の目的でのみ使用されます。</p>
+      <p>実際の決済手段（カード番号等）はGoogle/Appleが直接処理し、会社は保存しません。</p>
+      <p>サブスクリプション関連の記録は電子商取引法に基づき5年間保管されます。</p>
+    </section>
+  </div>
+);
+
+// ─── Subscription Refund Policy ───
+
+const SubscriptionRefundPolicyKo = () => (
+  <div className="space-y-4 text-xs text-gray-600">
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제1조(자동 갱신)</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Pro 멤버십은 월간 자동 갱신 구독 상품입니다.</li>
+        <li>결제는 매월 동일한 날에 자동으로 이루어지며, 현재 결제 기간 만료 24시간 전까지 취소하지 않으면 자동으로 갱신됩니다.</li>
+        <li>갱신 금액은 구독 시점에 표시된 가격을 기준으로 하며, 가격 변경 시 사전 고지됩니다.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제2조(구독 취소)</h4>
+      <p>사용자는 언제든지 구독을 취소할 수 있습니다. 취소 방법은 다음과 같습니다:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Android: Google Play Store → 계정 → 정기 결제 → Handy Nail Design → 정기 결제 취소</li>
+        <li>iOS: 설정 → Apple ID → 구독 → Handy Nail Design → 구독 취소</li>
+        <li>또는 앱 내 설정 → 구독 관리 메뉴에서 직접 스토어 페이지로 이동</li>
+      </ul>
+      <p>취소 후에도 현재 결제 기간이 끝날 때까지 Pro 혜택이 유지되며, 이후 Free 플랜으로 자동 전환됩니다.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제3조(환불 정책)</h4>
+      <p>환불은 결제를 처리한 결제 수단의 정책에 따라 처리됩니다:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Google Play (Android 앱): 구매일로부터 48시간 이내 본인이 직접 환불 요청 가능 (Play Store → 결제 및 구독 → 주문)</li>
+        <li>Apple App Store (iOS 앱): 구매일로부터 90일 이내 환불 신청 가능 (reportaproblem.apple.com)</li>
+        <li>웹 결제 (토스페이먼츠): 회사 고객센터로 직접 환불 신청</li>
+      </ul>
+      <p>웹에서의 결제는 토스페이먼츠 주식회사(전자결제대행업체)를 통해 처리되며, 환불 시에도 동일 경로를 통해 처리됩니다. 카드 승인 취소의 경우 영업일 기준 2~3일, 계좌 환입의 경우 3~5일이 소요될 수 있습니다.</p>
+      <p>전자상거래 등에서의 소비자보호에 관한 법률 제17조에 따라, 대한민국 소비자는 구매일로부터 7일 이내에 청약철회를 요청할 수 있습니다. 단, 디지털 콘텐츠의 성격상 이미 사용이 시작된 서비스는 동법 제17조 제2항 제5호에 따라 청약철회가 제한될 수 있습니다.</p>
+      <p>앱 스토어를 통한 결제의 경우 회사는 환불 요청을 직접 처리할 수 없으며, 모든 환불 문의는 해당 스토어로 직접 요청해 주시기 바랍니다. 웹 결제 환불 문의는 아래 고객센터로 연락해 주세요.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제4조(환불 불가 사유)</h4>
+      <p>다음의 경우 환불이 제한될 수 있습니다:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>구매 후 7일이 경과하고 서비스 이용 기록이 있는 경우</li>
+        <li>본인 과실로 인한 계정 정지 상태</li>
+        <li>부정 사용이 확인된 경우</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제5조(가격 변경)</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>구독 가격이 변경될 경우, 회사는 변경 적용 최소 30일 전에 앱 내 공지 및 이메일로 사전 고지합니다.</li>
+        <li>가격 인상에 동의하지 않는 경우, 사용자는 가격 적용 전에 구독을 취소할 수 있습니다.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제6조(문의)</h4>
+      <p>구독 관련 문의는 아래의 연락처로 보내주시기 바랍니다:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>이메일: hermosear98@gmail.com</li>
+      </ul>
+    </section>
+  </div>
+);
+
+const SubscriptionRefundPolicyEn = () => (
+  <div className="space-y-4 text-xs text-gray-600">
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 1 (Auto-Renewal)</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Pro Membership is a monthly auto-renewing subscription.</li>
+        <li>Payment is charged automatically on the same day each month. The subscription automatically renews unless canceled at least 24 hours before the end of the current billing period.</li>
+        <li>The renewal amount is based on the price displayed at the time of subscription. Any price changes will be notified in advance.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 2 (Cancellation)</h4>
+      <p>Users may cancel their subscription at any time through the following methods:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Android: Google Play Store → Account → Subscriptions → Handy Nail Design → Cancel subscription</li>
+        <li>iOS: Settings → Apple ID → Subscriptions → Handy Nail Design → Cancel Subscription</li>
+        <li>Or navigate directly from the app's Settings → Manage Subscription menu to the store page</li>
+      </ul>
+      <p>After cancellation, Pro benefits will remain active until the end of the current billing period, after which the account will automatically revert to the Free plan.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 3 (Refund Policy)</h4>
+      <p>Refunds are processed according to the policy of the payment channel used:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Google Play (Android app): Users may self-request a refund within 48 hours of purchase (Play Store → Payments &amp; subscriptions → Orders)</li>
+        <li>Apple App Store (iOS app): Users may request a refund within 90 days of purchase (reportaproblem.apple.com)</li>
+        <li>Web payment (Toss Payments): Contact the Company's customer support directly for refund requests</li>
+      </ul>
+      <p>Web payments are processed through Toss Payments Co., Ltd. (a payment gateway provider), and refunds are handled via the same channel. Card authorization reversals typically take 2–3 business days, while bank transfer refunds may take 3–5 business days.</p>
+      <p>Under Article 17 of the Korean Act on Consumer Protection in Electronic Commerce, consumers in the Republic of Korea may request withdrawal of subscription within 7 days of purchase. However, due to the nature of digital content, services whose use has already begun may be restricted from withdrawal under Article 17(2)(5) of the same Act.</p>
+      <p>For purchases made through app stores, the Company cannot directly process refund requests; all such inquiries must be submitted directly to the relevant store. For web payment refund inquiries, please contact the customer support listed below.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 4 (Non-refundable Cases)</h4>
+      <p>Refunds may be restricted in the following cases:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>When 7 days have passed since purchase and there is a record of service use</li>
+        <li>Account suspension due to the user's own fault</li>
+        <li>When fraudulent use has been confirmed</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 5 (Price Changes)</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>If the subscription price changes, the Company will provide at least 30 days' advance notice via in-app notification and email before the change takes effect.</li>
+        <li>Users who do not agree to a price increase may cancel their subscription before the new price takes effect.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 6 (Contact)</h4>
+      <p>For subscription-related inquiries, please contact us at:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Email: hermosear98@gmail.com</li>
+      </ul>
+    </section>
+  </div>
+);
+
+const SubscriptionRefundPolicyJa = () => (
+  <div className="space-y-4 text-xs text-gray-600">
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第1条（自動更新）</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Proメンバーシップは月額自動更新のサブスクリプション商品です。</li>
+        <li>決済は毎月同日に自動的に行われ、現在の決済期間満了の24時間前までにキャンセルしない限り自動的に更新されます。</li>
+        <li>更新金額はサブスクリプション時点で表示された価格に基づき、価格変更時には事前に告知します。</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第2条（サブスクリプションのキャンセル）</h4>
+      <p>利用者はいつでもサブスクリプションをキャンセルできます。キャンセル方法は以下のとおりです：</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Android：Google Play ストア → アカウント → 定期購入 → Handy Nail Design → 定期購入を解約</li>
+        <li>iOS：設定 → Apple ID → サブスクリプション → Handy Nail Design → サブスクリプションをキャンセル</li>
+        <li>またはアプリ内の設定 → サブスクリプション管理メニューから直接ストアページへ移動</li>
+      </ul>
+      <p>キャンセル後も現在の決済期間終了までProの特典は維持され、その後Freeプランに自動的に切り替わります。</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第3条（返金ポリシー）</h4>
+      <p>返金は決済を処理した決済手段のポリシーに従って処理されます：</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Google Play（Android アプリ）：購入日から48時間以内にご本人で返金リクエストが可能（Play ストア → お支払いと定期購入 → 注文）</li>
+        <li>Apple App Store（iOS アプリ）：購入日から90日以内に返金申請が可能（reportaproblem.apple.com）</li>
+        <li>ウェブ決済（トスペイメンツ）：会社のカスタマーサポートへ直接返金をお申し込みください</li>
+      </ul>
+      <p>ウェブでの決済はトスペイメンツ株式会社（電子決済代行業者）を通じて処理され、返金も同じ経路で処理されます。カード承認取消の場合は営業日基準で2〜3日、口座振込の場合は3〜5日ほどかかることがあります。</p>
+      <p>電子商取引等における消費者保護に関する法律第17条に基づき、大韓民国の消費者は購入日から7日以内に申込撤回を要求することができます。ただし、デジタルコンテンツの性質上、既に利用が開始されたサービスは同法第17条第2項第5号により申込撤回が制限される場合があります。</p>
+      <p>アプリストアを通じた決済については、会社が返金リクエストを直接処理することはできませんので、すべての返金に関するお問い合わせは該当ストアへ直接ご依頼ください。ウェブ決済の返金に関するお問い合わせは下記のカスタマーサポートへご連絡ください。</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第4条（返金不可事由）</h4>
+      <p>以下の場合、返金が制限されることがあります：</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>購入後7日が経過し、サービス利用記録がある場合</li>
+        <li>ご本人の過失によるアカウント停止状態</li>
+        <li>不正利用が確認された場合</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第5条（価格変更）</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>サブスクリプション価格が変更される場合、会社は変更適用の少なくとも30日前にアプリ内通知およびメールで事前に告知します。</li>
+        <li>値上げに同意されない場合、利用者は新価格適用前にサブスクリプションをキャンセルできます。</li>
+      </ul>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第6条（お問い合わせ）</h4>
+      <p>サブスクリプションに関するお問い合わせは下記までお送りください：</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>メール：hermosear98@gmail.com</li>
+      </ul>
+    </section>
   </div>
 );
 
@@ -295,6 +510,15 @@ export function PrivacyPolicyContent() {
   if (lang === 'ja') return <PrivacyPolicyJa />;
   if (lang === 'en') return <PrivacyPolicyEn />;
   return <PrivacyPolicyKo />;
+}
+
+export function SubscriptionRefundPolicyContent() {
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
+
+  if (lang === 'ja') return <SubscriptionRefundPolicyJa />;
+  if (lang === 'en') return <SubscriptionRefundPolicyEn />;
+  return <SubscriptionRefundPolicyKo />;
 }
 
 // ─── Personal Data Consent ───

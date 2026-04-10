@@ -165,7 +165,7 @@ export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void 
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-base">mail</span>
-              <span>이메일: support@handy-platform.com</span>
+              <span>이메일: hermosear98@gmail.com</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-base">chat</span>

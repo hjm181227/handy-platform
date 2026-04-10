@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ServiceTermsContent, PrivacyPolicyContent, PersonalDataConsentContent } from '../legal/LegalContent';
+import { ServiceTermsContent, PrivacyPolicyContent, PersonalDataConsentContent, SubscriptionRefundPolicyContent } from '../legal/LegalContent';
 
 // 공통 레이아웃 컴포넌트
 const PolicyLayout = ({
@@ -50,6 +50,16 @@ export function PrivacyPolicy({ onClose }: { onClose: () => void }) {
   return (
     <PolicyLayout title={t('footer.privacyPolicy')} onClose={onClose}>
       <PrivacyPolicyContent />
+    </PolicyLayout>
+  );
+}
+
+// 구독 자동갱신 및 환불정책 컴포넌트
+export function SubscriptionRefundPolicy({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('nav');
+  return (
+    <PolicyLayout title={t('footer.subscriptionRefundPolicy', 'Subscription & Refund Policy')} onClose={onClose}>
+      <SubscriptionRefundPolicyContent />
     </PolicyLayout>
   );
 }
