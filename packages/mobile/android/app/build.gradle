@@ -102,8 +102,8 @@ android {
         applicationId "com.handyapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 19
-        versionName "1.9.5"
+        versionCode 20
+        versionName "1.9.6"
 
         // NDK ABI 필터 설정 (16KB 페이지 크기 지원)
         ndk {
