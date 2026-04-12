@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { webApiService, likesService } from '../../services/apiService';
+import { webApiService, likesService, logout as apiLogout } from '../../services/apiService';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import type { User, LikeItem, TargetType, Product } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
@@ -321,7 +321,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
       if (isWebViewEnvironment()) {
         (window as any).ReactNativeWebView.auth('logout');
       } else {
-        await webApiService.logoutAndClearToken();
+        await apiLogout();
         window.dispatchEvent(new CustomEvent('authStateChanged'));
         onGo('/login');
       }

@@ -1,11 +1,62 @@
 import React, { createContext, useContext, useState, useEffect, useRef, RefObject } from 'react';
-import { Modal, DeviceEventEmitter } from 'react-native';
+import { Modal, DeviceEventEmitter, View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { getWebURL } from '../config/webUrl';
 import { englishToKoreanFinger } from '@handy-platform/shared/src/utils/fingerMapping';
 import NailSizesScreen from '../screens/NailSizesScreen';
 import NailMeasurement from '../screens/NailMeasurement';
 import CustomToast from '../components/CustomToast';
+
+// ErrorBoundary: 릴리스 빌드에서 Modal 내부 크래시 방지
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ScreenErrorBoundary extends React.Component<
+  { children: React.ReactNode; onClose: () => void },
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ScreenErrorBoundary] Crash caught:', error.message);
+    console.error('[ScreenErrorBoundary] Stack:', info.componentStack);
+    // 릴리스에서도 에러 확인 가능하도록 Alert 표시
+    Alert.alert(
+      '오류 발생',
+      `화면을 표시하는 중 오류가 발생했습니다.\n\n${error.message}`,
+      [{ text: '닫기', onPress: () => this.props.onClose() }],
+    );
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={ebStyles.container}>
+          <Text style={ebStyles.title}>오류가 발생했습니다</Text>
+          <Text style={ebStyles.message}>{this.state.error?.message}</Text>
+          <TouchableOpacity style={ebStyles.button} onPress={this.props.onClose}>
+            <Text style={ebStyles.buttonText}>닫기</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const ebStyles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#fff' },
+  title: { fontSize: 18, fontWeight: '700', color: '#131211', marginBottom: 12 },
+  message: { fontSize: 14, color: '#71717A', textAlign: 'center', marginBottom: 24 },
+  button: { backgroundColor: '#FF8FA3', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 28 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+});
 
 // Context 타입 정의
 interface NativeScreenContextType {
@@ -166,18 +217,20 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
         presentationStyle="formSheet"
         onRequestClose={closeNailSizes}
       >
-        <NailSizesScreen
-          onClose={closeNailSizes}
-          refreshKey={nailSizesRefreshKey}
-          onNavigateToCamera={(hand, finger) => {
-            console.log(`🎯 [NativeScreenProvider] onNavigateToCamera called with hand: ${hand}, finger: ${finger}`);
-            // iOS에서는 Modal을 동시에 2개 표시할 수 없으므로 NailSizes를 먼저 닫음
-            closeNailSizes();
-            setTimeout(() => {
-              openMeasurement(hand, finger);
-            }, 300);
-          }}
-        />
+        <ScreenErrorBoundary onClose={closeNailSizes}>
+          <NailSizesScreen
+            onClose={closeNailSizes}
+            refreshKey={nailSizesRefreshKey}
+            onNavigateToCamera={(hand, finger) => {
+              console.log(`🎯 [NativeScreenProvider] onNavigateToCamera called with hand: ${hand}, finger: ${finger}`);
+              // iOS에서는 Modal을 동시에 2개 표시할 수 없으므로 NailSizes를 먼저 닫음
+              closeNailSizes();
+              setTimeout(() => {
+                openMeasurement(hand, finger);
+              }, 300);
+            }}
+          />
+        </ScreenErrorBoundary>
       </Modal>
 
       {/* 손톱 측정 Modal */}
@@ -187,18 +240,19 @@ export const NativeScreenProvider: React.FC<NativeScreenProviderProps> = ({ chil
         presentationStyle="fullScreen"
         onRequestClose={closeMeasurement}
       >
-        <NailMeasurement
-          preselectedHand={selectedHand}
-          preselectedFinger={selectedFinger}
-          onClose={closeMeasurement}
-          onNavigateToSizes={() => {
-            console.log('🔵 [NativeScreenProvider] onNavigateToSizes called');
-            closeMeasurement();
-            openNailSizes();
-            setNailSizesRefreshKey(prev => prev + 1);
-          }}
-        />
-        <CustomToast />
+        <ScreenErrorBoundary onClose={closeMeasurement}>
+          <NailMeasurement
+            preselectedHand={selectedHand}
+            onClose={closeMeasurement}
+            onNavigateToSizes={() => {
+              console.log('🔵 [NativeScreenProvider] onNavigateToSizes called');
+              closeMeasurement();
+              openNailSizes();
+              setNailSizesRefreshKey(prev => prev + 1);
+            }}
+          />
+          <CustomToast />
+        </ScreenErrorBoundary>
       </Modal>
 
       {/* Provider 레벨 Toast — 메인 화면에서 표시 */}

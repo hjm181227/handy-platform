@@ -57,11 +57,6 @@ const App: React.FC = () => {
       if (Platform.OS === 'android') {
         await requestAndroidPermissions();
       }
-
-      // 스플래시 스크린 숨기기 (if splash screen package is available)
-      // setTimeout(() => {
-      //   SplashScreen.hide();
-      // }, 1000);
     } catch (error) {
       console.error('App initialization error:', error);
     }
