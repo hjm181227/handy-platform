@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { purchaseApiService } from '../../services/purchaseApiService';
-import { reviewService, webApiService } from '../../services/apiService';
+import { reviewService, userService } from '../../services/apiService';
 import type { CustomerOrder, DetailedReview } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
@@ -1112,7 +1112,7 @@ export function NailSizesPage({ onGo }: { onGo: (to: string) => void }) {
     try {
       setLoading(true);
       setError(null);
-      const response = await webApiService.user.getNailSize();
+      const response = await userService.getNailSize();
       if (response.success) {
         setNailSizeData(response.data || null);
       } else {
