@@ -72,24 +72,30 @@ const resources = {
 
 // Get saved language or detect from browser/URL
 function getInitialLanguage(): string {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.location !== 'undefined') {
     // Check URL query parameter first (?lang=en)
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get('lang');
-    if (langParam && ['ko', 'en', 'ja'].includes(langParam)) {
-      localStorage.setItem('handy-language', langParam);
-      return langParam;
-    }
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const langParam = urlParams.get('lang');
+      if (langParam && ['ko', 'en', 'ja'].includes(langParam)) {
+        localStorage.setItem('handy-language', langParam);
+        return langParam;
+      }
+    } catch {}
     // Check localStorage
-    const saved = localStorage.getItem('handy-language');
-    if (saved && ['ko', 'en', 'ja'].includes(saved)) {
-      return saved;
-    }
+    try {
+      const saved = localStorage.getItem('handy-language');
+      if (saved && ['ko', 'en', 'ja'].includes(saved)) {
+        return saved;
+      }
+    } catch {}
     // Detect from browser
-    const browserLang = navigator.language.split('-')[0];
-    if (['ko', 'en', 'ja'].includes(browserLang)) {
-      return browserLang;
-    }
+    try {
+      const browserLang = navigator.language.split('-')[0];
+      if (['ko', 'en', 'ja'].includes(browserLang)) {
+        return browserLang;
+      }
+    } catch {}
   }
   return DEFAULT_LANGUAGE;
 }
@@ -110,9 +116,11 @@ i18n.init({
 
 // Save language preference when changed
 i18n.on('languageChanged', (lng) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('handy-language', lng);
-  }
+  try {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem('handy-language', lng);
+    }
+  } catch {}
 });
 
 export default i18n;
