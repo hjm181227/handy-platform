@@ -116,6 +116,19 @@ if (imageResizerDir) {
       console.log('[patch] Fixed ImageResizer.mm (removed ALAssetsLibrary)');
     }
   }
+  // Patch Android build.gradle - compileSdk for AGP 8.12+
+  const androidGradle = path.join(imageResizerDir, 'android', 'build.gradle');
+  if (fs.existsSync(androidGradle)) {
+    let content = fs.readFileSync(androidGradle, 'utf8');
+    if (content.includes('compileSdkVersion getExtOrIntegerDefault')) {
+      content = content.replace(
+        'compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")',
+        'compileSdk rootProject.ext.has("compileSdkVersion") ? rootProject.ext.get("compileSdkVersion") : 35'
+      );
+      fs.writeFileSync(androidGradle, content);
+      console.log('[patch] Fixed react-native-image-resizer android/build.gradle (compileSdk)');
+    }
+  }
 }
 
 // Patch 6: react-native-screens - Fix RN 0.85 deprecated APIs

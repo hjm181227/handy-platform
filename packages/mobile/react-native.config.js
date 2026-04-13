@@ -12,6 +12,12 @@ module.exports = {
       sourceDir: './ios',
     },
   },
-  dependencies: {},
+  dependencies: {
+    '@bam.tech/react-native-image-resizer': {
+      platforms: {
+        android: null, // Excluded: AGP 8.12+ incompatible, using react-native-image-resizer shim
+      },
+    },
+  },
   assets: ['../../node_modules/react-native-vector-icons/Fonts'],
 };
