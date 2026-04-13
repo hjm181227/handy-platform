@@ -32,7 +32,7 @@ import {
   TABLET_BREAKPOINT,
 } from './types';
 import RNFS from '@dr.pogodin/react-native-fs';
-import ImageResizer from 'react-native-image-resizer';
+import ImageResizer from '@bam.tech/react-native-image-resizer';
 import { Dimensions } from 'react-native';
 
 // react-native-fast-tflite를 lazy import (Hermes 엔진 호환성 문제 방지)

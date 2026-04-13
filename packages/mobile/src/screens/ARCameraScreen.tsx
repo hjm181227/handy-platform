@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cameraSimulation: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#1a1a1a',
     justifyContent: 'center',
     alignItems: 'center',
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'space-between',
   },
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   capturedImageBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingTop: 50,

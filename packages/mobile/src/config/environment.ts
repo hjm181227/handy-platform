@@ -17,8 +17,12 @@ export const getAppEnvironment = (): string => {
       }
     }
 
-    // iOS: __DEV__ 플래그로 개발 환경 감지 (Metro 연결 시 true)
+    // iOS: process.env.REACT_NATIVE_ENV 우선, 없으면 __DEV__ 플래그로 감지
     if (Platform.OS === 'ios') {
+      if (typeof process !== 'undefined' && process.env?.REACT_NATIVE_ENV) {
+        console.log('🟢 [ENV] iOS process.env.REACT_NATIVE_ENV:', process.env.REACT_NATIVE_ENV);
+        return process.env.REACT_NATIVE_ENV;
+      }
       if (__DEV__) {
         console.log('🟢 [ENV] iOS __DEV__ mode: development');
         return 'development';

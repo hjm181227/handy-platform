@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   imageBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   measurementContainer: {
     position: 'absolute',
