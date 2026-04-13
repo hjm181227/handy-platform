@@ -30,15 +30,93 @@ export interface DesignToolPlan {
   hasCollaboration: boolean;
 }
 
-export interface DesignToolAccess {
-  hasAccess: boolean;
-  currentPlan: DesignToolPlanId;
-  subscriptionStatus: 'active' | 'cancelled' | 'expired' | 'trial' | 'none';
+export type SubscriptionStatus =
+  | 'active'
+  | 'cancelled'
+  | 'expired'
+  | 'in_grace_period'
+  | 'on_hold'
+  | 'paused'
+  | 'trial'
+  | 'none';
+
+export type PaymentSource = 'toss' | 'apple' | 'google' | 'admin';
+
+export interface BillingMethodMeta {
+  cardCompany?: string;
+  maskedNumber?: string;
+  cardType?: string;
+  ownerType?: string;
+}
+
+/**
+ * 디자인 툴 구독 상태 (신규 RESTful 스펙).
+ * 기존 DesignToolAccess의 역할을 대체한다.
+ */
+export interface SubscriptionState {
+  userUuid: string;
+  plan: DesignToolPlanId;
+  status: SubscriptionStatus;
+  paymentSource?: PaymentSource;
   expiresAt?: string;
-  trialEndsAt?: string;
+  nextRenewalAt?: string;
+  autoRenew: boolean;
   subscribedAt?: string;
   cancelledAt?: string;
+  trialEndsAt?: string;
+  amount?: number;
+  currency?: string;
+  billingMethodMeta?: BillingMethodMeta;
+}
+
+/**
+ * @deprecated Use SubscriptionState. Maintained as alias for backward compatibility
+ * during migration. Consumers should migrate to SubscriptionState field names
+ * (plan, status, nextRenewalAt, billingMethodMeta, ...).
+ */
+export type DesignToolAccess = SubscriptionState;
+
+export interface DesignToolPaymentRecord {
+  id: string;
+  paidAt: string;
+  amount: number;
+  currency: string;
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  paymentSource: Exclude<PaymentSource, 'admin'>;
+  productId?: string;
+  receiptUrl?: string;
+  refundedAt?: string;
+}
+
+export interface DesignToolPaymentsPage {
+  items: DesignToolPaymentRecord[];
+  nextCursor?: string;
+}
+
+export interface AdminSubscriptionSummary {
+  userUuid: string;
+  email: string;
+  plan: DesignToolPlanId;
+  status: SubscriptionStatus;
+  paymentSource?: PaymentSource;
+  expiresAt?: string;
   autoRenew: boolean;
+  lastPaymentAt?: string;
+}
+
+export interface AdminSubscriptionListResponse {
+  items: AdminSubscriptionSummary[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AdminSubscriptionListQuery {
+  status?: SubscriptionStatus;
+  plan?: DesignToolPlanId;
+  paymentSource?: PaymentSource;
+  page?: number;
+  limit?: number;
 }
 
 export interface DesignToolSubscribeRequest {
@@ -51,11 +129,12 @@ export interface DesignToolPaymentSession {
   amount: number;
   clientKey: string;
   orderName: string;
+  customerKey?: string;
 }
 
 export interface DesignToolSubscribeResponse {
   success: boolean;
-  subscription?: DesignToolAccess;
+  subscription?: SubscriptionState;
   paymentSession?: DesignToolPaymentSession;
   message: string;
 }

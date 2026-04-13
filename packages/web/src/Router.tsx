@@ -77,6 +77,8 @@ import { SellerPublicOrderDetailPage } from './components/pages/SellerPublicOrde
 import { DesignToolPage } from './components/pages/DesignToolPage';
 import { DesignToolSubscriptionPage } from './components/pages/DesignToolSubscriptionPage';
 import { DesignToolPaymentResultPage } from './components/pages/DesignToolPaymentResultPage';
+import { DesignToolBillingHistoryPage } from './components/pages/DesignToolBillingHistoryPage';
+import DesignToolManagement from './components/admin/DesignToolManagement';
 
 // Seller Components
 import { SellerRegistrationPage } from './components/pages/SellerRegistrationPage';
@@ -738,6 +740,13 @@ export function Router() {
       </RequireAuth>
     );
   }
+  else if (pathname === '/my/billing/design-tool') {
+    screen = (
+      <RequireAuth>
+        <DesignToolBillingHistoryPage onGo={nav} />
+      </RequireAuth>
+    );
+  }
   // ==================== Seller Registration Routes ====================
   else if (pathname === '/seller/register') {
     screen = (
@@ -964,6 +973,12 @@ export function Router() {
       screen = (
         <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <SnapManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === '/admin/design-tool') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <DesignToolManagement />
         </AdminLayout>
       );
     } else {

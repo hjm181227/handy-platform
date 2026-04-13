@@ -98,6 +98,7 @@
     "designTool": "디자인 툴"
   },
   "defaultUser": "사용자",
+  "designToolBillingHistory": "디자인 툴 결제 내역",
   "customOrderManagement": "커스텀 주문 관리",
   "claims": "반품/교환 내역",
   "cancelHistory": "취소 내역",

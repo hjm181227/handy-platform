@@ -10,14 +10,18 @@ interface DesignToolPaymentResultPageProps {
 
 export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentResultPageProps) {
   const { t } = useTranslation('common');
-  const { confirmBilling } = useDesignToolAccess(false);
+  const { confirmBilling, updateBillingMethod } = useDesignToolAccess(false);
   const [status, setStatus] = useState<'processing' | 'completed' | 'failed'>('processing');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [mode, setMode] = useState<'new' | 'update'>('new');
   const confirmedRef = useRef(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isUpdate = params.get('mode') === 'update';
+    setMode(isUpdate ? 'update' : 'new');
+
     if (type === 'fail') {
-      const params = new URLSearchParams(window.location.search);
       setStatus('failed');
       setErrorMessage(params.get('message') || t('designTool.payment.defaultError'));
       return;
@@ -26,7 +30,6 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
     if (confirmedRef.current) return;
     confirmedRef.current = true;
 
-    const params = new URLSearchParams(window.location.search);
     const authKey = params.get('authKey');
     const customerKey = params.get('customerKey');
     const orderId = params.get('orderId');
@@ -38,17 +41,23 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
     }
 
     const confirmPayment = async () => {
-      const success = await confirmBilling(authKey, customerKey, orderId || '');
+      const success = isUpdate
+        ? await updateBillingMethod(authKey, customerKey)
+        : await confirmBilling(authKey, customerKey, orderId || '');
       if (success) {
         setStatus('completed');
       } else {
         setStatus('failed');
-        setErrorMessage(t('designTool.payment.registrationFailed'));
+        setErrorMessage(
+          isUpdate
+            ? t('designTool.subscription.cardChangeFailed')
+            : t('designTool.payment.registrationFailed'),
+        );
       }
     };
 
     confirmPayment();
-  }, [type, confirmBilling]);
+  }, [type, confirmBilling, updateBillingMethod, t]);
 
   if (status === 'processing') {
     return (
@@ -64,10 +73,18 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('designTool.payment.subscriptionComplete')}</h2>
-        <p className="text-gray-500 mb-8">{t('designTool.payment.subscriptionActivated')}</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {mode === 'update'
+            ? t('designTool.subscription.cardChangeSuccess')
+            : t('designTool.payment.subscriptionComplete')}
+        </h2>
+        <p className="text-gray-500 mb-8">
+          {mode === 'update'
+            ? t('designTool.subscription.cardChangeSuccessDesc')
+            : t('designTool.payment.subscriptionActivated')}
+        </p>
         <button
-          onClick={() => onGo('/design-tool/subscription')}
+          onClick={() => onGo('/design-tool')}
           className="w-full py-3 bg-pink-500 text-white rounded-xl font-semibold hover:bg-pink-600"
         >
           {t('designTool.payment.goToSubscription')}

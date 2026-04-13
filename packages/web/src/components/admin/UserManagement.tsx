@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AdminUser, AdminUsersResponse, UserRoleUpdateRequest } from '@handy-platform/shared';
-import type { DesignToolPlanId } from '@handy-platform/shared';
+import type {
+  DesignToolPlanId,
+  DesignToolPaymentRecord,
+  SubscriptionState,
+} from '@handy-platform/shared';
 import { adminService, designToolService } from '../../services/apiService';
 
 const UserManagement: React.FC = () => {
@@ -19,6 +23,10 @@ const UserManagement: React.FC = () => {
   const [roleChangeLoading, setRoleChangeLoading] = useState(false);
   const [showDesignToolModal, setShowDesignToolModal] = useState(false);
   const [designToolLoading, setDesignToolLoading] = useState(false);
+  const [dtModalTab, setDtModalTab] = useState<'manage' | 'history'>('manage');
+  const [dtPayments, setDtPayments] = useState<DesignToolPaymentRecord[]>([]);
+  const [dtPaymentsLoading, setDtPaymentsLoading] = useState(false);
+  const [dtSubscription, setDtSubscription] = useState<SubscriptionState | null>(null);
 
   // 통합된 adminService 사용 (토큰 관리 자동화)
 
@@ -101,23 +109,105 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDesignToolChange = async (planId: DesignToolPlanId, hasAccess: boolean) => {
-    if (!selectedUser) return;
+  const openDesignToolModal = async (user: AdminUser) => {
+    setSelectedUser(user);
+    setShowDesignToolModal(true);
+    setDtModalTab('manage');
+    setDtPayments([]);
+    setDtSubscription(user.designToolAccess ?? null);
+    try {
+      const res = await designToolService.adminGetUserSubscription(user.userUuid);
+      if (res.success && res.subscription) {
+        setDtSubscription(res.subscription);
+      }
+    } catch (err) {
+      console.error('Failed to fetch subscription detail:', err);
+    }
+  };
 
+  const loadDtPayments = async () => {
+    if (!selectedUser) return;
+    setDtPaymentsLoading(true);
+    try {
+      const res = await designToolService.adminGetUserPayments(
+        selectedUser.userUuid,
+        { limit: 50 },
+      );
+      if (res.success && res.items) {
+        setDtPayments(res.items);
+      }
+    } catch (err) {
+      console.error('Failed to load payments:', err);
+    } finally {
+      setDtPaymentsLoading(false);
+    }
+  };
+
+  const handleDtGrant = async (planId: DesignToolPlanId) => {
+    if (!selectedUser) return;
+    const reason = prompt('권한 부여 사유를 입력하세요:');
+    if (!reason) return;
     try {
       setDesignToolLoading(true);
-      await designToolService.adminUpdateAccess(selectedUser.userUuid, {
-        hasAccess,
-        currentPlan: planId,
-        subscriptionStatus: hasAccess ? 'active' : 'none',
+      const res = await designToolService.adminGrantUser(selectedUser.userUuid, {
+        plan: planId,
+        reason,
       });
+      if (res.success && res.subscription) {
+        setDtSubscription(res.subscription);
+      }
       await loadUsers();
-      setShowDesignToolModal(false);
-      setSelectedUser(null);
-      alert(`${selectedUser.name}님의 디자인 툴 플랜이 변경되었습니다.`);
+      alert(`${selectedUser.name}님에게 ${planId} 플랜 권한이 부여되었습니다.`);
     } catch (error) {
-      console.error('Design tool access change failed:', error);
-      alert('디자인 툴 권한 변경에 실패했습니다.');
+      console.error('Grant failed:', error);
+      alert('권한 부여에 실패했습니다.');
+    } finally {
+      setDesignToolLoading(false);
+    }
+  };
+
+  const handleDtCancel = async () => {
+    if (!selectedUser) return;
+    const reason = prompt('취소 사유를 입력하세요:') || undefined;
+    if (!confirm(`${selectedUser.name}님의 구독을 강제 취소하시겠습니까?`)) return;
+    try {
+      setDesignToolLoading(true);
+      const res = await designToolService.adminCancelUser(selectedUser.userUuid, {
+        reason,
+      });
+      if (res.success && res.subscription) {
+        setDtSubscription(res.subscription);
+      }
+      await loadUsers();
+      alert('구독이 취소되었습니다.');
+    } catch (error) {
+      console.error('Cancel failed:', error);
+      alert('구독 취소에 실패했습니다.');
+    } finally {
+      setDesignToolLoading(false);
+    }
+  };
+
+  const handleDtRefund = async (paymentId?: string) => {
+    if (!selectedUser) return;
+    const reason = prompt('환불 사유를 입력하세요:');
+    if (!reason) return;
+    if (!confirm(`${selectedUser.name}님의 결제를 환불하시겠습니까?`)) return;
+    try {
+      setDesignToolLoading(true);
+      const res = await designToolService.adminRefundUser(selectedUser.userUuid, {
+        reason,
+        paymentId,
+      });
+      if (res.success && res.subscription) {
+        setDtSubscription(res.subscription);
+      }
+      await loadDtPayments();
+      await loadUsers();
+      alert('환불이 처리되었습니다.');
+    } catch (error) {
+      console.error('Refund failed:', error);
+      alert('환불에 실패했습니다.');
     } finally {
       setDesignToolLoading(false);
     }
@@ -125,22 +215,31 @@ const UserManagement: React.FC = () => {
 
   const getDesignToolBadge = (user: AdminUser) => {
     const access = user.designToolAccess;
-    if (!access || access.subscriptionStatus === 'none') {
+    if (!access || access.status === 'none') {
       return { label: '없음', color: 'bg-gray-100 text-gray-500' };
     }
-    if (access.currentPlan === 'pro' && access.subscriptionStatus === 'active') {
+    if (access.plan === 'pro' && access.status === 'active') {
       return { label: 'Pro', color: 'bg-pink-100 text-pink-700' };
     }
-    if (access.currentPlan === 'free' && access.subscriptionStatus === 'active') {
+    if (access.plan === 'free' && access.status === 'active') {
       return { label: 'Free', color: 'bg-green-100 text-green-700' };
     }
-    if (access.subscriptionStatus === 'cancelled') {
+    if (access.status === 'cancelled') {
       return { label: '취소됨', color: 'bg-yellow-100 text-yellow-700' };
     }
-    if (access.subscriptionStatus === 'expired') {
+    if (access.status === 'expired') {
       return { label: '만료', color: 'bg-red-100 text-red-700' };
     }
-    return { label: access.currentPlan, color: 'bg-gray-100 text-gray-600' };
+    if (access.status === 'in_grace_period') {
+      return { label: 'Grace', color: 'bg-amber-100 text-amber-700' };
+    }
+    if (access.status === 'on_hold') {
+      return { label: 'On Hold', color: 'bg-red-100 text-red-700' };
+    }
+    if (access.status === 'paused') {
+      return { label: 'Paused', color: 'bg-blue-100 text-blue-700' };
+    }
+    return { label: access.plan, color: 'bg-gray-100 text-gray-600' };
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -334,10 +433,7 @@ const UserManagement: React.FC = () => {
                         const badge = getDesignToolBadge(user);
                         return (
                           <button
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowDesignToolModal(true);
-                            }}
+                            onClick={() => openDesignToolModal(user)}
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badge.color} hover:opacity-80 transition-opacity cursor-pointer`}
                           >
                             {badge.label}
@@ -664,84 +760,184 @@ const UserManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="px-6 py-6">
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2">현재 상태</p>
-                <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium">
-                  {(() => {
-                    const badge = getDesignToolBadge(selectedUser);
-                    return badge.label;
-                  })()}
-                </div>
-                {selectedUser.designToolAccess?.expiresAt && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    만료일: {new Date(selectedUser.designToolAccess.expiresAt).toLocaleDateString('ko-KR')}
-                  </p>
-                )}
-              </div>
+            {/* 탭 */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setDtModalTab('manage')}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  dtModalTab === 'manage'
+                    ? 'text-pink-600 border-b-2 border-pink-500'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                구독 관리
+              </button>
+              <button
+                onClick={() => {
+                  setDtModalTab('history');
+                  if (dtPayments.length === 0) loadDtPayments();
+                }}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  dtModalTab === 'history'
+                    ? 'text-pink-600 border-b-2 border-pink-500'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                결제 이력
+              </button>
+            </div>
 
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-900 mb-3">플랜 변경</p>
-                {([
-                  { id: 'pro' as const, label: '프로 (Pro)', desc: '모든 기능 + AI + 협업', icon: '👑', color: 'bg-pink-100 text-pink-600' },
-                  { id: 'free' as const, label: '무료 (Free)', desc: '기본 디자인 도구', icon: '🎨', color: 'bg-green-100 text-green-600' },
-                ]).map((plan) => {
-                  const isCurrent = selectedUser.designToolAccess?.subscriptionStatus === 'active' && selectedUser.designToolAccess?.currentPlan === plan.id;
-                  return (
-                    <button
-                      key={plan.id}
-                      onClick={() => handleDesignToolChange(plan.id, true)}
-                      disabled={designToolLoading || isCurrent}
-                      className={`w-full text-left px-4 py-3 border-2 rounded-lg transition-all duration-200 ${
-                        isCurrent
-                          ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50 hover:shadow-sm'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${plan.color}`}>
-                            {plan.icon}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{plan.label}</p>
-                            <p className="text-xs text-gray-500">{plan.desc}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {isCurrent && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              현재
-                            </span>
-                          )}
-                          {designToolLoading && (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-
-                {/* 접근 회수 버튼 */}
-                {selectedUser.designToolAccess?.subscriptionStatus === 'active' && (
-                  <button
-                    onClick={() => handleDesignToolChange('free', false)}
-                    disabled={designToolLoading}
-                    className="w-full text-left px-4 py-3 border-2 border-red-200 rounded-lg text-red-700 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-100 text-red-600">
-                        🚫
-                      </div>
-                      <div>
-                        <p className="font-medium">접근 회수</p>
-                        <p className="text-xs text-red-500">디자인 툴 접근을 완전히 제거합니다</p>
-                      </div>
+            <div className="px-6 py-6 max-h-[60vh] overflow-y-auto">
+              {dtModalTab === 'manage' && (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2">현재 상태</p>
+                    <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium">
+                      {getDesignToolBadge(selectedUser).label}
                     </div>
-                  </button>
-                )}
-              </div>
+                    {dtSubscription?.paymentSource && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        결제 소스: {dtSubscription.paymentSource.toUpperCase()}
+                      </p>
+                    )}
+                    {dtSubscription?.expiresAt && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        만료일: {new Date(dtSubscription.expiresAt).toLocaleDateString('ko-KR')}
+                      </p>
+                    )}
+                    {dtSubscription?.nextRenewalAt && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        다음 결제일:{' '}
+                        {new Date(dtSubscription.nextRenewalAt).toLocaleDateString('ko-KR')}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-4">
+                    <p className="text-sm font-medium text-gray-900 mb-3">권한 부여 (Grant)</p>
+                    <p className="text-xs text-gray-500 mb-3">
+                      지원 케이스용 — 결제 없이 플랜을 부여합니다. 감사 로그에 사유가 기록됩니다.
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => handleDtGrant('pro')}
+                        disabled={designToolLoading}
+                        className="w-full px-4 py-2 border border-pink-200 rounded-lg text-sm text-pink-700 hover:bg-pink-50 disabled:opacity-50"
+                      >
+                        Pro 플랜 부여
+                      </button>
+                      <button
+                        onClick={() => handleDtGrant('free')}
+                        disabled={designToolLoading}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Free 플랜 부여
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-4 space-y-2">
+                    <p className="text-sm font-medium text-gray-900 mb-2">위험 액션</p>
+                    <button
+                      onClick={handleDtCancel}
+                      disabled={
+                        designToolLoading ||
+                        !dtSubscription ||
+                        dtSubscription.status === 'none' ||
+                        dtSubscription.status === 'cancelled'
+                      }
+                      className="w-full px-4 py-2 border border-amber-200 rounded-lg text-sm text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                    >
+                      강제 취소
+                    </button>
+                    <button
+                      onClick={() => handleDtRefund()}
+                      disabled={designToolLoading}
+                      className="w-full px-4 py-2 border border-red-200 rounded-lg text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      최근 결제 환불
+                    </button>
+                    <p className="text-xs text-gray-400 mt-2">
+                      특정 결제를 환불하려면 "결제 이력" 탭에서 개별 환불을 사용하세요.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {dtModalTab === 'history' && (
+                <div>
+                  {dtPaymentsLoading && (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500" />
+                    </div>
+                  )}
+                  {!dtPaymentsLoading && dtPayments.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-8">
+                      결제 이력이 없습니다.
+                    </p>
+                  )}
+                  {!dtPaymentsLoading && dtPayments.length > 0 && (
+                    <ul className="divide-y divide-gray-100">
+                      {dtPayments.map((p) => (
+                        <li key={p.id} className="py-3 flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                ₩{p.amount.toLocaleString()}
+                              </span>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full ${
+                                  p.status === 'completed'
+                                    ? 'bg-green-100 text-green-700'
+                                    : p.status === 'refunded'
+                                    ? 'bg-gray-100 text-gray-600'
+                                    : p.status === 'failed'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                }`}
+                              >
+                                {p.status}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {p.paymentSource}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {new Date(p.paidAt).toLocaleString('ko-KR')}
+                            </p>
+                            {p.refundedAt && (
+                              <p className="text-xs text-gray-400">
+                                환불: {new Date(p.refundedAt).toLocaleDateString('ko-KR')}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            {p.receiptUrl && (
+                              <a
+                                href={p.receiptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-pink-600 hover:underline"
+                              >
+                                영수증
+                              </a>
+                            )}
+                            {p.status === 'completed' && !p.refundedAt && (
+                              <button
+                                onClick={() => handleDtRefund(p.id)}
+                                disabled={designToolLoading}
+                                className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                              >
+                                환불
+                              </button>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl flex justify-end">
@@ -749,6 +945,8 @@ const UserManagement: React.FC = () => {
                 onClick={() => {
                   setShowDesignToolModal(false);
                   setSelectedUser(null);
+                  setDtPayments([]);
+                  setDtSubscription(null);
                 }}
                 disabled={designToolLoading}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"

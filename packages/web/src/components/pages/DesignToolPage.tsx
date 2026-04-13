@@ -63,8 +63,8 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
     }
   };
 
-  const currentPlan = access?.currentPlan;
-  const isActive = access?.subscriptionStatus === 'active';
+  const currentPlan = access?.plan;
+  const isActive = access?.status === 'active';
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

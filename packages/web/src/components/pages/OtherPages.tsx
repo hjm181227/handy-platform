@@ -514,6 +514,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
           {/* 디자인 툴 */}
           <Section title={t('mypage:sections.designTool')}>
             <LinkRow title={t('mypage:subscriptionManagement')} to="/design-tool" />
+            <LinkRow title={t('mypage:designToolBillingHistory')} to="/my/billing/design-tool" />
           </Section>
 
           {/* Menu Section 2 */}

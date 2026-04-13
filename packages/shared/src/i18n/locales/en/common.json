@@ -353,11 +353,29 @@
       "cancelledWithExpiry": "Cancelled (available until expiry)",
       "expired": "Expired",
       "none": "No subscription",
-      "trial": "Trial"
+      "trial": "Trial",
+      "inGracePeriod": "Grace Period",
+      "onHold": "On Hold",
+      "paused": "Paused"
     },
     "subscription": {
       "startDate": "Start Date",
       "expiryDate": "Expiry Date",
+      "nextBillingDate": "Next Billing Date",
+      "billingMethod": "Billing Method",
+      "changeCard": "Change Card",
+      "cardChangeSuccess": "Card updated",
+      "cardChangeSuccessDesc": "Your next payment will be charged to the new card.",
+      "cardChangeFailed": "Failed to update card",
+      "gracePeriodTitle": "Grace Period",
+      "gracePeriodNotice": "Your payment failed. Please update your card within the grace period, otherwise your subscription will be suspended.",
+      "onHoldTitle": "Subscription On Hold",
+      "onHoldNotice": "Your subscription is on hold due to a failed payment. Update your card to resume.",
+      "pausedTitle": "Subscription Paused",
+      "pausedNotice": "Your subscription is currently paused.",
+      "card": "Card",
+      "billingMethodUnknown": "No billing method info",
+      "iapManageNotice": "This subscription was purchased via {{store}}. Please manage or cancel it from the store's subscription settings.",
       "autoRenew": "Auto-renew",
       "on": "On",
       "off": "Off",
@@ -392,6 +410,21 @@
       "authError": "Payment authentication information is invalid.",
       "registrationFailed": "Subscription registration failed. Please contact customer support.",
       "defaultError": "Payment failed."
+    },
+    "billing": {
+      "history": "Billing History",
+      "historyEmpty": "No billing history.",
+      "historyLoadFailed": "Failed to load billing history.",
+      "loadMore": "Load More",
+      "loadingMore": "Loading...",
+      "viewReceipt": "View Receipt",
+      "refundedAt": "Refunded: {{date}}",
+      "status": {
+        "completed": "Completed",
+        "refunded": "Refunded",
+        "failed": "Failed",
+        "pending": "Pending"
+      }
     }
   }
 }

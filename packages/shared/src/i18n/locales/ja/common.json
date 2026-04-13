@@ -353,11 +353,29 @@
       "cancelledWithExpiry": "キャンセル済み（有効期限まで利用可能）",
       "expired": "期限切れ",
       "none": "サブスクリプションなし",
-      "trial": "お試し中"
+      "trial": "お試し中",
+      "inGracePeriod": "支払い猶予期間",
+      "onHold": "保留中",
+      "paused": "一時停止"
     },
     "subscription": {
       "startDate": "サブスクリプション開始日",
       "expiryDate": "有効期限",
+      "nextBillingDate": "次回請求日",
+      "billingMethod": "お支払い方法",
+      "changeCard": "カード変更",
+      "cardChangeSuccess": "カードを変更しました",
+      "cardChangeSuccessDesc": "次回の決済から新しいカードで請求されます。",
+      "cardChangeFailed": "カード変更に失敗しました",
+      "gracePeriodTitle": "支払い猶予期間",
+      "gracePeriodNotice": "決済に失敗しました。猶予期間内にカードを変更してください。期間を過ぎるとサブスクリプションが停止されます。",
+      "onHoldTitle": "サブスクリプション保留中",
+      "onHoldNotice": "決済失敗によりサブスクリプションが保留されています。カードを変更して再開してください。",
+      "pausedTitle": "サブスクリプション一時停止",
+      "pausedNotice": "サブスクリプションは現在一時停止されています。",
+      "card": "カード",
+      "billingMethodUnknown": "お支払い方法の情報なし",
+      "iapManageNotice": "このサブスクリプションは{{store}}で購入されました。キャンセル／管理は該当ストアのサブスクリプション設定から行ってください。",
       "autoRenew": "自動更新",
       "on": "有効",
       "off": "無効",
@@ -392,6 +410,21 @@
       "authError": "決済認証情報が正しくありません。",
       "registrationFailed": "定期購読の登録に失敗しました。カスタマーサポートにお問い合わせください。",
       "defaultError": "決済に失敗しました。"
+    },
+    "billing": {
+      "history": "決済履歴",
+      "historyEmpty": "決済履歴がありません。",
+      "historyLoadFailed": "決済履歴の読み込みに失敗しました。",
+      "loadMore": "もっと見る",
+      "loadingMore": "読み込み中...",
+      "viewReceipt": "領収書を見る",
+      "refundedAt": "返金日: {{date}}",
+      "status": {
+        "completed": "決済完了",
+        "refunded": "返金済み",
+        "failed": "決済失敗",
+        "pending": "処理中"
+      }
     }
   }
 }

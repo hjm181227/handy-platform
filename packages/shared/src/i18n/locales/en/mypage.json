@@ -98,6 +98,7 @@
     "designTool": "Design Tool"
   },
   "defaultUser": "User",
+  "designToolBillingHistory": "Design Tool Billing History",
   "customOrderManagement": "Custom Order Management",
   "claims": "Returns & Exchanges",
   "cancelHistory": "Cancellations",

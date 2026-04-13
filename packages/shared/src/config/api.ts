@@ -525,16 +525,36 @@ export const API_ENDPOINTS = {
     QUOTES: (uuid: string) => `/api/custom-orders/${uuid}/quotes`, // GET - 주문서별 견적 목록
   },
 
-  // 디자인 툴
+  // 디자인 툴 (RESTful — Phase A)
   DESIGN_TOOL: {
-    ACCESS: '/api/design-tool/access',
+    // 유지되는 legacy 엔드포인트 (신규 가입 플로우 전용)
     PLANS: '/api/design-tool/plans',
-    SUBSCRIBE: '/api/design-tool/subscribe',
-    APPROVE: '/api/design-tool/approve',
-    BILLING_CONFIRM: '/api/design-tool/billing/confirm',
-    CANCEL: '/api/design-tool/cancel',
-    CHANGE_PLAN: '/api/design-tool/change-plan',
-    ADMIN_ACCESS: (userUuid: string) => `/api/design-tool/admin/${userUuid}/access`,
+    SUBSCRIBE: '/api/design-tool/subscribe',                 // Toss 결제 세션 생성
+    BILLING_CONFIRM: '/api/design-tool/billing/confirm',     // 최초 빌링키 발급 + 첫 결제
+
+    // 사용자 본인 구독 관리
+    ME: {
+      SUBSCRIPTION: '/api/design-tool/me/subscription',
+      PAYMENTS: '/api/design-tool/me/subscription/payments',
+      CANCEL: '/api/design-tool/me/subscription/cancel',
+      CHANGE_PLAN: '/api/design-tool/me/subscription/change-plan',
+      BILLING_METHOD: '/api/design-tool/me/subscription/billing-method',
+    },
+
+    // 운영자(Admin) 구독 관리
+    ADMIN: {
+      SUBSCRIPTIONS_LIST: '/api/design-tool/admin/subscriptions',
+      USER_SUBSCRIPTION: (userUuid: string) =>
+        `/api/design-tool/admin/users/${userUuid}/subscription`,
+      USER_PAYMENTS: (userUuid: string) =>
+        `/api/design-tool/admin/users/${userUuid}/subscription/payments`,
+      USER_CANCEL: (userUuid: string) =>
+        `/api/design-tool/admin/users/${userUuid}/subscription/cancel`,
+      USER_REFUND: (userUuid: string) =>
+        `/api/design-tool/admin/users/${userUuid}/subscription/refund`,
+      USER_GRANT: (userUuid: string) =>
+        `/api/design-tool/admin/users/${userUuid}/subscription/grant`,
+    },
   },
 
   // 견적서
