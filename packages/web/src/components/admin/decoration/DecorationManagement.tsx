@@ -190,7 +190,7 @@ export default function DecorationManagement() {
 
   const getCategoryName = (slug: string) => {
     const cat = categories.find((c) => c.slug === slug);
-    return cat ? cat.nameKo : slug;
+    return cat ? (cat.name?.ko || cat.name?.en || slug) : slug;
   };
 
   // ============================================================
@@ -264,7 +264,7 @@ export default function DecorationManagement() {
                 <option value="">전체</option>
                 {categories.map((c) => (
                   <option key={c.decorationCategoryUuid} value={c.slug}>
-                    {c.nameKo}
+                    {c.name?.ko || c.name?.en}
                   </option>
                 ))}
               </select>
@@ -349,7 +349,7 @@ export default function DecorationManagement() {
                           {asset.assets?.previewUrl ? (
                             <img
                               src={asset.assets.previewUrl}
-                              alt={asset.nameKo}
+                              alt={asset.name?.ko || asset.name?.en}
                               className="w-10 h-10 object-contain rounded"
                             />
                           ) : (
@@ -357,8 +357,8 @@ export default function DecorationManagement() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {asset.nameKo}
-                          <span className="block text-xs text-gray-400">{asset.name}</span>
+                          {asset.name?.ko || asset.name?.en}
+                          <span className="block text-xs text-gray-400">{asset.name?.en}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <AssetTypeBadge type={asset.assetType} />
@@ -443,7 +443,7 @@ export default function DecorationManagement() {
               <div className="bg-white rounded-lg max-w-md w-full p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-2">에셋 삭제</h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  <strong>{deleteTarget.nameKo}</strong> 에셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                  <strong>{deleteTarget.name?.ko || deleteTarget.name?.en}</strong> 에셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
@@ -517,8 +517,8 @@ export default function DecorationManagement() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">
                           {cat.slug}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cat.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cat.nameKo}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cat.name?.en}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cat.name?.ko}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
                             {cat.assetType}
@@ -578,7 +578,7 @@ export default function DecorationManagement() {
               <div className="bg-white rounded-lg max-w-md w-full p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-2">카테고리 삭제</h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  <strong>{catDeleteTarget.nameKo}</strong> 카테고리를 삭제하시겠습니까?
+                  <strong>{catDeleteTarget.name?.ko || catDeleteTarget.name?.en}</strong> 카테고리를 삭제하시겠습니까?
                 </p>
                 <div className="flex justify-end gap-3">
                   <button

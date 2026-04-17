@@ -2592,10 +2592,8 @@ export interface UpdateQuestionRequest {
 export interface DecorationAsset {
   decorationAssetUuid: string;
   assetType: 'part' | 'sticker';
-  name: string;
-  nameKo: string;
-  description?: string;
-  descriptionKo?: string;
+  name: Record<string, string>;
+  description?: Record<string, string>;
   category: string;
   tags: { themes: string[]; appearances: string[] };
   sortOrder: number;
@@ -2607,8 +2605,7 @@ export interface DecorationAsset {
   };
   variants: Array<{
     id: string;
-    name: string;
-    nameKo: string;
+    name: Record<string, string>;
     swatchColor: string;
     color: [number, number, number];
     metalness: number;
@@ -2635,8 +2632,7 @@ export interface DecorationAsset {
 export interface DecorationCategory {
   decorationCategoryUuid: string;
   slug: string;
-  name: string;
-  nameKo: string;
+  name: Record<string, string>;
   assetType: 'part' | 'sticker' | 'all';
   sortOrder: number;
   icon?: string;

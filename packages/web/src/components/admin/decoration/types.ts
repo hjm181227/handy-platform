@@ -10,7 +10,7 @@ export interface AssetFilters {
 
 export interface VariantFormData {
   id: string;
-  name: string;
+  nameEn: string;
   nameKo: string;
   swatchColor: string;
   color: [number, number, number];
@@ -20,9 +20,9 @@ export interface VariantFormData {
 }
 
 export interface AssetFormData {
-  name: string;
+  nameEn: string;
   nameKo: string;
-  description: string;
+  descriptionEn: string;
   descriptionKo: string;
   assetType: 'part' | 'sticker';
   category: string;
@@ -43,7 +43,7 @@ export interface AssetFormData {
 
 export interface CategoryFormData {
   slug: string;
-  name: string;
+  nameEn: string;
   nameKo: string;
   assetType: 'part' | 'sticker' | 'all';
   sortOrder: number;

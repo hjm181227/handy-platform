@@ -7,9 +7,9 @@ import { GLBPreview } from './GLBPreview';
 import { SVGPreview } from './SVGPreview';
 
 const defaultAssetForm = (): AssetFormData => ({
-  name: '',
+  nameEn: '',
   nameKo: '',
-  description: '',
+  descriptionEn: '',
   descriptionKo: '',
   assetType: 'part',
   category: '',
@@ -56,10 +56,10 @@ export function DecorationFormModal({
     if (!isOpen) return;
     if (mode === 'edit' && initialData) {
       setForm({
-        name: initialData.name,
-        nameKo: initialData.nameKo,
-        description: initialData.description || '',
-        descriptionKo: initialData.descriptionKo || '',
+        nameEn: initialData.name?.en || '',
+        nameKo: initialData.name?.ko || '',
+        descriptionEn: initialData.description?.en || '',
+        descriptionKo: initialData.description?.ko || '',
         assetType: initialData.assetType,
         category: initialData.category,
         accessTier: initialData.accessTier,
@@ -74,7 +74,16 @@ export function DecorationFormModal({
         svgPath: initialData.assets?.svgPath || '',
         viewBox: initialData.assets?.viewBox || '0 0 100 100',
         defaultColor: initialData.defaultColor || '#FF0000',
-        variants: (initialData.variants || []).map((v) => ({ ...v })),
+        variants: (initialData.variants || []).map((v: DecorationAsset['variants'][number]) => ({
+          id: v.id,
+          nameEn: v.name?.en || '',
+          nameKo: v.name?.ko || '',
+          swatchColor: v.swatchColor,
+          color: v.color,
+          metalness: v.metalness,
+          roughness: v.roughness,
+          clearcoat: v.clearcoat,
+        })),
       });
     } else {
       setForm(defaultAssetForm());
@@ -158,7 +167,7 @@ export function DecorationFormModal({
         ...prev.variants,
         {
           id: `var_${Date.now()}`,
-          name: '',
+          nameEn: '',
           nameKo: '',
           swatchColor: '#CCCCCC',
           color: [0.8, 0.8, 0.8] as [number, number, number],
@@ -184,7 +193,7 @@ export function DecorationFormModal({
 
   // --- Submit ---
   const handleSubmit = async () => {
-    if (!form.name || !form.nameKo) {
+    if (!form.nameEn || !form.nameKo) {
       alert('이름과 한국어 이름은 필수입니다.');
       return;
     }
@@ -209,10 +218,10 @@ export function DecorationFormModal({
           .filter(Boolean);
 
       const payload: Partial<DecorationAsset> = {
-        name: form.name,
-        nameKo: form.nameKo,
-        description: form.description || undefined,
-        descriptionKo: form.descriptionKo || undefined,
+        name: { en: form.nameEn, ko: form.nameKo },
+        description: form.descriptionEn || form.descriptionKo
+          ? { en: form.descriptionEn, ko: form.descriptionKo }
+          : undefined,
         assetType: form.assetType,
         category: form.category,
         accessTier: form.accessTier,
@@ -231,7 +240,15 @@ export function DecorationFormModal({
 
       if (form.assetType === 'part') {
         payload.baseSize = form.baseSize;
-        payload.variants = form.variants;
+        payload.variants = form.variants.map((v) => ({
+          id: v.id,
+          name: { en: v.nameEn, ko: v.nameKo },
+          swatchColor: v.swatchColor,
+          color: v.color,
+          metalness: v.metalness,
+          roughness: v.roughness,
+          clearcoat: v.clearcoat,
+        }));
       }
 
       if (form.assetType === 'sticker') {
@@ -257,16 +274,16 @@ export function DecorationFormModal({
           </h2>
 
           <div className="space-y-4">
-            {/* Row: name / nameKo */}
+            {/* Row: nameEn / nameKo */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name (EN) <span className="text-red-500">*</span>
+                  이름 (EN) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  value={form.nameEn}
+                  onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -283,13 +300,13 @@ export function DecorationFormModal({
               </div>
             </div>
 
-            {/* Row: description / descriptionKo */}
+            {/* Row: descriptionEn / descriptionKo */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description (EN)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">설명 (EN)</label>
                 <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  value={form.descriptionEn}
+                  onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -337,7 +354,7 @@ export function DecorationFormModal({
                     .filter((c) => c.assetType === 'all' || c.assetType === form.assetType)
                     .map((c) => (
                       <option key={c.decorationCategoryUuid} value={c.slug}>
-                        {c.nameKo} ({c.slug})
+                        {c.name?.ko || c.name?.en} ({c.slug})
                       </option>
                     ))}
                 </select>
@@ -551,16 +568,16 @@ export function DecorationFormModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600">Name</label>
+                        <label className="block text-xs text-gray-600">이름 (EN)</label>
                         <input
                           type="text"
-                          value={v.name}
-                          onChange={(e) => updateVariant(idx, 'name', e.target.value)}
+                          value={v.nameEn}
+                          onChange={(e) => updateVariant(idx, 'nameEn', e.target.value)}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600">이름(KO)</label>
+                        <label className="block text-xs text-gray-600">이름 (KO)</label>
                         <input
                           type="text"
                           value={v.nameKo}
@@ -689,7 +706,7 @@ export function DecorationFormModal({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!form.name || !form.nameKo || submitting}
+              disabled={!form.nameEn || !form.nameKo || submitting}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiCheck className="inline mr-1" />

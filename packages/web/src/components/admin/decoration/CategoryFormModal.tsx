@@ -5,7 +5,7 @@ import type { CategoryFormData } from './types';
 
 const defaultCategoryForm = (): CategoryFormData => ({
   slug: '',
-  name: '',
+  nameEn: '',
   nameKo: '',
   assetType: 'all',
   sortOrder: 0,
@@ -34,8 +34,8 @@ export function CategoryFormModal({
     if (mode === 'edit' && initialData) {
       setForm({
         slug: initialData.slug,
-        name: initialData.name,
-        nameKo: initialData.nameKo,
+        nameEn: initialData.name?.en || '',
+        nameKo: initialData.name?.ko || '',
         assetType: initialData.assetType,
         sortOrder: initialData.sortOrder,
         icon: initialData.icon || '',
@@ -47,16 +47,15 @@ export function CategoryFormModal({
   }, [isOpen, mode, initialData]);
 
   const handleSubmit = async () => {
-    if (!form.slug || !form.name || !form.nameKo) {
-      alert('slug, name, nameKo는 필수입니다.');
+    if (!form.slug || !form.nameEn || !form.nameKo) {
+      alert('slug, name(EN), name(KO)는 필수입니다.');
       return;
     }
     try {
       setSubmitting(true);
       await onSubmit({
         slug: form.slug,
-        name: form.name,
-        nameKo: form.nameKo,
+        name: { en: form.nameEn, ko: form.nameKo },
         assetType: form.assetType,
         sortOrder: form.sortOrder,
         icon: form.icon || undefined,
@@ -96,12 +95,12 @@ export function CategoryFormModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name (EN) <span className="text-red-500">*</span>
+                  이름 (EN) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  value={form.nameEn}
+                  onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -171,7 +170,7 @@ export function CategoryFormModal({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!form.slug || !form.name || !form.nameKo || submitting}
+              disabled={!form.slug || !form.nameEn || !form.nameKo || submitting}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiCheck className="inline mr-1" />
