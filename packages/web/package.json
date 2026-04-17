@@ -18,7 +18,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "deploy:stage": "vercel",
-    "deploy:prod": "vercel --prod"
+    "deploy:prod": "vercel --prod",
+    "postinstall": "node scripts/ensure-react18.cjs"
   },
   "dependencies": {
     "@fontsource/bodoni-moda": "^5.2.7",
