@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FiEye } from 'react-icons/fi';
+import { FiEye, FiRefreshCw } from 'react-icons/fi';
 
 export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCapture: (blob: Blob) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -9,6 +9,18 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const frameRef = useRef<number>(0);
+  const [isAutoCapturing, setIsAutoCapturing] = useState(false);
+
+  const captureCanvas = () => {
+    const renderer = rendererRef.current;
+    const scene = sceneRef.current;
+    const camera = cameraRef.current;
+    if (!renderer || !scene || !camera) return;
+    renderer.render(scene, camera);
+    renderer.domElement.toBlob((blob) => {
+      if (blob) onCapture(blob);
+    }, 'image/png');
+  };
 
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
@@ -43,6 +55,7 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
     scene.add(dirLight);
 
     // Load GLB
+    let autoCaptureTimer: ReturnType<typeof setTimeout> | null = null;
     const loader = new GLTFLoader();
     loader.load(
       modelUrl,
@@ -60,6 +73,13 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
         camera.position.set(center.x + dist * 0.5, center.y + dist * 0.3, center.z + dist);
         camera.lookAt(center);
         camera.updateProjectionMatrix();
+
+        // Auto-capture after a short delay to ensure rendering is complete
+        setIsAutoCapturing(true);
+        autoCaptureTimer = setTimeout(() => {
+          captureCanvas();
+          setIsAutoCapturing(false);
+        }, 500);
       },
       undefined,
       (err) => console.error('GLB load error:', err)
@@ -80,6 +100,7 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
     animate();
 
     return () => {
+      if (autoCaptureTimer) clearTimeout(autoCaptureTimer);
       cancelAnimationFrame(frameRef.current);
       renderer.dispose();
       container.innerHTML = '';
@@ -87,27 +108,29 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
   }, [modelUrl]);
 
   const handleCapture = () => {
-    const renderer = rendererRef.current;
-    const scene = sceneRef.current;
-    const camera = cameraRef.current;
-    if (!renderer || !scene || !camera) return;
-    renderer.render(scene, camera);
-    renderer.domElement.toBlob((blob) => {
-      if (blob) onCapture(blob);
-    }, 'image/png');
+    captureCanvas();
   };
 
   return (
     <div>
       <div ref={containerRef} className="w-full border border-gray-300 rounded-lg overflow-hidden" style={{ height: 300 }} />
-      <button
-        type="button"
-        onClick={handleCapture}
-        className="mt-2 inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-      >
-        <FiEye className="mr-1" />
-        미리보기 캡처
-      </button>
+      <div className="mt-2 flex items-center gap-2">
+        {isAutoCapturing && (
+          <span className="inline-flex items-center text-sm text-indigo-600">
+            <FiRefreshCw className="mr-1 animate-spin" />
+            자동 캡처 중...
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={handleCapture}
+          disabled={isAutoCapturing}
+          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FiEye className="mr-1" />
+          다시 캡처
+        </button>
+      </div>
     </div>
   );
 }

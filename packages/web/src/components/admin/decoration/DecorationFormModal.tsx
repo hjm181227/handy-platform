@@ -45,7 +45,12 @@ export function DecorationFormModal({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [glbSizeError, setGlbSizeError] = useState<string | null>(null);
+  const [isAutoCapturing, setIsAutoCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_GLB_SIZE = 20 * 1024 * 1024; // 20MB
+  const MAX_PREVIEW_SIZE = 5 * 1024 * 1024; // 5MB
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,6 +80,8 @@ export function DecorationFormModal({
       setForm(defaultAssetForm());
     }
     setGlbFile(null);
+    setGlbSizeError(null);
+    setIsAutoCapturing(false);
     setUploadProgress(0);
     setIsUploading(false);
   }, [isOpen, mode, initialData]);
@@ -118,6 +125,12 @@ export function DecorationFormModal({
       alert('GLB 또는 GLTF 파일만 지원합니다.');
       return;
     }
+    if (file.size > MAX_GLB_SIZE) {
+      setGlbSizeError(`파일 크기가 ${(file.size / 1024 / 1024).toFixed(1)}MB입니다. 최대 20MB까지 업로드할 수 있습니다.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    setGlbSizeError(null);
     setGlbFile(file);
     // Create a local object URL for preview
     const url = URL.createObjectURL(file);
@@ -127,11 +140,13 @@ export function DecorationFormModal({
 
   const handlePreviewCapture = async (blob: Blob) => {
     try {
+      setIsAutoCapturing(true);
       const fileUrl = await uploadFileToS3(blob, 'decoration-preview', `preview_${Date.now()}.png`, 'image/png');
       setForm((prev) => ({ ...prev, previewUrl: fileUrl }));
-      alert('미리보기 이미지가 업로드되었습니다.');
     } catch (err: any) {
       alert(`미리보기 업로드 실패: ${err.message}`);
+    } finally {
+      setIsAutoCapturing(false);
     }
   };
 
@@ -401,14 +416,20 @@ export function DecorationFormModal({
                   onChange={handleGlbSelect}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <FiUpload className="mr-2" />
-                  GLB 파일 선택
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    <FiUpload className="mr-2" />
+                    GLB 파일 선택
+                  </button>
+                  <p className="text-sm text-gray-500">최대 20MB</p>
+                </div>
+                {glbSizeError && (
+                  <p className="text-xs text-red-600 mt-1">{glbSizeError}</p>
+                )}
                 {glbFile && (
                   <p className="text-xs text-gray-500">
                     선택된 파일: {glbFile.name} ({(glbFile.size / 1024 / 1024).toFixed(2)} MB)
@@ -433,9 +454,13 @@ export function DecorationFormModal({
                   <GLBPreview modelUrl={form.modelUrl} onCapture={handlePreviewCapture} />
                 )}
 
+                {isAutoCapturing && (
+                  <p className="text-xs text-indigo-600 mt-1">자동 캡처 및 업로드 중...</p>
+                )}
+
                 {form.previewUrl && (
                   <div className="mt-2">
-                    <p className="text-xs text-gray-500 mb-1">저장된 미리보기:</p>
+                    <p className="text-xs text-gray-500 mb-1">저장된 미리보기: <span className="text-gray-400">(최대 5MB)</span></p>
                     <img src={form.previewUrl} alt="preview" className="w-24 h-24 object-contain border rounded" />
                   </div>
                 )}
