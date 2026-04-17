@@ -23,6 +23,9 @@ export * from './loyalty/LoyaltyService';
 // Design Tool
 export * from './designtool/DesignToolService';
 
+// Decoration
+export * from './decoration/DecorationService';
+
 // Utilities
 export * from './utils';
 

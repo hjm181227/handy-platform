@@ -337,6 +337,13 @@ export const API_ENDPOINTS = {
     // 스냅 신고 관리
     SNAP_REPORTS: '/api/admin/snaps/reports',
     SNAP_REPORT_STATUS: (reportUuid: string) => `/api/admin/snaps/reports/${reportUuid}`,
+
+    // 데코레이션 관리
+    DECORATIONS: '/api/admin/decorations',
+    DECORATION_DETAIL: (uuid: string) => `/api/admin/decorations/${uuid}`,
+    DECORATION_STATUS: (uuid: string) => `/api/admin/decorations/${uuid}/status`,
+    DECORATION_CATEGORIES: '/api/admin/decoration-categories',
+    DECORATION_CATEGORY_DETAIL: (uuid: string) => `/api/admin/decoration-categories/${uuid}`,
   },
 
   // 판매자 센터 (서버 API 스펙에 완전 일치)

@@ -2587,3 +2587,71 @@ export interface UpdateQuestionRequest {
   content?: string;
   isSecret?: boolean;
 }
+
+// Decoration Types
+export interface DecorationAsset {
+  decorationAssetUuid: string;
+  assetType: 'part' | 'sticker';
+  name: string;
+  nameKo: string;
+  description?: string;
+  descriptionKo?: string;
+  category: string;
+  tags: { themes: string[]; appearances: string[] };
+  sortOrder: number;
+  assets: {
+    modelUrl?: string;
+    previewUrl: string;
+    svgPath?: string;
+    viewBox?: string;
+  };
+  variants: Array<{
+    id: string;
+    name: string;
+    nameKo: string;
+    swatchColor: string;
+    color: [number, number, number];
+    metalness: number;
+    roughness: number;
+    clearcoat: number;
+  }>;
+  defaultVariantId?: string;
+  baseSize?: number;
+  defaultColor?: string;
+  strokeColor?: string;
+  accessTier: 'free' | 'paid' | 'pro_only';
+  ownerType: 'system' | 'user';
+  ownerUserUuid?: string;
+  packUuid?: string;
+  status: 'active' | 'inactive' | 'pending_review' | 'rejected';
+  isDeleted: boolean;
+  stats: { usageCount: number; downloadCount: number; favoriteCount: number };
+  fileSize?: number;
+  fileHash?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DecorationCategory {
+  decorationCategoryUuid: string;
+  slug: string;
+  name: string;
+  nameKo: string;
+  assetType: 'part' | 'sticker' | 'all';
+  sortOrder: number;
+  icon?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DecorationCatalogResponse {
+  categories: DecorationCategory[];
+  items: DecorationAsset[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}

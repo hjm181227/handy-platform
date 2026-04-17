@@ -132,6 +132,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
       href: '/admin/design-tool',
       icon: MdPalette
     },
+    {
+      name: '데코레이션 관리',
+      href: '/admin/decorations',
+      icon: MdPalette
+    },
   ];
 
   return (

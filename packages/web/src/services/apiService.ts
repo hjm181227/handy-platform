@@ -188,6 +188,7 @@ class WebApiService {
   get snap() { return this.apiService.snap; }
   get follow() { return this.apiService.follow; }
   get designTool() { return this.apiService.designTool; }
+  get decoration() { return this.apiService.decoration; }
 
   // 환경 정보
   getEnvironmentInfo() {
@@ -341,6 +342,7 @@ export const {
   user: userService,
   follow: followService,
   designTool: designToolService,
+  decoration: decorationService,
 } = webApiService;
 
 // 레거시 호환성을 위한 기본 함수들
