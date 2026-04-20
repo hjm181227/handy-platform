@@ -22,6 +22,7 @@ export default function DecorationManagement() {
     accessTier: '',
     status: '',
     search: '',
+    sort: 'newest',
   });
 
   // Asset modals
@@ -50,6 +51,7 @@ export default function DecorationManagement() {
         accessTier: (filters.accessTier as any) || undefined,
         status: (filters.status as any) || undefined,
         search: filters.search || undefined,
+        sort: filters.sort || undefined,
         page,
         limit: 20,
       });
@@ -68,8 +70,8 @@ export default function DecorationManagement() {
   const loadCategories = useCallback(async () => {
     try {
       setCatLoading(true);
-      const cats = await webApiService.decoration.getDecorationCategories();
-      setCategories(Array.isArray(cats) ? cats : []);
+      const res = await webApiService.decoration.getDecorationCategories();
+      setCategories(res.success && Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Failed to load decoration categories:', error);
     } finally {
@@ -241,7 +243,7 @@ export default function DecorationManagement() {
           </div>
 
           {/* Filters */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">에셋 타입</label>
               <select
@@ -308,6 +310,18 @@ export default function DecorationManagement() {
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">정렬</label>
+              <select
+                value={filters.sort}
+                onChange={(e) => updateFilter('sort', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="newest">최신순</option>
+                <option value="name">이름순</option>
+                <option value="order">수동정렬</option>
+              </select>
             </div>
           </div>
 

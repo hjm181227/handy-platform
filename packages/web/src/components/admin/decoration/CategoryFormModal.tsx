@@ -8,7 +8,6 @@ const defaultCategoryForm = (): CategoryFormData => ({
   nameEn: '',
   nameKo: '',
   assetType: 'all',
-  sortOrder: 0,
   icon: '',
   isActive: true,
 });
@@ -37,7 +36,6 @@ export function CategoryFormModal({
         nameEn: initialData.name?.en || '',
         nameKo: initialData.name?.ko || '',
         assetType: initialData.assetType,
-        sortOrder: initialData.sortOrder,
         icon: initialData.icon || '',
         isActive: initialData.isActive,
       });
@@ -57,7 +55,6 @@ export function CategoryFormModal({
         slug: form.slug,
         name: { en: form.nameEn, ko: form.nameKo },
         assetType: form.assetType,
-        sortOrder: form.sortOrder,
         icon: form.icon || undefined,
         isActive: form.isActive,
       });
@@ -128,15 +125,6 @@ export function CategoryFormModal({
                   <option value="part">Part</option>
                   <option value="sticker">Sticker</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">정렬 순서</label>
-                <input
-                  type="number"
-                  value={form.sortOrder}
-                  onChange={(e) => setForm({ ...form, sortOrder: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
               </div>
             </div>
             <div>

@@ -6,6 +6,32 @@ import type { AssetFormData } from './types';
 import { GLBPreview } from './GLBPreview';
 import { SVGPreview } from './SVGPreview';
 
+const THEME_OPTIONS = ['gothic', 'luxury', 'minimal', 'classic', 'elegant', 'cute', 'celestial'] as const;
+
+const MATERIAL_PRESETS: Record<string, { metalness: number; roughness: number; clearcoat: number }> = {
+  glossy: { metalness: 0.3, roughness: 0.15, clearcoat: 0.8 },
+  metallic: { metalness: 1.0, roughness: 0.2, clearcoat: 0 },
+  matte: { metalness: 0, roughness: 0.9, clearcoat: 0 },
+  pearly: { metalness: 0.4, roughness: 0.1, clearcoat: 1.0 },
+  transparent: { metalness: 0, roughness: 0.05, clearcoat: 0.5 },
+  brushed: { metalness: 0.8, roughness: 0.5, clearcoat: 0 },
+  satin: { metalness: 0.2, roughness: 0.4, clearcoat: 0.3 },
+};
+const MATERIAL_OPTIONS = Object.keys(MATERIAL_PRESETS);
+
+function hexToRgb01(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+  return [Math.round(r * 100) / 100, Math.round(g * 100) / 100, Math.round(b * 100) / 100];
+}
+
+function rgb01ToHex(c: [number, number, number]): string {
+  const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+  return `#${toHex(c[0])}${toHex(c[1])}${toHex(c[2])}`;
+}
+
 const defaultAssetForm = (): AssetFormData => ({
   nameEn: '',
   nameKo: '',
@@ -14,15 +40,14 @@ const defaultAssetForm = (): AssetFormData => ({
   assetType: 'part',
   category: '',
   accessTier: 'free',
-  sortOrder: 0,
-  baseSize: 1,
-  tags: { themes: '', appearances: '' },
+  tags: { themes: [] },
   modelUrl: '',
   previewUrl: '',
   svgPath: '',
   viewBox: '0 0 100 100',
   defaultColor: '#FF0000',
-  variants: [],
+  allowedColors: [],
+  allowedMaterials: [],
 });
 
 export function DecorationFormModal({
@@ -63,27 +88,16 @@ export function DecorationFormModal({
         assetType: initialData.assetType,
         category: initialData.category,
         accessTier: initialData.accessTier,
-        sortOrder: initialData.sortOrder,
-        baseSize: initialData.baseSize || 1,
         tags: {
-          themes: (initialData.tags?.themes || []).join(', '),
-          appearances: (initialData.tags?.appearances || []).join(', '),
+          themes: initialData.tags?.themes || [],
         },
         modelUrl: initialData.assets?.modelUrl || '',
         previewUrl: initialData.assets?.previewUrl || '',
         svgPath: initialData.assets?.svgPath || '',
         viewBox: initialData.assets?.viewBox || '0 0 100 100',
         defaultColor: initialData.defaultColor || '#FF0000',
-        variants: (initialData.variants || []).map((v: DecorationAsset['variants'][number]) => ({
-          id: v.id,
-          nameEn: v.name?.en || '',
-          nameKo: v.name?.ko || '',
-          swatchColor: v.swatchColor,
-          color: v.color,
-          metalness: v.metalness,
-          roughness: v.roughness,
-          clearcoat: v.clearcoat,
-        })),
+        allowedColors: initialData.allowedColors || [],
+        allowedMaterials: (initialData.allowedMaterials || []).map((m) => m.id),
       });
     } else {
       setForm(defaultAssetForm());
@@ -104,11 +118,12 @@ export function DecorationFormModal({
   ): Promise<string> => {
     setIsUploading(true);
     setUploadProgress(0);
-    const presigned = await webApiService.decoration.getDecorationPresignedUrl({
+    const res = await webApiService.decoration.getDecorationPresignedUrl({
       uploadType,
       fileName,
       contentType,
     });
+    const presigned = res.data;
 
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -159,36 +174,22 @@ export function DecorationFormModal({
     }
   };
 
-  // --- Variant helpers ---
-  const addVariant = () => {
+  // --- Color helpers ---
+  const [newColorHex, setNewColorHex] = useState('#CC0000');
+
+  const addColor = () => {
+    const rgb = hexToRgb01(newColorHex);
     setForm((prev) => ({
       ...prev,
-      variants: [
-        ...prev.variants,
-        {
-          id: `var_${Date.now()}`,
-          nameEn: '',
-          nameKo: '',
-          swatchColor: '#CCCCCC',
-          color: [0.8, 0.8, 0.8] as [number, number, number],
-          metalness: 0,
-          roughness: 0.5,
-          clearcoat: 0,
-        },
-      ],
+      allowedColors: [...prev.allowedColors, { color: rgb }],
     }));
   };
 
-  const removeVariant = (idx: number) => {
-    setForm((prev) => ({ ...prev, variants: prev.variants.filter((_, i) => i !== idx) }));
-  };
-
-  const updateVariant = (idx: number, field: string, value: any) => {
-    setForm((prev) => {
-      const variants = [...prev.variants];
-      (variants[idx] as any)[field] = value;
-      return { ...prev, variants };
-    });
+  const removeColor = (idx: number) => {
+    setForm((prev) => ({
+      ...prev,
+      allowedColors: prev.allowedColors.filter((_, i) => i !== idx),
+    }));
   };
 
   // --- Submit ---
@@ -211,12 +212,6 @@ export function DecorationFormModal({
         modelUrl = await uploadFileToS3(glbFile, 'decoration-model', glbFile.name, 'model/gltf-binary');
       }
 
-      const parseTags = (str: string) =>
-        str
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-
       const payload: Partial<DecorationAsset> = {
         name: { en: form.nameEn, ko: form.nameKo },
         description: form.descriptionEn || form.descriptionKo
@@ -225,10 +220,8 @@ export function DecorationFormModal({
         assetType: form.assetType,
         category: form.category,
         accessTier: form.accessTier,
-        sortOrder: form.sortOrder,
         tags: {
-          themes: parseTags(form.tags.themes),
-          appearances: parseTags(form.tags.appearances),
+          themes: form.tags.themes,
         },
         assets: {
           modelUrl: form.assetType === 'part' ? modelUrl : undefined,
@@ -239,15 +232,10 @@ export function DecorationFormModal({
       };
 
       if (form.assetType === 'part') {
-        payload.baseSize = form.baseSize;
-        payload.variants = form.variants.map((v) => ({
-          id: v.id,
-          name: { en: v.nameEn, ko: v.nameKo },
-          swatchColor: v.swatchColor,
-          color: v.color,
-          metalness: v.metalness,
-          roughness: v.roughness,
-          clearcoat: v.clearcoat,
+        payload.allowedColors = form.allowedColors;
+        payload.allowedMaterials = form.allowedMaterials.map((id) => ({
+          id,
+          ...MATERIAL_PRESETS[id],
         }));
       }
 
@@ -373,52 +361,38 @@ export function DecorationFormModal({
               </div>
             </div>
 
-            {/* Row: sortOrder / baseSize */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">정렬 순서</label>
-                <input
-                  type="number"
-                  value={form.sortOrder}
-                  onChange={(e) => setForm({ ...form, sortOrder: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              {form.assetType === 'part' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">기본 크기 (baseSize)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={form.baseSize}
-                    onChange={(e) => setForm({ ...form, baseSize: parseFloat(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              )}
-            </div>
 
-            {/* Tags */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Themes (콤마 구분)</label>
-                <input
-                  type="text"
-                  value={form.tags.themes}
-                  onChange={(e) => setForm({ ...form, tags: { ...form.tags, themes: e.target.value } })}
-                  placeholder="wedding, party, daily"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Appearances (콤마 구분)</label>
-                <input
-                  type="text"
-                  value={form.tags.appearances}
-                  onChange={(e) => setForm({ ...form, tags: { ...form.tags, appearances: e.target.value } })}
-                  placeholder="gold, silver, matte"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+            {/* Tags — Chip Select */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Themes</label>
+              <div className="flex flex-wrap gap-2">
+                {THEME_OPTIONS.map((theme) => {
+                  const selected = form.tags.themes.includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          tags: {
+                            ...form.tags,
+                            themes: selected
+                              ? form.tags.themes.filter((t) => t !== theme)
+                              : [...form.tags.themes, theme],
+                          },
+                        })
+                      }
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                        selected
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -531,166 +505,86 @@ export function DecorationFormModal({
               </div>
             )}
 
-            {/* === Part-specific: Variants === */}
+            {/* === Part-specific: Allowed Colors === */}
             {form.assetType === 'part' && (
               <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-800">Variants ({form.variants.length})</h3>
+                <h3 className="text-sm font-semibold text-gray-800">허용 색상 ({form.allowedColors.length})</h3>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={newColorHex}
+                    onChange={(e) => setNewColorHex(e.target.value)}
+                    className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={newColorHex}
+                    onChange={(e) => setNewColorHex(e.target.value)}
+                    className="w-28 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                   <button
                     type="button"
-                    onClick={addVariant}
-                    className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
+                    onClick={addColor}
+                    className="inline-flex items-center px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
                   >
                     <FiPlus className="mr-1" /> 추가
                   </button>
                 </div>
-
-                {form.variants.map((v, idx) => (
-                  <div key={idx} className="border border-gray-100 rounded-lg p-3 bg-gray-50 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-500">Variant #{idx + 1}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(idx)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="block text-xs text-gray-600">ID</label>
-                        <input
-                          type="text"
-                          value={v.id}
-                          onChange={(e) => updateVariant(idx, 'id', e.target.value)}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                {form.allowedColors.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {form.allowedColors.map((entry, idx) => (
+                      <div key={idx} className="relative group">
+                        <div
+                          className="w-10 h-10 rounded-full border-2 border-gray-200"
+                          style={{ backgroundColor: rgb01ToHex(entry.color) }}
+                          title={`RGB: ${entry.color.map((v) => v.toFixed(2)).join(', ')}`}
                         />
+                        <button
+                          type="button"
+                          onClick={() => removeColor(idx)}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
                       </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">이름 (EN)</label>
-                        <input
-                          type="text"
-                          value={v.nameEn}
-                          onChange={(e) => updateVariant(idx, 'nameEn', e.target.value)}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">이름 (KO)</label>
-                        <input
-                          type="text"
-                          value={v.nameKo}
-                          onChange={(e) => updateVariant(idx, 'nameKo', e.target.value)}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      <div>
-                        <label className="block text-xs text-gray-600">Swatch Color</label>
-                        <input
-                          type="color"
-                          value={v.swatchColor}
-                          onChange={(e) => updateVariant(idx, 'swatchColor', e.target.value)}
-                          className="w-full h-8 border border-gray-300 rounded cursor-pointer"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">R (0-1)</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={v.color[0]}
-                          onChange={(e) => {
-                            const c: [number, number, number] = [...v.color];
-                            c[0] = parseFloat(e.target.value);
-                            updateVariant(idx, 'color', c);
-                          }}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{v.color[0].toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">G (0-1)</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={v.color[1]}
-                          onChange={(e) => {
-                            const c: [number, number, number] = [...v.color];
-                            c[1] = parseFloat(e.target.value);
-                            updateVariant(idx, 'color', c);
-                          }}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{v.color[1].toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">B (0-1)</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={v.color[2]}
-                          onChange={(e) => {
-                            const c: [number, number, number] = [...v.color];
-                            c[2] = parseFloat(e.target.value);
-                            updateVariant(idx, 'color', c);
-                          }}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{v.color[2].toFixed(2)}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="block text-xs text-gray-600">Metalness (0-1)</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={v.metalness}
-                          onChange={(e) => updateVariant(idx, 'metalness', parseFloat(e.target.value))}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{v.metalness.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">Roughness (0-1)</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={v.roughness}
-                          onChange={(e) => updateVariant(idx, 'roughness', parseFloat(e.target.value))}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{v.roughness.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600">Clearcoat (0-1)</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={v.clearcoat}
-                          onChange={(e) => updateVariant(idx, 'clearcoat', parseFloat(e.target.value))}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{v.clearcoat.toFixed(2)}</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
+            )}
+
+            {/* === Part-specific: Allowed Materials === */}
+            {form.assetType === 'part' && (
+              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-gray-800">허용 재질 ({form.allowedMaterials.length})</h3>
+                <div className="flex flex-wrap gap-2">
+                  {MATERIAL_OPTIONS.map((mat) => {
+                    const selected = form.allowedMaterials.includes(mat);
+                    const preset = MATERIAL_PRESETS[mat];
+                    return (
+                      <button
+                        key={mat}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            allowedMaterials: selected
+                              ? form.allowedMaterials.filter((m) => m !== mat)
+                              : [...form.allowedMaterials, mat],
+                          })
+                        }
+                        className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                          selected
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                        }`}
+                        title={`metalness: ${preset.metalness}, roughness: ${preset.roughness}, clearcoat: ${preset.clearcoat}`}
+                      >
+                        {mat}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

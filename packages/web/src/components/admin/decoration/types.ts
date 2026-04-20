@@ -6,17 +6,11 @@ export interface AssetFilters {
   accessTier: string;
   status: string;
   search: string;
+  sort: string;
 }
 
-export interface VariantFormData {
-  id: string;
-  nameEn: string;
-  nameKo: string;
-  swatchColor: string;
+export interface ColorEntry {
   color: [number, number, number];
-  metalness: number;
-  roughness: number;
-  clearcoat: number;
 }
 
 export interface AssetFormData {
@@ -27,9 +21,7 @@ export interface AssetFormData {
   assetType: 'part' | 'sticker';
   category: string;
   accessTier: 'free' | 'paid' | 'pro_only';
-  sortOrder: number;
-  baseSize: number;
-  tags: { themes: string; appearances: string };
+  tags: { themes: string[] };
   // part assets
   modelUrl: string;
   previewUrl: string;
@@ -37,8 +29,9 @@ export interface AssetFormData {
   svgPath: string;
   viewBox: string;
   defaultColor: string;
-  // variants (part only)
-  variants: VariantFormData[];
+  // colors & materials (part only)
+  allowedColors: ColorEntry[];
+  allowedMaterials: string[];
 }
 
 export interface CategoryFormData {
@@ -46,7 +39,6 @@ export interface CategoryFormData {
   nameEn: string;
   nameKo: string;
   assetType: 'part' | 'sticker' | 'all';
-  sortOrder: number;
   icon: string;
   isActive: boolean;
 }

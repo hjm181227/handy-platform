@@ -2595,7 +2595,7 @@ export interface DecorationAsset {
   name: Record<string, string>;
   description?: Record<string, string>;
   category: string;
-  tags: { themes: string[]; appearances: string[] };
+  tags: { themes: string[] };
   sortOrder: number;
   assets: {
     modelUrl?: string;
@@ -2603,17 +2603,13 @@ export interface DecorationAsset {
     svgPath?: string;
     viewBox?: string;
   };
-  variants: Array<{
+  allowedColors: Array<{ color: [number, number, number] }>;
+  allowedMaterials: Array<{
     id: string;
-    name: Record<string, string>;
-    swatchColor: string;
-    color: [number, number, number];
     metalness: number;
     roughness: number;
     clearcoat: number;
   }>;
-  defaultVariantId?: string;
-  baseSize?: number;
   defaultColor?: string;
   strokeColor?: string;
   accessTier: 'free' | 'paid' | 'pro_only';

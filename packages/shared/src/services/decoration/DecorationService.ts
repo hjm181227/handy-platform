@@ -17,10 +17,37 @@ export interface DecorationListResponse {
   };
 }
 
+// 단건 wrap 응답
+export interface DecorationResponse {
+  success: boolean;
+  data: DecorationAsset;
+}
+
+// 카테고리 목록 wrap 응답
+export interface DecorationCategoryListResponse {
+  success: boolean;
+  data: DecorationCategory[];
+}
+
+// 카테고리 단건 wrap 응답
+export interface DecorationCategoryResponse {
+  success: boolean;
+  data: DecorationCategory;
+}
+
+// 삭제 응답
+export interface DecorationDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
 // Presigned URL 응답
 export interface DecorationPresignedUrlResponse {
-  presignedUrl: string;
-  fileUrl: string;
+  success: boolean;
+  data: {
+    presignedUrl: string;
+    fileUrl: string;
+  };
 }
 
 export abstract class BaseDecorationService extends BaseApiService {
@@ -33,6 +60,7 @@ export abstract class BaseDecorationService extends BaseApiService {
     accessTier?: 'free' | 'paid' | 'pro_only';
     status?: 'active' | 'inactive' | 'pending_review' | 'rejected';
     search?: string;
+    sort?: string;
     page?: number;
     limit?: number;
   } = {}): Promise<DecorationListResponse> {
@@ -51,32 +79,32 @@ export abstract class BaseDecorationService extends BaseApiService {
     return this.request<DecorationListResponse>(url);
   }
 
-  async getDecoration(uuid: string): Promise<DecorationAsset> {
-    return this.request<DecorationAsset>(API_ENDPOINTS.ADMIN.DECORATION_DETAIL(uuid));
+  async getDecoration(uuid: string): Promise<DecorationResponse> {
+    return this.request<DecorationResponse>(API_ENDPOINTS.ADMIN.DECORATION_DETAIL(uuid));
   }
 
-  async createDecoration(data: Partial<DecorationAsset>): Promise<DecorationAsset> {
-    return this.request<DecorationAsset>(API_ENDPOINTS.ADMIN.DECORATIONS, {
+  async createDecoration(data: Partial<DecorationAsset>): Promise<DecorationResponse> {
+    return this.request<DecorationResponse>(API_ENDPOINTS.ADMIN.DECORATIONS, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateDecoration(uuid: string, data: Partial<DecorationAsset>): Promise<DecorationAsset> {
-    return this.request<DecorationAsset>(API_ENDPOINTS.ADMIN.DECORATION_DETAIL(uuid), {
+  async updateDecoration(uuid: string, data: Partial<DecorationAsset>): Promise<DecorationResponse> {
+    return this.request<DecorationResponse>(API_ENDPOINTS.ADMIN.DECORATION_DETAIL(uuid), {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteDecoration(uuid: string): Promise<void> {
-    await this.request<void>(API_ENDPOINTS.ADMIN.DECORATION_DETAIL(uuid), {
+  async deleteDecoration(uuid: string): Promise<DecorationDeleteResponse> {
+    return this.request<DecorationDeleteResponse>(API_ENDPOINTS.ADMIN.DECORATION_DETAIL(uuid), {
       method: 'DELETE',
     });
   }
 
-  async toggleDecorationStatus(uuid: string, status: 'active' | 'inactive'): Promise<DecorationAsset> {
-    return this.request<DecorationAsset>(API_ENDPOINTS.ADMIN.DECORATION_STATUS(uuid), {
+  async toggleDecorationStatus(uuid: string, status: 'active' | 'inactive'): Promise<DecorationResponse> {
+    return this.request<DecorationResponse>(API_ENDPOINTS.ADMIN.DECORATION_STATUS(uuid), {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
@@ -84,26 +112,26 @@ export abstract class BaseDecorationService extends BaseApiService {
 
   // === Admin 카테고리 관리 ===
 
-  async getDecorationCategories(): Promise<DecorationCategory[]> {
-    return this.request<DecorationCategory[]>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORIES);
+  async getDecorationCategories(): Promise<DecorationCategoryListResponse> {
+    return this.request<DecorationCategoryListResponse>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORIES);
   }
 
-  async createDecorationCategory(data: Partial<DecorationCategory>): Promise<DecorationCategory> {
-    return this.request<DecorationCategory>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORIES, {
+  async createDecorationCategory(data: Partial<DecorationCategory>): Promise<DecorationCategoryResponse> {
+    return this.request<DecorationCategoryResponse>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORIES, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateDecorationCategory(uuid: string, data: Partial<DecorationCategory>): Promise<DecorationCategory> {
-    return this.request<DecorationCategory>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORY_DETAIL(uuid), {
+  async updateDecorationCategory(uuid: string, data: Partial<DecorationCategory>): Promise<DecorationCategoryResponse> {
+    return this.request<DecorationCategoryResponse>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORY_DETAIL(uuid), {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteDecorationCategory(uuid: string): Promise<void> {
-    await this.request<void>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORY_DETAIL(uuid), {
+  async deleteDecorationCategory(uuid: string): Promise<DecorationDeleteResponse> {
+    return this.request<DecorationDeleteResponse>(API_ENDPOINTS.ADMIN.DECORATION_CATEGORY_DETAIL(uuid), {
       method: 'DELETE',
     });
   }
