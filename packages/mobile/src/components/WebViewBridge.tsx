@@ -311,7 +311,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       || (() => {
         const env = getAppEnvironment();
         const apiBaseUrl = API_CONFIG[env]?.baseURL || API_CONFIG.stage.baseURL;
-        return `${apiBaseUrl}/api/auth/oauth/${provider}/login?source=app`;
+        return `${apiBaseUrl}/api/auth/oauth/${provider}/login?source=handyapp`;
       })();
     const redirectUrl = 'handyapp://oauth-callback';
 
@@ -1068,7 +1068,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           const provider = oauthMatch[1];
           console.log(`🔵 [WEBVIEW] Intercepting ${provider} OAuth URL:`, request.url);
           const separator = request.url.includes('?') ? '&' : '?';
-          handleOAuth({ provider, url: `${request.url}${separator}source=app` });
+          handleOAuth({ provider, url: `${request.url}${separator}source=handyapp` });
           return false;
         }
         return true;
