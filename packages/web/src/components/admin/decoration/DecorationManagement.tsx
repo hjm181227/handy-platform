@@ -71,7 +71,8 @@ export default function DecorationManagement() {
     try {
       setCatLoading(true);
       const res = await webApiService.decoration.getDecorationCategories();
-      setCategories(res.success && Array.isArray(res.data) ? res.data : []);
+      const cats = res.data?.categories ?? res.data;
+      setCategories(res.success && Array.isArray(cats) ? cats : []);
     } catch (error) {
       console.error('Failed to load decoration categories:', error);
     } finally {

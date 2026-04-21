@@ -26,7 +26,9 @@ export interface DecorationResponse {
 // 카테고리 목록 wrap 응답
 export interface DecorationCategoryListResponse {
   success: boolean;
-  data: DecorationCategory[];
+  data: {
+    categories: DecorationCategory[];
+  };
 }
 
 // 카테고리 단건 wrap 응답
