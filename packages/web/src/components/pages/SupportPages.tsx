@@ -944,9 +944,24 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
           )}
 
           <button
-            onClick={() => {
-              if (confirm(t('support.deleteAccountConfirm'))) {
-                alert("탈퇴 처리가 완료되었습니다.");
+            onClick={async () => {
+              const confirmMsg = t('support.deleteAccountConfirm', '정말로 계정을 삭제하시겠습니까?\n\n• 탈퇴 후 30일 내에 다시 로그인하면 계정을 복원할 수 있습니다.\n• 30일이 지나면 모든 데이터가 영구 삭제됩니다.');
+              if (!confirm(confirmMsg)) return;
+              try {
+                if ((window as any).ReactNativeWebView) {
+                  (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'DELETE_ACCOUNT',
+                  }));
+                } else {
+                  await webApiService.deleteAccountAndClearToken();
+                  window.dispatchEvent(new CustomEvent('authStateChanged'));
+                  alert(t('support.deleteAccountSuccess', '탈퇴 요청이 접수되었습니다. 30일 내에 다시 로그인하시면 계정을 복원할 수 있습니다.'));
+                  onGo('/login');
+                }
+              } catch (error: any) {
+                const serverMsg = error?.data?.message || error?.message || '';
+                const fallback = t('support.deleteAccountError', '계정 삭제에 실패했습니다. 다시 시도해주세요.');
+                alert(serverMsg || fallback);
               }
             }}
             className="w-full bg-white border border-red-200 rounded-lg p-4 text-left hover:bg-red-50"

@@ -89,6 +89,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'SAVE_IMAGE':
           await handleSaveImage(message.data);
           break;
+        case 'DELETE_ACCOUNT':
+          await handleDeleteAccount();
+          break;
         case 'closeChat':
           console.log('🔵 [BRIDGE] closeChat 메시지 수신');
           DeviceEventEmitter.emit('closeChat');
@@ -196,6 +199,48 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           success: false,
           error: error instanceof Error ? error.message : 'Authentication failed'
         },
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      console.log('🔵 [BRIDGE] 계정 삭제 처리 시작');
+      await mobileApiService.deleteAccountAndClearToken();
+
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          (function() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('user');
+            window.dispatchEvent(new CustomEvent('authStateChanged'));
+            alert('탈퇴 요청이 접수되었습니다. 30일 내에 다시 로그인하시면 계정을 복원할 수 있습니다.');
+          })();
+          true;
+        `);
+      }
+
+      sendMessageToWebView({
+        type: 'DELETE_ACCOUNT_RESPONSE',
+        data: { success: true },
+      });
+
+      DeviceEventEmitter.emit('navigateToHomeAndLogin');
+      console.log('✅ [BRIDGE] 계정 삭제 처리 완료');
+    } catch (error) {
+      console.error('🔴 [BRIDGE] 계정 삭제 실패:', error);
+      const errorMsg = error instanceof Error ? error.message : '계정 삭제에 실패했습니다.';
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          alert(${JSON.stringify(errorMsg)});
+          true;
+        `);
+      }
+      sendMessageToWebView({
+        type: 'DELETE_ACCOUNT_RESPONSE',
+        data: { success: false, error: errorMsg },
       });
     }
   };
