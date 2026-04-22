@@ -40,6 +40,10 @@ export function TermsOfService({ onClose }: { onClose: () => void }) {
   return (
     <PolicyLayout title={t('footer.termsOfService')} onClose={onClose}>
       <ServiceTermsContent />
+      <div className="mt-8 pt-8 border-t border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">구독 및 환불 정책</h3>
+        <SubscriptionRefundPolicyContent />
+      </div>
     </PolicyLayout>
   );
 }

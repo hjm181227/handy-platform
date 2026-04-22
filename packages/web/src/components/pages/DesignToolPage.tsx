@@ -228,17 +228,31 @@ function PlanCard({
       </ul>
 
       {plan.price > 0 && (
-        <button
-          onClick={onSelect}
-          disabled={disabled}
-          className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
-            isCurrent
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-pink-500 text-white hover:bg-pink-600'
-          }`}
-        >
-          {isCurrent ? t('designTool.currentPlanButton') : t('designTool.subscribe')}
-        </button>
+        <>
+          <p className="text-xs text-gray-500 mb-2 leading-relaxed">
+            {t('designTool.purchaseConsent', '결제 시 이용약관 및 구독·환불 정책에 동의하며, 디지털 콘텐츠 특성상 유료 기능 이용 시 청약철회가 제한됩니다.')}
+          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <a href="https://h-andy.com/policy/terms" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 underline hover:text-gray-700">
+              {t('designTool.termsLink', '이용약관')}
+            </a>
+            <span className="text-xs text-gray-400">|</span>
+            <a href="https://h-andy.com/policy/privacy" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 underline hover:text-gray-700">
+              {t('designTool.privacyLink', '개인정보처리방침')}
+            </a>
+          </div>
+          <button
+            onClick={onSelect}
+            disabled={disabled}
+            className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
+              isCurrent
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-pink-500 text-white hover:bg-pink-600'
+            }`}
+          >
+            {isCurrent ? t('designTool.currentPlanButton') : t('designTool.subscribe')}
+          </button>
+        </>
       )}
     </div>
   );

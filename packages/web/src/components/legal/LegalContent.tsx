@@ -340,6 +340,7 @@ const SubscriptionRefundPolicyKo = () => (
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">제3조(환불 정책)</h4>
+      <p>본 약관의 환불 규정에도 불구하고, Apple App Store 및 Google Play Store를 통해 결제한 건은 해당 스토어의 환불 정책이 본 약관에 우선하여 적용됩니다.</p>
       <p>환불은 결제를 처리한 결제 수단의 정책에 따라 처리됩니다:</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>Google Play (Android 앱): 구매일로부터 48시간 이내 본인이 직접 환불 요청 가능 (Play Store → 결제 및 구독 → 주문)</li>
@@ -347,11 +348,12 @@ const SubscriptionRefundPolicyKo = () => (
         <li>웹 결제 (토스페이먼츠): 회사 고객센터로 직접 환불 신청</li>
       </ul>
       <p>웹에서의 결제는 토스페이먼츠 주식회사(전자결제대행업체)를 통해 처리되며, 환불 시에도 동일 경로를 통해 처리됩니다. 카드 승인 취소의 경우 영업일 기준 2~3일, 계좌 환입의 경우 3~5일이 소요될 수 있습니다.</p>
-      <p>전자상거래 등에서의 소비자보호에 관한 법률 제17조에 따라, 대한민국 소비자는 구매일로부터 7일 이내에 청약철회를 요청할 수 있습니다. 단, 디지털 콘텐츠의 성격상 이미 사용이 시작된 서비스는 동법 제17조 제2항 제5호에 따라 청약철회가 제한될 수 있습니다.</p>
+      <p>전자상거래 등에서의 소비자보호에 관한 법률 제17조에 따라, 대한민국 소비자는 구매일로부터 7일 이내에 청약철회를 요청할 수 있습니다. 단, 이용자가 결제 후 1회라도 디자인 툴의 유료 기능을 사용(프리미엄 브러시·재질 사용, 고해상도 내보내기, 프로젝트 제한 초과 생성 등)하거나 콘텐츠를 다운로드한 경우, 전자상거래 등에서의 소비자보호에 관한 법률 제17조 제2항 제5호에 따라 청약철회가 제한됩니다.</p>
       <p>앱 스토어를 통한 결제의 경우 회사는 환불 요청을 직접 처리할 수 없으며, 모든 환불 문의는 해당 스토어로 직접 요청해 주시기 바랍니다. 웹 결제 환불 문의는 아래 고객센터로 연락해 주세요.</p>
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">제4조(환불 불가 사유)</h4>
+      <p>본 조항은 토스페이먼츠 등 회사가 직접 제공하는 웹 결제 수단을 통해 결제한 경우에만 적용됩니다. 앱 스토어(Apple, Google) 결제 건은 해당 스토어의 환불 정책을 따릅니다.</p>
       <p>다음의 경우 환불이 제한될 수 있습니다:</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>구매 후 7일이 경과하고 서비스 이용 기록이 있는 경우</li>
@@ -360,14 +362,18 @@ const SubscriptionRefundPolicyKo = () => (
       </ul>
     </section>
     <section>
-      <h4 className="font-semibold text-gray-800 mb-2">제5조(가격 변경)</h4>
+      <h4 className="font-semibold text-gray-800 mb-2">제5조(해외 이용자 보호)</h4>
+      <p>이용자의 거주 국가 법령에 따라 본 약관보다 유리한 소비자 보호 규정이 있는 경우 해당 법령이 우선 적용될 수 있습니다. (예: EU 거주자의 경우 소비자권리지침에 따른 14일 이내 철회권)</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제6조(가격 변경)</h4>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>구독 가격이 변경될 경우, 회사는 변경 적용 최소 30일 전에 앱 내 공지 및 이메일로 사전 고지합니다.</li>
         <li>가격 인상에 동의하지 않는 경우, 사용자는 가격 적용 전에 구독을 취소할 수 있습니다.</li>
       </ul>
     </section>
     <section>
-      <h4 className="font-semibold text-gray-800 mb-2">제6조(문의)</h4>
+      <h4 className="font-semibold text-gray-800 mb-2">제7조(문의)</h4>
       <p>구독 관련 문의는 아래의 연락처로 보내주시기 바랍니다:</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>이메일: hermosear98@gmail.com</li>
@@ -398,6 +404,7 @@ const SubscriptionRefundPolicyEn = () => (
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">Article 3 (Refund Policy)</h4>
+      <p>Notwithstanding the refund provisions of these Terms, purchases made through the Apple App Store or Google Play Store are subject to the refund policies of the respective store, which shall take precedence over these Terms.</p>
       <p>Refunds are processed according to the policy of the payment channel used:</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>Google Play (Android app): Users may self-request a refund within 48 hours of purchase (Play Store → Payments &amp; subscriptions → Orders)</li>
@@ -405,11 +412,12 @@ const SubscriptionRefundPolicyEn = () => (
         <li>Web payment (Toss Payments): Contact the Company's customer support directly for refund requests</li>
       </ul>
       <p>Web payments are processed through Toss Payments Co., Ltd. (a payment gateway provider), and refunds are handled via the same channel. Card authorization reversals typically take 2–3 business days, while bank transfer refunds may take 3–5 business days.</p>
-      <p>Under Article 17 of the Korean Act on Consumer Protection in Electronic Commerce, consumers in the Republic of Korea may request withdrawal of subscription within 7 days of purchase. However, due to the nature of digital content, services whose use has already begun may be restricted from withdrawal under Article 17(2)(5) of the same Act.</p>
+      <p>Under Article 17 of the Korean Act on Consumer Protection in Electronic Commerce, consumers in the Republic of Korea may request withdrawal of subscription within 7 days of purchase. However, if the user has used any paid feature of the design tool even once after payment (e.g., using premium brushes or materials, high-resolution export, creating projects beyond the free limit, etc.) or has downloaded content, the right of withdrawal is restricted pursuant to Article 17(2)(5) of the same Act.</p>
       <p>For purchases made through app stores, the Company cannot directly process refund requests; all such inquiries must be submitted directly to the relevant store. For web payment refund inquiries, please contact the customer support listed below.</p>
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">Article 4 (Non-refundable Cases)</h4>
+      <p>This article applies only to payments made through web payment methods directly provided by the Company, such as Toss Payments. Payments made through app stores (Apple, Google) are subject to the refund policies of the respective store.</p>
       <p>Refunds may be restricted in the following cases:</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>When 7 days have passed since purchase and there is a record of service use</li>
@@ -418,14 +426,18 @@ const SubscriptionRefundPolicyEn = () => (
       </ul>
     </section>
     <section>
-      <h4 className="font-semibold text-gray-800 mb-2">Article 5 (Price Changes)</h4>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 5 (International Consumer Protection)</h4>
+      <p>Where the laws of the user's country of residence provide consumer protection provisions more favorable than these Terms, such laws may take precedence. (e.g., EU residents may exercise a 14-day right of withdrawal under the Consumer Rights Directive.)</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 6 (Price Changes)</h4>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>If the subscription price changes, the Company will provide at least 30 days' advance notice via in-app notification and email before the change takes effect.</li>
         <li>Users who do not agree to a price increase may cancel their subscription before the new price takes effect.</li>
       </ul>
     </section>
     <section>
-      <h4 className="font-semibold text-gray-800 mb-2">Article 6 (Contact)</h4>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 7 (Contact)</h4>
       <p>For subscription-related inquiries, please contact us at:</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>Email: hermosear98@gmail.com</li>
@@ -456,6 +468,7 @@ const SubscriptionRefundPolicyJa = () => (
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">第3条（返金ポリシー）</h4>
+      <p>本規約の返金規定にかかわらず、Apple App StoreおよびGoogle Play Storeを通じて決済された取引には、該当ストアの返金ポリシーが本規約に優先して適用されます。</p>
       <p>返金は決済を処理した決済手段のポリシーに従って処理されます：</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>Google Play（Android アプリ）：購入日から48時間以内にご本人で返金リクエストが可能（Play ストア → お支払いと定期購入 → 注文）</li>
@@ -463,11 +476,12 @@ const SubscriptionRefundPolicyJa = () => (
         <li>ウェブ決済（トスペイメンツ）：会社のカスタマーサポートへ直接返金をお申し込みください</li>
       </ul>
       <p>ウェブでの決済はトスペイメンツ株式会社（電子決済代行業者）を通じて処理され、返金も同じ経路で処理されます。カード承認取消の場合は営業日基準で2〜3日、口座振込の場合は3〜5日ほどかかることがあります。</p>
-      <p>電子商取引等における消費者保護に関する法律第17条に基づき、大韓民国の消費者は購入日から7日以内に申込撤回を要求することができます。ただし、デジタルコンテンツの性質上、既に利用が開始されたサービスは同法第17条第2項第5号により申込撤回が制限される場合があります。</p>
+      <p>電子商取引等における消費者保護に関する法律第17条に基づき、大韓民国の消費者は購入日から7日以内に申込撤回を要求することができます。ただし、利用者が決済後1回でもデザインツールの有料機能を使用（プレミアムブラシ・素材の使用、高解像度エクスポート、プロジェクト制限を超える作成など）した場合、またはコンテンツをダウンロードした場合、電子商取引等における消費者保護に関する法律第17条第2項第5号に基づき申込撤回が制限されます。</p>
       <p>アプリストアを通じた決済については、会社が返金リクエストを直接処理することはできませんので、すべての返金に関するお問い合わせは該当ストアへ直接ご依頼ください。ウェブ決済の返金に関するお問い合わせは下記のカスタマーサポートへご連絡ください。</p>
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">第4条（返金不可事由）</h4>
+      <p>本条項は、トスペイメンツ等、会社が直接提供するウェブ決済手段を通じて決済された場合にのみ適用されます。アプリストア（Apple、Google）での決済については、該当ストアの返金ポリシーに従います。</p>
       <p>以下の場合、返金が制限されることがあります：</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>購入後7日が経過し、サービス利用記録がある場合</li>
@@ -476,14 +490,18 @@ const SubscriptionRefundPolicyJa = () => (
       </ul>
     </section>
     <section>
-      <h4 className="font-semibold text-gray-800 mb-2">第5条（価格変更）</h4>
+      <h4 className="font-semibold text-gray-800 mb-2">第5条（海外利用者保護）</h4>
+      <p>利用者の居住国の法令により本規約よりも有利な消費者保護規定がある場合、当該法令が優先的に適用されることがあります。（例：EU居住者の場合、消費者権利指令に基づく14日以内の撤回権）</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第6条（価格変更）</h4>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>サブスクリプション価格が変更される場合、会社は変更適用の少なくとも30日前にアプリ内通知およびメールで事前に告知します。</li>
         <li>値上げに同意されない場合、利用者は新価格適用前にサブスクリプションをキャンセルできます。</li>
       </ul>
     </section>
     <section>
-      <h4 className="font-semibold text-gray-800 mb-2">第6条（お問い合わせ）</h4>
+      <h4 className="font-semibold text-gray-800 mb-2">第7条（お問い合わせ）</h4>
       <p>サブスクリプションに関するお問い合わせは下記までお送りください：</p>
       <ul className="list-disc ml-4 mt-1 space-y-1">
         <li>メール：hermosear98@gmail.com</li>
