@@ -22,7 +22,7 @@
  * ```
  */
 
-import * as RNFS from '@dr.pogodin/react-native-fs';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
 import {
   NailSegmentationResult,
@@ -203,13 +203,13 @@ class NailSegmentationAPI {
       const cleanUri = imageUri.replace('file://', '');
 
       // 파일 존재 확인
-      const exists = await RNFS.exists(cleanUri);
+      const exists = await ReactNativeBlobUtil.fs.exists(cleanUri);
       if (!exists) {
         throw new Error(`Image file not found: ${cleanUri}`);
       }
 
       // 파일을 base64로 읽기
-      const base64Data = await RNFS.readFile(cleanUri, 'base64');
+      const base64Data = await ReactNativeBlobUtil.fs.readFile(cleanUri, 'base64');
       console.log('[NailSegmentationAPI] File read time:', Date.now() - readStartTime, 'ms');
       console.log('[NailSegmentationAPI] Base64 length:', base64Data.length);
 
@@ -345,7 +345,7 @@ class NailSegmentationAPI {
     try {
       // 1. 파일 존재 확인
       const cleanUri = imageUri.replace('file://', '');
-      const exists = await RNFS.exists(cleanUri);
+      const exists = await ReactNativeBlobUtil.fs.exists(cleanUri);
       if (!exists) {
         throw new Error(`Image file not found: ${cleanUri}`);
       }

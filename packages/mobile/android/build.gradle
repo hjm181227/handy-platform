@@ -1,99 +1,32 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-ext {
-    buildToolsVersion = "35.0.0"
-    minSdkVersion = 24  // React Native 0.76+ requires minSdk 24
-    compileSdkVersion = 35
-    targetSdkVersion = 35
-    ndkVersion = "27.1.12297006"  // NDK r27 - 16KB 페이지 크기 지원
-    kotlinVersion = "2.0.21"
+buildscript {
+    ext {
+        buildToolsVersion = "36.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 36
+        targetSdkVersion = 35
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "2.1.20"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.12.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+        classpath(files("../../../node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build/libs/react-native-gradle-plugin.jar"))
+    }
 }
+
+apply plugin: "com.facebook.react.rootproject"
 
 allprojects {
     repositories {
         google()
         mavenCentral()
-
-        // JSC from node_modules for proper dependency resolution
-        maven {
-            url("$rootDir/../../node_modules/jsc-android/dist")
-        }
-
-        // React Native repositories
+        maven { url("$rootDir/../../node_modules/jsc-android/dist") }
         maven { url 'https://www.jitpack.io' }
-    }
-}
-
-// Override outdated AGP versions in library buildscripts and provide RNGP plugin
-subprojects { sub ->
-    sub.buildscript {
-        repositories {
-            google()
-            mavenCentral()
-        }
-        dependencies {
-            classpath "com.android.tools.build:gradle:8.7.2"
-            classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlinVersion}"
-        }
-    }
-}
-
-// Inject settings into all subprojects with Android plugin
-subprojects { sub ->
-    sub.pluginManager.withPlugin('com.android.library') {
-        sub.android {
-            // Enable buildConfig for libraries that use custom BuildConfig fields
-            buildFeatures {
-                buildConfig true
-            }
-            defaultConfig {
-                externalNativeBuild {
-                    cmake {
-                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-                    }
-                }
-            }
-        }
-        // Use afterEvaluate to override library's own compileOptions (e.g. react-native-fs sets 1.8)
-        sub.afterEvaluate {
-            sub.android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-            }
-        }
-        // Auto-set namespace from AndroidManifest.xml for libraries missing it (AGP 8+ requirement)
-        if (sub.android.namespace == null || sub.android.namespace.isEmpty()) {
-            def manifestFile = sub.android.sourceSets.main.manifest.srcFile
-            if (manifestFile.exists()) {
-                def factory = javax.xml.parsers.DocumentBuilderFactory.newInstance()
-                def builder = factory.newDocumentBuilder()
-                def doc = builder.parse(manifestFile)
-                def packageName = doc.documentElement.getAttribute('package')
-                if (packageName) {
-                    sub.android.namespace = packageName
-                }
-            }
-        }
-    }
-    sub.pluginManager.withPlugin('com.android.application') {
-        sub.android {
-            defaultConfig {
-                externalNativeBuild {
-                    cmake {
-                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-                    }
-                }
-            }
-        }
-    }
-
-    configurations.all {
-        resolutionStrategy {
-            force 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'
-            force 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
-            force 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1'
-        }
     }
 }

@@ -2091,6 +2091,51 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNSVG (15.15.4):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNSVG/common (= 15.15.4)
+    - Yoga
+  - RNSVG/common (15.15.4):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNVectorIcons (10.3.0):
     - hermes-engine
     - RCTRequired
@@ -2240,6 +2285,7 @@ DEPENDENCIES:
   - RNInAppBrowser (from `../../../node_modules/react-native-inappbrowser-reborn`)
   - RNPermissions (from `../../../node_modules/react-native-permissions`)
   - RNScreens (from `../../node_modules/react-native-screens`)
+  - RNSVG (from `../../../node_modules/react-native-svg`)
   - RNVectorIcons (from `../../../node_modules/react-native-vector-icons`)
   - vision-camera-resize-plugin (from `../../../node_modules/vision-camera-resize-plugin`)
   - VisionCamera (from `../../../node_modules/react-native-vision-camera`)
@@ -2420,6 +2466,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-permissions"
   RNScreens:
     :path: "../../node_modules/react-native-screens"
+  RNSVG:
+    :path: "../../../node_modules/react-native-svg"
   RNVectorIcons:
     :path: "../../../node_modules/react-native-vector-icons"
   vision-camera-resize-plugin:
@@ -2471,7 +2519,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: ca1f33f7c98b76d923f550d39631eb4e05fa9aec
   react-native-fast-tflite: 3a72224f627bf0250e97d1a52cf50756b0f714fc
   react-native-image-picker: 16b96bec669da30b8f196145a1ed1ee565e60e69
-  react-native-image-resizer: 7f5551be59040bdb33e00293daee0417950be0e0
+  react-native-image-resizer: 9b8cba5b22e67dfea5ebaf98c7645ba9ecbcc541
   react-native-safe-area-context: 6b4966397ada0f7dd481e4486a2ef936834861a1
   react-native-webview: 2da09bdea1aeb6c46e27dd94632e21059cade6c1
   react-native-worklets-core: 89a42b9bbce25698c6fb3f36fa61181377655e6c
@@ -2514,6 +2562,7 @@ SPEC CHECKSUMS:
   RNInAppBrowser: 904d24dc75e8e6c6c98a3160329192608946f9df
   RNPermissions: 5cf56f8c71f23f207ec89f9a5d71f844e2c15683
   RNScreens: 8b7aa891939f72996fa1bcc105acc79bfbe6d6a7
+  RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
   RNVectorIcons: 97f26211c07d69e45b189f9dd0dbbe5e2d2b0b92
   TensorFlowLiteC: eac6d689a8d391d1b202dc59e3d9165ba64aaf73
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888

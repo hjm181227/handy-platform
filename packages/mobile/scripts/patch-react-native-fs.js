@@ -1,79 +1,39 @@
 #!/usr/bin/env node
 
 /**
- * Manual patch script for @dr.pogodin/react-native-fs@2.28.0
+ * Manual patch script for RN 0.85 compatibility
  * Required because patch-package can't find hoisted packages in monorepo
  *
- * Fixes:
- * 1. AGP version mismatch (7.2.1 -> 8.7.2)
- * 2. Kotlin 2.0 removeLast() deprecation
- * 3. Promise.reject(null, ...) incompatible with RN 0.76
+ * react-native-fs replaced with react-native-blob-util (AGP 8.12.0 incompatibility)
+ *
+ * Remaining:
+ * 5. @bam.tech/react-native-image-resizer - ALAssetsLibrary removal (iOS 26) + AGP compat
+ * 6. react-native-screens - RN 0.85 deprecated APIs
  */
 
 const fs = require('fs');
 const path = require('path');
 
-// Find the package in possible locations
-const possiblePaths = [
-  path.join(__dirname, '..', 'node_modules', '@dr.pogodin', 'react-native-fs'),
-  path.join(__dirname, '..', '..', 'node_modules', '@dr.pogodin', 'react-native-fs'),
-  path.join(__dirname, '..', '..', '..', 'node_modules', '@dr.pogodin', 'react-native-fs'),
+// Patch A: @react-native-async-storage/async-storage - Remove configurations block (AGP 8.12 conflict)
+const asyncStoragePaths = [
+  path.join(__dirname, '..', 'node_modules', '@react-native-async-storage', 'async-storage'),
+  path.join(__dirname, '..', '..', 'node_modules', '@react-native-async-storage', 'async-storage'),
+  path.join(__dirname, '..', '..', '..', 'node_modules', '@react-native-async-storage', 'async-storage'),
 ];
-
-let pkgDir = null;
-for (const p of possiblePaths) {
-  if (fs.existsSync(p)) {
-    pkgDir = p;
-    break;
-  }
+let asyncStorageDir = null;
+for (const p of asyncStoragePaths) {
+  if (fs.existsSync(p)) { asyncStorageDir = p; break; }
 }
-
-if (!pkgDir) {
-  console.warn('[patch] @dr.pogodin/react-native-fs not found, skipping patch');
-  process.exit(0);
-}
-
-console.log(`[patch] Patching @dr.pogodin/react-native-fs at ${pkgDir}`);
-
-// Patch 1: build.gradle - AGP version
-const buildGradle = path.join(pkgDir, 'android', 'build.gradle');
-if (fs.existsSync(buildGradle)) {
-  let content = fs.readFileSync(buildGradle, 'utf8');
-  content = content.replace(
-    'classpath "com.android.tools.build:gradle:7.2.1"',
-    'classpath "com.android.tools.build:gradle:8.7.2"'
-  );
-  fs.writeFileSync(buildGradle, content);
-  console.log('[patch] Fixed build.gradle AGP version');
-}
-
-// Patch 2 & 3: ReactNativeFsModule.kt
-const moduleKt = path.join(pkgDir, 'android', 'src', 'main', 'java', 'com', 'drpogodin', 'reactnativefs', 'ReactNativeFsModule.kt');
-if (fs.existsSync(moduleKt)) {
-  let content = fs.readFileSync(moduleKt, 'utf8');
-  content = content.replace(
-    'val next = queue.removeLast()',
-    'val next = queue.removeAt(queue.lastIndex)'
-  );
-  content = content.replace(
-    'promise.reject(null, ex!!.message)',
-    'promise.reject("EUNSPECIFIED", ex!!.message)'
-  );
-  fs.writeFileSync(moduleKt, content);
-  console.log('[patch] Fixed ReactNativeFsModule.kt (removeLast + reject)');
-}
-
-// Patch 4: iOS codegen - Add ResultT type alias for RN 0.85 compatibility
-const specHeader = path.join(pkgDir, 'ios', 'generated', 'RNReactNativeFsSpec', 'RNReactNativeFsSpec.h');
-if (fs.existsSync(specHeader)) {
-  let content = fs.readFileSync(specHeader, 'utf8');
-  if (!content.includes('using ResultT = Constants;')) {
+if (asyncStorageDir) {
+  const buildGradle = path.join(asyncStorageDir, 'android', 'build.gradle');
+  if (fs.existsSync(buildGradle)) {
+    let content = fs.readFileSync(buildGradle, 'utf8');
     content = content.replace(
-      '      struct Builder {',
-      '      struct Builder {\n        using ResultT = Constants;'
+      'configurations {\n    compileClasspath\n}\n\n',
+      ''
     );
-    fs.writeFileSync(specHeader, content);
-    console.log('[patch] Fixed RNReactNativeFsSpec.h (added ResultT for RN 0.85)');
+    fs.writeFileSync(buildGradle, content);
+    console.log('[patch] Fixed async-storage build.gradle (removed configurations block)');
   }
 }
 

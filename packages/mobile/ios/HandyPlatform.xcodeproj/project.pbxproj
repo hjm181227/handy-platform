@@ -471,8 +471,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = HandyTemp/HandyTemp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 766Q6P7JRQ;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = V7XPTJL83T;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = HandyTemp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -502,8 +502,8 @@
 				CODE_SIGN_ENTITLEMENTS = HandyTemp/HandyTemp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 766Q6P7JRQ;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = V7XPTJL83T;
 				INFOPLIST_FILE = HandyTemp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -517,7 +517,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hermosear.handy;
 				PRODUCT_NAME = HandyTemp;
-				PROVISIONING_PROFILE_SPECIFIER = "Handy AppStore Distribution";
+				PROVISIONING_PROFILE_SPECIFIER = "Handy Platform distribute";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

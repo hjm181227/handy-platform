@@ -9,7 +9,7 @@ import { mobileApiService } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@handy-platform/shared/src/config/api';
 import { getAppEnvironment } from '../config/environment';
-import * as RNFS from '@dr.pogodin/react-native-fs';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 interface WebViewBridgeProps {
   url: string;
@@ -769,18 +769,18 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
 
       // 파일 저장 경로 설정
       const downloadDir = Platform.OS === 'android'
-        ? RNFS.DownloadDirectoryPath
-        : RNFS.DocumentDirectoryPath;
+        ? ReactNativeBlobUtil.fs.dirs.DownloadDir
+        : ReactNativeBlobUtil.fs.dirs.DocumentDir;
       const filePath = `${downloadDir}/${filename}`;
 
       // base64 데이터를 파일로 저장
-      await RNFS.writeFile(filePath, base64, 'base64');
+      await ReactNativeBlobUtil.fs.writeFile(filePath, base64, 'base64');
       console.log('🟢 [BRIDGE] 이미지 저장 완료:', filePath);
 
       // iOS: 갤러리에도 저장
       if (Platform.OS === 'ios') {
         try {
-          // CameraRoll API 대신 RNFS.copyFile로 사진 라이브러리 접근
+          // CameraRoll API 대신 파일 시스템으로 사진 라이브러리 접근
           // iOS에서는 DocumentDirectory에 저장된 파일을 공유 시트로 내보낼 수 있음
           console.log('🟢 [BRIDGE] iOS 문서 디렉토리에 저장됨:', filePath);
         } catch (galleryErr) {
