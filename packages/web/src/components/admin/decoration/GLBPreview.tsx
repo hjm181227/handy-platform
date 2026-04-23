@@ -40,14 +40,14 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
       });
     }
 
-    // Tight-fit camera for square aspect
+    // Tight-fit camera for square aspect — use only x/y extent (ignore depth)
     if (modelRef.current) {
       const box = new THREE.Box3().setFromObject(modelRef.current);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
+      const visibleDim = Math.max(size.x, size.y);
       const fov = camera.fov * (Math.PI / 180);
-      const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.0;
+      const dist = visibleDim / (2 * Math.tan(fov / 2));
       camera.position.set(center.x, center.y, center.z + dist);
       camera.lookAt(center);
     }
