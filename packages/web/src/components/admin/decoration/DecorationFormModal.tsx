@@ -178,23 +178,7 @@ export function DecorationFormModal({
     }
   };
 
-  // --- Color helpers ---
-  const [newColorHex, setNewColorHex] = useState('#CC0000');
-
-  const addColor = () => {
-    const rgb = hexToRgb01(newColorHex);
-    setForm((prev) => ({
-      ...prev,
-      allowedColors: [...prev.allowedColors, { color: rgb }],
-    }));
-  };
-
-  const removeColor = (idx: number) => {
-    setForm((prev) => ({
-      ...prev,
-      allowedColors: prev.allowedColors.filter((_, i) => i !== idx),
-    }));
-  };
+  const [activeColorIndex, setActiveColorIndex] = useState<number>(0);
 
   // --- Submit ---
   const handleSubmit = async () => {
@@ -366,39 +350,74 @@ export function DecorationFormModal({
             </div>
 
 
-            {/* Tags — Chip Select */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Themes</label>
-              <div className="flex flex-wrap gap-2">
-                {THEME_OPTIONS.map((theme) => {
-                  const selected = form.tags.themes.includes(theme);
-                  return (
-                    <button
-                      key={theme}
-                      type="button"
-                      onClick={() =>
-                        setForm({
-                          ...form,
-                          tags: {
-                            ...form.tags,
-                            themes: selected
-                              ? form.tags.themes.filter((t) => t !== theme)
-                              : [...form.tags.themes, theme],
-                          },
-                        })
-                      }
-                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
-                        selected
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      {theme}
-                    </button>
-                  );
-                })}
+            {/* 허용 색상 */}
+            {form.assetType === 'part' && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  허용 색상 ({form.allowedColors.length})
+                  <span className="text-xs text-gray-400 ml-2">첫번째 색상이 기본 미리보기에 적용됩니다</span>
+                </h4>
+                <div className="space-y-2">
+                  {form.allowedColors.map((c, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveColorIndex(idx)}
+                        className={`w-8 h-8 rounded-full border-2 flex-shrink-0 ${
+                          idx === activeColorIndex ? 'border-indigo-500 ring-2 ring-indigo-300' : 'border-gray-300'
+                        }`}
+                        style={{ backgroundColor: rgb01ToHex(c.color as [number, number, number]) }}
+                        title="클릭하여 미리보기에 적용"
+                      />
+                      <input
+                        type="text"
+                        value={rgb01ToHex(c.color as [number, number, number])}
+                        onChange={(e) => {
+                          const hex = e.target.value;
+                          if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                            const rgb = hexToRgb01(hex);
+                            setForm((prev) => ({
+                              ...prev,
+                              allowedColors: prev.allowedColors.map((col, i) =>
+                                i === idx ? { color: rgb } : col
+                              ),
+                            }));
+                          }
+                        }}
+                        className="w-24 px-2 py-1 text-sm border border-gray-300 rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            allowedColors: prev.allowedColors.filter((_, i) => i !== idx),
+                          }));
+                          if (activeColorIndex >= form.allowedColors.length - 1) {
+                            setActiveColorIndex(Math.max(0, form.allowedColors.length - 2));
+                          }
+                        }}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      allowedColors: [...prev.allowedColors, { color: hexToRgb01('#CC0000') }],
+                    }));
+                  }}
+                  className="mt-2 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700"
+                >
+                  <FiPlus className="mr-1" /> 추가
+                </button>
               </div>
-            </div>
+            )}
 
             {/* === Part-specific: GLB Upload + Three.js Preview === */}
             {form.assetType === 'part' && (
@@ -446,7 +465,11 @@ export function DecorationFormModal({
 
                 {/* Three.js preview */}
                 {form.modelUrl && (
-                  <GLBPreview modelUrl={form.modelUrl} onCapture={handlePreviewCapture} />
+                  <GLBPreview
+                    modelUrl={form.modelUrl}
+                    color={form.allowedColors[activeColorIndex]?.color as [number, number, number] | undefined}
+                    onCapture={handlePreviewCapture}
+                  />
                 )}
 
                 {isAutoCapturing && (
@@ -509,54 +532,6 @@ export function DecorationFormModal({
               </div>
             )}
 
-            {/* === Part-specific: Allowed Colors === */}
-            {form.assetType === 'part' && (
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-gray-800">허용 색상 ({form.allowedColors.length})</h3>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={newColorHex}
-                    onChange={(e) => setNewColorHex(e.target.value)}
-                    className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={newColorHex}
-                    onChange={(e) => setNewColorHex(e.target.value)}
-                    className="w-28 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={addColor}
-                    className="inline-flex items-center px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
-                  >
-                    <FiPlus className="mr-1" /> 추가
-                  </button>
-                </div>
-                {form.allowedColors.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {form.allowedColors.map((entry, idx) => (
-                      <div key={idx} className="relative group">
-                        <div
-                          className="w-10 h-10 rounded-full border-2 border-gray-200"
-                          style={{ backgroundColor: rgb01ToHex(entry.color) }}
-                          title={`RGB: ${entry.color.map((v) => v.toFixed(2)).join(', ')}`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeColor(idx)}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* === Part-specific: Allowed Materials === */}
             {form.assetType === 'part' && (
               <div className="border border-gray-200 rounded-lg p-4 space-y-3">
@@ -591,6 +566,40 @@ export function DecorationFormModal({
                 </div>
               </div>
             )}
+
+            {/* Tags — Chip Select */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Themes</label>
+              <div className="flex flex-wrap gap-2">
+                {THEME_OPTIONS.map((theme) => {
+                  const selected = form.tags.themes.includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          tags: {
+                            ...form.tags,
+                            themes: selected
+                              ? form.tags.themes.filter((t) => t !== theme)
+                              : [...form.tags.themes, theme],
+                          },
+                        })
+                      }
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                        selected
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Footer */}

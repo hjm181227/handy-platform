@@ -3,7 +3,11 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FiEye, FiRefreshCw } from 'react-icons/fi';
 
-export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCapture: (blob: Blob) => void }) {
+export function GLBPreview({ modelUrl, color, onCapture }: {
+  modelUrl: string;
+  color?: [number, number, number];
+  onCapture: (blob: Blob) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -112,6 +116,19 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
         scene.add(model);
         modelRef.current = model;
 
+        // Apply initial color
+        if (color) {
+          model.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              const mesh = child as THREE.Mesh;
+              const mat = mesh.material as THREE.MeshStandardMaterial;
+              if (mat && mat.color) {
+                mat.color.setRGB(color[0], color[1], color[2]);
+              }
+            }
+          });
+        }
+
         // Auto-fit camera
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
@@ -155,6 +172,19 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
       container.innerHTML = '';
     };
   }, [modelUrl]);
+
+  useEffect(() => {
+    if (!modelRef.current || !color) return;
+    modelRef.current.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        if (mat && mat.color) {
+          mat.color.setRGB(color[0], color[1], color[2]);
+        }
+      }
+    });
+  }, [color]);
 
   const handleCapture = () => {
     captureCanvas();
