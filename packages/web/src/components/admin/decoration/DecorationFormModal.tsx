@@ -123,7 +123,6 @@ export function DecorationFormModal({
       fileName,
       contentType,
     });
-    const presigned = res.data;
 
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -132,14 +131,19 @@ export function DecorationFormModal({
       });
       xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`S3 upload failed: ${xhr.status}`)));
       xhr.onerror = () => reject(new Error('S3 upload network error'));
-      xhr.open('PUT', presigned.presignedUrl);
+      xhr.open('PUT', res.presignedUrl);
       xhr.setRequestHeader('Content-Type', contentType);
+      if (res.uploadHeaders) {
+        Object.entries(res.uploadHeaders).forEach(([key, value]) => {
+          xhr.setRequestHeader(key, value);
+        });
+      }
       xhr.send(file);
     });
 
     setIsUploading(false);
     setUploadProgress(0);
-    return presigned.fileUrl;
+    return res.imageUrl;
   };
 
   const handleGlbSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -46,9 +46,19 @@ export interface DecorationDeleteResponse {
 // Presigned URL 응답
 export interface DecorationPresignedUrlResponse {
   success: boolean;
-  data: {
-    presignedUrl: string;
-    fileUrl: string;
+  presignedUrl: string;
+  imageUrl: string;
+  filename: string;
+  uploadType: string;
+  maxFileSize: string;
+  expiresIn: string;
+  uploadHeaders?: Record<string, string>;
+  constraints: {
+    allowedTypes: string[];
+    maxFileSize: string;
+    minDimensions?: string;
+    maxDimensions?: string;
+    aspectRatio?: number;
   };
 }
 
