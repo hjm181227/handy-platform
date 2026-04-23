@@ -8,6 +8,7 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const modelRef = useRef<THREE.Object3D | null>(null);
   const frameRef = useRef<number>(0);
   const [isAutoCapturing, setIsAutoCapturing] = useState(false);
 
@@ -16,9 +17,55 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
     const scene = sceneRef.current;
     const camera = cameraRef.current;
     if (!renderer || !scene || !camera) return;
+
+    const captureSize = 512;
+
+    // Save original state
+    const originalSize = new THREE.Vector2();
+    renderer.getSize(originalSize);
+    const originalAspect = camera.aspect;
+
+    // Set square for capture
+    renderer.setSize(captureSize, captureSize);
+    camera.aspect = 1;
+
+    // Reset rotation to initial state for capture
+    const savedRotations: { child: THREE.Object3D; y: number }[] = [];
+    if (modelRef.current) {
+      scene.traverse((child) => {
+        if (child.type === 'Group' && child.parent === scene) {
+          savedRotations.push({ child, y: child.rotation.y });
+          child.rotation.y = 0;
+        }
+      });
+    }
+
+    // Tight-fit camera for square aspect
+    if (modelRef.current) {
+      const box = new THREE.Box3().setFromObject(modelRef.current);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const fov = camera.fov * (Math.PI / 180);
+      const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.0;
+      camera.position.set(center.x, center.y, center.z + dist);
+      camera.lookAt(center);
+    }
+    camera.updateProjectionMatrix();
+
     renderer.render(scene, camera);
     renderer.domElement.toBlob((blob) => {
       if (blob) onCapture(blob);
+
+      // Restore rotation
+      for (const saved of savedRotations) {
+        saved.child.rotation.y = saved.y;
+      }
+
+      // Restore original state
+      renderer.setSize(originalSize.x, originalSize.y);
+      camera.aspect = originalAspect;
+      camera.updateProjectionMatrix();
     }, 'image/png');
   };
 
@@ -63,6 +110,7 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
       (gltf) => {
         const model = gltf.scene;
         scene.add(model);
+        modelRef.current = model;
 
         // Auto-fit camera
         const box = new THREE.Box3().setFromObject(model);
@@ -70,8 +118,8 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const fov = camera.fov * (Math.PI / 180);
-        const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.5;
-        camera.position.set(center.x + dist * 0.5, center.y + dist * 0.3, center.z + dist);
+        const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.3;
+        camera.position.set(center.x, center.y + dist * 0.15, center.z + dist);
         camera.lookAt(center);
         camera.updateProjectionMatrix();
 
