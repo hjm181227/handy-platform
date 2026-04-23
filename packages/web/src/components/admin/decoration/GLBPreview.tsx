@@ -31,7 +31,7 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
 
     // Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    scene.background = null;
     sceneRef.current = scene;
 
     // Camera
@@ -39,7 +39,8 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
     cameraRef.current = camera;
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -113,7 +114,15 @@ export function GLBPreview({ modelUrl, onCapture }: { modelUrl: string; onCaptur
 
   return (
     <div>
-      <div ref={containerRef} className="w-full border border-gray-300 rounded-lg overflow-hidden" style={{ height: 300 }} />
+      <div
+        ref={containerRef}
+        className="w-full border border-gray-300 rounded-lg overflow-hidden"
+        style={{
+          height: 300,
+          backgroundImage: 'repeating-conic-gradient(#e0e0e0 0% 25%, #ffffff 0% 50%)',
+          backgroundSize: '16px 16px',
+        }}
+      />
       <div className="mt-2 flex items-center gap-2">
         {isAutoCapturing && (
           <span className="inline-flex items-center text-sm text-indigo-600">
