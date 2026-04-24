@@ -206,59 +206,59 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 // FAQ 페이지
 export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
   const { t } = useTranslation('common');
-  const [activeCategory, setActiveCategory] = useState(t('support.faqCategoryOrder'));
+  const [activeCategory, setActiveCategory] = useState('order');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const categories = [
-    t('support.faqCategoryOrder'),
-    t('support.faqCategoryReturn'),
-    t('support.faqCategoryPayment'),
-    t('support.faqCategoryProduct'),
-    t('support.faqCategoryMember'),
+    { id: 'order', label: t('support.faqCategoryOrder') },
+    { id: 'return', label: t('support.faqCategoryReturn') },
+    { id: 'payment', label: t('support.faqCategoryPayment') },
+    { id: 'product', label: t('support.faqCategoryProduct') },
+    { id: 'member', label: t('support.faqCategoryMember') },
   ];
-  
-  const faqs = {
-    "주문/배송": [
-      { id: 1, question: "배송료는 얼마인가요?", answer: "3만원 이상 무료배송이며, 미만 시 3,000원의 배송료가 부과됩니다." },
-      { id: 2, question: "배송기간은 얼마나 걸리나요?", answer: "평일 기준 1-2일 소요되며, 주말/공휴일 제외입니다." },
-      { id: 3, question: "주문 취소는 어떻게 하나요?", answer: "배송 전까지 마이페이지에서 취소 가능하며, 배송 후엔 반품으로 처리됩니다." },
+
+  const faqs: Record<string, { id: number; question: string; answer: string }[]> = {
+    order: [
+      { id: 1, question: t('support.faq1Q'), answer: t('support.faq1A') },
+      { id: 2, question: t('support.faq2Q'), answer: t('support.faq2A') },
+      { id: 3, question: t('support.faq3Q'), answer: t('support.faq3A') },
     ],
-    "교환/반품": [
-      { id: 4, question: "교환/반품이 가능한 기간은?", answer: "상품 수령 후 7일 이내에 신청 가능합니다." },
-      { id: 5, question: "교환/반품 비용은?", answer: "단순변심 시 고객 부담, 상품 불량 시 무료입니다." },
+    return: [
+      { id: 4, question: t('support.faq4Q'), answer: t('support.faq4A') },
+      { id: 5, question: t('support.faq5Q'), answer: t('support.faq5A') },
     ],
-    "결제": [
-      { id: 6, question: "어떤 결제 방법을 지원하나요?", answer: "신용카드, 체크카드, 간편결제(카카오페이, 네이버페이) 등을 지원합니다." },
-      { id: 7, question: "포인트는 어떻게 적립되나요?", answer: "구매 금액의 1% 기본 적립되며, 등급별 추가 혜택이 있습니다." },
+    payment: [
+      { id: 6, question: t('support.faq6Q'), answer: t('support.faq6A') },
+      { id: 7, question: t('support.faq7Q'), answer: t('support.faq7A') },
     ],
-    "상품": [
-      { id: 8, question: "네일팁 사이즈는 어떻게 선택하나요?", answer: "사이즈 가이드를 참고하시거나 사이즈 카드를 구매하여 측정해보세요." },
-      { id: 9, question: "재입고 알림을 받을 수 있나요?", answer: "품절 상품 페이지에서 '재입고 알림' 버튼을 눌러 신청하시면 됩니다." },
+    product: [
+      { id: 8, question: t('support.faq8Q'), answer: t('support.faq8A') },
+      { id: 9, question: t('support.faq9Q'), answer: t('support.faq9A') },
     ],
-    "회원": [
-      { id: 10, question: "회원가입 혜택이 있나요?", answer: "신규회원 10% 할인쿠폰과 적립금 1,000원을 드립니다." },
-      { id: 11, question: "비밀번호를 잊었어요", answer: "로그인 페이지의 '비밀번호 찾기'를 이용하시거나 고객센터로 문의하세요." },
-    ]
+    member: [
+      { id: 10, question: t('support.faq10Q'), answer: t('support.faq10A') },
+      { id: 11, question: t('support.faq11Q'), answer: t('support.faq11A') },
+    ],
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader onBack={() => onGo("/my")} title={t('support.faqTitle')} />
-      
+
       {/* 카테고리 탭 */}
       <div className="bg-white border-b">
         <div className="flex overflow-x-auto px-4 py-2">
           {categories.map(category => (
             <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
               className={`px-4 py-2 text-sm whitespace-nowrap ${
-                activeCategory === category
+                activeCategory === category.id
                   ? 'text-black font-bold'
                   : 'text-gray-400'
               }`}
             >
-              {category}
+              {category.label}
             </button>
           ))}
         </div>
@@ -266,17 +266,17 @@ export function FaqPage({ onGo }: { onGo: (to: string) => void }) {
 
       {/* FAQ 목록 */}
       <div className="p-4 space-y-2">
-        {faqs[activeCategory as keyof typeof faqs]?.map(faq => (
+        {faqs[activeCategory]?.map(faq => (
           <div key={faq.id} className="bg-white rounded-lg border">
             <button
               onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
               className="w-full p-4 text-left flex items-center justify-between"
             >
               <span className="font-medium">{faq.question}</span>
-              <svg 
+              <svg
                 className={`h-5 w-5 transform transition-transform ${
                   expandedFaq === faq.id ? 'rotate-180' : ''
-                }`} 
+                }`}
                 viewBox="0 0 24 24"
               >
                 <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
