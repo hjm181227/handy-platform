@@ -150,6 +150,7 @@ import CategoryManagement from './components/admin/CategoryManagement';
 import BannerManagement from './components/admin/BannerManagement';
 import AdminCouponManagement from './components/admin/AdminCouponManagement';
 import SnapManagement from './components/admin/SnapManagement';
+import DecorationManagement from './components/admin/decoration';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 /**
@@ -979,6 +980,12 @@ export function Router() {
       screen = (
         <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <DesignToolManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === '/admin/decorations') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <DecorationManagement />
         </AdminLayout>
       );
     } else {
