@@ -179,6 +179,11 @@ class MobileApiService {
     await MobileTokenManager.clearToken();
   }
 
+  async deleteAccountAndClearToken() {
+    await this.auth.deleteAccount();
+    await MobileTokenManager.clearToken();
+  }
+
   // 로그아웃 후 앱 재시작이 필요한 경우 사용 (React Native 환경)
   async logoutAndRestart() {
     await this.logoutAndClearToken();

@@ -31,7 +31,7 @@ import {
   CARD_GUIDE_WIDTH_TABLET,
   TABLET_BREAKPOINT,
 } from './types';
-import RNFS from '@dr.pogodin/react-native-fs';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import ImageResizer from '@bam.tech/react-native-image-resizer';
 import { Dimensions } from 'react-native';
 
@@ -351,7 +351,7 @@ class NailSegmentationModel {
       });
 
       // 2. 정규화된 이미지 읽기 (Buffer 폴리필 없이)
-      const base64Data = await RNFS.readFile(normalizedImage.path, 'base64');
+      const base64Data = await ReactNativeBlobUtil.fs.readFile(normalizedImage.path, 'base64');
       const imageBytes = base64ToUint8Array(base64Data);
       const rawImageData = getJpeg().decode(imageBytes, { useTArray: true });
 
@@ -507,9 +507,9 @@ class NailSegmentationModel {
     }, 90);
 
     // 임시 파일로 저장 (상단에 정의된 헬퍼 함수 사용)
-    const tempPath = `${RNFS.CachesDirectoryPath}/cropped_${Date.now()}.jpg`;
+    const tempPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/cropped_${Date.now()}.jpg`;
     const base64Result = uint8ArrayToBase64(jpegData.data);
-    await RNFS.writeFile(tempPath, base64Result, 'base64');
+    await ReactNativeBlobUtil.fs.writeFile(tempPath, base64Result, 'base64');
 
     return `file://${tempPath}`;
   }

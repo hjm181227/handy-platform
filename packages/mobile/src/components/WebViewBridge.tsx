@@ -9,7 +9,7 @@ import { mobileApiService } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@handy-platform/shared/src/config/api';
 import { getAppEnvironment } from '../config/environment';
-import * as RNFS from '@dr.pogodin/react-native-fs';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 interface WebViewBridgeProps {
   url: string;
@@ -88,6 +88,9 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'SAVE_IMAGE':
           await handleSaveImage(message.data);
+          break;
+        case 'DELETE_ACCOUNT':
+          await handleDeleteAccount();
           break;
         case 'closeChat':
           console.log('🔵 [BRIDGE] closeChat 메시지 수신');
@@ -196,6 +199,48 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           success: false,
           error: error instanceof Error ? error.message : 'Authentication failed'
         },
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      console.log('🔵 [BRIDGE] 계정 삭제 처리 시작');
+      await mobileApiService.deleteAccountAndClearToken();
+
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          (function() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('user');
+            window.dispatchEvent(new CustomEvent('authStateChanged'));
+            alert('탈퇴 요청이 접수되었습니다. 30일 내에 다시 로그인하시면 계정을 복원할 수 있습니다.');
+          })();
+          true;
+        `);
+      }
+
+      sendMessageToWebView({
+        type: 'DELETE_ACCOUNT_RESPONSE',
+        data: { success: true },
+      });
+
+      DeviceEventEmitter.emit('navigateToHomeAndLogin');
+      console.log('✅ [BRIDGE] 계정 삭제 처리 완료');
+    } catch (error) {
+      console.error('🔴 [BRIDGE] 계정 삭제 실패:', error);
+      const errorMsg = error instanceof Error ? error.message : '계정 삭제에 실패했습니다.';
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          alert(${JSON.stringify(errorMsg)});
+          true;
+        `);
+      }
+      sendMessageToWebView({
+        type: 'DELETE_ACCOUNT_RESPONSE',
+        data: { success: false, error: errorMsg },
       });
     }
   };
@@ -311,7 +356,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       || (() => {
         const env = getAppEnvironment();
         const apiBaseUrl = API_CONFIG[env]?.baseURL || API_CONFIG.stage.baseURL;
-        return `${apiBaseUrl}/api/auth/oauth/${provider}/login?source=app`;
+        return `${apiBaseUrl}/api/auth/oauth/${provider}/login?source=handyapp`;
       })();
     const redirectUrl = 'handyapp://oauth-callback';
 
@@ -769,18 +814,18 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
 
       // 파일 저장 경로 설정
       const downloadDir = Platform.OS === 'android'
-        ? RNFS.DownloadDirectoryPath
-        : RNFS.DocumentDirectoryPath;
+        ? ReactNativeBlobUtil.fs.dirs.DownloadDir
+        : ReactNativeBlobUtil.fs.dirs.DocumentDir;
       const filePath = `${downloadDir}/${filename}`;
 
       // base64 데이터를 파일로 저장
-      await RNFS.writeFile(filePath, base64, 'base64');
+      await ReactNativeBlobUtil.fs.writeFile(filePath, base64, 'base64');
       console.log('🟢 [BRIDGE] 이미지 저장 완료:', filePath);
 
       // iOS: 갤러리에도 저장
       if (Platform.OS === 'ios') {
         try {
-          // CameraRoll API 대신 RNFS.copyFile로 사진 라이브러리 접근
+          // CameraRoll API 대신 파일 시스템으로 사진 라이브러리 접근
           // iOS에서는 DocumentDirectory에 저장된 파일을 공유 시트로 내보낼 수 있음
           console.log('🟢 [BRIDGE] iOS 문서 디렉토리에 저장됨:', filePath);
         } catch (galleryErr) {
@@ -1068,7 +1113,7 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           const provider = oauthMatch[1];
           console.log(`🔵 [WEBVIEW] Intercepting ${provider} OAuth URL:`, request.url);
           const separator = request.url.includes('?') ? '&' : '?';
-          handleOAuth({ provider, url: `${request.url}${separator}source=app` });
+          handleOAuth({ provider, url: `${request.url}${separator}source=handyapp` });
           return false;
         }
         return true;

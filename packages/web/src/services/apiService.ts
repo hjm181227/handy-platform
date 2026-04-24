@@ -253,6 +253,11 @@ class WebApiService {
     }
   }
 
+  async deleteAccountAndClearToken() {
+    await this.auth.deleteAccount();
+    WebTokenManager.clearToken();
+  }
+
   // 로그아웃 후 리다이렉트가 필요한 경우 사용
   async logoutAndRedirect(redirectPath: string = '/login') {
     await this.logoutAndClearToken();

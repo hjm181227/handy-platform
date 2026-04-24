@@ -135,6 +135,7 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: '/api/auth/profile',
     LOGOUT: '/api/auth/logout',
     CHANGE_PASSWORD: '/api/auth/change-password',
+    DELETE_ACCOUNT: '/api/auth/account',
     UPDATE_TERMS: '/api/auth/terms',
     WISHLIST_ADD: (productId: string) => `/api/auth/wishlist/${productId}`,
     WISHLIST_REMOVE: (productId: string) => `/api/auth/wishlist/${productId}`,

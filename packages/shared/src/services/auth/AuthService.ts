@@ -164,6 +164,12 @@ export abstract class BaseAuthService extends BaseApiService {
     });
   }
 
+  async deleteAccount(): Promise<ApiResponse> {
+    return this.request<ApiResponse>(API_ENDPOINTS.AUTH.DELETE_ACCOUNT, {
+      method: 'DELETE',
+    });
+  }
+
   // OAuth 메서드
   async oauthLogin(provider: 'kakao' | 'google' | 'apple' | 'naver', accessToken: string): Promise<OAuthLoginResponse> {
     const endpoint = API_ENDPOINTS.OAUTH[provider.toUpperCase() as keyof typeof API_ENDPOINTS.OAUTH] as string;
