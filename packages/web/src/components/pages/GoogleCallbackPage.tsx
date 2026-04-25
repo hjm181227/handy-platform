@@ -78,11 +78,13 @@ export function GoogleCallbackPage({ onGo }: GoogleCallbackPageProps) {
           window.dispatchEvent(new CustomEvent('authStateChanged'));
           setStatus('success');
 
+          const savedReturnUrl = localStorage.getItem('oauth_returnUrl') || '/';
+          localStorage.removeItem('oauth_returnUrl');
           setTimeout(() => {
             if (onGo) {
-              onGo('/');
+              onGo(savedReturnUrl);
             } else {
-              window.location.href = '/';
+              window.location.href = savedReturnUrl;
             }
           }, 1500);
         }
@@ -106,10 +108,12 @@ export function GoogleCallbackPage({ onGo }: GoogleCallbackPageProps) {
   // 약관 동의 완료 핸들러
   const handleTermsComplete = () => {
     window.dispatchEvent(new CustomEvent('authStateChanged'));
+    const savedReturnUrl = localStorage.getItem('oauth_returnUrl') || '/';
+    localStorage.removeItem('oauth_returnUrl');
     if (onGo) {
-      onGo('/');
+      onGo(savedReturnUrl);
     } else {
-      window.location.href = '/';
+      window.location.href = savedReturnUrl;
     }
   };
 

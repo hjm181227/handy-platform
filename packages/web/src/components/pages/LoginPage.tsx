@@ -83,6 +83,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
       } else if (provider === "google") {
         setError("Google login is not ready yet.");
       } else if (provider === "apple") {
+        localStorage.setItem('oauth_returnUrl', returnUrl);
         const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
         window.location.href = `${apiBaseUrl}/api/auth/oauth/apple/login`;
       }
