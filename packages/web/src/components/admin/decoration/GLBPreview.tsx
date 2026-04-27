@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { FiEye, FiRefreshCw } from 'react-icons/fi';
 
 export function GLBPreview({ modelUrl, color, onCapture }: {
@@ -99,12 +100,22 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Environment map for PBR materials
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envTexture;
+    scene.environmentIntensity = 0.4;
+    pmremGenerator.dispose();
+
+    // Lights (matched to design tool)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 10, 7);
-    scene.add(dirLight);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
+    dirLight1.position.set(2, 3, 5);
+    scene.add(dirLight1);
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.15);
+    dirLight2.position.set(-3, 1, 3);
+    scene.add(dirLight2);
 
     // Load GLB
     let autoCaptureTimer: ReturnType<typeof setTimeout> | null = null;
@@ -168,6 +179,10 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
     return () => {
       if (autoCaptureTimer) clearTimeout(autoCaptureTimer);
       cancelAnimationFrame(frameRef.current);
+      if (scene.environment) {
+        scene.environment.dispose();
+        scene.environment = null;
+      }
       renderer.dispose();
       container.innerHTML = '';
     };
