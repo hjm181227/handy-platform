@@ -45,14 +45,14 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
       });
     }
 
-    // Tight-fit camera for square aspect — use only x/y extent (ignore depth)
+    // Fit camera for square capture — include depth so 3D models don't overflow
     if (modelRef.current) {
       const box = new THREE.Box3().setFromObject(modelRef.current);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
-      const visibleDim = Math.max(size.x, size.y);
+      const maxDim = Math.max(size.x, size.y, size.z);
       const fov = camera.fov * (Math.PI / 180);
-      const dist = visibleDim / (2 * Math.tan(fov / 2));
+      const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.8;
       camera.position.set(center.x, center.y, center.z + dist);
       camera.lookAt(center);
     }
@@ -143,7 +143,7 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const fov = camera.fov * (Math.PI / 180);
-        const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.3;
+        const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.8;
         camera.position.set(center.x, center.y + dist * 0.15, center.z + dist);
         camera.lookAt(center);
         camera.updateProjectionMatrix();
