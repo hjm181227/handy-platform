@@ -107,15 +107,12 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
     scene.environmentIntensity = 0.4;
     pmremGenerator.dispose();
 
-    // Lights (matched to design tool)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // Lights (subtle — environment map handles most illumination)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
     scene.add(ambientLight);
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.2);
     dirLight1.position.set(2, 3, 5);
     scene.add(dirLight1);
-    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.15);
-    dirLight2.position.set(-3, 1, 3);
-    scene.add(dirLight2);
 
     // Load GLB
     let autoCaptureTimer: ReturnType<typeof setTimeout> | null = null;
