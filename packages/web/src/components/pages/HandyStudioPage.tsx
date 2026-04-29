@@ -1,10 +1,47 @@
 import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@handy-platform/shared';
 
 const STORE_LINKS = {
   appStore: '#app-store',
   googlePlay: '#google-play',
+};
+
+const BASE_URL = 'https://h-andy.com';
+const PAGE_PATH = '/handy-studio';
+const OG_IMAGE = `${BASE_URL}/images/handy-studio-og.png`;
+
+const SEO_DATA: Record<string, { title: string; description: string; keywords: string }> = {
+  ko: {
+    title: 'HandyStudio: 네일아트 디자인 툴 | 3D 네일 시뮬레이터',
+    description: '네일 아티스트의 작업 효율과 수익을 높이는 스마트한 파트너. PBR 엔진 기반의 전문 네일 디자인 툴로 실제 젤의 광택과 특수 질감을 사실적으로 재현합니다.',
+    keywords: '이달의아트,아트판,네일샵,젤네일,수제네일팁,시안제작,재료절약,매니큐어,살롱,뷰티,네일도안,스케치,고객상담,네일연습,셀프네일',
+  },
+  en: {
+    title: 'HandyStudio: Nail Art Design Tool | 3D Nail Simulator',
+    description: 'Maximize Efficiency and Profit for Professional Nail Artists. A pro-grade nail design tool powered by a PBR engine that recreates real gel textures with stunning accuracy.',
+    keywords: 'nailtech,presson,salon,manicure,gelnail,sketch,mockup,practice,portfolio,business,beauty,pro',
+  },
+  ja: {
+    title: 'HandyStudio: ネイルアートデザインツール | 3Dネイルシミュレーター',
+    description: 'ネイルアーティストの作業効率と収益を高めるスマートパートナー。PBRエンジン搭載の本格ネイルデザインツールです。',
+    keywords: 'ネイルテック,ジェルネイル,サロン,マニキュア,スケッチ,練習,カウンセリング,ポートフォリオ,セルフネイル',
+  },
+};
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'HandyStudio',
+  operatingSystem: 'iOS, Android',
+  applicationCategory: 'LifestyleApplication',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'KRW',
+    description: 'Free with in-app purchases',
+  },
 };
 
 interface HandyStudioPageProps {
@@ -22,8 +59,43 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
     }
   }, [i18n]);
 
+  const lang = i18n.language?.substring(0, 2) || 'ko';
+  const seo = SEO_DATA[lang] || SEO_DATA.ko;
+  const pageUrl = `${BASE_URL}${PAGE_PATH}`;
+
   return (
     <div className="min-h-screen bg-white">
+        <Helmet>
+          <html lang={lang} />
+          <title>{seo.title}</title>
+          <meta name="description" content={seo.description} />
+          <meta name="keywords" content={seo.keywords} />
+          <link rel="canonical" href={pageUrl} />
+
+          {/* Open Graph */}
+          <meta property="og:title" content={seo.title} />
+          <meta property="og:description" content={seo.description} />
+          <meta property="og:image" content={OG_IMAGE} />
+          <meta property="og:url" content={pageUrl} />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="HandyStudio" />
+
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={seo.title} />
+          <meta name="twitter:description" content={seo.description} />
+          <meta name="twitter:image" content={OG_IMAGE} />
+
+          {/* hreflang */}
+          <link rel="alternate" hrefLang="ko" href={`${pageUrl}?lang=ko`} />
+          <link rel="alternate" hrefLang="en" href={`${pageUrl}?lang=en`} />
+          <link rel="alternate" hrefLang="ja" href={`${pageUrl}?lang=ja`} />
+          <link rel="alternate" hrefLang="x-default" href={pageUrl} />
+
+          {/* JSON-LD */}
+          <script type="application/ld+json">{JSON.stringify(JSON_LD)}</script>
+        </Helmet>
+
         {/* ─── Hero Section ─── */}
         <section className="relative overflow-hidden bg-gradient-to-b from-pink-50 via-white to-white">
           <div className="max-w-7xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28">
