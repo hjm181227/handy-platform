@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { webApiService } from '../../../services/apiService';
 import type { DecorationAsset, DecorationCategory } from '@handy-platform/shared';
 import { FiCheck, FiX, FiPlus, FiTrash2, FiUpload } from 'react-icons/fi';
 import type { AssetFormData } from './types';
-import { GLBPreview } from './GLBPreview';
+const GLBPreview = lazy(() => import('./GLBPreview').then(m => ({ default: m.GLBPreview })));
 import { SVGPreview } from './SVGPreview';
 
 const THEME_OPTIONS = ['gothic', 'luxury', 'minimal', 'classic', 'elegant', 'cute', 'celestial'] as const;
@@ -463,13 +463,15 @@ export function DecorationFormModal({
                   </div>
                 )}
 
-                {/* Three.js preview */}
+                {/* Three.js preview (lazy loaded) */}
                 {form.modelUrl && (
-                  <GLBPreview
-                    modelUrl={form.modelUrl}
-                    color={form.allowedColors[activeColorIndex]?.color as [number, number, number] | undefined}
-                    onCapture={handlePreviewCapture}
-                  />
+                  <Suspense fallback={<div className="text-xs text-gray-400 py-2">3D 프리뷰 로딩 중...</div>}>
+                    <GLBPreview
+                      modelUrl={form.modelUrl}
+                      color={form.allowedColors[activeColorIndex]?.color as [number, number, number] | undefined}
+                      onCapture={handlePreviewCapture}
+                    />
+                  </Suspense>
                 )}
 
                 {isAutoCapturing && (

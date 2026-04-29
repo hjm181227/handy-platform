@@ -448,5 +448,38 @@
         "pending": "処理中"
       }
     }
+  },
+  "handyStudio": {
+    "heroSubtitle": "ネイルアーティストの作業効率と収益を高めるスマートパートナー。PBRエンジン搭載の本格ネイルデザインツールで、リアルなジェルの光沢と特殊テクスチャを再現します。",
+    "screenshotPlaceholder": "アプリスクリーンショット",
+    "featuresTitle": "主な機能",
+    "featuresSubtitle": "プロのネイルアーティストのためのオールインワンデザインツール",
+    "feature1Title": "リアルPBRテクスチャ",
+    "feature1Desc": "マグネットジェル、グリッター、クロム、マットなど、実際の素材の質感を物理ベースレンダリングでリアルに再現します。",
+    "feature2Title": "リアルタイム3Dプレビュー",
+    "feature2Desc": "描いた結果が即座に3Dネイルモデルに反映され、立体感と光沢をリアルタイムで確認できます。",
+    "feature3Title": "プロ仕様マルチレイヤー",
+    "feature3Desc": "各レイヤーを独立して編集・変形でき、複雑なネイルアートも自由に制作できます。",
+    "feature4Title": "3Dデコレーションエディタ",
+    "feature4Desc": "ストーン、チャーム、スタッズなどの3Dパーツを自由に配置し、角度や位置を調整できます。",
+    "feature5Title": "ネイル最適化インターフェース",
+    "feature5Desc": "ネイルアーティストのワークフローに合わせた直感的なUIで、学習不要ですぐに作業を始められます。",
+    "feature6Title": "スマートデザイン管理",
+    "feature6Desc": "完成したデザインを保存し、自分だけのデジタルアートボードを構築して体系的に管理します。",
+    "planFreeTag": "無料体験",
+    "planFreeHeading": "無料で始めましょう",
+    "planFreeDesc": "コア機能を気軽にお試しください。インストールするだけですぐに始められます。",
+    "planProButton": "プランを見る",
+    "planDivider": "もっと必要ですか？",
+    "planProHeading": "Proにアップグレード",
+    "planProDesc": "プレミアム機能をアンロックして、制限なく作業しましょう。",
+    "planProFeature1": "無制限プロジェクト",
+    "planProFeature2": "すべてのブラシ＆素材（マグネットジェル、ベルベット含む）",
+    "planProFeature3": "高解像度エクスポート",
+    "planProPrice": "₩24,900/月",
+    "ctaTitle": "今すぐ始めましょう",
+    "ctaSubtitle": "HandyStudioでネイルデザインの新しい可能性を体験してください。",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー"
   }
 }

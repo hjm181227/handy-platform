@@ -100,6 +100,9 @@ import { KakaoCallbackPage } from './components/pages/KakaoCallbackPage';
 import { GoogleCallbackPage } from './components/pages/GoogleCallbackPage';
 import { AppleCallbackPage } from './components/pages/AppleCallbackPage';
 
+// Landing Pages
+import { HandyStudioPage } from './components/pages/HandyStudioPage';
+
 // Footer Components
 import {
   AboutCompanyPage,
@@ -812,6 +815,9 @@ export function Router() {
   else if (pathname.startsWith('/partner/')) {
     const type = decodeURIComponent(pathname.split('/').pop() || '');
     screen = <PartnerInquiryPage onGo={nav} type={type} />;
+  }
+  else if (pathname === '/handy-studio') {
+    screen = <HandyStudioPage onGo={nav} />;
   }
   else if (pathname.startsWith('/policy/')) {
     const policyType = pathname.split('/').pop() || '';

@@ -448,5 +448,38 @@
         "pending": "Pending"
       }
     }
+  },
+  "handyStudio": {
+    "heroSubtitle": "Maximize Efficiency and Profit for Professional Nail Artists. A pro-grade nail design tool powered by a PBR engine that recreates real gel textures with stunning accuracy.",
+    "screenshotPlaceholder": "App Screenshot",
+    "featuresTitle": "Key Features",
+    "featuresSubtitle": "An all-in-one design tool for professional nail artists",
+    "feature1Title": "Real PBR Textures",
+    "feature1Desc": "Faithfully recreates real material textures — cat-eye gel, glitter, chrome, matte and more — using physically based rendering.",
+    "feature2Title": "Real-Time 3D Preview",
+    "feature2Desc": "See your brushstrokes instantly applied to a 3D nail model, with lifelike depth and shine updated in real time.",
+    "feature3Title": "Pro Multi Layer",
+    "feature3Desc": "Edit and transform each layer independently, giving you full creative freedom for complex nail art.",
+    "feature4Title": "3D Decoration Editor",
+    "feature4Desc": "Place and adjust 3D parts like stones, charms, and studs with full control over position and angle.",
+    "feature5Title": "Nail-Optimized Interface",
+    "feature5Desc": "An intuitive UI built around the nail artist's workflow — start creating with zero learning curve.",
+    "feature6Title": "Smart Design Management",
+    "feature6Desc": "Save your finished designs and build your own digital art portfolio for easy organization.",
+    "planFreeTag": "Free Trial",
+    "planFreeHeading": "Start for Free",
+    "planFreeDesc": "Try the core features with no strings attached. Just install and start creating.",
+    "planProButton": "View Plans",
+    "planDivider": "Need more?",
+    "planProHeading": "Upgrade to Pro",
+    "planProDesc": "Unlock premium features and remove all limits.",
+    "planProFeature1": "Unlimited projects",
+    "planProFeature2": "All brushes & materials (cat-eye gel, velvet, etc.)",
+    "planProFeature3": "High-resolution export",
+    "planProPrice": "₩24,900/mo",
+    "ctaTitle": "Get Started Now",
+    "ctaSubtitle": "Discover new possibilities in nail design with HandyStudio.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
   }
 }
