@@ -1,0 +1,73 @@
+default_platform(:ios)
+
+ASC_API_KEY_PATH = File.expand_path("~/Projects/Handy_Design_Tool/credentials/ios/AuthKey_W9CK6D87T7.p8")
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build_app(
+      workspace: "ios/HandyPlatform.xcworkspace",
+      scheme: "HandyTemp",
+      configuration: "Release",
+      export_options: "ios/ExportOptions.plist",
+      output_directory: "build",
+      output_name: "HandyPlatform.ipa",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates",
+    )
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"] || "W9CK6D87T7",
+      issuer_id: ENV["ASC_API_ISSUER_ID"] || "e40f6783-ba51-4b34-8f5a-f620821fbd15",
+      key_filepath: ASC_API_KEY_PATH,
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: "build/HandyPlatform.ipa",
+      skip_waiting_for_build_processing: true,
+    )
+  end
+
+  desc "Build and upload to App Store Connect"
+  lane :release do
+    build_app(
+      workspace: "ios/HandyPlatform.xcworkspace",
+      scheme: "HandyTemp",
+      configuration: "Release",
+      export_options: "ios/ExportOptions.plist",
+      output_directory: "build",
+      output_name: "HandyPlatform.ipa",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates",
+    )
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"] || "W9CK6D87T7",
+      issuer_id: ENV["ASC_API_ISSUER_ID"] || "e40f6783-ba51-4b34-8f5a-f620821fbd15",
+      key_filepath: ASC_API_KEY_PATH,
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      ipa: "build/HandyPlatform.ipa",
+      skip_metadata: true,
+      skip_screenshots: true,
+      precheck_include_in_app_purchases: false,
+    )
+  end
+
+  desc "Build only (no upload)"
+  lane :build do
+    build_app(
+      workspace: "ios/HandyPlatform.xcworkspace",
+      scheme: "HandyTemp",
+      configuration: "Release",
+      export_options: "ios/ExportOptions.plist",
+      output_directory: "build",
+      output_name: "HandyPlatform.ipa",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates",
+    )
+  end
+end

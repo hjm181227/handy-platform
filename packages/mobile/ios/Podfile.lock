@@ -1,26 +1,4 @@
 PODS:
-  - dr-pogodin-react-native-fs (2.28.0):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
   - FBLazyVector (0.85.0)
   - hermes-engine (250829098.0.10):
     - hermes-engine/Pre-built (= 250829098.0.10)
@@ -1384,6 +1362,28 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+  - react-native-blob-util (0.24.7):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-fast-tflite (2.0.0):
     - hermes-engine
     - RCTRequired
@@ -1407,7 +1407,7 @@ PODS:
     - ReactNativeDependencies
     - TensorFlowLiteC (= 2.17.0)
     - Yoga
-  - react-native-image-picker (7.2.3):
+  - react-native-image-picker (8.2.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2044,7 +2044,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNScreens (4.4.0):
+  - RNScreens (4.25.0-nightly-20260423-b43a02140):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2066,9 +2066,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNScreens/common (= 4.4.0)
+    - RNScreens/common (= 4.25.0-nightly-20260423-b43a02140)
     - Yoga
-  - RNScreens/common (4.4.0):
+  - RNScreens/common (4.25.0-nightly-20260423-b43a02140):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2200,7 +2200,6 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - "dr-pogodin-react-native-fs (from `../../node_modules/@dr.pogodin/react-native-fs`)"
   - FBLazyVector (from `../../../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCTDeprecation (from `../../../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2240,8 +2239,9 @@ DEPENDENCIES:
   - React-logger (from `../../../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../../../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-blob-util (from `../../../node_modules/react-native-blob-util`)
   - react-native-fast-tflite (from `../../../node_modules/react-native-fast-tflite`)
-  - react-native-image-picker (from `../../../node_modules/react-native-image-picker`)
+  - react-native-image-picker (from `../../node_modules/react-native-image-picker`)
   - "react-native-image-resizer (from `../../../node_modules/@bam.tech/react-native-image-resizer`)"
   - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
   - react-native-webview (from `../../../node_modules/react-native-webview`)
@@ -2284,7 +2284,7 @@ DEPENDENCIES:
   - RNImageCropPicker (from `../../../node_modules/react-native-image-crop-picker`)
   - RNInAppBrowser (from `../../../node_modules/react-native-inappbrowser-reborn`)
   - RNPermissions (from `../../../node_modules/react-native-permissions`)
-  - RNScreens (from `../../node_modules/react-native-screens`)
+  - RNScreens (from `../../../node_modules/react-native-screens`)
   - RNSVG (from `../../../node_modules/react-native-svg`)
   - RNVectorIcons (from `../../../node_modules/react-native-vector-icons`)
   - vision-camera-resize-plugin (from `../../../node_modules/vision-camera-resize-plugin`)
@@ -2297,8 +2297,6 @@ SPEC REPOS:
     - TOCropViewController
 
 EXTERNAL SOURCES:
-  dr-pogodin-react-native-fs:
-    :path: "../../node_modules/@dr.pogodin/react-native-fs"
   FBLazyVector:
     :path: "../../../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2376,10 +2374,12 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-blob-util:
+    :path: "../../../node_modules/react-native-blob-util"
   react-native-fast-tflite:
     :path: "../../../node_modules/react-native-fast-tflite"
   react-native-image-picker:
-    :path: "../../../node_modules/react-native-image-picker"
+    :path: "../../node_modules/react-native-image-picker"
   react-native-image-resizer:
     :path: "../../../node_modules/@bam.tech/react-native-image-resizer"
   react-native-safe-area-context:
@@ -2465,7 +2465,7 @@ EXTERNAL SOURCES:
   RNPermissions:
     :path: "../../../node_modules/react-native-permissions"
   RNScreens:
-    :path: "../../node_modules/react-native-screens"
+    :path: "../../../node_modules/react-native-screens"
   RNSVG:
     :path: "../../../node_modules/react-native-svg"
   RNVectorIcons:
@@ -2478,7 +2478,6 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  dr-pogodin-react-native-fs: c646bf998af4f4f7739798193ba9be4191fbb948
   FBLazyVector: c00c20551d40126351a6783c47ce75f5b374851b
   hermes-engine: 08f83b8e17f183afe950c5ba8c7bb3db94723909
   RCTDeprecation: 3bb167081b134461cfeb875ff7ae1945f8635257
@@ -2517,8 +2516,9 @@ SPEC CHECKSUMS:
   React-logger: ee47d5f3b59a46a006c65038ed5d0b1143e37510
   React-Mapbuffer: 7f8bfbe3fcb2203db4ccb3975414af8cabe4bcd0
   React-microtasksnativemodule: ca1f33f7c98b76d923f550d39631eb4e05fa9aec
+  react-native-blob-util: 4233adc282d2d0e3dad4c0a2287fcd02b7757f02
   react-native-fast-tflite: 3a72224f627bf0250e97d1a52cf50756b0f714fc
-  react-native-image-picker: 16b96bec669da30b8f196145a1ed1ee565e60e69
+  react-native-image-picker: 23540feacc79c63c60857f318fdfa8477c26e70a
   react-native-image-resizer: 9b8cba5b22e67dfea5ebaf98c7645ba9ecbcc541
   react-native-safe-area-context: 6b4966397ada0f7dd481e4486a2ef936834861a1
   react-native-webview: 2da09bdea1aeb6c46e27dd94632e21059cade6c1
@@ -2561,7 +2561,7 @@ SPEC CHECKSUMS:
   RNImageCropPicker: 6b9ac564593efdf86b886f93aab4356e80db12de
   RNInAppBrowser: 904d24dc75e8e6c6c98a3160329192608946f9df
   RNPermissions: 5cf56f8c71f23f207ec89f9a5d71f844e2c15683
-  RNScreens: 8b7aa891939f72996fa1bcc105acc79bfbe6d6a7
+  RNScreens: 315db95d36cedf15f89dc96812615f8557b8387e
   RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
   RNVectorIcons: 97f26211c07d69e45b189f9dd0dbbe5e2d2b0b92
   TensorFlowLiteC: eac6d689a8d391d1b202dc59e3d9165ba64aaf73
