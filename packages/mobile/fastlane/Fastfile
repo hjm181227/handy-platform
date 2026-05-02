@@ -71,3 +71,28 @@ platform :ios do
     )
   end
 end
+
+GOOGLE_PLAY_JSON_KEY = File.expand_path("~/Projects/Handy_Design_Tool/credentials/android/google-play-service-account.json")
+
+platform :android do
+  desc "Build AAB and upload to Google Play (internal track)"
+  lane :beta do
+    upload_to_play_store(
+      track: "internal",
+      release_status: "draft",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      json_key: GOOGLE_PLAY_JSON_KEY,
+      package_name: "com.handyapp",
+    )
+  end
+
+  desc "Build AAB only"
+  lane :build do
+    gradle(
+      project_dir: "android",
+      task: "bundle",
+      build_type: "Release",
+    )
+  end
+end
