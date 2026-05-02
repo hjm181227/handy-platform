@@ -244,19 +244,6 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             {loading ? t('auth:login.loggingIn') : t('auth:login.loginButton')}
           </button>
         </form>
-
-        {/* 회원가입 링크 - 개발/스테이지 환경에서만 표시 */}
-        {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
-          <div className="mt-6 text-center">
-            <span className="text-gray-500 text-sm">{t('auth:login.noAccount')} </span>
-            <button
-              onClick={() => onGo("/signup")}
-              className="text-[#E85A6B] text-sm font-medium hover:underline"
-            >
-              {t('common:signup')}
-            </button>
-          </div>
-        )}
       </div>
     );
   }

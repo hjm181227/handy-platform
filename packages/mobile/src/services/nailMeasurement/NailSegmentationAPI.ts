@@ -24,6 +24,7 @@
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
+import ImageResizer from 'react-native-image-resizer';
 import {
   NailSegmentationResult,
   NailRegion,
@@ -49,6 +50,11 @@ const PRODUCTION_URL = 'https://qhcy0cjmr5.execute-api.ap-northeast-2.amazonaws.
 //     })
 //   : PRODUCTION_URL;
 const API_SERVER_URL = PRODUCTION_URL;
+
+// 업로드 전 리사이즈 파라미터
+// 모델 입력은 800x800이므로 1600 long-side면 충분한 헤드룸 + API Gateway 10MB 한도 내 안전
+const UPLOAD_MAX_DIMENSION = 1600;
+const UPLOAD_JPEG_QUALITY = 85;
 
 // API 응답 타입
 interface SegmentationAPIResponse {
@@ -213,10 +219,13 @@ class NailSegmentationAPI {
       console.log('[NailSegmentationAPI] File read time:', Date.now() - readStartTime, 'ms');
       console.log('[NailSegmentationAPI] Base64 length:', base64Data.length);
 
-      // 2. FormData 생성
+      // 2. 업로드 전 리사이즈
+      const uploadUri = await this.resizeForUpload(imageUri);
+
+      // 3. FormData 생성
       const formData = new FormData();
       formData.append('image', {
-        uri: imageUri,
+        uri: uploadUri,
         type: 'image/jpeg',
         name: 'image.jpg',
       } as any);
@@ -297,9 +306,11 @@ class NailSegmentationAPI {
   ): Promise<MeasurementAPIResponse> {
     console.log('[NailSegmentationAPI] Calling measure API...');
 
+    const uploadUri = await this.resizeForUpload(imageUri);
+
     const formData = new FormData();
     formData.append('image', {
-      uri: imageUri,
+      uri: uploadUri,
       type: 'image/jpeg',
       name: 'image.jpg',
     } as any);
@@ -350,10 +361,13 @@ class NailSegmentationAPI {
         throw new Error(`Image file not found: ${cleanUri}`);
       }
 
-      // 2. FormData 생성
+      // 2. 업로드 전 리사이즈
+      const uploadUri = await this.resizeForUpload(imageUri);
+
+      // 3. FormData 생성
       const formData = new FormData();
       formData.append('image', {
-        uri: imageUri,
+        uri: uploadUri,
         type: 'image/jpeg',
         name: 'image.jpg',
       } as any);
@@ -453,6 +467,39 @@ class NailSegmentationAPI {
       console.error('[NailSegmentationAPI] predictWithOverlay failed:', error);
       console.error('[NailSegmentationAPI] ========================================');
       throw error;
+    }
+  }
+
+  /**
+   * 업로드 전 이미지 리사이즈
+   * - API Gateway 10MB 한도 회피 (413 방지)
+   * - onlyScaleDown: 작은 이미지는 손대지 않음
+   * - 실패 시 원본 URI 반환
+   */
+  private async resizeForUpload(imageUri: string): Promise<string> {
+    try {
+      const t0 = Date.now();
+      const resized = await ImageResizer.createResizedImage(
+        imageUri,
+        UPLOAD_MAX_DIMENSION,
+        UPLOAD_MAX_DIMENSION,
+        'JPEG',
+        UPLOAD_JPEG_QUALITY,
+        0,
+        undefined,
+        false,
+        { mode: 'contain', onlyScaleDown: true }
+      );
+      console.log('[NailSegmentationAPI] Resize:', {
+        ms: Date.now() - t0,
+        width: resized.width,
+        height: resized.height,
+        sizeKB: Math.round(resized.size / 1024),
+      });
+      return resized.uri;
+    } catch (e) {
+      console.warn('[NailSegmentationAPI] Resize failed, falling back to original:', e);
+      return imageUri;
     }
   }
 

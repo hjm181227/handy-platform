@@ -405,16 +405,6 @@ export function AuthModalContent() {
             {loading ? t('auth:login.loggingIn') : t('auth:login.loginButton')}
           </button>
         </form>
-
-        <div className="mt-6 text-center pb-6">
-          <span className="text-gray-500 text-sm">{t('auth:login.noAccount')} </span>
-          <button
-            onClick={() => setView('signup')}
-            className="text-[#E85A6B] text-sm font-medium hover:underline"
-          >
-            {t('common:signup')}
-          </button>
-        </div>
       </div>
     );
   }
