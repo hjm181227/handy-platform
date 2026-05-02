@@ -24,7 +24,7 @@
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { Platform } from 'react-native';
-import ImageResizer from 'react-native-image-resizer';
+import ImageResizer from '@bam.tech/react-native-image-resizer';
 import {
   NailSegmentationResult,
   NailRegion,
@@ -204,25 +204,24 @@ class NailSegmentationAPI {
     console.log('[NailSegmentationAPI] Image URI:', imageUri.substring(0, 50) + '...');
 
     try {
-      // 1. 이미지 파일 읽기
+      // 1. 원본 파일 존재 확인
       const readStartTime = Date.now();
       const cleanUri = imageUri.replace('file://', '');
-
-      // 파일 존재 확인
       const exists = await ReactNativeBlobUtil.fs.exists(cleanUri);
       if (!exists) {
         throw new Error(`Image file not found: ${cleanUri}`);
       }
 
-      // 파일을 base64로 읽기
-      const base64Data = await ReactNativeBlobUtil.fs.readFile(cleanUri, 'base64');
+      // 2. 업로드 전 리사이즈 (파일 존재 확인 직후, tmp 삭제 전에 수행)
+      const uploadUri = await this.resizeForUpload(imageUri);
+
+      // 3. 리사이즈된 파일에서 base64 읽기
+      const resizedCleanUri = uploadUri.replace('file://', '');
+      const base64Data = await ReactNativeBlobUtil.fs.readFile(resizedCleanUri, 'base64');
       console.log('[NailSegmentationAPI] File read time:', Date.now() - readStartTime, 'ms');
       console.log('[NailSegmentationAPI] Base64 length:', base64Data.length);
 
-      // 2. 업로드 전 리사이즈
-      const uploadUri = await this.resizeForUpload(imageUri);
-
-      // 3. FormData 생성
+      // 4. FormData 생성
       const formData = new FormData();
       formData.append('image', {
         uri: uploadUri,
@@ -230,7 +229,7 @@ class NailSegmentationAPI {
         name: 'image.jpg',
       } as any);
 
-      // 3. API 호출
+      // 5. API 호출
       const apiStartTime = Date.now();
       console.log('[NailSegmentationAPI] Calling API:', `${this.serverUrl}/api/segment`);
 
@@ -354,14 +353,14 @@ class NailSegmentationAPI {
     console.log('[NailSegmentationAPI] Image URI:', imageUri.substring(0, 50) + '...');
 
     try {
-      // 1. 파일 존재 확인
+      // 1. 원본 파일 존재 확인
       const cleanUri = imageUri.replace('file://', '');
       const exists = await ReactNativeBlobUtil.fs.exists(cleanUri);
       if (!exists) {
         throw new Error(`Image file not found: ${cleanUri}`);
       }
 
-      // 2. 업로드 전 리사이즈
+      // 2. 업로드 전 리사이즈 (파일 존재 확인 직후, tmp 삭제 전에 수행)
       const uploadUri = await this.resizeForUpload(imageUri);
 
       // 3. FormData 생성
@@ -372,7 +371,7 @@ class NailSegmentationAPI {
         name: 'image.jpg',
       } as any);
 
-      // 3. API 호출
+      // 4. API 호출
       const apiStartTime = Date.now();
       console.log('[NailSegmentationAPI] Calling API:', `${this.serverUrl}/api/segment-with-overlay`);
 
@@ -478,9 +477,12 @@ class NailSegmentationAPI {
    */
   private async resizeForUpload(imageUri: string): Promise<string> {
     try {
+      // URI 정규화: file:// prefix 보장
+      const normalizedUri = imageUri.startsWith('file://') ? imageUri : `file://${imageUri}`;
+
       const t0 = Date.now();
       const resized = await ImageResizer.createResizedImage(
-        imageUri,
+        normalizedUri,
         UPLOAD_MAX_DIMENSION,
         UPLOAD_MAX_DIMENSION,
         'JPEG',
@@ -496,7 +498,9 @@ class NailSegmentationAPI {
         height: resized.height,
         sizeKB: Math.round(resized.size / 1024),
       });
-      return resized.uri;
+
+      // 반환값도 file:// prefix 보장
+      return resized.uri.startsWith('file://') ? resized.uri : `file://${resized.uri}`;
     } catch (e) {
       console.warn('[NailSegmentationAPI] Resize failed, falling back to original:', e);
       return imageUri;
