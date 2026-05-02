@@ -140,6 +140,7 @@ export function AuthModalContent() {
 
     // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     setLoading(false);
+    localStorage.setItem('oauth_returnUrl', window.location.pathname + window.location.search);
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
     window.location.href = `${apiBaseUrl}/api/auth/oauth/kakao/login`;
   };
@@ -203,6 +204,7 @@ export function AuthModalContent() {
 
     // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     setLoading(false);
+    localStorage.setItem('oauth_returnUrl', window.location.pathname + window.location.search);
     executeNaverLogin();
   };
 
@@ -219,6 +221,7 @@ export function AuthModalContent() {
 
     // 웹 브라우저: 백엔드로 리다이렉트하여 전체 OAuth 흐름 처리
     setLoading(false);
+    localStorage.setItem('oauth_returnUrl', window.location.pathname + window.location.search);
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:11000';
     window.location.href = `${apiBaseUrl}/api/auth/oauth/apple/login`;
   };

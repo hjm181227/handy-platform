@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@handy-platform/shared';
 import { PrivacyPolicy, TermsOfService } from './PolicyPages';
 
 // 공통 컴포넌트
@@ -248,6 +249,16 @@ export function PartnerInquiryPage({ onGo, type }: { onGo: (to: string) => void;
 
 // 정책 페이지들
 export function PolicyPage({ onGo, type }: { onGo: (to: string) => void; type: string }) {
+  const { i18n } = useTranslation();
+
+  // ?lang= 쿼리 파라미터로 언어 전환 지원
+  useEffect(() => {
+    const langParam = new URLSearchParams(window.location.search).get('lang');
+    if (langParam && (SUPPORTED_LANGUAGES as readonly string[]).includes(langParam)) {
+      i18n.changeLanguage(langParam as SupportedLanguage);
+    }
+  }, [i18n]);
+
   // 개인정보처리방침과 이용약관은 상세 컴포넌트 사용
   if (type === 'privacy') {
     return <PrivacyPolicy onClose={() => onGo("/")} />;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { FiEye, FiRefreshCw } from 'react-icons/fi';
 
 export function GLBPreview({ modelUrl, color, onCapture }: {
@@ -44,15 +45,15 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
       });
     }
 
-    // Tight-fit camera for square aspect — use only x/y extent (ignore depth)
+    // Tight-fit camera for square capture — fill frame with no margin
     if (modelRef.current) {
       const box = new THREE.Box3().setFromObject(modelRef.current);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       const visibleDim = Math.max(size.x, size.y);
       const fov = camera.fov * (Math.PI / 180);
-      const dist = visibleDim / (2 * Math.tan(fov / 2));
-      camera.position.set(center.x, center.y, center.z + dist);
+      const dist = visibleDim / (2 * Math.tan(fov / 2)) * 1.05;
+      camera.position.set(center.x, center.y, center.z + size.z / 2 + dist);
       camera.lookAt(center);
     }
     camera.updateProjectionMatrix();
@@ -99,12 +100,19 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Environment map for PBR materials
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envTexture;
+    scene.environmentIntensity = 0.4;
+    pmremGenerator.dispose();
+
+    // Lights (subtle — environment map handles most illumination)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 10, 7);
-    scene.add(dirLight);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.2);
+    dirLight1.position.set(2, 3, 5);
+    scene.add(dirLight1);
 
     // Load GLB
     let autoCaptureTimer: ReturnType<typeof setTimeout> | null = null;
@@ -135,7 +143,7 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const fov = camera.fov * (Math.PI / 180);
-        const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.3;
+        const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.8;
         camera.position.set(center.x, center.y + dist * 0.15, center.z + dist);
         camera.lookAt(center);
         camera.updateProjectionMatrix();
@@ -168,6 +176,10 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
     return () => {
       if (autoCaptureTimer) clearTimeout(autoCaptureTimer);
       cancelAnimationFrame(frameRef.current);
+      if (scene.environment) {
+        scene.environment.dispose();
+        scene.environment = null;
+      }
       renderer.dispose();
       container.innerHTML = '';
     };

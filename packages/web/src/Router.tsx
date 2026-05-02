@@ -100,6 +100,9 @@ import { KakaoCallbackPage } from './components/pages/KakaoCallbackPage';
 import { GoogleCallbackPage } from './components/pages/GoogleCallbackPage';
 import { AppleCallbackPage } from './components/pages/AppleCallbackPage';
 
+// Landing Pages
+import { HandyStudioPage } from './components/pages/HandyStudioPage';
+
 // Footer Components
 import {
   AboutCompanyPage,
@@ -813,6 +816,9 @@ export function Router() {
     const type = decodeURIComponent(pathname.split('/').pop() || '');
     screen = <PartnerInquiryPage onGo={nav} type={type} />;
   }
+  else if (pathname === '/handy-studio') {
+    screen = <HandyStudioPage onGo={nav} />;
+  }
   else if (pathname.startsWith('/policy/')) {
     const policyType = pathname.split('/').pop() || '';
     screen = <PolicyPage onGo={nav} type={policyType} />;
@@ -1411,6 +1417,13 @@ function ShoppingBagIcon({ size = 'md' }: { size?: 'sm' | 'md' }) {
  */
 function AuthRedirect({ nav, openModal }: { nav: (to: string) => void; openModal: () => void }) {
   useEffect(() => {
+    // returnUrl 쿼리 파라미터가 있으면 localStorage에 저장 (OAuth 리다이렉트 시 유지용)
+    const params = new URLSearchParams(window.location.search);
+    const returnUrl = params.get('returnUrl');
+    if (returnUrl) {
+      localStorage.setItem('oauth_returnUrl', returnUrl);
+    }
+
     nav('/');
     // 약간의 딜레이 후 모달 열기 (네비게이션 완료 후)
     const timer = setTimeout(() => {
