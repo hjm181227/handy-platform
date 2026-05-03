@@ -19,6 +19,70 @@ const MATERIAL_PRESETS: Record<string, { metalness: number; roughness: number; c
 };
 const MATERIAL_OPTIONS = Object.keys(MATERIAL_PRESETS);
 
+const COLOR_PRESETS: Record<string, { name: string; hex: string }[]> = {
+  '크롬/메탈릭': [
+    { name: 'Silver', hex: '#C0C0C0' },
+    { name: 'Light Silver', hex: '#E8E8E8' },
+    { name: 'Gold', hex: '#FFD700' },
+    { name: 'Champagne Gold', hex: '#F7E7CE' },
+    { name: 'Rose Gold', hex: '#B76E79' },
+    { name: 'Copper', hex: '#B87333' },
+    { name: 'Gunmetal', hex: '#2C3539' },
+    { name: 'Bronze', hex: '#CD7F32' },
+    { name: 'Platinum', hex: '#E5E4E2' },
+  ],
+  '펄/시머': [
+    { name: 'White Pearl', hex: '#FDFBF7' },
+    { name: 'Pink Pearl', hex: '#F2D4DC' },
+    { name: 'Lavender Pearl', hex: '#E6D7F1' },
+    { name: 'Blue Pearl', hex: '#D4E6F1' },
+    { name: 'Green Pearl', hex: '#D5F0E8' },
+    { name: 'Peach Pearl', hex: '#FAE0D4' },
+    { name: 'Champagne Pearl', hex: '#F5ECD7' },
+  ],
+  '솔리드': [
+    { name: 'Black', hex: '#000000' },
+    { name: 'White', hex: '#FFFFFF' },
+    { name: 'Red', hex: '#E03030' },
+    { name: 'Deep Red', hex: '#8B0000' },
+    { name: 'Hot Pink', hex: '#FF69B4' },
+    { name: 'Nude Pink', hex: '#E8C4B8' },
+    { name: 'Coral', hex: '#FF7F50' },
+    { name: 'Orange', hex: '#FF8C00' },
+    { name: 'Yellow', hex: '#FFD600' },
+    { name: 'Green', hex: '#2E8B57' },
+    { name: 'Navy', hex: '#1B2A4A' },
+    { name: 'Royal Blue', hex: '#4169E1' },
+    { name: 'Purple', hex: '#6B3FA0' },
+    { name: 'Brown', hex: '#6B4423' },
+    { name: 'Beige', hex: '#F5E6D3' },
+  ],
+  '파스텔': [
+    { name: 'Baby Pink', hex: '#FFD1DC' },
+    { name: 'Lavender', hex: '#C8A2C8' },
+    { name: 'Mint', hex: '#AAF0D1' },
+    { name: 'Sky Blue', hex: '#A7D8DE' },
+    { name: 'Lemon', hex: '#FFFACD' },
+    { name: 'Lilac', hex: '#D8B4F8' },
+    { name: 'Peach', hex: '#FFDAB9' },
+  ],
+  '글리터/홀로': [
+    { name: 'Holographic Silver', hex: '#D1E8E2' },
+    { name: 'Holographic Pink', hex: '#F4C2C2' },
+    { name: 'Gold Glitter', hex: '#E6BE8A' },
+    { name: 'Red Glitter', hex: '#C41E3A' },
+    { name: 'Aurora Green', hex: '#A8E6CF' },
+    { name: 'Aurora Purple', hex: '#C3B1E1' },
+  ],
+  '투명/젤리': [
+    { name: 'Clear Pink', hex: '#FFE4E9' },
+    { name: 'Clear Nude', hex: '#F8E8DC' },
+    { name: 'Milky White', hex: '#FFF8F0' },
+    { name: 'Jelly Red', hex: '#FF6B6B' },
+    { name: 'Jelly Purple', hex: '#B088F9' },
+  ],
+};
+
 function hexToRgb01(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
   const r = parseInt(h.substring(0, 2), 16) / 255;
@@ -179,6 +243,7 @@ export function DecorationFormModal({
   };
 
   const [activeColorIndex, setActiveColorIndex] = useState<number>(0);
+  const [showPresets, setShowPresets] = useState(false);
 
   // --- Submit ---
   const handleSubmit = async () => {
@@ -357,6 +422,62 @@ export function DecorationFormModal({
                   허용 색상 ({form.allowedColors.length})
                   <span className="text-xs text-gray-400 ml-2">첫번째 색상이 기본 미리보기에 적용됩니다</span>
                 </h4>
+
+                {/* Color Preset Palette */}
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPresets(!showPresets)}
+                    className="text-xs font-medium px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    {showPresets ? '▾ 색상 프리셋 닫기' : '▸ 색상 프리셋'}
+                  </button>
+                  {showPresets && (
+                    <div className="mt-2 border border-gray-200 rounded-lg p-3 max-h-60 overflow-y-auto">
+                      {Object.entries(COLOR_PRESETS).map(([groupName, colors]) => (
+                        <div key={groupName} className="mb-2 last:mb-0">
+                          <p className="text-xs font-medium text-gray-500 mb-1">{groupName}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {colors.map((preset) => {
+                              const presetRgb = hexToRgb01(preset.hex);
+                              const alreadyAdded = form.allowedColors.some(
+                                (c) =>
+                                  c.color[0] === presetRgb[0] &&
+                                  c.color[1] === presetRgb[1] &&
+                                  c.color[2] === presetRgb[2]
+                              );
+                              return (
+                                <button
+                                  key={preset.hex}
+                                  type="button"
+                                  title={`${preset.name} (${preset.hex})`}
+                                  onClick={() => {
+                                    if (!alreadyAdded) {
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        allowedColors: [...prev.allowedColors, { color: presetRgb }],
+                                      }));
+                                    }
+                                  }}
+                                  className={`w-6 h-6 rounded-full border flex-shrink-0 relative transition-opacity ${
+                                    alreadyAdded ? 'opacity-40 border-gray-400 cursor-default' : 'border-gray-300 hover:scale-110 hover:border-gray-500'
+                                  }`}
+                                  style={{ backgroundColor: preset.hex }}
+                                >
+                                  {alreadyAdded && (
+                                    <FiCheck className="absolute inset-0 m-auto text-gray-700" size={12} />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Existing color list */}
                 <div className="space-y-2">
                   {form.allowedColors.map((c, idx) => (
                     <div key={idx} className="flex items-center gap-2">
@@ -368,6 +489,21 @@ export function DecorationFormModal({
                         }`}
                         style={{ backgroundColor: rgb01ToHex(c.color as [number, number, number]) }}
                         title="클릭하여 미리보기에 적용"
+                      />
+                      <input
+                        type="color"
+                        value={rgb01ToHex(c.color as [number, number, number])}
+                        onChange={(e) => {
+                          const hex = e.target.value;
+                          const rgb = hexToRgb01(hex);
+                          setForm((prev) => ({
+                            ...prev,
+                            allowedColors: prev.allowedColors.map((col, i) =>
+                              i === idx ? { color: rgb } : col
+                            ),
+                          }));
+                        }}
+                        className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
                       />
                       <input
                         type="text"
