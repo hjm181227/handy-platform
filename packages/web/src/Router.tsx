@@ -1192,7 +1192,7 @@ function HomeContent({
               </div>
               <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
                 {brand.products?.filter(Boolean).slice(0, 6).map((p, idx) => {
-                  const productId = p.productUuid;
+                  const productId = p.productUuid || (p as any).id || (p as any).productId;
                   return (
                     <div key={`brand-${brandIdx}-product-${idx}`} className="md:snap-start md:flex-shrink-0">
                       <ProductCard
