@@ -50,7 +50,8 @@ export function ProductCard({
   }
 
   // 좋아요 API는 UUID를 요구하므로 productUuid 사용
-  const productId = p.productUuid;
+  // 일부 엔드포인트(/api/brands withItems)는 productUuid 대신 id 필드로 반환하므로 폴백 처리
+  const productId = p.productUuid || (p as any).id || (p as any).productId;
   // 가격 fallback: discountedPrice > salePrice > price
   const salePrice = p.discountedPrice ?? p.salePrice ?? p.price ?? 0;
   // rating null 체크
