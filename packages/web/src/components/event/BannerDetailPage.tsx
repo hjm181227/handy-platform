@@ -30,6 +30,28 @@ function resolveCtaConfig(redirectUrl: string | undefined) {
   return { label: '이벤트 참여하기', bgColor: '#E85A6B', hoverBgColor: '#D14A5B' };
 }
 
+function handleBannerClick(banner: EventBanner, onGo: (to: string) => void) {
+  const hasDetailImages = (banner.detailImages?.length ?? 0) > 0;
+  const bid = banner._id || banner.bannerId || banner.bannerUuid;
+
+  if (hasDetailImages) {
+    if (bid) onGo(`/event/${bid}`);
+    return;
+  }
+
+  if (banner.redirectUrl) {
+    const url = banner.redirectUrl;
+    if (/^https?:\/\//i.test(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      onGo(url);
+    }
+    return;
+  }
+
+  if (bid) onGo(`/event/${bid}`);
+}
+
 // 이벤트 상태 판별
 function getEventStatus(banner: EventBanner): { label: string; color: string; bgColor: string } {
   const now = new Date();
@@ -315,7 +337,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                   return (
                     <div
                       key={relatedId}
-                      onClick={() => onGo(`/event/${relatedId}`)}
+                      onClick={() => handleBannerClick(related, onGo)}
                       className="cursor-pointer group"
                     >
                       <div className="relative w-full overflow-hidden rounded-xl bg-gray-100">
@@ -467,7 +489,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                   return (
                     <div
                       key={relatedId}
-                      onClick={() => onGo(`/event/${relatedId}`)}
+                      onClick={() => handleBannerClick(related, onGo)}
                       className="flex-shrink-0 w-[160px] cursor-pointer"
                     >
                       <div className="w-full h-[100px] rounded-xl overflow-hidden bg-gray-100 mb-2">

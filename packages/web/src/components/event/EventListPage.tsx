@@ -26,6 +26,28 @@ function getDday(endDate: string): string {
   return `D-${diff}`;
 }
 
+function handleBannerClick(banner: EventBanner, onGo: (to: string) => void) {
+  const hasDetailImages = (banner.detailImages?.length ?? 0) > 0;
+  const bid = banner._id || banner.bannerId || banner.bannerUuid;
+
+  if (hasDetailImages) {
+    if (bid) onGo(`/event/${bid}`);
+    return;
+  }
+
+  if (banner.redirectUrl) {
+    const url = banner.redirectUrl;
+    if (/^https?:\/\//i.test(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      onGo(url);
+    }
+    return;
+  }
+
+  if (bid) onGo(`/event/${bid}`);
+}
+
 export function EventListPage({ onGo }: EventListPageProps) {
   const [banners, setBanners] = useState<EventBanner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +158,7 @@ export function EventListPage({ onGo }: EventListPageProps) {
             return (
               <div
                 key={bid}
-                onClick={() => { if (bid) onGo(`/event/${bid}`); }}
+                onClick={() => handleBannerClick(banner, onGo)}
                 className="cursor-pointer group"
               >
                 <div className="relative w-full overflow-hidden rounded-2xl bg-gray-100">
