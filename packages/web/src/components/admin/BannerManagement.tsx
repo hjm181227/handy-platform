@@ -759,8 +759,9 @@ const BannerManagement: React.FC = () => {
                   value={formData.redirectUrl}
                   onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://example.com"
+                  placeholder="https://example.com 또는 /design-tool 같은 내부 경로"
                 />
+                <p className="text-xs text-gray-500 mt-1">상세 이미지가 없을 때 배너를 누르면 이 URL로 이동합니다. (외부 URL은 새 탭에서 열림)</p>
               </div>
 
               <div>
@@ -928,7 +929,9 @@ const BannerManagement: React.FC = () => {
                   value={formData.redirectUrl}
                   onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com 또는 /design-tool 같은 내부 경로"
                 />
+                <p className="text-xs text-gray-500 mt-1">상세 이미지가 없을 때 배너를 누르면 이 URL로 이동합니다. (외부 URL은 새 탭에서 열림)</p>
               </div>
 
               <div>

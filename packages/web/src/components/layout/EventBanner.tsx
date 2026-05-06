@@ -3,6 +3,37 @@ import { useTranslation } from 'react-i18next';
 import { webApiService } from '../../services/apiService';
 import type { EventBanner } from '@handy-platform/shared';
 
+function getBannerHref(banner: EventBanner): string {
+  const hasDetailImages = (banner.detailImages?.length ?? 0) > 0;
+  const bid = banner._id || banner.bannerId || banner.bannerUuid;
+  if (hasDetailImages && bid) return `/event/${bid}`;
+  if (banner.redirectUrl) return banner.redirectUrl;
+  if (bid) return `/event/${bid}`;
+  return '#';
+}
+
+function handleBannerClick(banner: EventBanner, onGo: (to: string) => void) {
+  const hasDetailImages = (banner.detailImages?.length ?? 0) > 0;
+  const bid = banner._id || banner.bannerId || banner.bannerUuid;
+
+  if (hasDetailImages) {
+    if (bid) onGo(`/event/${bid}`);
+    return;
+  }
+
+  if (banner.redirectUrl) {
+    const url = banner.redirectUrl;
+    if (/^https?:\/\//i.test(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      onGo(url);
+    }
+    return;
+  }
+
+  if (bid) onGo(`/event/${bid}`);
+}
+
 export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
   const { t } = useTranslation(['nav']);
   const [banners, setBanners] = useState<EventBanner[]>([]);
@@ -220,12 +251,10 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
                   } sm:opacity-100`}
                 >
                   <a
-                    href={`/event/${banner._id || banner.bannerId || banner.bannerUuid}`}
+                    href={getBannerHref(banner)}
                     onClick={(e) => {
                       e.preventDefault();
-                      const bid = banner._id || banner.bannerId || banner.bannerUuid;
-
-                      if (bid) onGo(`/event/${bid}`);
+                      handleBannerClick(banner, onGo);
                     }}
                     className="relative block overflow-hidden bg-gray-100 transition-shadow duration-300"
                     style={{
@@ -281,11 +310,10 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
           {banners.map((banner, i) => (
             <a
               key={banner._id || i}
-              href={`/event/${banner._id || banner.bannerId || banner.bannerUuid}`}
+              href={getBannerHref(banner)}
               onClick={(e) => {
                 e.preventDefault();
-                const bid = banner._id || banner.bannerId || banner.bannerUuid;
-                if (bid) onGo(`/event/${bid}`);
+                handleBannerClick(banner, onGo);
               }}
               className="relative block group overflow-hidden bg-gray-100 transition-shadow duration-300"
               style={{

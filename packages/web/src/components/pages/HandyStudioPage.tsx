@@ -125,16 +125,22 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
                 </a>
               </div>
 
-              {/* 앱 스크린샷 목업 영역 */}
+              {/* 앱 스크린샷 영역 */}
               <div className="mt-12 relative">
-                <div className="bg-gradient-to-b from-gray-100 to-gray-50 rounded-3xl p-8 md:p-12 flex items-center justify-center min-h-[300px] md:min-h-[400px]">
-                  <div className="text-center text-gray-400">
-                    <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gray-200 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm">{t('handyStudio.screenshotPlaceholder')}</p>
+                <div className="bg-gradient-to-b from-gray-100 to-gray-50 rounded-3xl p-6 md:p-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
+                    <img
+                      src="/images/handy-studio/screenshot-1.png"
+                      alt={t('handyStudio.screenshotPlaceholder')}
+                      className="w-full h-auto rounded-2xl shadow-lg"
+                      loading="lazy"
+                    />
+                    <img
+                      src="/images/handy-studio/screenshot-2.png"
+                      alt={t('handyStudio.screenshotPlaceholder')}
+                      className="w-full h-auto rounded-2xl shadow-lg"
+                      loading="lazy"
+                    />
                   </div>
                 </div>
               </div>
