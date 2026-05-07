@@ -3,6 +3,8 @@ import { Platform, PermissionsAndroid, Permission, Linking, DeviceEventEmitter }
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NativeScreenProvider } from './src/contexts/NativeScreenProvider';
 import HomeScreen from './src/screens/HomeScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { notificationService } from './src/services/notificationService';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -57,6 +59,31 @@ const App: React.FC = () => {
       if (Platform.OS === 'android') {
         await requestAndroidPermissions();
       }
+
+      // 푸시 알림 채널/핸들러 초기화 (콜드 스타트 알림 라우팅 포함)
+      await notificationService.initialize();
+
+      // 이미 로그인된 사용자면 FCM 토큰 등록 + 권한 요청
+      const accessToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+      if (accessToken) {
+        const granted = await notificationService.requestPermission();
+        if (granted) {
+          notificationService.registerToken(accessToken);
+        }
+      }
+
+      // FCM 토큰 갱신 시 자동 재등록
+      const tokenRefreshSub = DeviceEventEmitter.addListener(
+        'fcmTokenRefreshed',
+        async () => {
+          const currentToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+          if (currentToken) {
+            notificationService.registerToken(currentToken);
+          }
+        },
+      );
+      // App 컴포넌트가 unmount될 일이 거의 없지만, 안전하게 cleanup
+      (initializeApp as any).__tokenRefreshSub = tokenRefreshSub;
     } catch (error) {
       console.error('App initialization error:', error);
     }

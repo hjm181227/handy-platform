@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cameraService } from '../services/cameraService';
 import { WebViewMessage } from '@handy-platform/shared';
 import { mobileApiService } from '../services/apiService';
+import { notificationService } from '../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@handy-platform/shared/src/config/api';
 import { getAppEnvironment } from '../config/environment';
@@ -152,6 +153,15 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'logout':
           console.log('🔵 [BRIDGE] 로그아웃 처리 시작');
+          // 토큰 클리어 전에 FCM 토큰 채팅 서버에서 해제 (실패해도 로그아웃은 진행)
+          try {
+            const currentToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+            if (currentToken) {
+              await notificationService.unregisterToken(currentToken);
+            }
+          } catch (e) {
+            console.warn('[BRIDGE] FCM unregister failed:', e);
+          }
           await mobileApiService.logoutAndClearToken();
           result = { success: true };
 
@@ -261,6 +271,18 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       }
 
       console.log('🟢 [BRIDGE] 토큰이 AsyncStorage에 저장됨');
+
+      // 푸시 알림 권한 요청 + FCM 토큰을 채팅 서버에 등록 (fire-and-forget)
+      (async () => {
+        try {
+          const granted = await notificationService.requestPermission();
+          if (granted) {
+            await notificationService.registerToken(data.token);
+          }
+        } catch (e) {
+          console.warn('[BRIDGE] FCM register failed:', e);
+        }
+      })();
 
       sendMessageToWebView({
         type: 'STORE_AUTH_TOKEN_RESPONSE',
@@ -459,7 +481,18 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   };
 
   const handleNotification = (data: any) => {
-    Alert.alert(data.title || '알림', data.message);
+    // 웹에서 트리거된 로컬 알림 (주문/프로모션 등)을 Notifee로 표시
+    notificationService
+      .showLocalNotification({
+        title: data.title || '알림',
+        message: data.message || '',
+        type: data.type,
+        data: data.data,
+      })
+      .catch((e) => {
+        console.warn('[BRIDGE] handleNotification failed, fallback to Alert:', e);
+        Alert.alert(data.title || '알림', data.message || '');
+      });
   };
 
   const handleCamera = async (data: any) => {

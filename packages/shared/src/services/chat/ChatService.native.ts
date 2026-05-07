@@ -135,6 +135,11 @@ export class ChatServiceNative extends BaseChatService {
           }
         });
 
+        // 미확인 총합 (헤더 배지 실시간 업데이트용)
+        this.socket.on('chat:unread-total', (data: { total: number }) => {
+          this.unreadTotalCallbacks.forEach(cb => cb(data));
+        });
+
       } catch (error) {
         reject(error);
       }
