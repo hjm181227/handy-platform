@@ -21,7 +21,8 @@ class MobileTokenManager {
   static async getToken(): Promise<string | null> {
     try {
       return await AsyncStorage.getItem(this.TOKEN_KEY);
-    } catch {
+    } catch (e) {
+      console.error('Failed to get token:', e);
       return null;
     }
   }

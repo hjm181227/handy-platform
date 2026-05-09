@@ -86,6 +86,7 @@ export interface DesignToolPaymentRecord {
   productId?: string;
   receiptUrl?: string;
   refundedAt?: string;
+  isTrial?: boolean;
 }
 
 export interface DesignToolPaymentsPage {

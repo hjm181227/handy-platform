@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { webApiService } from '../../../services/apiService';
 import type { DecorationAsset, DecorationCategory } from '@handy-platform/shared';
 import { FiEdit2, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
@@ -12,10 +12,12 @@ export default function DecorationManagement() {
 
   // --- Asset state ---
   const [decorations, setDecorations] = useState<DecorationAsset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
+  const [resetKey, setResetKey] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const [filters, setFilters] = useState<AssetFilters>({
     assetType: '',
     category: '',
@@ -42,7 +44,7 @@ export default function DecorationManagement() {
   const [catDeleteTarget, setCatDeleteTarget] = useState<DecorationCategory | null>(null);
 
   // ---- Load Data ----
-  const loadDecorations = useCallback(async () => {
+  const loadDecorations = useCallback(async (pageNum: number, reset: boolean = false) => {
     try {
       setLoading(true);
       const response = await webApiService.decoration.getDecorations({
@@ -52,20 +54,22 @@ export default function DecorationManagement() {
         status: (filters.status as any) || undefined,
         search: filters.search || undefined,
         sort: filters.sort || undefined,
-        page,
-        limit: 20,
+        page: pageNum,
+        limit: 30,
       });
       if (response.success) {
-        setDecorations(response.data.items);
-        setTotalPages(response.data.pagination.totalPages);
-        setTotalItems(response.data.pagination.totalItems);
+        const newItems = response.data?.items ?? [];
+        setDecorations(prev => reset ? newItems : [...prev, ...newItems]);
+        setHasMore(pageNum < (response.data?.pagination?.totalPages ?? 1));
+        setTotalItems(response.data?.pagination?.totalItems ?? 0);
       }
     } catch (error) {
       console.error('Failed to load decorations:', error);
     } finally {
       setLoading(false);
     }
-  }, [page, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -80,9 +84,34 @@ export default function DecorationManagement() {
     }
   }, []);
 
+  // Load when page changes or reset is triggered
   useEffect(() => {
-    loadDecorations();
-  }, [loadDecorations]);
+    loadDecorations(page, page === 1);
+  }, [page, loadDecorations, resetKey]);
+
+  // Reset when filters change
+  useEffect(() => {
+    setDecorations([]);
+    setHasMore(true);
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.assetType, filters.category, filters.accessTier, filters.status, filters.search, filters.sort]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loading) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loading]);
 
   useEffect(() => {
     loadCategories();
@@ -110,14 +139,18 @@ export default function DecorationManagement() {
       alert('에셋이 수정되었습니다.');
     }
     setShowAssetModal(false);
-    loadDecorations();
+    setDecorations([]);
+    setHasMore(true);
+    setPage(1);
   };
 
   const handleToggleStatus = async (asset: DecorationAsset) => {
     try {
       const newStatus = asset.status === 'active' ? 'inactive' : 'active';
       await webApiService.decoration.toggleDecorationStatus(asset.decorationAssetUuid, newStatus);
-      loadDecorations();
+      setDecorations([]);
+      setHasMore(true);
+      setPage(1);
     } catch (error: any) {
       alert(`상태 변경 실패: ${error.message || '알 수 없는 오류'}`);
     }
@@ -129,7 +162,9 @@ export default function DecorationManagement() {
       await webApiService.decoration.deleteDecoration(deleteTarget.decorationAssetUuid);
       setShowDeleteModal(false);
       setDeleteTarget(null);
-      loadDecorations();
+      setDecorations([]);
+      setHasMore(true);
+      setPage(1);
       alert('에셋이 삭제되었습니다.');
     } catch (error: any) {
       alert(`삭제 실패: ${error.message || '알 수 없는 오류'}`);
@@ -188,7 +223,6 @@ export default function DecorationManagement() {
   // ---- Filter handlers ----
   const updateFilter = (key: keyof AssetFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    setPage(1);
   };
 
   const getCategoryName = (slug: string) => {
@@ -343,7 +377,7 @@ export default function DecorationManagement() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {loading ? (
+                  {loading && decorations.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                         <div className="flex justify-center">
@@ -351,7 +385,7 @@ export default function DecorationManagement() {
                         </div>
                       </td>
                     </tr>
-                  ) : decorations.length === 0 ? (
+                  ) : !loading && decorations.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                         에셋이 없습니다.
@@ -418,27 +452,15 @@ export default function DecorationManagement() {
               </table>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  이전
-                </button>
-                <span className="text-sm text-gray-700">
-                  {page} / {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  다음
-                </button>
+            {/* Infinite scroll sentinel & indicators */}
+            <div ref={sentinelRef} className="h-4" />
+            {loading && decorations.length > 0 && (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
               </div>
+            )}
+            {!hasMore && decorations.length > 0 && (
+              <p className="text-center text-sm text-gray-400 py-4">모든 항목을 불러왔습니다</p>
             )}
           </div>
 

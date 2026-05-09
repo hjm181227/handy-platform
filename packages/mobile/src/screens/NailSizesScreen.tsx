@@ -47,7 +47,12 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
       console.log('🔍 [NailSizes] Token check:', token ? `${token.substring(0, 20)}...` : 'NULL');
       console.log('🔍 [NailSizes] userService:', typeof userService, !!userService);
 
-      const response = await userService.getNailSize();
+      let response;
+      try {
+        response = await userService.getNailSize();
+      } catch (callErr: any) {
+        throw callErr;
+      }
 
       if (response.success) {
         setNailSizeData(response.data || null);

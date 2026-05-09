@@ -66,11 +66,20 @@ class NotificationService {
       console.warn('[NotificationService] Skipping initialize — Firebase not available');
       return;
     }
+    console.log('🔔 [NotificationService] Initializing — Firebase is available');
     await this.ensureChannel();
     this.setupForegroundHandler();
     this.setupTokenRefreshHandler();
     this.setupNotificationOpenedHandler();
     await this.checkInitialNotification();
+
+    // 초기화 시 FCM 토큰 발급 확인
+    try {
+      const token = await this.getDeviceToken();
+      console.log('[FCM] Init token result:', token ? `${token.substring(0, 20)}...` : 'NULL');
+    } catch (e) {
+      console.warn('[FCM] Init token fetch failed:', e);
+    }
   }
 
   /**
@@ -111,10 +120,12 @@ class NotificationService {
       }
       const authStatus = await messaging().requestPermission();
       const AuthorizationStatus = require('@react-native-firebase/messaging').AuthorizationStatus;
-      return (
+      const granted = (
         authStatus === AuthorizationStatus.AUTHORIZED ||
         authStatus === AuthorizationStatus.PROVISIONAL
       );
+      console.log('🔔 [NotificationService] iOS permission result:', authStatus, 'granted:', granted);
+      return granted;
     } catch (e) {
       console.warn('[NotificationService] Permission request failed:', e);
       return false;
@@ -128,6 +139,7 @@ class NotificationService {
     if (!firebaseAvailable) return null;
     try {
       const token = await messaging().getToken();
+      console.log('🔔 [NotificationService] FCM token:', token || 'NULL');
       return token || null;
     } catch (e) {
       console.warn('[NotificationService] Failed to get FCM token:', e);
@@ -142,7 +154,11 @@ class NotificationService {
   async registerToken(accessToken: string): Promise<boolean> {
     try {
       const fcmToken = await this.getDeviceToken();
-      if (!fcmToken) return false;
+      if (!fcmToken) {
+        console.warn('🔔 [NotificationService] No FCM token available, skipping registration');
+        return false;
+      }
+      console.log('🔔 [NotificationService] Registering FCM token to chat server...');
 
       const platform: 'ios' | 'android' = Platform.OS === 'ios' ? 'ios' : 'android';
       const url = this.getChatApiUrl() + '/push/tokens';
