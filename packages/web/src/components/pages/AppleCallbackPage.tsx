@@ -75,6 +75,13 @@ export function AppleCallbackPage({ onGo }: AppleCallbackPageProps) {
         if (response.token && response.user) {
           console.log('Apple 로그인 성공, 토큰 저장 중...');
           await webApiService.auth.setAuthToken(response.token, response.user);
+          // WebView 환경: 명시적으로 네이티브에 토큰 전달
+          if ((window as any).ReactNativeWebView) {
+            (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'STORE_AUTH_TOKEN',
+              data: { token: response.token, user: response.user }
+            }));
+          }
           window.dispatchEvent(new CustomEvent('authStateChanged'));
           setStatus('success');
 

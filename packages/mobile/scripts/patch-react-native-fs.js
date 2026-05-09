@@ -55,8 +55,8 @@ if (imageResizerDir) {
     if (content.includes("'AssetsLibrary'")) {
       content = content.replace("'AssetsLibrary', 'MobileCoreServices'", "'MobileCoreServices'");
     }
-    if (content.includes('RCT-Folly')) {
-      content = content.replace(/if ENV\['RCT_NEW_ARCH_ENABLED'\][\s\S]*?end/m, 'install_modules_dependencies(s)');
+    if (content.includes("ENV['RCT_NEW_ARCH_ENABLED']")) {
+      content = content.replace(/if ENV\['RCT_NEW_ARCH_ENABLED'\][\s\S]*?end\n/m, 'install_modules_dependencies(s)\n');
     }
     fs.writeFileSync(podspec, content);
     console.log('[patch] Fixed react-native-image-resizer.podspec');

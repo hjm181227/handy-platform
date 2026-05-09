@@ -14,6 +14,11 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+# Firebase requires modular headers for static library integration
+pod 'GoogleUtilities', :modular_headers => true
+pod 'FirebaseCore', :modular_headers => true
+pod 'FirebaseCoreInternal', :modular_headers => true
+
 target 'HandyTemp' do
   config = use_native_modules!
 

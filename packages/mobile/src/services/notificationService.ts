@@ -1,14 +1,27 @@
 import { Platform, PermissionsAndroid, DeviceEventEmitter } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import messaging, {
-  FirebaseMessagingTypes,
-} from '@react-native-firebase/messaging';
-import notifee, { AndroidImportance } from '@notifee/react-native';
 import {
   API_CONFIG,
   getCurrentEnvironment,
 } from '@handy-platform/shared/src/config/api';
 import { getChatServiceNative } from '@handy-platform/shared/src/services/chat/ChatService.native';
+
+// Firebase/Notifee — lazy require로 GoogleService-Info.plist 미설정 시 안전하게 스킵
+let messaging: any = null;
+let notifee: any = null;
+let AndroidImportance: any = {};
+let firebaseAvailable = false;
+
+try {
+  messaging = require('@react-native-firebase/messaging').default;
+  notifee = require('@notifee/react-native').default;
+  AndroidImportance = require('@notifee/react-native').AndroidImportance;
+  // messaging()을 한 번 호출해봐서 Firebase App이 초기화되었는지 확인
+  messaging();
+  firebaseAvailable = true;
+} catch (e: any) {
+  console.warn('[NotificationService] Firebase not available — push notifications disabled:', e.message);
+}
 
 const CHANNEL_ID = 'chat-messages';
 const CHANNEL_NAME = '채팅 메시지';
@@ -49,6 +62,10 @@ class NotificationService {
    * 멱등 — 중복 호출 안전.
    */
   async initialize(): Promise<void> {
+    if (!firebaseAvailable) {
+      console.warn('[NotificationService] Skipping initialize — Firebase not available');
+      return;
+    }
     await this.ensureChannel();
     this.setupForegroundHandler();
     this.setupTokenRefreshHandler();
@@ -81,6 +98,7 @@ class NotificationService {
    * iOS는 Apple 권한 다이얼로그 표시.
    */
   async requestPermission(): Promise<boolean> {
+    if (!firebaseAvailable) return false;
     try {
       if (Platform.OS === 'android') {
         if (Platform.Version >= 33) {
@@ -92,9 +110,10 @@ class NotificationService {
         return true;
       }
       const authStatus = await messaging().requestPermission();
+      const AuthorizationStatus = require('@react-native-firebase/messaging').AuthorizationStatus;
       return (
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL
       );
     } catch (e) {
       console.warn('[NotificationService] Permission request failed:', e);
@@ -106,6 +125,7 @@ class NotificationService {
    * FCM 디바이스 토큰 조회 (없으면 발급)
    */
   async getDeviceToken(): Promise<string | null> {
+    if (!firebaseAvailable) return null;
     try {
       const token = await messaging().getToken();
       return token || null;
@@ -182,7 +202,7 @@ class NotificationService {
   private setupForegroundHandler(): void {
     if (this.foregroundUnsubscribe) return;
     this.foregroundUnsubscribe = messaging().onMessage(
-      async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      async (remoteMessage: any) => {
         const payload = this.parsePayload(remoteMessage);
         if (!payload) return;
 
@@ -220,7 +240,7 @@ class NotificationService {
   private setupNotificationOpenedHandler(): void {
     if (this.notificationOpenedUnsubscribe) return;
     this.notificationOpenedUnsubscribe = messaging().onNotificationOpenedApp(
-      (remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) => {
+      (remoteMessage: any | null) => {
         const payload = this.parsePayload(remoteMessage);
         if (payload) this.routeToChat(payload);
       },
@@ -289,7 +309,7 @@ class NotificationService {
    * 푸시 페이로드 파싱 (chat_message 타입만 인식)
    */
   private parsePayload(
-    remoteMessage: FirebaseMessagingTypes.RemoteMessage | null,
+    remoteMessage: any | null,
   ): ChatPushPayload | null {
     if (!remoteMessage || !remoteMessage.data) return null;
     const data = remoteMessage.data as Record<string, string>;

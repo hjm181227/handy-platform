@@ -305,8 +305,18 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
   const isWebViewEnvironment = () => !!(window as any).ReactNativeWebView;
 
-  const goToNailSizes = () => {
+  const goToNailSizes = async () => {
     if (isWebViewEnvironment()) {
+      // 안전망: 네이티브 화면 열기 전 토큰을 명시적으로 전달
+      const token = localStorage.getItem('accessToken');
+      const userStr = localStorage.getItem('user');
+      if (token) {
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'STORE_AUTH_TOKEN',
+          data: { token, user: userStr ? JSON.parse(userStr) : null }
+        }));
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'NAVIGATE_TO_SIZES',
         data: { screen: 'NailSizes' }

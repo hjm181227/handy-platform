@@ -55,6 +55,18 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         localStorage.setItem('autoLogin', 'true');
       }
 
+      // WebView 환경: 명시적으로 네이티브에 토큰 전달
+      if ((window as any).ReactNativeWebView) {
+        const token = localStorage.getItem('accessToken');
+        const userStr = localStorage.getItem('user');
+        if (token) {
+          (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'STORE_AUTH_TOKEN',
+            data: { token, user: userStr ? JSON.parse(userStr) : null }
+          }));
+        }
+      }
+
       window.dispatchEvent(new CustomEvent('authStateChanged'));
       onGo(returnUrl);
     } catch (error: any) {
