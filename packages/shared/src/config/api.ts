@@ -573,6 +573,18 @@ export const API_ENDPOINTS = {
   },
 };
 
+/**
+ * 채팅 서버(chat-stack-scaffold) 엔드포인트
+ * - chat-server는 메인 API와 호스트가 다르므로(API_CONFIG.chatURL 사용) 별도 상수로 관리
+ * - chat-server는 /api 전역 prefix가 없음 — 컨트롤러 경로를 그대로 사용
+ */
+export const CHAT_ENDPOINTS = {
+  ROOMS: '/rooms',
+  UNREAD_TOTAL: '/chat/unread-total',
+  PUSH_TOKEN: '/push/tokens',
+  PUSH_TOKEN_DELETE: (token: string) => `/push/tokens/${encodeURIComponent(token)}`,
+};
+
 // 환경별 디버그 설정
 export const DEBUG_CONFIG = {
   development: {

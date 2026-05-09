@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.facebook.react")
+    // Firebase google-services plugin (reads google-services.json)
+    id("com.google.gms.google-services")
 }
 
 /**
@@ -49,7 +51,7 @@ react {
     // extraPackagerArgs = []
 
     /* Hermes Commands */
-    hermesCommand = file("../../../../node_modules/hermes-compiler/hermesc/osx-bin/hermesc").absolutePath
+    hermesCommand = file("../../../../node_modules/hermes-compiler/hermesc/" + (org.gradle.internal.os.OperatingSystem.current().isWindows() ? "win64-bin/hermesc.exe" : org.gradle.internal.os.OperatingSystem.current().isMacOsX() ? "osx-bin/hermesc" : "linux64-bin/hermesc")).absolutePath
     //
     //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
     // hermesFlags = ["-O", "-output-source-map"]
@@ -95,6 +97,14 @@ android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
+
+    // Windows path-length workaround: redirect .cxx to a short path
+    // (vision-camera-resize-plugin codegen exceeds 260 chars otherwise)
+    externalNativeBuild {
+        cmake {
+            buildStagingDirectory = file("C:/h/.cxx-${project.name}")
+        }
+    }
 
     namespace "com.handyapp"
     defaultConfig {

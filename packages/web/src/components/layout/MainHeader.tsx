@@ -7,6 +7,7 @@ import { Logo } from '../common/Logo';
 import { Menu, Search, X, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthModal } from '../../contexts/AuthModalContext';
+import { useChatUnreadCount } from '../../hooks/useChatUnreadCount';
 import { GNB_ITEMS } from '../../config/navigationConfig';
 
 export function MainHeader({
@@ -41,6 +42,8 @@ export function MainHeader({
 
   // Auth Modal
   const { openLogin } = useAuthModal();
+  // 채팅 미확인 카운트 (헤더 채팅 버튼 배지)
+  const { count: chatUnreadCount } = useChatUnreadCount();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -446,6 +449,24 @@ export function MainHeader({
               </button>
             )}
 
+            {onChat && (
+              <button
+                onClick={onChat}
+                className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors relative"
+                aria-label={t('nav:header.chat')}
+              >
+                <span className="flex items-center gap-1">
+                  <MessageCircle size={16} />
+                  <span className="hidden sm:inline">{t('nav:header.chat')}</span>
+                  {chatUnreadCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                    </span>
+                  )}
+                </span>
+              </button>
+            )}
+
             <button
               onClick={onCart}
               className="rounded-full border px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors relative"
@@ -509,10 +530,15 @@ export function MainHeader({
             {onChat && (
               <button
                 onClick={onChat}
-                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors relative"
                 aria-label={t('nav:header.chat')}
               >
                 <MessageCircle size={20} />
+                {chatUnreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                  </span>
+                )}
               </button>
             )}
             {/* 장바구니 버튼 */}

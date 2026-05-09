@@ -13,6 +13,8 @@ import type {
   ErrorCallback,
 } from './types';
 
+export type UnreadTotalCallback = (data: { total: number }) => void;
+
 export abstract class BaseChatService {
   protected currentRoomId: string | null = null;
   protected messageCallbacks: Set<MessageCallback> = new Set();
@@ -20,6 +22,7 @@ export abstract class BaseChatService {
   protected connectCallbacks: Set<ConnectionCallback> = new Set();
   protected disconnectCallbacks: Set<ConnectionCallback> = new Set();
   protected errorCallbacks: Set<ErrorCallback> = new Set();
+  protected unreadTotalCallbacks: Set<UnreadTotalCallback> = new Set();
 
   /**
    * 소켓 연결
@@ -104,6 +107,16 @@ export abstract class BaseChatService {
   }
 
   /**
+   * 미확인 메시지 총합 이벤트 구독 (서버 'chat:unread-total' emit 수신)
+   * - 메시지 수신 / 읽음 처리 시 서버가 fresh total을 broadcast
+   * - 헤더 배지 실시간 업데이트용
+   */
+  public onUnreadTotal(callback: UnreadTotalCallback): () => void {
+    this.unreadTotalCallbacks.add(callback);
+    return () => this.unreadTotalCallbacks.delete(callback);
+  }
+
+  /**
    * 모든 리스너 정리
    */
   public cleanup(): void {
@@ -112,6 +125,7 @@ export abstract class BaseChatService {
     this.connectCallbacks.clear();
     this.disconnectCallbacks.clear();
     this.errorCallbacks.clear();
+    this.unreadTotalCallbacks.clear();
   }
 
   /**
