@@ -103,3 +103,7 @@ venv/
 .venv/
 __pycache__/
 *.pyc
+
+# Firebase config (contains API keys)
+GoogleService-Info.plist
+google-services.json
