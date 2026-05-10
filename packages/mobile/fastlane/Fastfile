@@ -51,10 +51,31 @@ platform :ios do
     upload_to_app_store(
       api_key: api_key,
       ipa: "build/HandyPlatform.ipa",
-      skip_metadata: true,
+      skip_metadata: false,
       skip_screenshots: true,
       precheck_include_in_app_purchases: false,
       ignore_language_directory_validation: true,
+      metadata_path: "fastlane/metadata/ios",
+    )
+  end
+
+  desc "Upload metadata only (no build, no binary)"
+  lane :metadata do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"] || "W9CK6D87T7",
+      issuer_id: ENV["ASC_API_ISSUER_ID"] || "e40f6783-ba51-4b34-8f5a-f620821fbd15",
+      key_filepath: ASC_API_KEY_PATH,
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: true,
+      precheck_include_in_app_purchases: false,
+      ignore_language_directory_validation: true,
+      metadata_path: "fastlane/metadata/ios",
+      force: true,
     )
   end
 
