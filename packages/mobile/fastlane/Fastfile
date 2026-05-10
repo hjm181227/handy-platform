@@ -54,6 +54,7 @@ platform :ios do
       skip_metadata: true,
       skip_screenshots: true,
       precheck_include_in_app_purchases: false,
+      ignore_language_directory_validation: true,
     )
   end
 
@@ -82,6 +83,10 @@ platform :android do
       release_status: "draft",
       aab: "android/app/build/outputs/bundle/release/app-release.aab",
       skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
       json_key: GOOGLE_PLAY_JSON_KEY,
       package_name: "com.handyapp",
     )
