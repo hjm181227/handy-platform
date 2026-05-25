@@ -154,6 +154,7 @@ import BannerManagement from './components/admin/BannerManagement';
 import AdminCouponManagement from './components/admin/AdminCouponManagement';
 import SnapManagement from './components/admin/SnapManagement';
 import DecorationManagement from './components/admin/decoration';
+import AnnouncementManagement from './components/admin/announcement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 /**
@@ -992,6 +993,12 @@ export function Router() {
       screen = (
         <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <DecorationManagement />
+        </AdminLayout>
+      );
+    } else if (pathname === '/admin/announcements') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <AnnouncementManagement />
         </AdminLayout>
       );
     } else {

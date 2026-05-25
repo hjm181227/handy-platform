@@ -25,6 +25,7 @@ import { BaseFollowService, FollowServiceFactory } from './follow/FollowService'
 import { BaseChatService, getChatService } from './chat';
 import { BaseDesignToolService, DesignToolServiceFactory } from './designtool/DesignToolService';
 import { BaseDecorationService, DecorationServiceFactory } from './decoration/DecorationService';
+import { BaseAnnouncementService, AnnouncementServiceFactory } from './announcement/AnnouncementService';
 
 // 통합 API 서비스 인터페이스
 export interface IntegratedApiService {
@@ -55,6 +56,7 @@ export interface IntegratedApiService {
   chat: BaseChatService;
   designTool: BaseDesignToolService;
   decoration: BaseDecorationService;
+  announcement: BaseAnnouncementService;
 
   // 환경 정보 메서드
   getEnvironmentInfo(): {
@@ -92,6 +94,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
   public chat: BaseChatService;
   public designTool: BaseDesignToolService;
   public decoration: BaseDecorationService;
+  public announcement: BaseAnnouncementService;
 
   protected baseURL: string;
   protected platform: string;
@@ -135,6 +138,7 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
     this.chat = getChatService();
     this.designTool = DesignToolServiceFactory.create(baseURL, getAuthHeaders);
     this.decoration = DecorationServiceFactory.create(baseURL, getAuthHeaders);
+    this.announcement = AnnouncementServiceFactory.create(baseURL, getAuthHeaders);
   }
 
   getEnvironmentInfo() {
@@ -166,7 +170,8 @@ export abstract class BaseIntegratedApiService implements IntegratedApiService {
         'follow',
         'chat',
         'designTool',
-        'decoration'
+        'decoration',
+        'announcement'
       ],
     };
   }
@@ -266,4 +271,5 @@ export type {
   BaseFollowService,
   BaseDesignToolService,
   BaseDecorationService,
+  BaseAnnouncementService,
 };
