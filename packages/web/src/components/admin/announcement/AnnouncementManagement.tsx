@@ -72,9 +72,11 @@ export default function AnnouncementManagement() {
         if (filters.search.trim()) {
           const q = filters.search.trim().toLowerCase();
           items = items.filter(
-            (a) =>
-              a.title.toLowerCase().includes(q) ||
-              a.summary?.toLowerCase().includes(q)
+            (a) => {
+              const title = typeof a.title === 'string' ? a.title : (a.title?.ko || a.title?.en || a.title?.ja || '');
+              const summary = typeof a.summary === 'string' ? a.summary : (a.summary?.ko || a.summary?.en || a.summary?.ja || '');
+              return title.toLowerCase().includes(q) || summary.toLowerCase().includes(q);
+            }
           );
         }
         setAnnouncements(items);
@@ -270,14 +272,22 @@ export default function AnnouncementManagement() {
                   <tr key={item.announcementUuid} className="hover:bg-gray-50">
                     {/* 제목 */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={item.title}>
-                        {item.title}
-                      </div>
-                      {item.summary && (
-                        <div className="text-xs text-gray-400 max-w-xs truncate" title={item.summary}>
-                          {item.summary}
-                        </div>
-                      )}
+                      {(() => {
+                        const titleText = typeof item.title === 'string' ? item.title : (item.title?.ko || item.title?.en || item.title?.ja || '');
+                        const summaryText = typeof item.summary === 'string' ? item.summary : (item.summary?.ko || item.summary?.en || item.summary?.ja || '');
+                        return (
+                          <>
+                            <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={titleText}>
+                              {titleText}
+                            </div>
+                            {summaryText && (
+                              <div className="text-xs text-gray-400 max-w-xs truncate" title={summaryText}>
+                                {summaryText}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </td>
 
                     {/* 카테고리 */}
@@ -420,7 +430,7 @@ export default function AnnouncementManagement() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-2">공지사항 삭제</h2>
             <p className="text-sm text-gray-600 mb-4">
-              <strong>{deleteTarget.title}</strong> 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+              <strong>{typeof deleteTarget.title === 'string' ? deleteTarget.title : (deleteTarget.title?.ko || deleteTarget.title?.en || deleteTarget.title?.ja || '')}</strong> 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
             </p>
             <div className="flex justify-end gap-3">
               <button

@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { webApiService } from '../../../services/apiService';
-import type { Announcement, AnnouncementCategory, AnnouncementTarget, AnnouncementStatus } from '@handy-platform/shared';
+import type { Announcement, AnnouncementCategory, AnnouncementTarget, AnnouncementStatus, LocalizedField } from '@handy-platform/shared';
 import { ImageUploadManager, API_BASE_URL } from '@handy-platform/shared';
 import { FiCheck, FiX } from 'react-icons/fi';
 
+const emptyLocalized = (): LocalizedField => ({ ko: '', en: '', ja: '' });
+
 interface AnnouncementFormData {
-  title: string;
-  summary: string;
-  content: string;
+  title: LocalizedField;
+  summary: LocalizedField;
+  content: LocalizedField;
   category: AnnouncementCategory;
   target: AnnouncementTarget;
   status: AnnouncementStatus;
@@ -19,9 +21,9 @@ interface AnnouncementFormData {
 }
 
 const defaultFormData = (): AnnouncementFormData => ({
-  title: '',
-  summary: '',
-  content: '',
+  title: emptyLocalized(),
+  summary: emptyLocalized(),
+  content: emptyLocalized(),
   category: 'notice',
   target: 'all',
   status: 'draft',
@@ -46,6 +48,12 @@ export function AnnouncementFormModal({
   onSubmit: (data: Partial<Announcement>) => Promise<void>;
 }) {
   const [form, setForm] = useState<AnnouncementFormData>(defaultFormData());
+  const [activeLang, setActiveLang] = useState<'ko' | 'en' | 'ja'>('ko');
+  const langs = [
+    { code: 'ko' as const, label: '한국어' },
+    { code: 'en' as const, label: 'English' },
+    { code: 'ja' as const, label: '日本語' },
+  ];
   const [submitting, setSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -68,9 +76,9 @@ export function AnnouncementFormModal({
     if (!isOpen) return;
     if (mode === 'edit' && initialData) {
       setForm({
-        title: initialData.title || '',
-        summary: initialData.summary || '',
-        content: initialData.content || '',
+        title: initialData.title || emptyLocalized(),
+        summary: initialData.summary || emptyLocalized(),
+        content: initialData.content || emptyLocalized(),
         category: initialData.category || 'notice',
         target: initialData.target || 'all',
         status: initialData.status || 'draft',
@@ -144,8 +152,8 @@ export function AnnouncementFormModal({
   };
 
   const handleSubmit = async () => {
-    if (!form.title.trim()) {
-      alert('제목은 필수입니다.');
+    if (!form.title.ko.trim() && !form.title.en.trim() && !form.title.ja.trim()) {
+      alert('제목은 최소 1개 언어로 입력해야 합니다.');
       return;
     }
 
@@ -193,6 +201,24 @@ export function AnnouncementFormModal({
           </h2>
 
           <div className="space-y-4">
+            {/* 언어 탭 */}
+            <div className="flex gap-1 mb-3 border-b border-gray-200">
+              {langs.map(l => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => setActiveLang(l.code)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-t ${
+                    activeLang === l.code
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+
             {/* 제목 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -200,10 +226,10 @@ export function AnnouncementFormModal({
               </label>
               <input
                 type="text"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                value={form.title[activeLang]}
+                onChange={(e) => setForm({ ...form, title: { ...form.title, [activeLang]: e.target.value } })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="공지사항 제목을 입력하세요"
+                placeholder={`공지사항 제목을 입력하세요 (${activeLang})`}
               />
             </div>
 
@@ -212,10 +238,10 @@ export function AnnouncementFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">요약</label>
               <input
                 type="text"
-                value={form.summary}
-                onChange={(e) => setForm({ ...form, summary: e.target.value })}
+                value={form.summary[activeLang]}
+                onChange={(e) => setForm({ ...form, summary: { ...form.summary, [activeLang]: e.target.value } })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="공지사항 요약 (목록에 표시됩니다)"
+                placeholder={`공지사항 요약 (${activeLang})`}
               />
             </div>
 
@@ -263,11 +289,11 @@ export function AnnouncementFormModal({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">본문</label>
               <textarea
-                value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                value={form.content[activeLang]}
+                onChange={(e) => setForm({ ...form, content: { ...form.content, [activeLang]: e.target.value } })}
                 rows={8}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="공지사항 본문을 입력하세요"
+                placeholder={`공지사항 본문을 입력하세요 (${activeLang})`}
               />
             </div>
 
@@ -377,7 +403,7 @@ export function AnnouncementFormModal({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!form.title.trim() || submitting}
+              disabled={(!form.title.ko.trim() && !form.title.en.trim() && !form.title.ja.trim()) || submitting}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiCheck className="inline mr-1" />

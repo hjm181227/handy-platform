@@ -2651,6 +2651,12 @@ export interface DecorationCatalogResponse {
 
 // ===== Announcement (공지사항) =====
 
+export interface LocalizedField {
+  ko: string;
+  en: string;
+  ja: string;
+}
+
 export type AnnouncementCategory = 'notice' | 'event' | 'update';
 export type AnnouncementTarget = 'all' | 'design-tool' | 'platform';
 export type AnnouncementStatus = 'draft' | 'published' | 'archived';
@@ -2658,9 +2664,9 @@ export type AnnouncementStatus = 'draft' | 'published' | 'archived';
 export interface Announcement {
   announcementId: string;
   announcementUuid: string;
-  title: string;
-  summary: string;
-  content: string;
+  title: LocalizedField;
+  summary: LocalizedField;
+  content: LocalizedField;
   thumbnailUrl?: string;
   thumbnailS3Key?: string;
   contentImages?: { imageUrl: string; imageS3Key?: string; displayOrder: number }[];
