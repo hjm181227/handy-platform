@@ -75,10 +75,9 @@ class NotificationService {
 
     // 초기화 시 FCM 토큰 발급 확인
     try {
-      const token = await this.getDeviceToken();
-      console.log('[FCM] Init token result:', token ? `${token.substring(0, 20)}...` : 'NULL');
+      await this.getDeviceToken();
     } catch (e) {
-      console.warn('[FCM] Init token fetch failed:', e);
+      console.warn('[NotificationService] Init token fetch failed:', e);
     }
   }
 
@@ -139,7 +138,7 @@ class NotificationService {
     if (!firebaseAvailable) return null;
     try {
       const token = await messaging().getToken();
-      console.log('🔔 [NotificationService] FCM token:', token || 'NULL');
+      console.log('🔔 [NotificationService] FCM token acquired:', token ? 'yes' : 'no');
       return token || null;
     } catch (e) {
       console.warn('[NotificationService] Failed to get FCM token:', e);

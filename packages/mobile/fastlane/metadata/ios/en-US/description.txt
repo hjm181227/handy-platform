@@ -1,0 +1,9 @@
+Handy is a nail art platform that connects nail artists with customers.
+
+Key Features:
+- Nail Size Measurement: Measure your exact nail size with just one photo
+- Brand Discovery: Browse a wide selection of nail brands and products at a glance
+- Chat: Consult with artists in real time and get push notifications for new messages
+- Events: Never miss discounts and special promotions
+
+Discover your own nail style with Handy.

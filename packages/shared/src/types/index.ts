@@ -2648,3 +2648,52 @@ export interface DecorationCatalogResponse {
     totalPages: number;
   };
 }
+
+// ===== Announcement (공지사항) =====
+
+export interface LocalizedField {
+  ko: string;
+  en: string;
+  ja: string;
+}
+
+export type AnnouncementCategory = 'notice' | 'event' | 'update';
+export type AnnouncementTarget = 'all' | 'design-tool' | 'platform';
+export type AnnouncementStatus = 'draft' | 'published' | 'archived';
+
+export interface Announcement {
+  announcementId: string;
+  announcementUuid: string;
+  title: LocalizedField;
+  summary: LocalizedField;
+  content: LocalizedField;
+  thumbnailUrl?: string;
+  thumbnailS3Key?: string;
+  contentImages?: { imageUrl: string; imageS3Key?: string; displayOrder: number }[];
+  category: AnnouncementCategory;
+  target: AnnouncementTarget;
+  status: AnnouncementStatus;
+  isPinned: boolean;
+  isPopup: boolean;
+  isBanner: boolean;
+  bannerOrder: number;
+  displayOrder: number;
+  publishedAt?: string;
+  expiresAt?: string;
+  author?: any;
+  authorUuid?: string;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnnouncementListResponse {
+  success: boolean;
+  announcements: Announcement[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface AnnouncementDetailResponse {
+  success: boolean;
+  announcement: Announcement;
+}

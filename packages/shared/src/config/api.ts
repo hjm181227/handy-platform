@@ -339,6 +339,12 @@ export const API_ENDPOINTS = {
     SNAP_REPORTS: '/api/admin/snaps/reports',
     SNAP_REPORT_STATUS: (reportUuid: string) => `/api/admin/snaps/reports/${reportUuid}`,
 
+    // 공지사항 관리
+    ANNOUNCEMENTS: '/api/admin/announcements',
+    ANNOUNCEMENT_DETAIL: (uuid: string) => `/api/admin/announcements/${uuid}`,
+    ANNOUNCEMENT_STATUS: (uuid: string) => `/api/admin/announcements/${uuid}/status`,
+    ANNOUNCEMENT_PIN: (uuid: string) => `/api/admin/announcements/${uuid}/pin`,
+
     // 데코레이션 관리
     DECORATIONS: '/api/admin/decorations',
     DECORATION_DETAIL: (uuid: string) => `/api/admin/decorations/${uuid}`,
@@ -494,6 +500,10 @@ export const API_ENDPOINTS = {
   CATEGORIES: {
     ICONS: '/api/categories/icons',             // GET - 카테고리 아이콘 목록 조회 (Public, 24시간 캐시)
   },
+
+  // 공지사항 (Public)
+  ANNOUNCEMENTS: '/api/announcements',
+  ANNOUNCEMENT_DETAIL: (uuid: string) => `/api/announcements/${uuid}`,
 
   // 이벤트 배너 (Public)
   EVENT_BANNERS: '/api/event-banners',          // GET - 공개 이벤트 배너 목록 조회

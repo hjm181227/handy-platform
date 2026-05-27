@@ -513,11 +513,6 @@ export function AuthModalContent() {
         </button>
       </div>
 
-      {/*
-        TODO: 휴대폰 번호인증 발신번호 심사 통과 후 활성화
-        이메일 회원가입은 휴대폰 인증이 필요하므로 심사 완료 전까지 프로덕션에서 숨김 처리
-        이메일 로그인은 모든 환경에서 가능
-      */}
       {/* 구분선 */}
       <div className="flex items-center my-8">
         <div className="flex-grow border-t border-gray-200"></div>
@@ -525,19 +520,8 @@ export function AuthModalContent() {
         <div className="flex-grow border-t border-gray-200"></div>
       </div>
 
-      {/* 이메일로 시작하기 (회원가입) - 개발/스테이지 환경에서만 표시 */}
-      {(import.meta.env.VITE_ENVIRONMENT === 'development' || import.meta.env.VITE_ENVIRONMENT === 'staging') && (
-        <button
-          onClick={() => setView('signup')}
-          disabled={loading}
-          className="w-full rounded-xl border-2 border-gray-900 bg-white py-4 text-base font-medium text-gray-900 hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
-        >
-          {t('auth:login.startWithEmail')}
-        </button>
-      )}
-
-      {/* 기존 계정 로그인 링크 - 모든 환경에서 표시 */}
-      <div className="mt-6 text-center">
+      {/* 기존 계정 이메일 로그인 링크 - 모든 환경에서 표시 */}
+      <div className="text-center">
         <span className="text-gray-500 text-sm">{t('auth:signup.alreadyHaveAccount')} </span>
         <button
           onClick={() => setView('email-login')}

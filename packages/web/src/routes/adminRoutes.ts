@@ -60,6 +60,13 @@ export const adminRoutes: RouteConfig[] = [
     requireAuth: true,
     requireRole: 'admin',
   },
+  // 공지사항 관리
+  {
+    path: '/admin/announcements',
+    layout: 'admin',
+    requireAuth: true,
+    requireRole: 'admin',
+  },
   // 데코레이션 관리
   {
     path: '/admin/decorations',

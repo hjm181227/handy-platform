@@ -26,6 +26,9 @@ export * from './designtool/DesignToolService';
 // Decoration
 export * from './decoration/DecorationService';
 
+// Announcement
+export * from './announcement/AnnouncementService';
+
 // Utilities
 export * from './utils';
 

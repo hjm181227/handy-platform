@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { AppState } from 'react-native';
 import { cameraService } from '../../services/cameraService';
 import SelectionScreen from './SelectionScreen';
 import CameraScreen from './CameraScreen';
@@ -26,19 +27,29 @@ const NailMeasurement: React.FC<NailMeasurementProps> = ({
   const [measurementResult, setMeasurementResult] = useState<NailMeasurementResult | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      try {
-        const granted = await cameraService.requestCameraPermission();
-        setHasPermission(granted);
-      } catch (error) {
-        console.error('권한 확인 실패:', error);
-        setHasPermission(false);
-      }
-    };
-
-    checkPermissions();
+  const checkPermissions = useCallback(async () => {
+    try {
+      const granted = await cameraService.requestCameraPermission();
+      setHasPermission(granted);
+    } catch (error) {
+      console.error('권한 확인 실패:', error);
+      setHasPermission(false);
+    }
   }, []);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [checkPermissions]);
+
+  // 설정에서 권한 변경 후 앱 복귀 시 재확인
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        checkPermissions();
+      }
+    });
+    return () => sub.remove();
+  }, [checkPermissions]);
 
   const handleStartCamera = () => {
     setCurrentStep('camera');

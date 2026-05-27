@@ -154,6 +154,7 @@ import BannerManagement from './components/admin/BannerManagement';
 import AdminCouponManagement from './components/admin/AdminCouponManagement';
 import SnapManagement from './components/admin/SnapManagement';
 import DecorationManagement from './components/admin/decoration';
+import AnnouncementManagement from './components/admin/announcement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
 
 /**
@@ -171,7 +172,7 @@ export function Router() {
   const { currentUser, authLoading, setUser } = useAuth();
 
   // Auth modal
-  const { openLogin, openSignup } = useAuthModal();
+  const { openLogin } = useAuthModal();
 
   // Toast state
   const { showToast } = useToast();
@@ -994,6 +995,12 @@ export function Router() {
           <DecorationManagement />
         </AdminLayout>
       );
+    } else if (pathname === '/admin/announcements') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <AnnouncementManagement />
+        </AdminLayout>
+      );
     } else {
       // Admin 404
       screen = (
@@ -1041,7 +1048,8 @@ export function Router() {
     screen = <SocialSignupPage onGo={nav} />;
   }
   else if (pathname.startsWith('/signup')) {
-    screen = <AuthRedirect nav={nav} openModal={openSignup} />;
+    // 이메일 회원가입 비활성화 — /signup 접근 시 로그인 모달로 전환
+    screen = <AuthRedirect nav={nav} openModal={openLogin} />;
   }
   // ==================== Home ====================
   else if (COMMUNITY_NAV_ENABLED) {

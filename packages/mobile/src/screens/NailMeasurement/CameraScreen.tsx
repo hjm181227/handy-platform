@@ -15,6 +15,7 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 import Icon from 'react-native-vector-icons/Feather';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import CameraGuideOverlay from '../../components/CameraGuideOverlay';
 import { NMColors } from '../../styles/nailMeasurementTheme';
 
@@ -56,12 +57,17 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
     setIsCapturing(true);
 
     try {
-      const photo = await cameraRef.current.takePhoto({
-        qualityPrioritization: 'balanced',
-      });
+      const photo = await cameraRef.current.takePhoto();
 
-      const photoUri = `file://${photo.path}`;
-      console.log('[CameraScreen] Photo taken:', photoUri);
+      // tmp 파일을 cache 디렉토리로 복사 (iOS tmp 정리로 인한 파일 유실 방지)
+      const cacheDir = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/nail-photos`;
+      await ReactNativeBlobUtil.fs.mkdir(cacheDir).catch(() => {});
+      const filename = `nail_${Date.now()}.jpg`;
+      const cachePath = `${cacheDir}/${filename}`;
+      await ReactNativeBlobUtil.fs.cp(photo.path, cachePath);
+
+      const photoUri = `file://${cachePath}`;
+      console.log('[CameraScreen] Photo copied to cache:', photoUri);
       onPhotoTaken(photoUri);
     } catch (error) {
       console.error('Photo capture failed:', error);
