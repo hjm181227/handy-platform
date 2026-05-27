@@ -1,6 +1,3 @@
-• Chat push notifications — get notified of new messages in real time
-• Improved login stability — more reliable session management
-• Nail size measurement fix — resolved upload errors with high-resolution photos
-• Fixed product detail navigation from brand pages
-• Event banner links now open correctly
+• Improved nail measurement camera stability — fixed photos disappearing after capture
+• Camera permission changes now take effect immediately without restarting the app
 • Other bug fixes and performance improvements

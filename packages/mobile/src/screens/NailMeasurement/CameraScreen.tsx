@@ -57,17 +57,18 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
     setIsCapturing(true);
 
     try {
-      const photo = await cameraRef.current.takePhoto();
-
-      // tmp 파일을 cache 디렉토리로 복사 (iOS tmp 정리로 인한 파일 유실 방지)
+      // cache 디렉토리에 직접 저장 (iOS tmp 정리로 인한 파일 유실 방지)
       const cacheDir = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/nail-photos`;
       await ReactNativeBlobUtil.fs.mkdir(cacheDir).catch(() => {});
-      const filename = `nail_${Date.now()}.jpg`;
-      const cachePath = `${cacheDir}/${filename}`;
-      await ReactNativeBlobUtil.fs.cp(photo.path, cachePath);
 
-      const photoUri = `file://${cachePath}`;
-      console.log('[CameraScreen] Photo copied to cache:', photoUri);
+      const photo = await cameraRef.current.takePhoto({
+        path: cacheDir,
+      });
+
+      // photo.path를 그대로 사용 (file:// 중복 방지)
+      const photoUri = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
+      console.log('[CameraScreen] Photo path:', photo.path);
+      console.log('[CameraScreen] Photo URI:', photoUri);
       onPhotoTaken(photoUri);
     } catch (error) {
       console.error('Photo capture failed:', error);
