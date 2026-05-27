@@ -246,6 +246,7 @@ export default function AnnouncementManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">대상앱</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팝업</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">배너</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">고정</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발행일</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">조회수</th>
@@ -255,7 +256,7 @@ export default function AnnouncementManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                     <div className="flex justify-center">
                       <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
                     </div>
@@ -263,7 +264,7 @@ export default function AnnouncementManagement() {
                 </tr>
               ) : announcements.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                     공지사항이 없습니다.
                   </td>
                 </tr>
@@ -332,6 +333,13 @@ export default function AnnouncementManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.isPopup ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-500'}`}>
                         {item.isPopup ? 'ON' : 'OFF'}
+                      </span>
+                    </td>
+
+                    {/* 배너 */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.isBanner ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-500'}`}>
+                        {item.isBanner ? '✓' : '-'}
                       </span>
                     </td>
 

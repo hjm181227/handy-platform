@@ -2675,6 +2675,8 @@ export interface Announcement {
   status: AnnouncementStatus;
   isPinned: boolean;
   isPopup: boolean;
+  isBanner: boolean;
+  bannerOrder: number;
   displayOrder: number;
   publishedAt?: string;
   expiresAt?: string;

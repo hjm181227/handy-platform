@@ -15,6 +15,8 @@ interface AnnouncementFormData {
   status: AnnouncementStatus;
   isPinned: boolean;
   isPopup: boolean;
+  isBanner: boolean;
+  bannerOrder: number;
   thumbnailUrl: string;
   publishedAt: string;
   expiresAt: string;
@@ -29,6 +31,8 @@ const defaultFormData = (): AnnouncementFormData => ({
   status: 'draft',
   isPinned: false,
   isPopup: false,
+  isBanner: false,
+  bannerOrder: 0,
   thumbnailUrl: '',
   publishedAt: '',
   expiresAt: '',
@@ -84,6 +88,8 @@ export function AnnouncementFormModal({
         status: initialData.status || 'draft',
         isPinned: initialData.isPinned || false,
         isPopup: initialData.isPopup || false,
+        isBanner: initialData.isBanner || false,
+        bannerOrder: initialData.bannerOrder || 0,
         thumbnailUrl: initialData.thumbnailUrl || '',
         publishedAt: initialData.publishedAt ? initialData.publishedAt.slice(0, 16) : '',
         expiresAt: initialData.expiresAt ? initialData.expiresAt.slice(0, 16) : '',
@@ -177,6 +183,8 @@ export function AnnouncementFormModal({
         status: form.status,
         isPinned: form.isPinned,
         isPopup: form.isPopup,
+        isBanner: form.isBanner,
+        bannerOrder: form.bannerOrder,
         thumbnailUrl: thumbnailUrl || undefined,
         publishedAt: form.publishedAt ? new Date(form.publishedAt).toISOString() : undefined,
         expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : undefined,
@@ -368,6 +376,33 @@ export function AnnouncementFormModal({
                 <span className="text-sm text-gray-700">상단 고정</span>
               </label>
             </div>
+
+            {/* 배너 노출 */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isBanner}
+                  onChange={(e) => setForm({ ...form, isBanner: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">배너 캐러셀 노출</span>
+              </label>
+            </div>
+
+            {/* 배너 순서 (isBanner가 true일 때만 표시) */}
+            {form.isBanner && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">배너 순서</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.bannerOrder}
+                  onChange={(e) => setForm({ ...form, bannerOrder: parseInt(e.target.value) || 0 })}
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            )}
 
             {/* 날짜 */}
             <div className="grid grid-cols-2 gap-4">
