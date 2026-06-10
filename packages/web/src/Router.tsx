@@ -103,6 +103,9 @@ import { AppleCallbackPage } from './components/pages/AppleCallbackPage';
 // Landing Pages
 import { HandyStudioPage } from './components/pages/HandyStudioPage';
 
+// Portfolio (독립 공간 - 링크 진입 전용)
+import { PortfolioPage } from './components/pages/PortfolioPage';
+
 // Footer Components
 import {
   AboutCompanyPage,
@@ -275,13 +278,18 @@ export function Router() {
   const isAdminPage = pathname.startsWith('/admin');
   const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
   const isCustomOrderPage = /^\/product\/.+\/custom-order$/.test(pathname) || pathname === '/custom-order/new';
+  const isPortfolioPage = pathname === '/DongHyun/portfolio';
 
   // Route matching and screen rendering
   let screen: React.ReactNode;
 
+  // ==================== Portfolio (독립 공간 - 링크 진입 전용) ====================
+  if (isPortfolioPage) {
+    screen = <PortfolioPage nav={nav} />;
+  }
   // ==================== Chat Routes ====================
-  const mChatRoom = pathname.match(/^\/chat\/(.+)$/);
-  if (mChatRoom) {
+  else if (pathname.match(/^\/chat\/(.+)$/)) {
+    const mChatRoom = pathname.match(/^\/chat\/(.+)$/)!;
     screen = <ChatRoomPage nav={nav} roomId={decodeURIComponent(mChatRoom[1])} />;
   }
   // ==================== Product Routes ====================
@@ -1091,6 +1099,11 @@ export function Router() {
     if (pathname === '/my/coupons') return { title: '쿠폰', path: '/my/coupons' };
     return { path: pathname };
   }, [pathname]);
+
+  // Portfolio: 완전 독립 - 레이아웃/기본 SEOHead 미적용 (자체 Helmet으로 noindex 처리)
+  if (isPortfolioPage) {
+    return <>{screen}</>;
+  }
 
   // Wrap with appropriate layout
   if (isSellerPage || isAdminPage || isChatPage || isCustomOrderPage) {

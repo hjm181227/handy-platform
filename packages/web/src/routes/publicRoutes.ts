@@ -4,6 +4,11 @@ import { RouteConfig } from './types';
  * 공개 라우트 - 인증 없이 접근 가능한 페이지들
  */
 export const publicRoutes: RouteConfig[] = [
+  // 포트폴리오 (독립 공간, 링크 진입 전용 - 메뉴/네비게이션 미노출)
+  {
+    path: '/DongHyun/portfolio',
+    layout: 'none',
+  },
   // 채팅방 상세 (인증 없이도 접근 가능, 내부에서 처리)
   {
     path: '/chat/:roomId',
