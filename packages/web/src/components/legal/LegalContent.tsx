@@ -40,6 +40,19 @@ const ServiceTermsKo = () => (
       <h4 className="font-semibold text-gray-800 mb-2">제8조(개인정보보호)</h4>
       <p>"회사"는 이용자의 개인정보를 보호하기 위하여 개인정보처리방침을 수립하고 이를 준수합니다.</p>
     </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제9조(크레딧 및 유료 서비스)</h4>
+      <p>1. "크레딧"이란 회사가 제공하는 AI 기능(디자인 목업 생성 등)을 이용하기 위하여 앱 내에서만 사용되는 디지털 사용권으로, 현금 가치가 없으며 환금·양도·재판매할 수 없습니다.</p>
+      <p>2. 크레딧은 다음 두 종류로 구분됩니다.</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li><strong>구독 지급(기간제) 크레딧</strong>: Pro 구독 회원에게 매 결제 주기마다 구독 상품에 명시된 양(현재 매월 50 크레딧)이 지급됩니다. 다음 주기로 이월되지 않으며 결제 주기 종료 시 소멸합니다.</li>
+        <li><strong>충전형 크레딧</strong>: 이용자가 별도로 구매하여 적립하는 소비성 크레딧으로, 유효기간이 없습니다.</li>
+      </ul>
+      <p>3. 크레딧 차감은 <strong>기간제 크레딧을 먼저 사용한 후 충전형 크레딧</strong> 순서로 이루어집니다. 현재 1 크레딧으로 AI 목업 1회를 생성할 수 있으며, 크레딧이 사용되는 기능은 회사가 제공하거나 향후 추가하는 다른 AI·유료 기능으로 확대될 수 있습니다. 기능별 크레딧 차감량은 해당 기능 이용 시점의 화면에 표시됩니다.</p>
+      <p>4. 크레딧으로 제공되는 서비스(AI 목업 생성 등)는 생성 요청 즉시 제공·소비되는 디지털 콘텐츠입니다. AI 생성이 시스템 오류로 실패한 경우 해당 크레딧은 차감되지 않으며, 차감된 경우 자동으로 복원됩니다.</p>
+      <p>5. 구독이 해지되거나 만료되면 잔여 기간제 크레딧은 소멸하며, 충전형 크레딧은 유지됩니다. 회사가 서비스를 변경하거나 종료하는 경우 크레딧 및 잔액 처리 방침을 사전에 고지합니다.</p>
+      <p>6. 미성년자가 결제·충전을 하는 경우 법정대리인의 동의를 받아야 합니다.</p>
+    </section>
   </div>
 );
 
@@ -81,6 +94,19 @@ const ServiceTermsEn = () => (
       <h4 className="font-semibold text-gray-800 mb-2">Article 8 (Personal Information Protection)</h4>
       <p>The Company establishes and complies with a Privacy Policy to protect users' personal information in accordance with relevant laws.</p>
     </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 9 (Credits and Paid Services)</h4>
+      <p>1. "Credits" are an in-app-only digital right of use for accessing the Company's AI features (such as design mockup generation). Credits have no cash value and cannot be exchanged for cash, transferred, or resold.</p>
+      <p>2. Credits are of two types:</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li><strong>Subscription (cycle-based) credits</strong>: granted to Pro subscribers at the start of each billing cycle in the amount specified for the subscription product (currently 50 credits per month). They do not carry over to the next cycle and expire at the end of the billing cycle.</li>
+        <li><strong>Top-up credits</strong>: consumable credits that the user purchases separately, with no expiration date.</li>
+      </ul>
+      <p>3. Credits are deducted <strong>cycle-based credits first, then top-up credits</strong>. Currently one credit can be used to generate one AI mockup, and the features for which credits may be used may be extended to other AI or paid features provided or later added by the Company. The number of credits consumed per feature is displayed at the time that feature is used.</p>
+      <p>4. Services provided in exchange for credits (such as AI mockup generation) are digital content supplied and consumed immediately upon request. If an AI generation fails due to a system error, the corresponding credit is not deducted, and if deducted, it is automatically restored.</p>
+      <p>5. If the subscription is canceled or expires, any remaining cycle-based credits are forfeited, while top-up credits are retained. If the Company changes or discontinues the service, it will provide advance notice of how credits and balances will be handled.</p>
+      <p>6. Where a minor makes a payment or top-up purchase, the consent of a legal guardian is required.</p>
+    </section>
   </div>
 );
 
@@ -121,6 +147,19 @@ const ServiceTermsJa = () => (
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">第8条（個人情報保護）</h4>
       <p>「会社」は、利用者の個人情報を保護するために個人情報処理方針を策定し、これを遵守します。</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第9条（クレジットおよび有料サービス）</h4>
+      <p>1.「クレジット」とは、会社が提供するAI機能（デザインモックアップ生成等）を利用するためにアプリ内でのみ使用されるデジタル利用権であり、現金的価値を有さず、換金・譲渡・再販売することはできません。</p>
+      <p>2. クレジットは次の2種類に区分されます。</p>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li><strong>サブスクリプション付与（期間制）クレジット</strong>：Proサブスクリプション会員に、各決済周期ごとにサブスクリプション商品に明示された量（現在は毎月50クレジット）が付与されます。次の周期へ繰り越されず、決済周期の終了時に消滅します。</li>
+        <li><strong>チャージ型クレジット</strong>：利用者が別途購入して積み立てる消費性クレジットで、有効期限はありません。</li>
+      </ul>
+      <p>3. クレジットの差し引きは<strong>期間制クレジットを先に使用した後、チャージ型クレジット</strong>の順で行われます。現在は1クレジットでAIモックアップを1回生成でき、クレジットが使用される機能は、会社が提供するまたは今後追加する他のAI・有料機能へ拡大される場合があります。機能ごとのクレジット差し引き量は、当該機能の利用時点の画面に表示されます。</p>
+      <p>4. クレジットと引き換えに提供されるサービス（AIモックアップ生成等）は、リクエスト時に即時提供・消費されるデジタルコンテンツです。システム障害によりAI生成が失敗した場合、当該クレジットは差し引かれず、差し引かれた場合は自動的に復元されます。</p>
+      <p>5. サブスクリプションが解約または満了した場合、残存する期間制クレジットは消滅し、チャージ型クレジットは維持されます。会社がサービスを変更または終了する場合は、クレジットおよび残高の取扱い方針を事前に告知します。</p>
+      <p>6. 未成年者が決済・チャージを行う場合は、法定代理人の同意を得る必要があります。</p>
     </section>
   </div>
 );
@@ -182,10 +221,11 @@ const PrivacyPolicyKo = () => (
         <li>구독 상태(활성/취소/유예/보류/만료)</li>
         <li>구독 상품 ID 및 결제 주기</li>
         <li>자동 갱신 여부</li>
+        <li>크레딧 거래내역(지급·사용·환불·소멸 기록 및 충전형 크레딧 구매 내역)</li>
       </ul>
-      <p>해당 정보는 구독 서비스 제공, 결제 검증, 환불 처리, 자동 갱신 관리 목적으로만 사용됩니다.</p>
+      <p>해당 정보는 구독 서비스 제공, 결제 검증, 환불 처리, 자동 갱신 관리, 크레딧 지급·차감·정산 목적으로만 사용됩니다.</p>
       <p>실제 결제 수단(카드번호 등)은 Google/Apple이 직접 처리하며, 회사는 이를 저장하지 않습니다.</p>
-      <p>구독 관련 기록은 전자상거래법에 따라 5년간 보관됩니다.</p>
+      <p>구독 및 크레딧 거래 관련 기록은 전자상거래법에 따라 5년간 보관됩니다.</p>
     </section>
   </div>
 );
@@ -245,10 +285,11 @@ const PrivacyPolicyEn = () => (
         <li>Subscription state (active, canceled, grace period, on hold, expired)</li>
         <li>Product ID and billing cycle</li>
         <li>Auto-renewal status</li>
+        <li>Credit transaction history (records of grants, usage, refunds, and expiration, and top-up credit purchase records)</li>
       </ul>
-      <p>This information is used solely for providing the subscription service, payment verification, refund handling, and auto-renewal management.</p>
+      <p>This information is used solely for providing the subscription service, payment verification, refund handling, auto-renewal management, and the granting, deduction, and settlement of credits.</p>
       <p>Actual payment credentials (card numbers, etc.) are handled directly by Google/Apple and are not stored by the Company.</p>
-      <p>Subscription records are retained for 5 years in accordance with the Act on Consumer Protection in Electronic Commerce.</p>
+      <p>Subscription and credit transaction records are retained for 5 years in accordance with the Act on Consumer Protection in Electronic Commerce.</p>
     </section>
   </div>
 );
@@ -308,10 +349,11 @@ const PrivacyPolicyJa = () => (
         <li>サブスクリプション状態（アクティブ／キャンセル／猶予期間／保留／期限切れ）</li>
         <li>サブスクリプション商品IDおよび決済周期</li>
         <li>自動更新の有無</li>
+        <li>クレジット取引履歴（付与・使用・返金・消滅の記録およびチャージ型クレジットの購入履歴）</li>
       </ul>
-      <p>当該情報はサブスクリプションサービスの提供、決済検証、返金処理、自動更新管理の目的でのみ使用されます。</p>
+      <p>当該情報はサブスクリプションサービスの提供、決済検証、返金処理、自動更新管理、クレジットの付与・差し引き・精算の目的でのみ使用されます。</p>
       <p>実際の決済手段（カード番号等）はGoogle/Appleが直接処理し、会社は保存しません。</p>
-      <p>サブスクリプション関連の記録は電子商取引法に基づき5年間保管されます。</p>
+      <p>サブスクリプションおよびクレジット取引に関する記録は電子商取引法に基づき5年間保管されます。</p>
     </section>
   </div>
 );
@@ -348,8 +390,19 @@ const SubscriptionRefundPolicyKo = () => (
         <li>웹 결제 (토스페이먼츠): 회사 고객센터로 직접 환불 신청</li>
       </ul>
       <p>웹에서의 결제는 토스페이먼츠 주식회사(전자결제대행업체)를 통해 처리되며, 환불 시에도 동일 경로를 통해 처리됩니다. 카드 승인 취소의 경우 영업일 기준 2~3일, 계좌 환입의 경우 3~5일이 소요될 수 있습니다.</p>
-      <p>전자상거래 등에서의 소비자보호에 관한 법률 제17조에 따라, 대한민국 소비자는 구매일로부터 7일 이내에 청약철회를 요청할 수 있습니다. 단, 이용자가 결제 후 1회라도 디자인 툴의 유료 기능을 사용(프리미엄 브러시·재질 사용, 고해상도 내보내기, 프로젝트 제한 초과 생성 등)하거나 콘텐츠를 다운로드한 경우, 전자상거래 등에서의 소비자보호에 관한 법률 제17조 제2항 제5호에 따라 청약철회가 제한됩니다.</p>
+      <p>전자상거래 등에서의 소비자보호에 관한 법률 제17조에 따라, 대한민국 소비자는 구매일로부터 7일 이내에 청약철회를 요청할 수 있습니다. 단, 이용자가 결제 후 1회라도 디자인 툴의 유료 기능을 사용(AI 목업 생성(크레딧 사용), 고해상도 내보내기, 프로젝트 제한 초과 생성 등)하거나 콘텐츠를 다운로드한 경우, 전자상거래 등에서의 소비자보호에 관한 법률 제17조 제2항 제5호에 따라 청약철회가 제한됩니다.</p>
       <p>앱 스토어를 통한 결제의 경우 회사는 환불 요청을 직접 처리할 수 없으며, 모든 환불 문의는 해당 스토어로 직접 요청해 주시기 바랍니다. 웹 결제 환불 문의는 아래 고객센터로 연락해 주세요.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제3조의2(크레딧)</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Pro 구독 회원에게는 매 결제 주기마다 구독 상품에 명시된 양(현재 매월 50 크레딧)의 기간제 크레딧이 지급됩니다. 현재 1 크레딧으로 AI 목업 1회를 생성할 수 있으며, 크레딧 사용처와 기능별 차감량은 향후 추가되는 기능에 따라 확대될 수 있고 이용 시점 화면에 표시됩니다.</li>
+        <li>기간제 크레딧은 다음 주기로 이월되지 않고 결제 주기 종료 시 소멸하며, 구독 해지·만료 시에도 잔여 기간제 크레딧은 소멸합니다. 소멸된 크레딧은 환불 대상이 아닙니다.</li>
+        <li>충전형(구매형) 크레딧은 유효기간이 없으며, 차감은 기간제 크레딧을 먼저 사용한 후 충전형 크레딧 순서로 이루어집니다. 크레딧은 앱 내 전용 사용권으로 현금으로 환급·환전할 수 없습니다.</li>
+        <li>AI 목업 생성이 시스템 오류로 실패한 경우 해당 크레딧은 차감되지 않으며, 차감된 경우 자동으로 복원됩니다.</li>
+        <li>충전형 크레딧을 구매한 경우, 「전자상거래 등에서의 소비자보호에 관한 법률」에 따라 구매일로부터 7일 이내에 한하여 <strong>미사용 크레딧</strong>의 청약철회를 요청할 수 있습니다. 다만 이미 사용(목업 생성에 소비)된 크레딧은 이미 제공된 디지털 콘텐츠에 해당하여 청약철회가 제한됩니다.</li>
+        <li>위 청약철회 제한은 구매(충전) 전 화면에 사전 고지됩니다.</li>
+      </ul>
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">제4조(환불 불가 사유)</h4>
@@ -412,8 +465,19 @@ const SubscriptionRefundPolicyEn = () => (
         <li>Web payment (Toss Payments): Contact the Company's customer support directly for refund requests</li>
       </ul>
       <p>Web payments are processed through Toss Payments Co., Ltd. (a payment gateway provider), and refunds are handled via the same channel. Card authorization reversals typically take 2–3 business days, while bank transfer refunds may take 3–5 business days.</p>
-      <p>Under Article 17 of the Korean Act on Consumer Protection in Electronic Commerce, consumers in the Republic of Korea may request withdrawal of subscription within 7 days of purchase. However, if the user has used any paid feature of the design tool even once after payment (e.g., using premium brushes or materials, high-resolution export, creating projects beyond the free limit, etc.) or has downloaded content, the right of withdrawal is restricted pursuant to Article 17(2)(5) of the same Act.</p>
+      <p>Under Article 17 of the Korean Act on Consumer Protection in Electronic Commerce, consumers in the Republic of Korea may request withdrawal of subscription within 7 days of purchase. However, if the user has used any paid feature of the design tool even once after payment (e.g., AI mockup generation (using credits), high-resolution export, creating projects beyond the free limit, etc.) or has downloaded content, the right of withdrawal is restricted pursuant to Article 17(2)(5) of the same Act.</p>
       <p>For purchases made through app stores, the Company cannot directly process refund requests; all such inquiries must be submitted directly to the relevant store. For web payment refund inquiries, please contact the customer support listed below.</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 3-2 (Credits)</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Pro subscribers are granted cycle-based credits in the amount specified for the subscription product (currently 50 credits per month) at the start of each billing cycle. Currently one credit can be used to generate one AI mockup; the features for which credits may be used and the amount consumed per feature may expand as new features are added, and are shown at the time of use.</li>
+        <li>Cycle-based credits do not carry over to the next cycle and expire at the end of the billing cycle; any remaining cycle-based credits also expire upon cancellation or expiration of the subscription. Expired credits are not eligible for a refund.</li>
+        <li>Top-up (purchased) credits have no expiration date. Credits are deducted cycle-based credits first, then top-up credits. Credits are an in-app-only right of use and cannot be refunded or exchanged for cash.</li>
+        <li>If an AI mockup generation fails due to a system error, the corresponding credit is not deducted, and if deducted, it is automatically restored.</li>
+        <li>For purchased top-up credits, a consumer may, under the Act on Consumer Protection in Electronic Commerce, request withdrawal of <strong>unused credits</strong> within 7 days of purchase. However, credits already used (consumed for mockup generation) constitute already-supplied digital content and are excluded from the right of withdrawal.</li>
+        <li>The above restriction on withdrawal is disclosed on the screen prior to purchase (top-up).</li>
+      </ul>
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">Article 4 (Non-refundable Cases)</h4>
@@ -476,8 +540,19 @@ const SubscriptionRefundPolicyJa = () => (
         <li>ウェブ決済（トスペイメンツ）：会社のカスタマーサポートへ直接返金をお申し込みください</li>
       </ul>
       <p>ウェブでの決済はトスペイメンツ株式会社（電子決済代行業者）を通じて処理され、返金も同じ経路で処理されます。カード承認取消の場合は営業日基準で2〜3日、口座振込の場合は3〜5日ほどかかることがあります。</p>
-      <p>電子商取引等における消費者保護に関する法律第17条に基づき、大韓民国の消費者は購入日から7日以内に申込撤回を要求することができます。ただし、利用者が決済後1回でもデザインツールの有料機能を使用（プレミアムブラシ・素材の使用、高解像度エクスポート、プロジェクト制限を超える作成など）した場合、またはコンテンツをダウンロードした場合、電子商取引等における消費者保護に関する法律第17条第2項第5号に基づき申込撤回が制限されます。</p>
+      <p>電子商取引等における消費者保護に関する法律第17条に基づき、大韓民国の消費者は購入日から7日以内に申込撤回を要求することができます。ただし、利用者が決済後1回でもデザインツールの有料機能を使用（AIモックアップ生成（クレジット使用）、高解像度エクスポート、プロジェクト制限を超える作成など）した場合、またはコンテンツをダウンロードした場合、電子商取引等における消費者保護に関する法律第17条第2項第5号に基づき申込撤回が制限されます。</p>
       <p>アプリストアを通じた決済については、会社が返金リクエストを直接処理することはできませんので、すべての返金に関するお問い合わせは該当ストアへ直接ご依頼ください。ウェブ決済の返金に関するお問い合わせは下記のカスタマーサポートへご連絡ください。</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第3条の2（クレジット）</h4>
+      <ul className="list-disc ml-4 mt-1 space-y-1">
+        <li>Proサブスクリプション会員には、各決済周期ごとにサブスクリプション商品に明示された量（現在は毎月50クレジット）の期間制クレジットが付与されます。現在は1クレジットでAIモックアップを1回生成でき、クレジットの使用先および機能ごとの差し引き量は、今後追加される機能に応じて拡大される場合があり、利用時点の画面に表示されます。</li>
+        <li>期間制クレジットは次の周期へ繰り越されず決済周期の終了時に消滅し、サブスクリプションの解約・満了時にも残存する期間制クレジットは消滅します。消滅したクレジットは返金の対象外です。</li>
+        <li>チャージ型（購入型）クレジットには有効期限がありません。差し引きは期間制クレジットを先に使用した後、チャージ型クレジットの順で行われます。クレジットはアプリ内専用の利用権であり、現金で返金・換金することはできません。</li>
+        <li>AIモックアップ生成がシステム障害により失敗した場合、当該クレジットは差し引かれず、差し引かれた場合は自動的に復元されます。</li>
+        <li>チャージ型クレジットを購入した場合、電子商取引等における消費者保護に関する法律に基づき、購入日から7日以内に限り<strong>未使用クレジット</strong>の申込撤回を要求できます。ただし、すでに使用（モックアップ生成に消費）されたクレジットは、すでに提供されたデジタルコンテンツに該当し、申込撤回が制限されます。</li>
+        <li>上記の申込撤回の制限は、購入（チャージ）前の画面に事前に告知されます。</li>
+      </ul>
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">第4条（返金不可事由）</h4>
