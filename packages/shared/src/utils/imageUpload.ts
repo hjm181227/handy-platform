@@ -3,7 +3,7 @@ import { ApiError } from './apiHelpers';
 
 export interface ImageUploadOptions {
   file: File | Blob;
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'seller-document' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message';
   filename?: string;
   onProgress?: (progress: number) => void;
 }
@@ -37,7 +37,7 @@ export class ImageUploadManager {
 
     try {
       // 1. 파일 유효성 검사
-      this.validateFile(file);
+      this.validateFile(file, uploadType);
 
       // 2. 파일명 생성
       const filename = customFilename || this.generateFilename(file, uploadType);
@@ -47,15 +47,20 @@ export class ImageUploadManager {
         filename,
         contentType: file.type,
         uploadType,
+        fileSize: file.size,
       });
 
       // 4. S3에 직접 업로드
       await this.uploadToS3(presignedResponse.presignedUrl, file, onProgress);
 
       // 5. 업로드 성공 결과 반환
+      const completedImageUrl = uploadType === 'seller-document'
+        ? await this.completeSellerDocument(presignedResponse.imageUrl)
+        : presignedResponse.imageUrl;
+
       return {
         success: true,
-        imageUrl: presignedResponse.imageUrl,
+        imageUrl: completedImageUrl,
         tempUrl: presignedResponse.presignedUrl,
         filename: presignedResponse.filename,
         uploadType: presignedResponse.uploadType,
@@ -71,6 +76,20 @@ export class ImageUploadManager {
         error: error instanceof Error ? error.message : 'Upload failed',
       };
     }
+  }
+
+  private async completeSellerDocument(imageUrl: string): Promise<string> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseURL}/api/upload/seller-document/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ imageUrl }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || !body?.data?.url) {
+      throw new ApiError(body?.error || 'Failed to secure seller document', response.status);
+    }
+    return body.data.url;
   }
 
   /**
@@ -167,11 +186,10 @@ export class ImageUploadManager {
   /**
    * 파일 유효성 검사
    */
-  private validateFile(file: File | Blob): void {
-    // 파일 크기 검사 (10MB 제한)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+  private validateFile(file: File | Blob, uploadType: string): void {
+    const maxSize = uploadType === 'seller-document' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      throw new Error('파일 크기가 10MB를 초과합니다.');
+      throw new Error(`파일 크기가 ${uploadType === 'seller-document' ? 5 : 10}MB를 초과합니다.`);
     }
 
     // 파일 타입 검사

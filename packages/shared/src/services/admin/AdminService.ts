@@ -95,7 +95,7 @@ export interface AdminDashboardData {
 // SellerApplication은 types/index.ts에서 import
 
 export interface SellerApplicationDetail extends Omit<SellerApplication, 'verificationDocuments'> {
-  address: {
+  address?: {
     street: string;
     city: string;
     state: string;
@@ -123,6 +123,7 @@ export interface SellerApplicationDetail extends Omit<SellerApplication, 'verifi
   isActive: boolean;
   commission: number;
   verificationNote?: string;
+  auditLogs?: SellerApplicationAuditLog[];
   stats: {
     totalProducts: number;
     totalOrders: number;
@@ -136,16 +137,32 @@ export interface SellerApplicationDetail extends Omit<SellerApplication, 'verifi
 
 export interface SellerApplicationListResponse {
   success: boolean;
-  data: {
-    items: SellerApplication[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalItems: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    };
+  items: SellerApplication[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
+}
+
+export interface SellerApplicationAuditLog {
+  auditUuid: string;
+  action: 'approved' | 'rejected';
+  previousStatus: 'draft' | 'pending' | 'approved' | 'rejected';
+  nextStatus: 'draft' | 'pending' | 'approved' | 'rejected';
+  previousCommission?: number;
+  nextCommission?: number;
+  verificationNote?: string;
+  rejectionReason?: string;
+  actor: {
+    userUuid: string;
+    userId: string;
+    name?: string;
+    email?: string;
+  };
+  createdAt: string;
 }
 
 export interface SellerApplicationDetailResponse {
@@ -326,7 +343,7 @@ export abstract class BaseAdminService extends BaseApiService {
   async getSellerApplications(params: {
     page?: number;
     limit?: number;
-    status?: 'pending' | 'approved' | 'rejected';
+    status?: 'draft' | 'pending' | 'approved' | 'rejected';
     search?: string;
     sortBy?: 'created' | 'updated' | 'brandName';
     sortOrder?: 'asc' | 'desc';
@@ -347,9 +364,16 @@ export abstract class BaseAdminService extends BaseApiService {
     return this.request<SellerApplicationDetailResponse>(`/api/admin/seller-applications/${sellerInfoId}`);
   }
 
+  async getSellerDocumentAccessUrl(documentUrl: string): Promise<string> {
+    const response = await this.request<{ success: boolean; data: { url: string } }>(
+      `/api/upload/seller-document/access?url=${encodeURIComponent(documentUrl)}`
+    );
+    return response.data.url;
+  }
+
   async approveSellerApplication(
-    sellerInfoId: string, 
-    verificationNote?: string
+    sellerInfoId: string,
+    data: { verificationNote?: string; commission?: number } = {}
   ): Promise<ApiResponse<{
     sellerInfoId: string;
     userId: string;
@@ -358,7 +382,7 @@ export abstract class BaseAdminService extends BaseApiService {
   }>> {
     return this.request<ApiResponse<any>>(`/api/admin/seller-applications/${sellerInfoId}/approve`, {
       method: 'POST',
-      body: JSON.stringify({ verificationNote }),
+      body: JSON.stringify(data),
     });
   }
 
