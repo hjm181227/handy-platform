@@ -6,6 +6,8 @@ import { MdDashboard, MdInventory, MdStore, MdAssignment, MdViewCarousel, MdCame
 import { FaUsers, FaClipboardList, FaHome, FaSignOutAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { FiGrid } from 'react-icons/fi';
 import { RiCoupon2Line } from 'react-icons/ri';
+import { MdNotifications } from 'react-icons/md';
+import { useUnreadNotificationCount } from '../common/NotificationBell';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLoading = false }) => {
   const [internalLoading, setInternalLoading] = useState(true);
   const { path, nav } = useMiniRouter();
+  const { count: unreadNotificationCount } = useUnreadNotificationCount();
 
   useEffect(() => {
     // authLoading이 false가 되면 (App에서 인증 초기화 완료) 내부 로딩도 완료
@@ -77,6 +80,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
   }
 
   const navigation = [
+    {
+      name: '알림',
+      href: '/my/notifications',
+      icon: MdNotifications,
+      badge: unreadNotificationCount
+    },
     {
       name: '대시보드',
       href: '/admin',
@@ -182,6 +191,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
               >
                 <IconComponent className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
                 {item.name}
+                {'badge' in item && item.badge > 0 && (
+                  <span className="ml-auto min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-xs font-semibold text-white">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
