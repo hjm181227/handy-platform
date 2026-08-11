@@ -48,7 +48,9 @@ export abstract class BaseOrderService extends BaseApiService {
       '/api/orders/list',
       {
         method: 'POST',
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        // 필터를 body로 보내려고 POST를 쓸 뿐 실제로는 조회다. 재시도해도 안전하다.
+        enableRetry: true
       }
     );
 
@@ -188,6 +190,10 @@ export abstract class BaseOrderService extends BaseApiService {
       {
         method: 'POST',
         body: JSON.stringify(params),
+        // 재시도 금지 (POST 기본값). 서버의 멱등성 체크는 트랜잭션이
+        // completed로 확정된 뒤에만 동작하므로, PG 승인이 진행 중인
+        // 구간에 재시도가 들어가면 중복 승인이 발생할 수 있다.
+        enableRetry: false,
       }
     );
   }
