@@ -1,6 +1,9 @@
 node_modules/*
 .git
 *.log
+# 소스맵은 절대 배포하지 않는다 (전체 소스 공개 방지).
+# Sentry 업로드는 빌드 단계에서 처리되므로 배포 산출물에는 불필요하다.
+*.map
 .env.local
 .env.development.local
 .env.test.local
