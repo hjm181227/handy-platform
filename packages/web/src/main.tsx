@@ -49,47 +49,9 @@ window.addEventListener('unhandledrejection', (event) => {
   });
 });
 
-// 카카오 SDK 디버깅 헬퍼
-(window as any).debugKakao = () => {
-  console.log('=== 카카오 SDK 디버깅 정보 ===');
-  console.log('window.Kakao:', window.Kakao);
-  if (window.Kakao) {
-    console.log('Kakao keys:', Object.keys(window.Kakao));
-    console.log('Kakao.Auth:', window.Kakao.Auth);
-    if (window.Kakao.Auth) {
-      console.log('Auth keys:', Object.keys(window.Kakao.Auth));
-    }
-    console.log('isInitialized:', window.Kakao.isInitialized ? window.Kakao.isInitialized() : 'method not found');
-  }
-  console.log('HTML script tags:', Array.from(document.querySelectorAll('script[src*="kakao"]')));
-  console.log('========================');
-};
-
-// 페이지 로드 후 Kakao 상태 확인 및 사전 초기화
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    console.log('페이지 로드 완료 후 카카오 상태 확인:');
-    (window as any).debugKakao();
-    
-    // 카카오 SDK 사전 초기화 시도
-    if (window.Kakao && !window.Kakao.isInitialized()) {
-      try {
-        const appKey = (window as any).__VITE_ENV__ === 'production' 
-          ? 'your_production_app_key'
-          : 'f466bdbd818f288f370407d10da4710d';
-        console.log('카카오 SDK 사전 초기화 시도:', appKey);
-        window.Kakao.init(appKey);
-        
-        setTimeout(() => {
-          console.log('초기화 1초 후 상태:');
-          (window as any).debugKakao();
-        }, 1000);
-      } catch (error) {
-        console.error('카카오 SDK 사전 초기화 실패:', error);
-      }
-    }
-  }, 500);
-});
+// 카카오 SDK 초기화는 로그인 시점에 utils/kakaoSdk.ts의 initKakaoSdk()가 담당한다.
+// (여기서 사전 초기화하던 코드는 프로덕션 분기값이 'your_production_app_key'
+//  플레이스홀더였고, index.html이 이미 스테이징 키로 init해버려 무의미했다.)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
