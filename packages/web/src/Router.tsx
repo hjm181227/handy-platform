@@ -61,10 +61,10 @@ import {
 import {
   ContactPage,
   FaqPage,
-  NotificationsPage,
   SettingsPage,
   PromoPage
 } from './components/pages/SupportPages';
+import { NotificationsInboxPage } from './components/pages/NotificationsInboxPage';
 
 // Custom Order Pages
 import { PublicCustomOrderPage } from './components/pages/PublicCustomOrderPage';
@@ -81,7 +81,6 @@ import { DesignToolBillingHistoryPage } from './components/pages/DesignToolBilli
 import DesignToolManagement from './components/admin/DesignToolManagement';
 
 // Seller Components
-import { SellerRegistrationPage } from './components/pages/SellerRegistrationPage';
 
 // Checkout and Order Components
 import { CheckoutPage } from './components/pages/CheckoutPage';
@@ -661,7 +660,7 @@ export function Router() {
   else if (pathname === '/my/notifications') {
     screen = (
       <RequireAuth>
-        <NotificationsPage onGo={nav} />
+        <NotificationsInboxPage onGo={nav} />
       </RequireAuth>
     );
   }
@@ -764,7 +763,7 @@ export function Router() {
   else if (pathname === '/seller/register') {
     screen = (
       <RequireAuth>
-        <SellerRegistrationPage onGo={nav} />
+        <SellerApplicationForm onGo={nav} />
       </RequireAuth>
     );
   }

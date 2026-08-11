@@ -110,7 +110,6 @@ export const PROTECTED_ROUTES: ProtectedRoute[] = [
   {
     path: '/seller/register',
     requireAuth: true,
-    requiredRole: 'seller',
     description: '판매자 등록',
   },
   {
@@ -176,7 +175,6 @@ export const PROTECTED_ROUTES: ProtectedRoute[] = [
   {
     path: '/seller/apply',
     requireAuth: true,
-    requiredRole: 'seller',
     description: '판매자 신청',
   },
 
