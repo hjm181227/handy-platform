@@ -16,6 +16,7 @@ import {
   ProductCategory,
   ApiError,
   withRetry,
+  isRetryableMethod,
   parseApiError,
   safeJsonParse,
   isTokenExpired,
@@ -213,9 +214,11 @@ class WebApiService {
   }
 
   private async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {},
-    enableRetry: boolean = true
+    // 생략 시 메서드의 멱등성을 따른다. POST/PATCH를 자동 재시도하면
+    // 타임아웃·5xx 상황에서 주문/결제가 중복 생성될 수 있다.
+    enableRetry: boolean = isRetryableMethod(options.method)
   ): Promise<T> {
     const makeRequest = async (): Promise<T> => {
       const url = `${this.baseURL}${endpoint}`;

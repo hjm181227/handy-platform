@@ -19,33 +19,15 @@
     <meta name="theme-color" content="#E91E8C" />
     <link rel="canonical" href="https://www.h-andy.com" />
     <title>Handy - 네일아트 쇼핑몰</title>
-    <!-- 카카오 SDK 다른 버전으로 테스트 -->
-    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <!--
+      카카오 SDK는 여기서 로드만 하고 init은 하지 않는다.
+      앱 키는 환경별로 다르므로 초기화는 src/utils/kakaoSdk.ts의 initKakaoSdk()가
+      VITE_KAKAO_APP_KEY를 읽어 단독으로 담당한다.
+      (여기서 하드코딩 init을 하면 isInitialized() 가드 때문에 이후 초기화가 모두 무시된다.)
+    -->
+    <script defer src="https://developers.kakao.com/sdk/js/kakao.js"></script>
     <!-- Daum Postcode API -->
-    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-    <script>
-      console.log('HTML 스크립트 섹션에서 카카오 체크:', typeof window !== 'undefined' ? !!window.Kakao : 'window undefined');
-      
-      // 스크립트 로드 즉시 초기화 시도
-      if (typeof window !== 'undefined' && window.Kakao) {
-        try {
-          if (!window.Kakao.isInitialized()) {
-            window.Kakao.init('f466bdbd818f288f370407d10da4710d');
-            console.log('HTML에서 카카오 즉시 초기화 완료');
-          }
-          
-          // Auth 모듈 강제 로드 시도
-          setTimeout(() => {
-            console.log('HTML 스크립트에서 Auth 체크:', !!window.Kakao.Auth);
-            if (window.Kakao.Auth) {
-              console.log('Auth 모듈 사용 가능!');
-            }
-          }, 100);
-        } catch (error) {
-          console.error('HTML에서 카카오 초기화 실패:', error);
-        }
-      }
-    </script>
+    <script defer src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   </head>
   <body>
     <div id="root"></div>

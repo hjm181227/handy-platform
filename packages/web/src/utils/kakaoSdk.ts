@@ -8,11 +8,10 @@ declare global {
   }
 }
 
-// 카카오 앱 키 (환경 변수 또는 설정에서 가져와야 함)
-const KAKAO_APP_KEY = (import.meta as any).env.VITE_KAKAO_APP_KEY || 'YOUR_KAKAO_APP_KEY';
-
-// 디버깅용: 앱 키가 제대로 로드되었는지 확인
-console.log('카카오 앱 키 로드됨:', KAKAO_APP_KEY ? '✅ 설정됨' : '❌ 설정되지 않음');
+// 카카오 앱 키 - 이 파일이 유일한 출처다.
+// index.html이나 main.tsx에서 하드코딩 init을 하면 안 된다.
+// (한 번 초기화되면 isInitialized() 가드에 걸려 올바른 키로 재초기화가 불가능해진다.)
+const KAKAO_APP_KEY: string | undefined = (import.meta as any).env.VITE_KAKAO_APP_KEY;
 
 /**
  * 카카오 SDK가 HTML에서 로드될 때까지 대기합니다
@@ -61,21 +60,24 @@ const waitForKakaoSdk = (): Promise<void> => {
  */
 export const initKakaoSdk = async (): Promise<void> => {
   try {
+    if (!KAKAO_APP_KEY) {
+      // 조용히 잘못된 키로 초기화되어 로그인만 실패하는 것보다,
+      // 설정 누락을 즉시 드러내는 편이 낫다.
+      throw new Error(
+        'VITE_KAKAO_APP_KEY가 설정되지 않았습니다. 배포 환경변수를 확인하세요.'
+      );
+    }
+
     // HTML에서 로드된 SDK를 기다림
     await waitForKakaoSdk();
-    
+
     if (!window.Kakao) {
       throw new Error('카카오 SDK가 로드되지 않았습니다.');
     }
-    
+
     if (!window.Kakao.isInitialized()) {
       window.Kakao.init(KAKAO_APP_KEY);
-      console.log('카카오 SDK 초기화 완료:', KAKAO_APP_KEY);
-    } else {
-      console.log('카카오 SDK는 이미 초기화되어 있습니다.');
     }
-    
-    console.log('카카오 SDK 준비 완료');
   } catch (error) {
     console.error('카카오 SDK 초기화 실패:', error);
     throw error;

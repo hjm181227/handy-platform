@@ -5,14 +5,21 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // 환경변수 로드 (envDir에서 .env 파일들을 읽음)
-  const env = loadEnv(mode, process.cwd() + '/packages/web', '')
+  // 환경변수 로드 (이 config 파일이 있는 디렉토리 = packages/web 기준)
+  // process.cwd()를 쓰면 실행 위치(루트/packages/web)에 따라 경로가 달라져
+  // CI(working-directory: packages/web)에서는 .env를 못 찾는다.
+  const env = loadEnv(mode, __dirname, '')
+
+  // Sentry 소스맵 업로드가 실제로 가능한 경우에만 소스맵을 생성한다.
+  // 토큰이 없는데 소스맵만 만들면 업로드도, 업로드 후 삭제도 일어나지 않아
+  // dist/**/*.map(수십 MB)이 그대로 배포되어 전체 소스가 공개된다.
+  const sentryEnabled = Boolean(env.SENTRY_AUTH_TOKEN)
 
   return {
   plugins: [
     react(),
-    // Sentry 소스맵 업로드 (프로덕션 빌드 시에만, AUTH_TOKEN 있을 때만)
-    env.SENTRY_AUTH_TOKEN ? sentryVitePlugin({
+    // Sentry 소스맵 업로드 (AUTH_TOKEN 있을 때만)
+    sentryEnabled ? sentryVitePlugin({
       org: env.SENTRY_ORG || 'handy',
       project: env.SENTRY_PROJECT || 'handy-web',
       authToken: env.SENTRY_AUTH_TOKEN,
@@ -22,7 +29,7 @@ export default defineConfig(({ mode }) => {
     }) : null,
   ].filter(Boolean),
   build: {
-    sourcemap: true,
+    sourcemap: sentryEnabled,
   },
   // Vite가 .env 파일을 찾을 디렉토리 (현재 config 파일 위치 기준)
   envDir: '.',
