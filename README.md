@@ -1,5 +1,7 @@
 # Handy Platform
 
+> Handy 부활 프로젝트의 미완료 작업과 권장 재개 순서는 [보류 작업 기록](./docs/revival/DEFERRED_WORK.md)에서 관리합니다.
+
 React Native WebView 기반 쇼핑몰 하이브리드 앱
 
 ## 🚀 빠른 시작
