@@ -4,10 +4,32 @@ export interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: string;
   headers?: Record<string, string>;
+  /**
+   * 자동 재시도 여부. 생략하면 메서드의 멱등성에 따라 결정된다
+   * (GET/HEAD/OPTIONS/PUT/DELETE는 재시도, POST/PATCH는 재시도 안 함).
+   * 읽기 목적의 POST처럼 재시도가 안전한 경우에만 true를 명시한다.
+   */
   enableRetry?: boolean;
   timeout?: number;
   disableAutoRetry?: boolean; // 수동 재시도 시 자동 재시도 비활성화
   skipTokenExpiredHandler?: boolean; // 로그인 등 공개 API에서 401 에러 시 토큰 만료 처리 스킵
+}
+
+/**
+ * HTTP 명세상 재시도해도 안전한(멱등) 메서드.
+ *
+ * POST/PATCH가 제외된 이유: 요청이 서버에 도달해 처리되는 중에 클라이언트 타임아웃
+ * (기본 15초)이나 5xx가 발생하면 재시도가 같은 쓰기 작업을 다시 보낸다.
+ * 결제 승인/주문 생성에서 이는 중복 결제·중복 주문으로 이어진다.
+ */
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
+
+/**
+ * 해당 HTTP 메서드를 자동 재시도해도 안전한지 여부.
+ * 웹/모바일의 별도 request 구현도 이 판정을 공유해야 한다.
+ */
+export function isRetryableMethod(method?: string): boolean {
+  return IDEMPOTENT_METHODS.has((method || 'GET').toUpperCase());
 }
 
 export abstract class BaseApiService {
@@ -38,11 +60,13 @@ export abstract class BaseApiService {
       method = 'GET',
       body,
       headers = {},
-      enableRetry = true,
       timeout = this.timeout,
       disableAutoRetry = false,
       skipTokenExpiredHandler = false
     } = options;
+
+    // 호출부가 명시하지 않았으면 메서드의 멱등성을 따른다.
+    const enableRetry = options.enableRetry ?? isRetryableMethod(method);
 
     const makeRequest = async (): Promise<T> => {
       const url = `${this.baseURL}${endpoint}`;

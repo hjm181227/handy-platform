@@ -8,6 +8,7 @@ buildscript {
         targetSdkVersion = 35
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.1.20"
+        REACT_NATIVE_NODE_MODULES_DIR = file("../../../node_modules/react-native").absolutePath
     }
     repositories {
         google()
@@ -16,7 +17,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:8.12.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
-        classpath(files("../../../node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build/libs/react-native-gradle-plugin.jar"))
+        classpath("com.facebook.react:react-native-gradle-plugin")
         // Firebase google-services plugin (processes google-services.json for FCM)
         classpath("com.google.gms:google-services:4.4.4")
     }

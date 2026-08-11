@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@handy-platform/shared';
 
 const STORE_LINKS = {
-  appStore: '#app-store',
-  googlePlay: '#google-play',
+  appStore: 'https://apps.apple.com/us/app/handystudio-네일아트-디자인-툴/id6762440626?l=ko',
+  googlePlay: 'https://play.google.com/store/apps/details?id=com.handynaildesign.app&pcampaignid=web_share',
 };
 
 const BASE_URL = 'https://h-andy.com';
@@ -111,6 +111,8 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <a
                   href={STORE_LINKS.appStore}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto justify-center"
                 >
                   <AppleIcon />
@@ -118,6 +120,8 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
                 </a>
                 <a
                   href={STORE_LINKS.googlePlay}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-gray-900 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center"
                 >
                   <GooglePlayIcon />
@@ -267,6 +271,8 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
                 href={STORE_LINKS.appStore}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto justify-center"
               >
                 <AppleIcon />
@@ -274,6 +280,8 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               </a>
               <a
                 href={STORE_LINKS.googlePlay}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-gray-900 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center"
               >
                 <GooglePlayIcon />
