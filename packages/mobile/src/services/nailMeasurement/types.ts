@@ -13,6 +13,9 @@ export interface NailSegmentationResult {
   maskOverlayBase64?: string;   // 녹색 반투명 마스크 오버레이 (투명 배경)
   // Lambda에서 감지한 영역 (mask가 빈 경우 사용)
   serverRegions?: NailRegion[];
+  // 서버 카드 실측 검출 (가정 스케일 대체). 'detected'면 cardWidthPixelsDetected 사용
+  cardSource?: 'detected' | 'estimated';
+  cardWidthPixelsDetected?: number;  // 800 모델공간 픽셀폭
 }
 
 // 개별 손톱 영역

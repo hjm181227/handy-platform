@@ -462,6 +462,9 @@ class NailSegmentationAPI {
         maskOverlayBase64: data.mask_overlay,
         // Lambda에서 감지한 영역
         serverRegions,
+        // 카드 실측 검출 (있으면 스케일에 사용)
+        cardSource: data.card_source,
+        cardWidthPixelsDetected: data.card_width_pixels_detected ?? undefined,
       };
 
     } catch (error) {

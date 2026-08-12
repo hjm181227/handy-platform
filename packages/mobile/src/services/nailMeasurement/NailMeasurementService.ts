@@ -107,7 +107,17 @@ class NailMeasurementService {
 
       // 손가락별 분류
       const fingerRegions = classifyFingersByPosition(regions, isThumbOnly, selectedHand);
-      const pixelToMmRatio = calculatePixelToMmRatio(cardWidthPixels);
+      // 카드 실측 검출값이 있으면 그것으로 스케일 계산 (가정 기반 가이드 추정치 대체).
+      // 검출 실패 시 기존 가이드 추정치로 폴백.
+      const effectiveCardWidth =
+        segmentationResult.cardSource === 'detected' && segmentationResult.cardWidthPixelsDetected
+          ? segmentationResult.cardWidthPixelsDetected
+          : cardWidthPixels;
+      if (segmentationResult.cardSource === 'detected') {
+        console.log('[NailMeasurementService] Using DETECTED card width:', effectiveCardWidth,
+          '(guide estimate was', cardWidthPixels + ')');
+      }
+      const pixelToMmRatio = calculatePixelToMmRatio(effectiveCardWidth);
 
       measurements = [];
       fingerRegions.forEach((region, finger) => {
