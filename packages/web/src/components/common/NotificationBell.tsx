@@ -21,9 +21,13 @@ export function useUnreadNotificationCount() {
 
   useEffect(() => {
     refresh();
+    window.addEventListener('notifications:changed', refresh);
     // 60초마다 폴링
     const interval = setInterval(refresh, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications:changed', refresh);
+    };
   }, [refresh]);
 
   return { count, refresh };

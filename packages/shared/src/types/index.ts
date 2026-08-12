@@ -503,18 +503,22 @@ export interface SellerInfo {
 // 판매자 신청 관련 타입
 export interface SellerApplication {
   sellerInfoId: string;
-  userId: string;
+  userId?: string;
+  userUuid?: string;
   brandName: string;
   representativeName?: string;
-  businessNumber: string;
+  businessNumber?: string;
   businessType?: string;
   businessCategory?: string;
   businessSector?: string;
   contactEmail: string;
-  contactPhone: string;
-  status: 'pending' | 'approved' | 'rejected';
+  contactPhone?: string;
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
   hasVerificationDocuments: boolean;
   documentsCount: number;
+  applicationProgress?: number;
+  missingFields?: string[];
+  submittedAt?: string;
   createdAt: string;
   updatedAt: string;
   rejectionReason?: string;
@@ -532,7 +536,12 @@ export interface SellerApplication {
     accountNumber: string;
     accountHolder: string;
   };
-  verificationDocuments?: string[];
+  verificationDocuments?: Array<{
+    type: string;
+    url: string;
+    uploadedAt?: string;
+  }>;
+  verificationNote?: string;
 }
 
 // 판매자별 배송 정보
@@ -930,7 +939,8 @@ export interface PushNotification {
 export interface PresignedUrlRequest {
   filename: string;
   contentType: string;  // 다시 필수 필드로 복원
-  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message' | 'snap';
+  uploadType: 'product-main' | 'product-detail' | 'review' | 'avatar' | 'category' | 'coupon' | 'qr-code' | 'general' | 'seller-document' | 'banner' | 'brand-profile' | 'brand-banner' | 'custom-order-reference' | 'chat-message' | 'snap';
+  fileSize?: number;
 }
 
 export interface PresignedUrlResponse {
