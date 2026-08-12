@@ -82,9 +82,10 @@ FCM**으로 전달한다 (입점 신청 알림에 만든 인프라 재사용). �
 | 옵션 | 월 비용 | 판단 |
 |---|---|---|
 | 기존: 전용 EC2 + ElastiCache + Mongo | ~$45+ | 사용량 대비 과함 (이래서 껐던 것) |
-| **동거: 메인 EC2에 컨테이너 추가** | **~$0 (한계비용)** | ✅ 권장. NestJS 256MB면 충분, 메인 MongoDB 재사용, 단일 인스턴스라 Redis 어댑터 제거 |
+| ~~동거: 메인 EC2에 컨테이너 추가~~ | ~$0 | ❌ 철회 — 메인 프로덕션 EC2는 Spot+Blue-Green이라 인스턴스가 배포마다 교체됨. 수동 컨테이너는 소멸한다 |
+| **전용 t4g.micro + MVP compose** | **~$7** | ✅ 권장. Redis 제거, Mongo 컨테이너 동거, Caddy TLS. 상세: Handy_Chat_Ricecake `docs/deployment/LOW_COST_REVIVAL.md` |
 | Serverless 재작성 (APIGW WS/Lambda, Ably 등) | 종량제 | 재작성 비용 큼 — 트래픽 생기면 재검토 |
-| 야간 자동 정지(sleep) | 절반 수준 | 동거 시 불필요 |
+| 야간 자동 정지(sleep) | 절반 수준 | $7 구성에서는 실익 없음 |
 
 구현 요점:
 - `docker-compose.unified.yml`(이미 존재)을 기반으로 메인 서버 EC2에 chat 컨테이너 동거
