@@ -155,6 +155,117 @@ def predict(image: np.ndarray) -> np.ndarray:
 
 
 # ============================================
+# Card Detection (실측 스케일 — 가정 기반 스케일의 지배적 오차 제거)
+# ============================================
+#
+# 배경: 기존에는 "사용자가 카드를 화면 가이드에 완벽히 맞췄다"는 가정으로
+# 카드 픽셀폭을 추정했다. 카드가 유일한 스케일 기준이라, 이 가정이 조금만
+# 틀려도 모든 손톱이 같은 비율로 틀렸다. 여기서는 크롭된 이미지(마스크와
+# 동일 좌표계)에서 카드 사각형을 실제로 검출해 픽셀폭을 측정한다.
+#
+# 비파괴 원칙: 검출 실패/비활성 시 호출부는 기존 추정치로 폴백한다.
+
+def _order_quad(pts: np.ndarray) -> np.ndarray:
+    """4점을 tl, tr, br, bl 순서로 정렬."""
+    pts = pts.astype(np.float32)
+    s = pts.sum(axis=1)
+    diff = pts[:, 0] - pts[:, 1]  # x - y
+    tl = pts[np.argmin(s)]
+    br = pts[np.argmax(s)]
+    tr = pts[np.argmax(diff)]
+    bl = pts[np.argmin(diff)]
+    return np.array([tl, tr, br, bl], dtype=np.float32)
+
+
+def _quad_edges(quad: np.ndarray) -> Tuple[float, float]:
+    """정렬된 quad에서 (평균 가로변, 평균 세로변) 길이."""
+    tl, tr, br, bl = quad
+    top = float(np.hypot(*(tr - tl)))
+    bottom = float(np.hypot(*(br - bl)))
+    left = float(np.hypot(*(bl - tl)))
+    right = float(np.hypot(*(br - tr)))
+    return (top + bottom) / 2.0, (left + right) / 2.0
+
+
+def detect_card(
+    cropped_rgb: np.ndarray,
+    guide_card_width_pixels: float,
+    input_size: int = INPUT_SIZE,
+) -> Optional[dict]:
+    """크롭된 RGB 이미지(마스크와 동일 좌표계)에서 신용카드 사각형을 검출.
+
+    Returns:
+        {long_side, short_side, aspect_ratio, aspect_error, corners, score} 또는
+        검출 실패 시 None. long_side가 카드의 가로(85.6mm)에 해당하는 픽셀폭이다.
+    """
+    try:
+        gray = cv2.cvtColor(cropped_rgb, cv2.COLOR_RGB2GRAY)
+        gray = cv2.bilateralFilter(gray, 9, 60, 60)  # 엣지 보존 스무딩
+
+        # 배경 대비가 다양하므로 여러 엣지 전략을 시도
+        variants = [
+            cv2.Canny(gray, 40, 120),
+            cv2.Canny(gray, 60, 180),
+        ]
+        otsu_t, _ = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        variants.append(cv2.Canny(gray, int(otsu_t * 0.5), int(otsu_t)))
+
+        kernel = np.ones((3, 3), np.uint8)
+        center = np.array([input_size / 2.0, input_size / 2.0], dtype=np.float32)
+        min_area = (input_size * input_size) * 0.04  # 카드는 프레임의 최소 4%
+
+        best: Optional[dict] = None
+        for edges in variants:
+            closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=2)
+            contours, _ = cv2.findContours(closed, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            for c in contours:
+                area = cv2.contourArea(c)
+                if area < min_area:
+                    continue
+                peri = cv2.arcLength(c, True)
+                approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+                if len(approx) != 4 or not cv2.isContourConvex(approx):
+                    continue
+
+                quad = _order_quad(approx.reshape(4, 2))
+                w_edge, h_edge = _quad_edges(quad)
+                long_side = max(w_edge, h_edge)
+                short_side = min(w_edge, h_edge)
+                if short_side <= 1:
+                    continue
+
+                aspect = long_side / short_side
+                aspect_error = abs(aspect - CARD_ASPECT_RATIO) / CARD_ASPECT_RATIO
+                if aspect_error > 0.20:  # 카드 종횡비 1.586 ±20%
+                    continue
+
+                # 가이드 추정치와 크게 어긋나면 오검출로 간주 (±45%)
+                if guide_card_width_pixels > 0:
+                    guide_err = abs(long_side - guide_card_width_pixels) / guide_card_width_pixels
+                    if guide_err > 0.45:
+                        continue
+
+                quad_center = quad.mean(axis=0)
+                center_dist = float(np.hypot(*(quad_center - center)))
+                # 큰 면적 + 중앙 + 낮은 종횡비 오차를 선호
+                score = area - center_dist * 50.0 - aspect_error * area
+
+                if best is None or score > best["score"]:
+                    best = {
+                        "score": float(score),
+                        "long_side": float(long_side),
+                        "short_side": float(short_side),
+                        "aspect_ratio": float(aspect),
+                        "aspect_error": float(aspect_error),
+                        "corners": quad.astype(float).tolist(),
+                    }
+        return best
+    except Exception as e:  # 검출은 부가 기능 — 실패해도 측정은 계속
+        print(f"[Lambda] Card detection error (fallback to estimate): {e}")
+        return None
+
+
+# ============================================
 # Post-processing (server.py에서 이식)
 # ============================================
 
@@ -431,9 +542,21 @@ def handle_segment_with_overlay(event: dict) -> dict:
     # 추론
     mask = predict(img_rgb)
 
-    # 카드 가이드 필터링
-    if card_width_pixels > 0:
-        mask = mask_card_guide_region(mask, card_width_pixels)
+    # 카드 실측 검출 (기본 활성, 실패 시 가이드 추정치로 폴백)
+    use_card_detection = query_params.get("detect_card", "true").lower() == "true"
+    card_source = "estimated"
+    card_detection = None
+    effective_card_width = card_width_pixels
+    if use_card_detection and card_width_pixels > 0:
+        cropped_rgb = center_crop_and_resize(img_rgb, INPUT_SIZE)
+        card_detection = detect_card(cropped_rgb, card_width_pixels, INPUT_SIZE)
+        if card_detection is not None:
+            effective_card_width = card_detection["long_side"]
+            card_source = "detected"
+
+    # 카드 가이드 필터링 (실측 폭이 있으면 그 폭 기준)
+    if effective_card_width > 0:
+        mask = mask_card_guide_region(mask, effective_card_width)
 
     height, width = mask.shape
 
@@ -452,8 +575,8 @@ def handle_segment_with_overlay(event: dict) -> dict:
 
     # 영역 감지 (모바일에서 직접 사용)
     regions = find_connected_components(mask, threshold=THRESHOLD)
-    if card_width_pixels > 0:
-        regions = filter_regions_by_card_guide(regions, card_width_pixels, INPUT_SIZE)
+    if effective_card_width > 0:
+        regions = filter_regions_by_card_guide(regions, effective_card_width, INPUT_SIZE)
 
     # 통계
     mask_stats = {
@@ -478,6 +601,15 @@ def handle_segment_with_overlay(event: dict) -> dict:
             "height": height,
             "processing_time_ms": round(processing_time_ms, 2),
             "mask_stats": mask_stats,
+            # 실측 카드 스케일: 클라이언트가 mm 변환에 이 값을 쓰면 가정 오차가 사라진다.
+            # 검출 실패 시 card_source="estimated"이며 클라이언트는 기존 가이드 추정치를 쓴다.
+            "card_source": card_source,
+            "card_width_pixels_detected": round(effective_card_width, 1) if card_source == "detected" else None,
+            "card_detection": {
+                "aspect_ratio": round(card_detection["aspect_ratio"], 3),
+                "aspect_error": round(card_detection["aspect_error"], 3),
+                "corners": card_detection["corners"],
+            } if card_detection is not None else None,
         }),
     }
 
@@ -528,9 +660,11 @@ def handle_measure(event: dict) -> dict:
     if image_bytes is None:
         return error_response(400, "No image provided")
 
-    card_width_pixels = float(query_params.get("card_width_pixels", "280"))
+    guide_card_width_pixels = float(query_params.get("card_width_pixels", "280"))
     is_thumb_only = query_params.get("is_thumb_only", "true").lower() == "true"
     include_mask = query_params.get("include_mask", "false").lower() == "true"
+    # 카드 실측 검출 (기본 활성, 실패 시 가이드 추정치로 폴백)
+    use_card_detection = query_params.get("detect_card", "true").lower() == "true"
 
     img = decode_and_orient_image(image_bytes)
     if img is None:
@@ -538,6 +672,22 @@ def handle_measure(event: dict) -> dict:
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     mask = predict(img_rgb)
+
+    # 카드 실측: 마스크와 동일한 crop 좌표계에서 카드를 검출해 실제 픽셀폭 사용
+    card_source = "estimated"
+    card_detection = None
+    card_width_pixels = guide_card_width_pixels
+    if use_card_detection:
+        cropped_rgb = center_crop_and_resize(img_rgb, INPUT_SIZE)
+        card_detection = detect_card(cropped_rgb, guide_card_width_pixels, INPUT_SIZE)
+        if card_detection is not None:
+            card_width_pixels = card_detection["long_side"]
+            card_source = "detected"
+            print(f"[Lambda] Card detected: {card_width_pixels:.1f}px "
+                  f"(guide estimate {guide_card_width_pixels:.1f}px, "
+                  f"aspect_err {card_detection['aspect_error']:.3f})")
+        else:
+            print(f"[Lambda] Card not detected, using guide estimate {guide_card_width_pixels:.1f}px")
 
     # 연결 영역 탐지
     regions = find_connected_components(mask, threshold=THRESHOLD)
@@ -591,6 +741,15 @@ def handle_measure(event: dict) -> dict:
             "pixel_to_mm_ratio": round(pixel_to_mm_ratio, 4),
             "processing_time_ms": round(processing_time_ms, 2),
             "mask_base64": encode_mask_base64(mask) if include_mask else None,
+            # 진단: 스케일이 실측 카드에서 왔는지, 추정치 대비 얼마나 다른지
+            "card_source": card_source,
+            "card_width_pixels_used": round(card_width_pixels, 1),
+            "card_width_pixels_estimate": round(guide_card_width_pixels, 1),
+            "card_detection": {
+                "aspect_ratio": round(card_detection["aspect_ratio"], 3),
+                "aspect_error": round(card_detection["aspect_error"], 3),
+                "corners": card_detection["corners"],
+            } if card_detection is not None else None,
         }),
     }
 
