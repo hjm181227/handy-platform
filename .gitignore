@@ -111,3 +111,5 @@ google-services.json
 # 카드 검출 튜닝용 로컬 환경 (커밋 제외)
 packages/ml/venv-cardtune/
 packages/ml/test_images/
+packages/ml/lambda/model.onnx
+packages/ml/lambda/model.onnx.data
