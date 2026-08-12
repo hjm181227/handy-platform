@@ -19,7 +19,8 @@ from typing import List, Optional, Tuple
 
 import cv2
 import numpy as np
-import onnxruntime as ort
+# onnxruntime은 추론에만 필요하므로 지연 import한다 (get_session 내부).
+# 이렇게 하면 카드 검출 등 CV 로직을 onnxruntime 설치 없이 import·튜닝할 수 있다.
 
 # ============================================
 # Configuration
@@ -39,7 +40,7 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
 # Global ONNX session (재사용 — Lambda warm start에서 유지)
-_session: Optional[ort.InferenceSession] = None
+_session = None  # type: Optional["ort.InferenceSession"]
 
 
 def decode_and_orient_image(image_bytes: bytes) -> Optional[np.ndarray]:
@@ -71,10 +72,11 @@ def decode_and_orient_image(image_bytes: bytes) -> Optional[np.ndarray]:
     return img
 
 
-def get_session() -> ort.InferenceSession:
+def get_session():
     """ONNX 세션을 로드하거나 캐시된 세션을 반환합니다."""
     global _session
     if _session is None:
+        import onnxruntime as ort  # 지연 import (CV 튜닝은 onnxruntime 불필요)
         print(f"[Lambda] Loading ONNX model: {MODEL_PATH}")
         start = time.time()
         _session = ort.InferenceSession(
