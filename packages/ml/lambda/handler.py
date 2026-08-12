@@ -354,6 +354,32 @@ def mask_card_guide_region(
     return filtered
 
 
+def measure_nail_width(contour: np.ndarray) -> float:
+    """손톱 폭을 회전 불변으로 측정한다.
+
+    기존에는 축 정렬 boundingRect의 폭(w)을 썼는데, 손가락이 화면에서 기울면
+    그 폭이 실제 손톱 폭보다 과대측정된다 (예: 30° 기울면 수 % 오차).
+
+    이 앱의 촬영은 손가락을 대략 세로로 세워 찍으므로, 손톱 영역의 두 주축(PCA)
+    중 '더 수평에 가까운 축'이 폭 축이다. 그 축에 투영한 최대 caliper 거리를
+    폭으로 반환한다. 손톱이 기울어도 폭 축이 손톱을 따라 회전하므로 폭이 안정적이다.
+    (기울기 45° 미만에서 유효 — 실제 촬영 범위를 충분히 포함)
+    """
+    pts = contour.reshape(-1, 2).astype(np.float64)
+    if len(pts) < 5:
+        _, _, w, _ = cv2.boundingRect(contour)
+        return float(w)
+    mean = pts.mean(axis=0)
+    centered = pts - mean
+    cov = np.cov(centered.T)
+    _, eigvecs = np.linalg.eigh(cov)  # 열이 고유벡터
+    axis0, axis1 = eigvecs[:, 0], eigvecs[:, 1]
+    # x성분(수평)이 큰 축을 폭 축으로 (세로 손가락 prior)
+    width_axis = axis0 if abs(axis0[0]) >= abs(axis1[0]) else axis1
+    proj = centered @ width_axis
+    return float(proj.max() - proj.min())
+
+
 def find_connected_components(mask: np.ndarray, threshold: float = 0.5) -> List[dict]:
     """마스크에서 연결 영역(손톱)을 찾습니다."""
     binary_mask = (mask > threshold).astype(np.uint8)
@@ -373,6 +399,7 @@ def find_connected_components(mask: np.ndarray, threshold: float = 0.5) -> List[
             continue
 
         x, y, w, h = cv2.boundingRect(contour)
+        width_rot = measure_nail_width(contour)  # 회전 불변 폭
         M = cv2.moments(contour)
         if M["m00"] > 0:
             cx = int(M["m10"] / M["m00"])
@@ -383,7 +410,9 @@ def find_connected_components(mask: np.ndarray, threshold: float = 0.5) -> List[
         regions.append({
             "id": i,
             "bounding_box": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)},
-            "width_pixels": int(w),
+            # width_pixels: 실제 측정에 쓰는 폭(회전 불변). bbox 폭은 참고용으로 병기.
+            "width_pixels": round(width_rot, 1),
+            "width_pixels_bbox": int(w),
             "height_pixels": int(h),
             "center_x": int(cx),
             "center_y": int(cy),
