@@ -156,6 +156,10 @@ export function CustomOrderDetailPage({ uuid, onGo }: CustomOrderDetailPageProps
               <span className="text-[#71717A]">네일 길이</span>
               <span className="font-medium text-[#131211]">{LENGTH_LABELS[specs.length] || specs.length}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-[#71717A]">주문 수량</span>
+              <span className="font-medium text-[#131211]">{(specs as any).quantity || 1}세트</span>
+            </div>
             {specs.desiredColor && (
               <div className="flex justify-between">
                 <span className="text-[#71717A]">원하는 컬러</span>

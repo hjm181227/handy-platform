@@ -6,6 +6,7 @@ import {
   getCurrentEnvironment,
 } from '@handy-platform/shared/src/config/api';
 import { getChatServiceWeb } from '@handy-platform/shared/src/services/chat/ChatService.web';
+import { chatFetch, isChatMarkedDown } from '../lib/chat/chatHealth';
 
 /**
  * 헤더 채팅 버튼 미확인 카운트
@@ -28,9 +29,14 @@ export function useChatUnreadCount() {
       setCount(0);
       return;
     }
+    // 서킷브레이커: 채팅 서버가 다운으로 표시돼 있으면 시도 자체를 건너뛴다
+    // (꺼진 채팅 서버 때문에 페이지마다 타임아웃을 기다리지 않도록)
+    if (isChatMarkedDown()) {
+      return;
+    }
     try {
       const url = getChatApiUrl() + CHAT_ENDPOINTS.UNREAD_TOTAL;
-      const res = await fetch(url, {
+      const res = await chatFetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
@@ -58,30 +64,35 @@ export function useChatUnreadCount() {
     let unsubscribe: (() => void) | null = null;
     let cancelled = false;
 
-    // 1) 초기 fetch
-    void fetchTotal();
-
-    // 2) Socket 연결 + 이벤트 구독 (서버가 user:${userId} 룸에 자동 join 시킴)
-    const chat = getChatServiceWeb();
-    chat
-      .connect({ token })
-      .then(() => {
-        if (cancelled) return;
-        unsubscribe = chat.onUnreadTotal(({ total }) => {
-          setCount(typeof total === 'number' ? total : 0);
-        });
-      })
-      .catch((e) => {
-        console.warn('[useChatUnreadCount] Socket connect failed:', e);
-      });
-
-    // 3) 탭 복귀 시 refetch (소켓 재연결 갭 보완)
+    // 탭 복귀 시 refetch (소켓 재연결 갭 보완). fetchTotal이 서킷브레이커를
+    // 확인하므로 다운 상태에서는 조용히 건너뛴다.
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         void fetchTotal();
       }
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
+
+    // 1) 초기 fetch
+    void fetchTotal();
+
+    // 2) Socket 연결 + 이벤트 구독 (서버가 user:${userId} 룸에 자동 join 시킴)
+    // 채팅 서버 다운 상태면 소켓 연결은 시도하지 않는다 (탭 복귀 refetch가
+    // 성공하면 다운 표시가 풀리고, 다음 마운트부터 소켓이 다시 붙는다)
+    if (!isChatMarkedDown()) {
+      const chat = getChatServiceWeb();
+      chat
+        .connect({ token })
+        .then(() => {
+          if (cancelled) return;
+          unsubscribe = chat.onUnreadTotal(({ total }) => {
+            setCount(typeof total === 'number' ? total : 0);
+          });
+        })
+        .catch((e) => {
+          console.warn('[useChatUnreadCount] Socket connect failed:', e);
+        });
+    }
 
     return () => {
       cancelled = true;

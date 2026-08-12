@@ -203,6 +203,8 @@ function PublicCompleteStep({ onGoToManagement }: { onGoToManagement: () => void
 // 공개 주문서용 DetailsStep 래퍼 (title 필드 추가)
 function PublicDetailsStep({
   title,
+  quantity,
+  onUpdateQuantity,
   desiredColor,
   request,
   attachments,
@@ -217,6 +219,8 @@ function PublicDetailsStep({
   totalSteps,
 }: {
   title: string;
+  quantity: number;
+  onUpdateQuantity: (q: number) => void;
   desiredColor: string;
   request: string;
   attachments: File[];
@@ -258,6 +262,21 @@ function PublicDetailsStep({
             className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#E85A6B]"
             maxLength={100}
           />
+        </div>
+
+        {/* 주문 수량 (세트) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">주문 수량</label>
+          <div className="flex items-center gap-3">
+            <button type="button" aria-label="수량 줄이기" disabled={quantity <= 1}
+              onClick={() => onUpdateQuantity(Math.max(1, quantity - 1))}
+              className="w-11 h-11 rounded-xl border border-gray-300 text-lg font-bold disabled:opacity-40">−</button>
+            <div className="flex-1 text-center"><span className="text-xl font-bold">{quantity}</span><span className="ml-1 text-sm text-gray-500">세트</span></div>
+            <button type="button" aria-label="수량 늘리기" disabled={quantity >= 100}
+              onClick={() => onUpdateQuantity(Math.min(100, quantity + 1))}
+              className="w-11 h-11 rounded-xl border border-gray-300 text-lg font-bold disabled:opacity-40">+</button>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">판매자는 수량을 반영한 총액으로 견적을 보냅니다.</p>
         </div>
 
         {/* 기존 DetailsStep 필드들 */}
@@ -637,6 +656,8 @@ export function PublicCustomOrderPage({ onGo }: { onGo: (to: string) => void }) 
         return (
           <PublicDetailsStep
             title={data.title}
+            quantity={data.quantity}
+            onUpdateQuantity={(q: number) => updateData('quantity', q)}
             desiredColor={data.desiredColor}
             request={data.request}
             attachments={data.attachments}

@@ -2473,6 +2473,7 @@ export interface CreateCustomOrderRequest {
       left: { thumb: string; index: string; middle: string; ring: string; pinky: string };
       right: { thumb: string; index: string; middle: string; ring: string; pinky: string };
     };
+    quantity?: number;     // 세트 수 (기본 1). 견적 price는 수량 포함 총액
     desiredColor?: string;
     desiredDate?: string;  // ISO 문자열: "2025-12-25"
     designNotes?: string;
