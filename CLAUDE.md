@@ -256,13 +256,8 @@ npx tsc --noEmit --project packages/mobile
 - **프로덕션 환경**: `http://15.165.5.64:3000` (프로덕션 서버)
 
 ### 테스트 계정
-```javascript
-// 프로덕션 일반 사용자
-const testUser = {
-  email: "usertest@handy.com",
-  password: "password123"
-}
-```
+테스트 계정은 개발·스테이징 전용이며 비밀번호는 저장소에 기록하지 않는다.
+(계정 관리 정책: handy-app-server의 CLAUDE.md "Test Accounts" 참조)
 
 ### API 사용 예시
 ```javascript
