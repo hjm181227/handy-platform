@@ -187,78 +187,136 @@ def _quad_edges(quad: np.ndarray) -> Tuple[float, float]:
     return (top + bottom) / 2.0, (left + right) / 2.0
 
 
+# 종횡비 게이트: 원근 편향은 aspect_error와 거의 1:1로 움직인다
+# (8.4% 편향 → aspect_error 0.090). 0.12로 두면 최악 ~12% 편향까지만 통과.
+# 근본 해결(호모그래피 원근 보정)은 후속. 지금은 near-frontal 검출만 신뢰.
+CARD_ASPECT_ERROR_GATE = 0.12
+CARD_MIN_AREA_RATIO = 0.03  # 카드는 프레임의 최소 3%
+
+
+def _build_edge_maps(cropped_rgb: np.ndarray) -> List[np.ndarray]:
+    """저대비(흰 카드+흰 배경) 상황까지 잡기 위해 다채널·적응형 엣지맵을 만든다.
+
+    흰 카드/흰 벽은 grayscale 대비가 낮아 Canny 엣지가 끊긴다. 채도(S)·명도(V)
+    채널과 국소 대비 기반 adaptive threshold를 병용하면 한 채널에서라도 경계가
+    살아난다. 각 맵은 이후 morphology close로 끊긴 외곽을 잇는다.
+    """
+    maps: List[np.ndarray] = []
+    gray = cv2.cvtColor(cropped_rgb, cv2.COLOR_RGB2GRAY)
+    gray = cv2.bilateralFilter(gray, 9, 60, 60)
+
+    maps.append(cv2.Canny(gray, 40, 120))
+    maps.append(cv2.Canny(gray, 60, 180))
+    otsu_t, _ = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    maps.append(cv2.Canny(gray, int(otsu_t * 0.5), int(otsu_t)))
+
+    # 국소 대비: 흰-흰 경계도 지역적으로는 미세한 밝기 차가 있어 살아난다
+    adaptive = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 21, 4
+    )
+    maps.append(cv2.Canny(adaptive, 40, 120))
+
+    # HSV 채도/명도 채널 (색·재질이 다른 카드 경계 보강)
+    hsv = cv2.cvtColor(cropped_rgb, cv2.COLOR_RGB2HSV)
+    for ch in (1, 2):  # S, V
+        c = cv2.bilateralFilter(hsv[:, :, ch], 9, 60, 60)
+        maps.append(cv2.Canny(c, 40, 120))
+    return maps
+
+
+def _evaluate_candidate(long_side, short_side, box_pts, center,
+                        guide_card_width_pixels) -> Optional[dict]:
+    """카드 후보(회전 사각형)를 게이트 통과 시 dict로, 아니면 None."""
+    if short_side <= 1:
+        return None
+    aspect = long_side / short_side
+    aspect_error = abs(aspect - CARD_ASPECT_RATIO) / CARD_ASPECT_RATIO
+    if aspect_error > CARD_ASPECT_ERROR_GATE:
+        return None
+    if guide_card_width_pixels > 0:
+        guide_err = abs(long_side - guide_card_width_pixels) / guide_card_width_pixels
+        if guide_err > 0.45:
+            return None
+    quad = _order_quad(np.array(box_pts, dtype=np.float32))
+    quad_center = quad.mean(axis=0)
+    center_dist = float(np.hypot(*(quad_center - center)))
+    area = long_side * short_side
+    score = area - center_dist * 50.0 - aspect_error * area
+    return {
+        "score": float(score),
+        "long_side": float(long_side),
+        "short_side": float(short_side),
+        "aspect_ratio": float(aspect),
+        "aspect_error": float(aspect_error),
+        "corners": quad.astype(float).tolist(),
+    }
+
+
 def detect_card(
     cropped_rgb: np.ndarray,
     guide_card_width_pixels: float,
     input_size: int = INPUT_SIZE,
+    debug: bool = False,
 ) -> Optional[dict]:
     """크롭된 RGB 이미지(마스크와 동일 좌표계)에서 신용카드 사각형을 검출.
 
+    다채널 엣지 → 강한 morphology close → (approxPolyDP 4각형 OR minAreaRect)
+    후보를 종횡비·가이드 게이트로 검증. minAreaRect는 외곽이 살짝 끊기거나
+    모서리가 둥근 컨투어에도 강해, 저대비 상황의 검출률을 높인다.
+
     Returns:
-        {long_side, short_side, aspect_ratio, aspect_error, corners, score} 또는
-        검출 실패 시 None. long_side가 카드의 가로(85.6mm)에 해당하는 픽셀폭이다.
+        {long_side, short_side, aspect_ratio, aspect_error, corners, score} 또는 None.
+        long_side가 카드 가로(85.6mm)에 해당하는 픽셀폭.
     """
     try:
-        gray = cv2.cvtColor(cropped_rgb, cv2.COLOR_RGB2GRAY)
-        gray = cv2.bilateralFilter(gray, 9, 60, 60)  # 엣지 보존 스무딩
-
-        # 배경 대비가 다양하므로 여러 엣지 전략을 시도
-        variants = [
-            cv2.Canny(gray, 40, 120),
-            cv2.Canny(gray, 60, 180),
-        ]
-        otsu_t, _ = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        variants.append(cv2.Canny(gray, int(otsu_t * 0.5), int(otsu_t)))
-
-        kernel = np.ones((3, 3), np.uint8)
         center = np.array([input_size / 2.0, input_size / 2.0], dtype=np.float32)
-        min_area = (input_size * input_size) * 0.04  # 카드는 프레임의 최소 4%
+        min_area = (input_size * input_size) * CARD_MIN_AREA_RATIO
+        close_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
 
+        stats = {"contours": 0, "area_pass": 0, "shape_pass": 0, "gate_pass": 0}
         best: Optional[dict] = None
-        for edges in variants:
-            closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=2)
+
+        for edges in _build_edge_maps(cropped_rgb):
+            # 끊긴 카드 외곽을 잇는다 (저대비 대응 핵심)
+            closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, close_kernel, iterations=3)
             contours, _ = cv2.findContours(closed, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            stats["contours"] += len(contours)
             for c in contours:
                 area = cv2.contourArea(c)
                 if area < min_area:
                     continue
+                stats["area_pass"] += 1
+
+                candidates = []
+                # 1) 엄격한 4각형
                 peri = cv2.arcLength(c, True)
                 approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-                if len(approx) != 4 or not cv2.isContourConvex(approx):
-                    continue
+                if len(approx) == 4 and cv2.isContourConvex(approx):
+                    quad = _order_quad(approx.reshape(4, 2))
+                    w_edge, h_edge = _quad_edges(quad)
+                    candidates.append((max(w_edge, h_edge), min(w_edge, h_edge), quad))
+                # 2) 회전 사각형(비-4각형·둥근 모서리에 강함)
+                rect = cv2.minAreaRect(c)
+                (rw, rh) = rect[1]
+                if rw > 0 and rh > 0:
+                    box = cv2.boxPoints(rect)
+                    candidates.append((max(rw, rh), min(rw, rh), box))
 
-                quad = _order_quad(approx.reshape(4, 2))
-                w_edge, h_edge = _quad_edges(quad)
-                long_side = max(w_edge, h_edge)
-                short_side = min(w_edge, h_edge)
-                if short_side <= 1:
-                    continue
-
-                aspect = long_side / short_side
-                aspect_error = abs(aspect - CARD_ASPECT_RATIO) / CARD_ASPECT_RATIO
-                if aspect_error > 0.20:  # 카드 종횡비 1.586 ±20%
-                    continue
-
-                # 가이드 추정치와 크게 어긋나면 오검출로 간주 (±45%)
-                if guide_card_width_pixels > 0:
-                    guide_err = abs(long_side - guide_card_width_pixels) / guide_card_width_pixels
-                    if guide_err > 0.45:
+                if candidates:
+                    stats["shape_pass"] += 1
+                for long_side, short_side, box_pts in candidates:
+                    cand = _evaluate_candidate(
+                        long_side, short_side, box_pts, center, guide_card_width_pixels
+                    )
+                    if cand is None:
                         continue
+                    stats["gate_pass"] += 1
+                    if best is None or cand["score"] > best["score"]:
+                        best = cand
 
-                quad_center = quad.mean(axis=0)
-                center_dist = float(np.hypot(*(quad_center - center)))
-                # 큰 면적 + 중앙 + 낮은 종횡비 오차를 선호
-                score = area - center_dist * 50.0 - aspect_error * area
-
-                if best is None or score > best["score"]:
-                    best = {
-                        "score": float(score),
-                        "long_side": float(long_side),
-                        "short_side": float(short_side),
-                        "aspect_ratio": float(aspect),
-                        "aspect_error": float(aspect_error),
-                        "corners": quad.astype(float).tolist(),
-                    }
+        if debug:
+            print(f"[detect_card] funnel {stats} → "
+                  f"{'HIT ' + str(round(best['long_side'],1)) + 'px' if best else 'MISS'}")
         return best
     except Exception as e:  # 검출은 부가 기능 — 실패해도 측정은 계속
         print(f"[Lambda] Card detection error (fallback to estimate): {e}")

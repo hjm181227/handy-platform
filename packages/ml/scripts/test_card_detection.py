@@ -93,10 +93,10 @@ def run_on_image(path: str) -> int:
         return 1
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     cropped = center_crop_and_resize(img_rgb, INPUT_SIZE)
-    # 가이드 추정치 없이(0) 순수 검출
-    result = detect_card(cropped, 0, INPUT_SIZE)
+    # 가이드 추정치 없이(0) 순수 검출 + 퍼널 진단 출력
+    result = detect_card(cropped, 0, INPUT_SIZE, debug=True)
     if result is None:
-        print("카드 미검출. 배경 대비가 낮거나 카드가 프레임 밖일 수 있습니다.")
+        print("카드 미검출. 위 funnel에서 어느 관문(area/shape/gate)에서 막혔는지 확인.")
         return 1
     print(f"검출 성공: long={result['long_side']:.1f}px short={result['short_side']:.1f}px "
           f"aspect={result['aspect_ratio']:.3f} (기준 1.586, 오차 {result['aspect_error']:.3f})")
