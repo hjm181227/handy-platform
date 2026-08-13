@@ -157,14 +157,14 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
       <View style={styles.instructionSection}>
         <Text style={styles.instructionTitle}>
           {isThumbOnly
-            ? '신용카드 위에 엄지를 올려주세요'
-            : '신용카드 위에 4개 손가락을 올려주세요'
+            ? '카드 아래에 엄지를 붙여주세요'
+            : '카드 아래에 4개 손가락을 붙여주세요'
           }
         </Text>
         <Text style={styles.instructionSubtitle}>
           {isThumbOnly
-            ? '손톱이 정면을 향하도록 기울이지 마세요'
-            : '검지, 중지, 약지, 소지를 나란히 펴서 촬영해주세요'
+            ? '카드 전체가 보이게 두고, 손톱은 정면을 향하도록 기울이지 마세요'
+            : '카드 전체가 보이게 두고, 검지·중지·약지·소지를 나란히 펴서 촬영해주세요'
           }
         </Text>
       </View>

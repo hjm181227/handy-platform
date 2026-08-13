@@ -663,8 +663,10 @@ def handle_segment_with_overlay(event: dict) -> dict:
     overlay_base64 = encode_image_base64(overlay)
 
     # 영역 감지 (모바일에서 직접 사용)
+    # 손톱 영역 필터: card_box(기존) | none(새 "카드 아래 손톱" 자세)
+    nail_filter = query_params.get("nail_filter", "card_box").lower()
     regions = find_connected_components(mask, threshold=THRESHOLD)
-    if effective_card_width > 0:
+    if nail_filter == "card_box" and effective_card_width > 0:
         regions = filter_regions_by_card_guide(regions, effective_card_width, INPUT_SIZE)
 
     # 통계
@@ -754,6 +756,9 @@ def handle_measure(event: dict) -> dict:
     include_mask = query_params.get("include_mask", "false").lower() == "true"
     # 카드 실측 검출 (기본 활성, 실패 시 가이드 추정치로 폴백)
     use_card_detection = query_params.get("detect_card", "true").lower() == "true"
+    # 손톱 영역 필터: card_box(기존 "카드 위 손톱" 자세) | none(새 "카드 아래 손톱" 자세)
+    # 새 자세는 손톱이 카드 박스 밖에 있으므로 카드 박스 필터를 끈다.
+    nail_filter = query_params.get("nail_filter", "card_box").lower()
 
     img = decode_and_orient_image(image_bytes)
     if img is None:
@@ -780,7 +785,10 @@ def handle_measure(event: dict) -> dict:
 
     # 연결 영역 탐지
     regions = find_connected_components(mask, threshold=THRESHOLD)
-    regions = filter_regions_by_card_guide(regions, card_width_pixels, INPUT_SIZE)
+    if nail_filter == "card_box":
+        regions = filter_regions_by_card_guide(regions, card_width_pixels, INPUT_SIZE)
+    # nail_filter == "none": 카드 박스 필터 생략 (새 자세 — 카드 아래 손톱).
+    # 모델은 손톱만 세그멘테이션하므로 카드가 손톱으로 오검출되지 않는다.
 
     # 손가락 분류
     if is_thumb_only:
