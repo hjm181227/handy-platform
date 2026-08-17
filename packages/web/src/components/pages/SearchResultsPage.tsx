@@ -20,6 +20,12 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
 
+  // 상품 페이지네이션 상태 (더보기)
+  const [productPagination, setProductPagination] = useState<{ currentPage: number; totalPages: number } | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // 실제 검색에 사용된 검색어 (빈 결과 화면의 "전체보기" 등으로 prop과 달라질 수 있음)
+  const [activeQuery, setActiveQuery] = useState('');
+
   // 브랜드 검색 상태
   const [brands, setBrands] = useState<Brand[]>([]);
   const [brandsLoading, setBrandsLoading] = useState(false);
@@ -94,6 +100,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
     try {
       setError(null);
       setHasSearched(true);
+      setActiveQuery(query);
 
       console.log('🔍 Performing search with query:', query);
 
@@ -143,8 +150,10 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
       // 상품 결과 처리
       if (productResponse.success && productResponse.data) {
         setProducts(productResponse.data);
+        setProductPagination(productResponse.pagination ?? null);
       } else {
         setProducts([]);
+        setProductPagination(null);
         if (productResponse.error) {
           setError(`${t('product:search.generalError')}: ${productResponse.error}`);
         }
@@ -154,6 +163,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
     } catch (error: any) {
       setBrands([]);
       setProducts([]);
+      setProductPagination(null);
       setBrandsLoading(false);
       setProductsLoading(false);
 
@@ -170,7 +180,39 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
     }
   };
 
-  // 검색어 또는 정렬이 변경될 때마다 검색 실행
+  // 다음 페이지 상품 이어서 로드 (더보기)
+  const loadMoreProducts = async () => {
+    if (loadingMore || !productPagination || productPagination.currentPage >= productPagination.totalPages) {
+      return;
+    }
+
+    setLoadingMore(true);
+    try {
+      const sortParams = parseSortValue(sortBy);
+      const params = {
+        page: String(productPagination.currentPage + 1),
+        limit: '20',
+        sortBy: sortParams.sortBy,
+        sortOrder: sortParams.sortOrder,
+      };
+
+      const response = activeQuery.trim()
+        ? await webApiService.product.searchProducts(activeQuery, params)
+        : await webApiService.product.getProducts(params);
+
+      if (response.success && response.data) {
+        const nextItems: Product[] = response.data;
+        setProducts(prev => [...prev, ...nextItems]);
+        setProductPagination(response.pagination ?? null);
+      }
+    } catch (err) {
+      console.error('상품 더보기 로드 실패:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // 검색어 또는 정렬이 변경될 때마다 검색 실행 (페이지·결과는 performSearch에서 1페이지 기준으로 초기화됨)
   useEffect(() => {
     performSearch(searchQuery);
   }, [searchQuery, sortBy]);
@@ -377,6 +419,26 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               onLike={onLike}
               likedProducts={likedProducts}
             />
+
+            {/* 더보기 버튼 (마지막 페이지면 숨김) */}
+            {productPagination && productPagination.currentPage < productPagination.totalPages && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={loadMoreProducts}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-8 py-2.5 border border-[#E85A6B] text-[#E85A6B] rounded-lg hover:bg-[#E85A6B]/10 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loadingMore ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></span>
+                      {t('product:categoryPage.loadingMore')}
+                    </>
+                  ) : (
+                    t('product:discover.loadMore')
+                  )}
+                </button>
+              </div>
+            )}
           </section>
         )}
 

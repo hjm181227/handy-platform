@@ -145,7 +145,7 @@ packages/web/src/
 | `/seller/coupons` | CouponManagement | 쿠폰 관리 | ✅ |
 | `/seller/production` | ProductionSettings | 생산 설정 | ✅ |
 | `/seller/production/status` | ProductionStatus | 생산 현황 | ✅ |
-| `/seller/register` | SellerRegistrationPage | 판매자 등록 | ✅ |
+| `/seller/register` | SellerApplicationForm | 판매자 등록 (apply와 동일 컴포넌트) | ✅ |
 | `/seller/apply` | SellerApplicationForm | 판매자 신청 | ✅ |
 
 ### 관리자 페이지

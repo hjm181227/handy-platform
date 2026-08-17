@@ -492,7 +492,22 @@ export function Detail({
 
                     {/* 도움이 됐어요 */}
                     <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                      <button className="flex items-center gap-1 hover:text-purple-600">
+                      <button
+                        onClick={async () => {
+                          if (!currentUser) {
+                            openLogin();
+                            return;
+                          }
+                          try {
+                            const reviewId = (review as any).reviewUuid || (review as any)._id || review.id;
+                            await reviewService.markReviewHelpful(product!.productUuid, reviewId, true);
+                            await loadProductReviews(reviewsPage);
+                          } catch (err: any) {
+                            console.error('Failed to vote helpful:', err);
+                          }
+                        }}
+                        className="flex items-center gap-1 hover:text-[#E85A6B]"
+                      >
                         <span>👍</span>
                         <span>{t('product:detailPage.review.helpful')} ({review.helpful?.upVotes || 0})</span>
                       </button>

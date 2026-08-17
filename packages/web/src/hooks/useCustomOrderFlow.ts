@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Product, NailShape, NailLength, CreateCustomOrderResponse } from '@handy-platform/shared';
 import { productService, orderService, imageService, userService } from '../services/apiService';
 import { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
@@ -76,6 +76,50 @@ const initialData: CustomOrderFormData = {
   desiredDate: '',
 };
 
+// sessionStorage 초안 저장 (뒤로가기·새로고침 시 입력 유실 방지)
+const getDraftKey = (productId: string) => `customOrderDraft:product:${productId}`;
+// complete 단계로는 복원하지 않음 (최대 confirm 단계까지)
+const DRAFT_MAX_STEP_INDEX = STEP_ORDER.indexOf('confirm');
+
+// File 객체(첨부 이미지)는 직렬화 불가하므로 제외하고 저장
+type CustomOrderDraftData = Omit<CustomOrderFormData, 'attachments'>;
+
+interface CustomOrderDraft {
+  stepIndex: number;
+  data: CustomOrderDraftData;
+  attachmentCount: number;
+  savedAt: number;
+}
+
+function readDraft(key: string): CustomOrderDraft | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') {
+      return null;
+    }
+    return parsed as CustomOrderDraft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft(key: string) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // 초안 삭제 실패는 무시
+  }
+}
+
+// 초안 사이즈에 유효한 값이 하나라도 있는지 확인
+function draftHasSizes(sizes: HandSizes | undefined): boolean {
+  if (!sizes?.left || !sizes?.right) return false;
+  return [...Object.values(sizes.left), ...Object.values(sizes.right)]
+    .some(v => typeof v === 'string' && v.trim() !== '');
+}
+
 export function useCustomOrderFlow(productId: string) {
   const [state, setState] = useState<CustomOrderFlowState>({
     currentStep: 'shape',
@@ -92,11 +136,33 @@ export function useCustomOrderFlow(productId: string) {
     chatRoomId: null,
   });
 
+  // 초안 복원 확인을 이미 진행한 초안 키 (StrictMode의 이중 실행 방지)
+  const draftPromptedKeyRef = useRef<string | null>(null);
+
   // 상품 정보 및 사용자 네일 사이즈 로드
   useEffect(() => {
+    const draftKey = getDraftKey(productId);
+
     const loadInitialData = async () => {
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
+
+        // 저장된 초안이 있으면 복원 여부 확인
+        let restoredDraft: CustomOrderDraft | null = null;
+        if (draftPromptedKeyRef.current !== draftKey) {
+          draftPromptedKeyRef.current = draftKey;
+          const draft = readDraft(draftKey);
+          if (draft) {
+            if (window.confirm('작성 중이던 주문서가 있습니다. 이어서 작성할까요?')) {
+              restoredDraft = draft;
+              if (draft.attachmentCount > 0) {
+                window.alert('첨부했던 이미지는 저장할 수 없어 복원되지 않았습니다. 필요하시면 이미지를 다시 첨부해주세요.');
+              }
+            } else {
+              clearDraft(draftKey);
+            }
+          }
+        }
 
         // 상품 정보 로드
         const productResponse = await productService.getProduct(productId);
@@ -134,10 +200,41 @@ export function useCustomOrderFlow(productId: string) {
         const prod = productResponse.data;
 
         setState(prev => {
-          const initialShape = prod?.nailOptions?.shapeCustomizable === false && prod?.nailShape
-            ? prod.nailShape : prev.data.shape;
-          const initialLength = prod?.nailOptions?.lengthCustomizable === false && prod?.nailLength
-            ? prod.nailLength : prev.data.length;
+          // 상품에서 쉐입/길이가 고정된 경우 해당 값 강제 (초안보다 우선)
+          const fixedShape = prod?.nailOptions?.shapeCustomizable === false && prod?.nailShape
+            ? prod.nailShape : null;
+          const fixedLength = prod?.nailOptions?.lengthCustomizable === false && prod?.nailLength
+            ? prod.nailLength : null;
+
+          // 초안 복원: 직렬화 저장된 필드 복원 (첨부 이미지는 제외됨)
+          if (restoredDraft) {
+            const stepIndex = Math.min(Math.max(Number(restoredDraft.stepIndex) || 0, 0), DRAFT_MAX_STEP_INDEX);
+            const draftSizes = restoredDraft.data.sizes;
+            const draftData: CustomOrderFormData = {
+              ...initialData,
+              ...restoredDraft.data,
+              attachments: [],
+              sizes: draftHasSizes(draftSizes)
+                ? {
+                    left: { ...emptyFingerSizes, ...draftSizes.left },
+                    right: { ...emptyFingerSizes, ...draftSizes.right },
+                  }
+                : initialSizes,
+            };
+            return {
+              ...prev,
+              product: prod,
+              userNailSize: nailSizeResponse.data || null,
+              stepIndex,
+              currentStep: STEP_ORDER[stepIndex],
+              data: {
+                ...draftData,
+                shape: fixedShape ?? draftData.shape,
+                length: fixedLength ?? draftData.length,
+              },
+              loading: false,
+            };
+          }
 
           return {
             ...prev,
@@ -145,8 +242,8 @@ export function useCustomOrderFlow(productId: string) {
             userNailSize: nailSizeResponse.data || null,
             data: {
               ...prev.data,
-              shape: initialShape,
-              length: initialLength,
+              shape: fixedShape ?? prev.data.shape,
+              length: fixedLength ?? prev.data.length,
               sizes: initialSizes,
             },
             loading: false,
@@ -163,6 +260,37 @@ export function useCustomOrderFlow(productId: string) {
 
     loadInitialData();
   }, [productId]);
+
+  // 상태 변경 시마다 직렬화 가능한 필드만 sessionStorage에 초안 저장
+  useEffect(() => {
+    if (state.loading || state.submitting || state.createdOrder || state.currentStep === 'complete') {
+      return;
+    }
+
+    const { attachments, ...serializable } = state.data;
+
+    // 의미 있는 진행이 없으면 저장하지 않음 (불필요한 복원 확인 방지)
+    const hasProgress =
+      state.stepIndex > 0 ||
+      serializable.desiredColor.trim() !== '' ||
+      serializable.request.trim() !== '' ||
+      serializable.desiredDate !== '' ||
+      serializable.quantity !== 1 ||
+      attachments.length > 0;
+    if (!hasProgress) return;
+
+    try {
+      const draft: CustomOrderDraft = {
+        stepIndex: Math.min(state.stepIndex, DRAFT_MAX_STEP_INDEX),
+        data: serializable,
+        attachmentCount: attachments.length,
+        savedAt: Date.now(),
+      };
+      sessionStorage.setItem(getDraftKey(productId), JSON.stringify(draft));
+    } catch {
+      // 저장 실패는 무시 (초안은 부가 기능)
+    }
+  }, [state.data, state.stepIndex, state.loading, state.submitting, state.createdOrder, state.currentStep, productId]);
 
   // 다음 단계로 이동
   const nextStep = useCallback(() => {
@@ -356,6 +484,9 @@ export function useCustomOrderFlow(productId: string) {
         throw new Error('주문서 생성 응답이 올바르지 않습니다');
       }
 
+      // 제출 성공 시 초안 삭제
+      clearDraft(getDraftKey(productId));
+
       // 3. 채팅방 생성 시도 (동적 import로 순환 참조 방지)
       let chatRoomId: string | null = null;
       try {
@@ -399,6 +530,7 @@ export function useCustomOrderFlow(productId: string) {
 
   // 초기화
   const reset = useCallback(() => {
+    clearDraft(getDraftKey(productId));
     setState(prev => ({
       ...prev,
       currentStep: 'shape',
@@ -409,7 +541,7 @@ export function useCustomOrderFlow(productId: string) {
       createdOrder: null,
       chatRoomId: null,
     }));
-  }, []);
+  }, [productId]);
 
   // 네일 사이즈 데이터가 있는지 확인
   const hasNailSizeData = useCallback(() => {
