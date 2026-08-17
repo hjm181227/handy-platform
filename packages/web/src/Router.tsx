@@ -143,6 +143,7 @@ import {
   CouponManagement
 } from './components/pages/SellerPages';
 import { BulkProductUpload } from './components/pages/seller/BulkProductUpload';
+import { ReturnRequestManagement } from './components/pages/seller/ReturnRequestManagement';
 
 // Admin Components
 import AdminLayout from './components/admin/AdminLayout';
@@ -890,6 +891,13 @@ export function Router() {
     screen = (
       <RequireAuth>
         <SellerOrders onGo={nav} />
+      </RequireAuth>
+    );
+  }
+  else if (pathname === '/seller/returns') {
+    screen = (
+      <RequireAuth>
+        <ReturnRequestManagement onGo={nav} />
       </RequireAuth>
     );
   }

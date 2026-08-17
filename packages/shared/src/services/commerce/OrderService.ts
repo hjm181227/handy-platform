@@ -17,6 +17,9 @@ import {
   UpdateCustomOrderRequest,
   CustomOrderQuotesResponse,
   PublicCustomOrderListResponse,
+  ReturnRequest,
+  CreateReturnRequestPayload,
+  ReturnRequestListResponse,
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 import { validateResponseId, normalizeOrderId } from '../../utils/uuidUtils';
@@ -364,6 +367,105 @@ export abstract class BaseOrderService extends BaseApiService {
   async getQuoteDetail(quoteUuid: string): Promise<ApiResponse<any>> {
     return this.request<ApiResponse<any>>(
       API_ENDPOINTS.QUOTES.DETAIL(quoteUuid)
+    );
+  }
+
+  // ============================================
+  // 반품·교환 (RMA) 관련 메서드 — 서버 routes/returns.ts 준수
+  // ============================================
+
+  // 반품·교환 신청 (구매자)
+  // 오류: 400(미배송완료/30일 초과), 409(멀티셀러 주문/중복 신청) — err.message에 한국어 메시지가 담긴다
+  async createReturnRequest(
+    payload: CreateReturnRequestPayload
+  ): Promise<ApiResponse<{ returnRequest: ReturnRequest }>> {
+    return this.request<ApiResponse<{ returnRequest: ReturnRequest }>>(
+      API_ENDPOINTS.RETURNS.CREATE,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          imageUrls: [],
+          ...payload,
+        }),
+      }
+    );
+  }
+
+  // 내 반품·교환 신청 목록 (구매자)
+  async getMyReturnRequests(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<ReturnRequestListResponse> {
+    const query = this.buildQueryString({
+      page: params?.page,
+      limit: params?.limit,
+    });
+    const url = query ? `${API_ENDPOINTS.RETURNS.MY}?${query}` : API_ENDPOINTS.RETURNS.MY;
+    return this.request<ReturnRequestListResponse>(url);
+  }
+
+  // 신청 철회 (구매자, requested 상태만)
+  async withdrawReturnRequest(
+    returnRequestUuid: string
+  ): Promise<ApiResponse<{ returnRequest: ReturnRequest }>> {
+    return this.request<ApiResponse<{ returnRequest: ReturnRequest }>>(
+      API_ENDPOINTS.RETURNS.WITHDRAW(returnRequestUuid),
+      { method: 'POST' }
+    );
+  }
+
+  // 판매자 수신 목록 (판매자 전용) — status는 콤마 구분 다중값 지원
+  async getSellerReturnRequests(params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ReturnRequestListResponse> {
+    const query = this.buildQueryString({
+      status: params?.status,
+      page: params?.page,
+      limit: params?.limit,
+    });
+    const url = query ? `${API_ENDPOINTS.RETURNS.SELLER}?${query}` : API_ENDPOINTS.RETURNS.SELLER;
+    return this.request<ReturnRequestListResponse>(url);
+  }
+
+  // 승인 (판매자) — 반품이면 전액 환불까지 자동 수행되어 status가 바로 'completed'가 된다
+  async approveReturnRequest(
+    returnRequestUuid: string,
+    note?: string
+  ): Promise<ApiResponse<{ returnRequest: ReturnRequest; refunded: boolean }>> {
+    return this.request<ApiResponse<{ returnRequest: ReturnRequest; refunded: boolean }>>(
+      API_ENDPOINTS.RETURNS.APPROVE(returnRequestUuid),
+      {
+        method: 'POST',
+        body: JSON.stringify(note ? { note } : {}),
+        // 반품 승인은 PG 환불을 동반하므로 재시도 절대 금지
+        enableRetry: false,
+      }
+    );
+  }
+
+  // 반려 (판매자) — 사유 5자 이상 필수
+  async rejectReturnRequest(
+    returnRequestUuid: string,
+    rejectReason: string
+  ): Promise<ApiResponse<{ returnRequest: ReturnRequest }>> {
+    return this.request<ApiResponse<{ returnRequest: ReturnRequest }>>(
+      API_ENDPOINTS.RETURNS.REJECT(returnRequestUuid),
+      {
+        method: 'POST',
+        body: JSON.stringify({ rejectReason }),
+      }
+    );
+  }
+
+  // 교환 완료 처리 (판매자, approved 상태의 exchange만)
+  async completeReturnRequest(
+    returnRequestUuid: string
+  ): Promise<ApiResponse<{ returnRequest: ReturnRequest }>> {
+    return this.request<ApiResponse<{ returnRequest: ReturnRequest }>>(
+      API_ENDPOINTS.RETURNS.COMPLETE(returnRequestUuid),
+      { method: 'POST' }
     );
   }
 

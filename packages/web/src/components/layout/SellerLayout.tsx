@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MdDashboard, MdInventory, MdFactory, MdInsertChart, MdStorefront, MdQuestionAnswer } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdFactory, MdInsertChart, MdStorefront, MdQuestionAnswer, MdAssignmentReturn } from 'react-icons/md';
 import { FaClipboardList, FaMoneyBillWave, FaHome, FaSignOutAlt } from 'react-icons/fa';
 import { IoMdStar } from 'react-icons/io';
 import { RiCoupon2Line } from 'react-icons/ri';
@@ -45,6 +45,12 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
       icon: FaClipboardList,
       path: "/seller/orders",
       description: "주문 처리 및 배송"
+    },
+    {
+      label: "반품·교환",
+      icon: MdAssignmentReturn,
+      path: "/seller/returns",
+      description: "반품·교환 신청 처리"
     },
     {
       label: "생산 관리",

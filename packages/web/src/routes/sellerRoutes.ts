@@ -47,6 +47,13 @@ export const sellerRoutes: RouteConfig[] = [
     requireAuth: true,
     requireRole: 'seller',
   },
+  // 반품·교환 관리
+  {
+    path: '/seller/returns',
+    layout: 'seller',
+    requireAuth: true,
+    requireRole: 'seller',
+  },
   // 리뷰 관리
   {
     path: '/seller/reviews',
