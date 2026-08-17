@@ -220,19 +220,6 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
 
           {/* 우측 액션 */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => alert('알림 기능은 추후 구현됩니다.')}
-              className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zm-5-5h10l-5 5v-5z" />
-              </svg>
-              {/* 알림 뱃지 */}
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                3
-              </span>
-            </button>
-
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center" title={currentUser?.name || '판매자'}>
               <span className="text-white font-medium text-sm">
                 {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'S'}

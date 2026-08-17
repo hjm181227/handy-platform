@@ -8,6 +8,8 @@ import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { useAuthModal } from '../../contexts/AuthModalContext';
+import { useLikes } from '../../hooks/useLikes';
+import ProductQA from './ProductQA';
 
 export function Detail({
   id,
@@ -39,8 +41,11 @@ export function Detail({
   const [shape, setShape] = useState<string>("ROUND");
   const [length, setLength] = useState<string>("SHORT");
   const [qty, setQty] = useState<number>(1);
-  const [liked, setLiked] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("info");
+
+  // 찜: 로컬 state가 아닌 전역 LikesContext 사용 (서버 연동 + 낙관적 업데이트)
+  const { handleLike, isProductLiked } = useLikes();
+  const liked = isProductLiked(id);
 
   // 리뷰 관련 상태
   const [reviews, setReviews] = useState<DetailedReview[]>([]);
@@ -536,45 +541,12 @@ export function Detail({
         );
 
       case "qa":
+        // 실제 상품 Q&A 컴포넌트 연결 (기존에는 전 상품 동일한 목업 문답이 렌더됐음)
         return (
-          <div className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-sm mb-2">{t('product:detailPage.qa.title')}</h3>
-              <p className="text-xs text-gray-600 mb-3">{t('product:detailPage.qa.subtitle')}</p>
-              <button className="px-4 py-2 bg-black text-white text-sm rounded-lg">{t('product:detailPage.qa.buttonLabel')}</button>
-            </div>
-            <div className="space-y-4">
-              {[
-                {
-                  q: t('product:detailPage.qa.q1'),
-                  a: t('product:detailPage.qa.a1'),
-                  date: "2024.01.14"
-                },
-                {
-                  q: t('product:detailPage.qa.q2'),
-                  a: t('product:detailPage.qa.a2'),
-                  date: "2024.01.12"
-                },
-                {
-                  q: t('product:detailPage.qa.q3'),
-                  a: t('product:detailPage.qa.a3'),
-                  date: "2024.01.10"
-                }
-              ].map((qa, index) => (
-                <div key={index} className="border-b pb-4 last:border-b-0">
-                  <div className="mb-2">
-                    <span className="inline-block bg-black text-white text-xs font-bold px-2 py-1 rounded mr-2">Q</span>
-                    <span className="text-sm font-medium">{qa.q}</span>
-                    <span className="text-xs text-gray-500 ml-2">{qa.date}</span>
-                  </div>
-                  <div className="ml-6">
-                    <span className="inline-block bg-white text-black border text-xs font-bold px-2 py-1 rounded mr-2">A</span>
-                    <span className="text-sm text-gray-700">{qa.a}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ProductQA
+            productUuid={(product as any)?.productUuid || id}
+            sellerUserId={(product as any)?.sellerUuid}
+          />
         );
 
       case "shipping":
@@ -823,7 +795,7 @@ export function Detail({
 
           {/* 도구 */}
           <div className="flex items-center gap-3 text-sm pt-1">
-            <button onClick={() => setLiked((v) => !v)} className="flex items-center gap-1 hover:text-gray-600">
+            <button onClick={() => handleLike(id)} className="flex items-center gap-1 hover:text-gray-600">
               {liked ? <FaHeart className="w-4 h-4 text-red-500" /> : <FaRegHeart className="w-4 h-4" />}
               <span>{liked ? t('product:detailPage.liked') : t('product:detailPage.unliked')}</span>
             </button>

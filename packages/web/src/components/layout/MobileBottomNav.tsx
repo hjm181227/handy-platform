@@ -22,10 +22,18 @@ const ICON_MAP: Record<BottomTab['iconName'], React.ComponentType<any>> = {
   plus: Plus,
 };
 
+// 자체 하단 고정 CTA(구매바·주문하기·결제하기)가 있는 화면 — 탭바가 같은 bottom-0에
+// 겹쳐 버튼을 가리므로 이 경로들에서는 탭바를 렌더하지 않는다
+const CTA_ROUTE_PREFIXES = ['/product/', '/cart', '/checkout', '/payment'];
+
 export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBottomNavProps) {
   const { t } = useTranslation(['nav', 'common']);
   const { currentUser } = useAuth();
   const { openLogin } = useAuthModal();
+
+  if (CTA_ROUTE_PREFIXES.some(prefix => currentPath.startsWith(prefix))) {
+    return null;
+  }
 
   const isActive = (tabPath: string) => {
     if (tabPath === '/') return currentPath === '/';

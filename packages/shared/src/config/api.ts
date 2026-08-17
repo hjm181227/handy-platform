@@ -376,6 +376,7 @@ export const API_ENDPOINTS = {
     ORDER_DETAIL: (orderUuid: string) => `/api/seller/orders/${orderUuid}`,      // GET /:orderUuid
     ORDER_STATUS: (orderUuid: string) => `/api/seller/orders/${orderUuid}/status`, // PATCH /:orderUuid/status
     ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',           // GET /analytics/overview
+    REVENUE_ANALYTICS: '/api/seller/orders/analytics/revenue',          // GET /analytics/revenue (월별 매출)
 
     // 정산 관리
     SETTLEMENTS: '/api/seller/settlement',                               // GET /

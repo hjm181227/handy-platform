@@ -242,7 +242,11 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             </label>
             <button
               type="button"
-              onClick={() => onGo("/find/pw")}
+              onClick={() => {
+                // 비밀번호 재설정 화면(/find/pw)이 아직 없어 홈으로 튕기던 문제 —
+                // 재설정 플로우 구현 전까지 명확한 안내로 대체
+                alert('비밀번호 재설정은 준비 중입니다.\n카카오/네이버/구글 소셜 로그인을 이용하시거나, 고객센터(support/contact)로 문의해주세요.');
+              }}
               className="text-gray-500 hover:text-gray-700"
             >
               {t('auth:login.forgotPassword')}

@@ -1,34 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { adminService } from '../../services/apiService';
-
-// 관리자 주문 관리용 타입 정의
-interface AdminOrder {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  sellerName: string;
-  sellerUuid: string;
-  status: string;
-  totalAmount: number;
-  itemCount: number;
-  createdAt: string;
-  updatedAt: string;
-  shippingAddress: {
-    name: string;
-    street: string;
-    city: string;
-    zipCode: string;
-    phone: string;
-  };
-  items: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-    price: number;
-    options?: Record<string, any>;
-  }>;
-}
+import type { AdminOrderListItem } from '@handy-platform/shared';
 
 interface OrderPagination {
   currentPage: number;
@@ -36,167 +8,107 @@ interface OrderPagination {
   totalOrders: number;
 }
 
+const PAGE_SIZE = 20;
+
 const AdminOrderManagement: React.FC = () => {
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [orders, setOrders] = useState<AdminOrderListItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [dateFilter, setDateFilter] = useState<string>('');
+  const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<OrderPagination>({
     currentPage: 1,
     totalPages: 1,
     totalOrders: 0,
   });
-  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrderListItem | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // 주문 상태 옵션
+  // 주문 상태 옵션 (서버 OrderStatus enum과 동일)
   const statusOptions = [
     { value: '', label: '전체 상태' },
-    { value: 'pending', label: '결제 대기' },
-    { value: 'paid', label: '결제 완료' },
+    { value: 'pending', label: '주문 접수' },
+    { value: 'confirmed', label: '주문 확인' },
     { value: 'processing', label: '처리 중' },
     { value: 'shipped', label: '배송 중' },
     { value: 'delivered', label: '배송 완료' },
     { value: 'cancelled', label: '취소됨' },
-    { value: 'refunded', label: '환불됨' },
   ];
 
-  useEffect(() => {
-    loadOrders();
-  }, [pagination.currentPage, searchQuery, statusFilter, dateFilter]);
+  const getStatusLabel = (status: string) =>
+    statusOptions.find(option => option.value === status)?.label || status;
 
-  const loadOrders = async () => {
+  // 검색어 디바운스 (입력 중 과도한 API 호출 방지)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // 임시 더미 데이터 (실제로는 AdminService에 getAllOrders API가 필요)
-      const dummyOrders: AdminOrder[] = [
-        {
-          id: '1',
-          orderNumber: 'ORD-2024-001',
-          customerName: '김고객',
-          customerEmail: 'customer@example.com',
-          sellerName: '네일아트 스튜디오',
-          sellerUuid: 'seller1',
-          status: 'shipped',
-          totalAmount: 85000,
-          itemCount: 2,
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-01-16T14:20:00Z',
-          shippingAddress: {
-            name: '김고객',
-            street: '서울시 강남구 테헤란로 123',
-            city: '서울',
-            zipCode: '06142',
-            phone: '010-1234-5678'
-          },
-          items: [
-            {
-              productId: 'prod1',
-              productName: '프렌치 네일아트 세트',
-              quantity: 1,
-              price: 50000,
-              options: { color: 'pink', size: 'medium' }
-            },
-            {
-              productId: 'prod2',
-              productName: '네일 스티커 팩',
-              quantity: 1,
-              price: 35000
-            }
-          ]
-        },
-        {
-          id: '2',
-          orderNumber: 'ORD-2024-002',
-          customerName: '이고객',
-          customerEmail: 'customer2@example.com',
-          sellerName: '뷰티 네일샵',
-          sellerUuid: 'seller2',
-          status: 'processing',
-          totalAmount: 120000,
-          itemCount: 3,
-          createdAt: '2024-01-14T15:45:00Z',
-          updatedAt: '2024-01-15T09:30:00Z',
-          shippingAddress: {
-            name: '이고객',
-            street: '부산시 해운대구 센텀로 456',
-            city: '부산',
-            zipCode: '48058',
-            phone: '010-2345-6789'
-          },
-          items: [
-            {
-              productId: 'prod3',
-              productName: '젤네일 키트',
-              quantity: 2,
-              price: 40000
-            },
-            {
-              productId: 'prod4',
-              productName: '네일 데코 세트',
-              quantity: 1,
-              price: 40000
-            }
-          ]
-        }
-      ];
+      setError(null);
 
-      // 필터링 적용
-      let filteredOrders = dummyOrders;
-      
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        filteredOrders = filteredOrders.filter(order => 
-          order.orderNumber.toLowerCase().includes(query) ||
-          order.customerName.toLowerCase().includes(query) ||
-          order.customerEmail.toLowerCase().includes(query) ||
-          order.sellerName.toLowerCase().includes(query)
-        );
-      }
-
-      if (statusFilter) {
-        filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
-      }
-
-      setOrders(filteredOrders);
-      setPagination({
-        currentPage: 1,
-        totalPages: Math.ceil(filteredOrders.length / 20),
-        totalOrders: filteredOrders.length,
+      const response = await adminService.getAllOrders({
+        page,
+        limit: PAGE_SIZE,
+        status: statusFilter || undefined,
+        search: searchQuery || undefined,
       });
 
-    } catch (error) {
-      console.error('Failed to load orders:', error);
-      alert('주문 목록 로딩에 실패했습니다.');
+      setOrders(response.orders || []);
+      setPagination({
+        currentPage: response.pagination?.currentPage || 1,
+        totalPages: Math.max(response.pagination?.totalPages || 1, 1),
+        totalOrders: response.pagination?.totalOrders || 0,
+      });
+    } catch (err) {
+      console.error('Failed to load orders:', err);
+      setError('주문 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      setOrders([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchQuery, statusFilter]);
 
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const handleStatusChange = async (order: AdminOrderListItem, newStatus: string) => {
+    if (newStatus === order.status) return;
+
+    const confirmed = window.confirm(
+      `주문 ${order.orderNumber}의 상태를 '${getStatusLabel(newStatus)}'(으)로 변경하시겠습니까?`
+    );
+    if (!confirmed) return;
+
     try {
       setActionLoading(true);
-      // 실제로는 AdminService에 updateOrderStatus API가 필요
-      console.log('주문 상태 변경:', orderId, newStatus);
-      
-      // 로컬 상태 업데이트
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
-      ));
-      
+      await adminService.updateOrderStatus(order._id, { status: newStatus });
+
+      // 모달에 열려있는 주문이면 함께 갱신
+      setSelectedOrder(prev =>
+        prev && prev._id === order._id ? { ...prev, status: newStatus as AdminOrderListItem['status'] } : prev
+      );
+
       alert('주문 상태가 변경되었습니다.');
-    } catch (error) {
-      console.error('Failed to update order status:', error);
+      await loadOrders();
+    } catch (err) {
+      console.error('Failed to update order status:', err);
       alert('주문 상태 변경에 실패했습니다.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleViewDetail = (order: AdminOrder) => {
+  const handleViewDetail = (order: AdminOrderListItem) => {
     setSelectedOrder(order);
     setShowDetailModal(true);
   };
@@ -205,10 +117,11 @@ const AdminOrderManagement: React.FC = () => {
     return new Intl.NumberFormat('ko-KR', {
       style: 'currency',
       currency: 'KRW'
-    }).format(amount);
+    }).format(amount || 0);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',
@@ -220,22 +133,45 @@ const AdminOrderManagement: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '결제 대기' },
-      paid: { bg: 'bg-blue-100', text: 'text-blue-800', label: '결제 완료' },
-      processing: { bg: 'bg-purple-100', text: 'text-purple-800', label: '처리 중' },
-      shipped: { bg: 'bg-orange-100', text: 'text-orange-800', label: '배송 중' },
-      delivered: { bg: 'bg-green-100', text: 'text-green-800', label: '배송 완료' },
-      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: '취소됨' },
-      refunded: { bg: 'bg-gray-100', text: 'text-gray-800', label: '환불됨' },
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      confirmed: { bg: 'bg-blue-100', text: 'text-blue-800' },
+      processing: { bg: 'bg-purple-100', text: 'text-purple-800' },
+      shipped: { bg: 'bg-orange-100', text: 'text-orange-800' },
+      delivered: { bg: 'bg-green-100', text: 'text-green-800' },
+      cancelled: { bg: 'bg-red-100', text: 'text-red-800' },
     };
-    
+
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-    
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+        {getStatusLabel(status)}
+      </span>
+    );
+  };
+
+  const getPaymentStatusBadge = (paymentStatus: string) => {
+    const paymentConfig = {
+      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: '결제 대기' },
+      paid: { bg: 'bg-green-100', text: 'text-green-800', label: '결제 완료' },
+      failed: { bg: 'bg-red-100', text: 'text-red-800', label: '결제 실패' },
+      refunded: { bg: 'bg-gray-100', text: 'text-gray-600', label: '환불됨' },
+    };
+
+    const config = paymentConfig[paymentStatus as keyof typeof paymentConfig] || paymentConfig.pending;
+
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
         {config.label}
       </span>
     );
+  };
+
+  const formatShippingAddress = (order: AdminOrderListItem) => {
+    const addr = order.shippingAddress;
+    if (!addr) return '-';
+    const postcode = addr.postcode ? `(${addr.postcode}) ` : '';
+    return `${postcode}${addr.roadAddress || ''} ${addr.detailAddress || ''}`.trim() || '-';
   };
 
   return (
@@ -259,27 +195,24 @@ const AdminOrderManagement: React.FC = () => {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="주문번호, 고객명, 판매자명으로 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="주문번호로 검색..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
             className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {statusOptions.map(option => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
         </div>
       </div>
 
@@ -290,6 +223,21 @@ const AdminOrderManagement: React.FC = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">주문 목록을 불러오는 중...</p>
           </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <div className="text-red-400 mb-4">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => loadOrders()}
+              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              다시 시도
+            </button>
+          </div>
         ) : orders.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-gray-400 mb-4">
@@ -297,8 +245,12 @@ const AdminOrderManagement: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
-            <p className="text-gray-600 mb-2">검색 조건에 맞는 주문이 없습니다.</p>
-            <p className="text-gray-500 text-sm">다른 검색 조건을 시도해보세요.</p>
+            <p className="text-gray-600 mb-2">
+              {searchQuery || statusFilter ? '검색 조건에 맞는 주문이 없습니다.' : '등록된 주문이 없습니다.'}
+            </p>
+            {(searchQuery || statusFilter) && (
+              <p className="text-gray-500 text-sm">다른 검색 조건을 시도해보세요.</p>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -327,24 +279,26 @@ const AdminOrderManagement: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={order._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
-                        <div className="text-sm text-gray-500">{order.itemCount}개 상품</div>
+                        <div className="text-sm text-gray-500">{order.items?.length || 0}개 상품</div>
                         <div className="text-xs text-gray-400">{formatDate(order.createdAt)}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
-                        <div className="text-sm text-gray-500">{order.customerEmail}</div>
-                        <div className="text-xs text-gray-400">{order.shippingAddress.phone}</div>
+                        <div className="text-sm font-medium text-gray-900">{order.user?.name || '알 수 없음'}</div>
+                        <div className="text-sm text-gray-500">{order.user?.email || '-'}</div>
+                        <div className="text-xs text-gray-400">{order.shippingAddress?.recipientPhone || '-'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.sellerName}</div>
-                      <div className="text-xs text-gray-500">ID: {order.sellerUuid}</div>
+                      <div className="text-sm text-gray-900">{order.items?.[0]?.sellerName || '-'}</div>
+                      {order.items && order.items.length > 1 && (
+                        <div className="text-xs text-gray-500">외 {order.items.length - 1}개 상품</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -352,7 +306,10 @@ const AdminOrderManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(order.status)}
+                      <div className="space-y-1">
+                        <div>{getStatusBadge(order.status)}</div>
+                        <div>{getPaymentStatusBadge(order.paymentStatus)}</div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
@@ -364,7 +321,7 @@ const AdminOrderManagement: React.FC = () => {
                         </button>
                         <select
                           value={order.status}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          onChange={(e) => handleStatusChange(order, e.target.value)}
                           disabled={actionLoading}
                           className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                         >
@@ -382,16 +339,16 @@ const AdminOrderManagement: React.FC = () => {
         )}
 
         {/* 페이지네이션 */}
-        {pagination.totalPages > 1 && (
+        {!loading && !error && pagination.totalPages > 1 && (
           <div className="px-6 py-4 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                총 {pagination.totalOrders}건 중 {((pagination.currentPage - 1) * 20) + 1}-
-                {Math.min(pagination.currentPage * 20, pagination.totalOrders)}건 표시
+                총 {pagination.totalOrders}건 중 {((pagination.currentPage - 1) * PAGE_SIZE) + 1}-
+                {Math.min(pagination.currentPage * PAGE_SIZE, pagination.totalOrders)}건 표시
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))}
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={pagination.currentPage === 1 || loading}
                   className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -401,7 +358,7 @@ const AdminOrderManagement: React.FC = () => {
                   {pagination.currentPage} / {pagination.totalPages}
                 </span>
                 <button
-                  onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.min(prev.totalPages, prev.currentPage + 1) }))}
+                  onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
                   disabled={pagination.currentPage === pagination.totalPages || loading}
                   className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -430,7 +387,7 @@ const AdminOrderManagement: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* 주문 기본 정보 */}
               <div className="grid grid-cols-2 gap-6">
@@ -453,6 +410,16 @@ const AdminOrderManagement: React.FC = () => {
                       <span className="text-gray-500">상태:</span>
                       <span className="ml-2">{getStatusBadge(selectedOrder.status)}</span>
                     </div>
+                    <div>
+                      <span className="text-gray-500">결제 상태:</span>
+                      <span className="ml-2">{getPaymentStatusBadge(selectedOrder.paymentStatus)}</span>
+                    </div>
+                    {selectedOrder.trackingNumber && (
+                      <div>
+                        <span className="text-gray-500">운송장 번호:</span>
+                        <span className="ml-2 text-gray-900">{selectedOrder.trackingNumber}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -461,15 +428,11 @@ const AdminOrderManagement: React.FC = () => {
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="text-gray-500">이름:</span>
-                      <span className="ml-2 text-gray-900">{selectedOrder.customerName}</span>
+                      <span className="ml-2 text-gray-900">{selectedOrder.user?.name || '알 수 없음'}</span>
                     </div>
                     <div>
                       <span className="text-gray-500">이메일:</span>
-                      <span className="ml-2 text-gray-900">{selectedOrder.customerEmail}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">판매자:</span>
-                      <span className="ml-2 text-gray-900">{selectedOrder.sellerName}</span>
+                      <span className="ml-2 text-gray-900">{selectedOrder.user?.email || '-'}</span>
                     </div>
                   </div>
                 </div>
@@ -482,17 +445,15 @@ const AdminOrderManagement: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-500">받는 분:</span>
-                      <span className="ml-2 text-gray-900">{selectedOrder.shippingAddress.name}</span>
+                      <span className="ml-2 text-gray-900">{selectedOrder.shippingAddress?.recipientName || '-'}</span>
                     </div>
                     <div>
                       <span className="text-gray-500">연락처:</span>
-                      <span className="ml-2 text-gray-900">{selectedOrder.shippingAddress.phone}</span>
+                      <span className="ml-2 text-gray-900">{selectedOrder.shippingAddress?.recipientPhone || '-'}</span>
                     </div>
                     <div className="col-span-2">
                       <span className="text-gray-500">주소:</span>
-                      <span className="ml-2 text-gray-900">
-                        ({selectedOrder.shippingAddress.zipCode}) {selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.city}
-                      </span>
+                      <span className="ml-2 text-gray-900">{formatShippingAddress(selectedOrder)}</span>
                     </div>
                   </div>
                 </div>
@@ -506,6 +467,7 @@ const AdminOrderManagement: React.FC = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">상품명</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">판매자</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">옵션</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">수량</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">가격</th>
@@ -513,13 +475,15 @@ const AdminOrderManagement: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {selectedOrder.items.map((item, index) => (
+                      {(selectedOrder.items || []).map((item, index) => (
                         <tr key={index}>
                           <td className="px-4 py-3 text-sm text-gray-900">{item.productName}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{item.sellerName || '-'}</td>
                           <td className="px-4 py-3 text-sm text-gray-500">
-                            {item.options ? Object.entries(item.options).map(([key, value]) => 
-                              `${key}: ${value}`
-                            ).join(', ') : '-'}
+                            {[
+                              item.shape ? `쉐입: ${item.shape}` : null,
+                              item.size ? `사이즈: ${item.size}` : null,
+                            ].filter(Boolean).join(', ') || '-'}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">{item.quantity}</td>
                           <td className="px-4 py-3 text-sm text-gray-900">{formatCurrency(item.price)}</td>
@@ -531,7 +495,7 @@ const AdminOrderManagement: React.FC = () => {
                     </tbody>
                     <tfoot className="bg-gray-50">
                       <tr>
-                        <td colSpan={4} className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                        <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
                           총 결제 금액:
                         </td>
                         <td className="px-4 py-3 text-sm font-bold text-gray-900">
@@ -551,10 +515,11 @@ const AdminOrderManagement: React.FC = () => {
               >
                 닫기
               </button>
-              <div className="flex space-x-3">
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-500">상태 변경:</span>
                 <select
                   value={selectedOrder.status}
-                  onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
+                  onChange={(e) => handleStatusChange(selectedOrder, e.target.value)}
                   disabled={actionLoading}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -562,12 +527,7 @@ const AdminOrderManagement: React.FC = () => {
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
-                <button
-                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? '처리 중...' : '상태 변경'}
-                </button>
+                {actionLoading && <span className="text-sm text-gray-500">처리 중...</span>}
               </div>
             </div>
           </div>
