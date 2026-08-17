@@ -220,6 +220,18 @@ export const API_ENDPOINTS = {
     SKIP_PAYMENT: (orderUuid: string) => `/api/orders/${orderUuid}/skip-payment`,
   },
 
+  // 반품·교환 (RMA)
+  RETURNS: {
+    CREATE: '/api/returns',                                            // POST - 반품·교환 신청 (구매자)
+    MY: '/api/returns/my',                                             // GET - 내 신청 목록 (구매자)
+    SELLER: '/api/returns/seller',                                     // GET - 판매자 수신 목록 (판매자)
+    DETAIL: (returnRequestUuid: string) => `/api/returns/${returnRequestUuid}`,              // GET - 상세 (구매자/판매자)
+    WITHDRAW: (returnRequestUuid: string) => `/api/returns/${returnRequestUuid}/withdraw`,   // POST - 철회 (구매자, requested만)
+    APPROVE: (returnRequestUuid: string) => `/api/returns/${returnRequestUuid}/approve`,     // POST - 승인 (판매자, 반품이면 전액 환불)
+    REJECT: (returnRequestUuid: string) => `/api/returns/${returnRequestUuid}/reject`,       // POST - 반려 (판매자, 사유 5자 이상)
+    COMPLETE: (returnRequestUuid: string) => `/api/returns/${returnRequestUuid}/complete`,   // POST - 교환 완료 처리 (판매자)
+  },
+
   // 배송
   SHIPPING: {
     METHODS: '/api/shipping/methods',
@@ -376,6 +388,7 @@ export const API_ENDPOINTS = {
     ORDER_DETAIL: (orderUuid: string) => `/api/seller/orders/${orderUuid}`,      // GET /:orderUuid
     ORDER_STATUS: (orderUuid: string) => `/api/seller/orders/${orderUuid}/status`, // PATCH /:orderUuid/status
     ORDER_ANALYTICS: '/api/seller/orders/analytics/overview',           // GET /analytics/overview
+    REVENUE_ANALYTICS: '/api/seller/orders/analytics/revenue',          // GET /analytics/revenue (월별 매출)
 
     // 정산 관리
     SETTLEMENTS: '/api/seller/settlement',                               // GET /

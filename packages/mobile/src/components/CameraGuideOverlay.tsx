@@ -47,15 +47,19 @@ const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({
   const cardGuideWidth = isTablet ? CARD_GUIDE_WIDTH_TABLET : CARD_GUIDE_WIDTH_MOBILE;
   const cardGuideHeight = cardGuideWidth / CARD_ASPECT_RATIO;
 
-  const totalGuideHeight = Math.max(cardGuideHeight * 1.8, screenHeight * 0.4);
-
-  const guideTop = (screenHeight - totalGuideHeight) / 2;
-  const cardLeft = (screenWidth - cardGuideWidth) / 2;
-  const cardTop = guideTop + (totalGuideHeight - cardGuideHeight) / 2 - 20;
-
-  // Nail guide positions — inside the card area, vertically centered
+  // 새 자세: 카드를 손으로 가리지 않고 온전히 보이게 두고, 손톱은 카드 "바로 아래"에.
+  // 카드 실측 검출로 스케일을 잡으므로 카드가 가려지면 안 된다. 카드+손톱이
+  // 중앙 정사각 크롭 안에 함께 들어오도록 두 요소를 하나의 블록으로 세로 중앙 정렬한다.
   const nailHeight = isThumbOnly ? 90 : 75;
-  const nailGuideTop = cardTop + (cardGuideHeight - nailHeight) / 2;
+  const cardNailGap = 16;  // 카드 하단과 손톱 사이 간격(작게 유지 = 크롭 안에 함께)
+  const combinedHeight = cardGuideHeight + cardNailGap + nailHeight;
+
+  const blockTop = (screenHeight - combinedHeight) / 2 - 20;
+  const cardLeft = (screenWidth - cardGuideWidth) / 2;
+  const cardTop = blockTop;
+
+  // 손톱 가이드 — 카드 바로 아래
+  const nailGuideTop = cardTop + cardGuideHeight + cardNailGap;
 
   return (
     <View style={styles.overlay}>
@@ -75,7 +79,7 @@ const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({
         ]}
       >
         <View style={styles.cardLabel}>
-          <Text style={styles.cardLabelText}>신용카드 영역</Text>
+          <Text style={styles.cardLabelText}>신용카드 (전체가 보이게)</Text>
         </View>
       </View>
 
@@ -111,15 +115,19 @@ const CameraGuideOverlay: React.FC<CameraGuideOverlayProps> = ({
         </View>
       )}
 
-      {/* 촬영 팁 */}
+      {/* 촬영 팁 (새 자세: 카드를 가리지 않고 손톱을 카드 바로 아래에) */}
       <View style={styles.tipContainer}>
         <View style={styles.tipItem}>
           <View style={styles.tipDot} />
-          <Text style={styles.tipText}>신용카드를 황금색 영역에 맞춰주세요</Text>
+          <Text style={styles.tipText}>신용카드 전체가 보이게 황금 영역에 맞춰주세요 (손으로 가리지 마세요)</Text>
         </View>
         <View style={styles.tipItem}>
           <View style={styles.tipDot} />
-          <Text style={styles.tipText}>밝은 곳에서 손톱이 잘 보이게 촬영해주세요</Text>
+          <Text style={styles.tipText}>손톱을 카드 바로 아래에 붙여 함께 촬영해주세요</Text>
+        </View>
+        <View style={styles.tipItem}>
+          <View style={styles.tipDot} />
+          <Text style={styles.tipText}>카드와 손을 같은 바닥에 평평히, 폰은 수평으로</Text>
         </View>
       </View>
     </View>

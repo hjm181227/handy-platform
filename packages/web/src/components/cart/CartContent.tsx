@@ -93,6 +93,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const [pendingUndo, setPendingUndo] = useState<{ productId: string; options?: Record<string, string>; previousCart: Cart } | null>(null);
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // 언마운트 시 아직 서버에 반영되지 않은 삭제를 flush하기 위한 참조
+  const pendingRemovalRef = useRef<{ productId: string; options?: Record<string, string> } | null>(null);
 
   // 장바구니 데이터 로딩
   const loadCart = async () => {
@@ -330,7 +332,10 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       clearTimeout(undoTimerRef.current);
     }
 
+    pendingRemovalRef.current = { productId, options };
+
     undoTimerRef.current = setTimeout(async () => {
+      pendingRemovalRef.current = null;
       try {
         console.log('Removing cart item:', { productId, options });
         const response = await cartService.removeFromCart(productId, options);
@@ -372,6 +377,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       clearTimeout(undoTimerRef.current);
       undoTimerRef.current = null;
     }
+    pendingRemovalRef.current = null;
 
     // 이전 상태로 복원
     setCart(pendingUndo.previousCart);
@@ -391,11 +397,19 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
     }
   };
 
-  // 컴포넌트 언마운트 시 타이머 정리
+  // 컴포넌트 언마운트 시: 타이머만 취소하면 사용자가 삭제한 상품이 서버에 남아
+  // 다시 살아나므로, 대기 중인 삭제를 즉시 서버에 반영(flush)한다
   useEffect(() => {
     return () => {
       if (undoTimerRef.current) {
         clearTimeout(undoTimerRef.current);
+      }
+      const pending = pendingRemovalRef.current;
+      if (pending) {
+        pendingRemovalRef.current = null;
+        cartService.removeFromCart(pending.productId, pending.options)
+          .then(() => onCartUpdate?.())
+          .catch(err => console.error('Failed to flush pending cart removal:', err));
       }
     };
   }, []);

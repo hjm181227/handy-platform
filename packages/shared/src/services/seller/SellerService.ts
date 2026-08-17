@@ -392,6 +392,17 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<SellerOrderAnalytics>>(API_ENDPOINTS.SELLER.ORDER_ANALYTICS);
   }
 
+  // GET /analytics/revenue - 월별 매출 통계
+  async getRevenueAnalytics(period: '6m' | '1y' = '6m'): Promise<ApiResponse<{
+    revenueData: Array<{
+      _id: { year: number; month: number };
+      revenue: number;
+      orderCount: number;
+    }>;
+  }>> {
+    return this.request(`${API_ENDPOINTS.SELLER.REVENUE_ANALYTICS}?period=${period}`);
+  }
+
   // 기존 메서드들 (하위 호환성 유지)
   async getProductAnalytics(): Promise<ApiResponse<SellerProductAnalytics>> {
     // Note: 서버 API 응답이 변경되어 기존 SellerProductAnalytics와 다름

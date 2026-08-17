@@ -127,6 +127,8 @@ export function BrandCustomOrderFlow({ sellerUuid, brandName, onBack, onGo }: Br
       case 'details':
         return (
           <DetailsStep
+            quantity={data.quantity}
+            onUpdateQuantity={(q: number) => updateData('quantity', q)}
             desiredColor={data.desiredColor}
             request={data.request}
             attachments={data.attachments}

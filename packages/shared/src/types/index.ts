@@ -2473,6 +2473,7 @@ export interface CreateCustomOrderRequest {
       left: { thumb: string; index: string; middle: string; ring: string; pinky: string };
       right: { thumb: string; index: string; middle: string; ring: string; pinky: string };
     };
+    quantity?: number;     // 세트 수 (기본 1). 견적 price는 수량 포함 총액
     desiredColor?: string;
     desiredDate?: string;  // ISO 문자열: "2025-12-25"
     designNotes?: string;
@@ -2706,4 +2707,72 @@ export interface AnnouncementListResponse {
 export interface AnnouncementDetailResponse {
   success: boolean;
   announcement: Announcement;
+}
+
+// ============================================
+// 반품·교환 (RMA) 관련 타입
+// ============================================
+
+export type ReturnRequestType = 'return' | 'exchange';
+
+export type ReturnRequestStatus =
+  | 'requested'   // 접수
+  | 'approved'    // 승인 (교환)
+  | 'rejected'    // 반려
+  | 'completed'   // 완료 (반품 환불 완료 / 교환 완료)
+  | 'withdrawn';  // 구매자 철회
+
+export interface ReturnRequestStatusHistory {
+  status: ReturnRequestStatus | string;
+  date: string;
+  note?: string;
+}
+
+// 서버 routes/returns.ts의 ReturnRequest 응답 형태
+export interface ReturnRequest {
+  returnRequestUuid: string;
+  orderUuid: string;
+  orderNumber: string;
+  buyerUuid?: string;
+  sellerUuid?: string;
+  type: ReturnRequestType;
+  reason: string;
+  detail?: string;
+  imageUrls?: string[];
+  status: ReturnRequestStatus;
+  rejectReason?: string;
+  refund?: {
+    required?: boolean;
+    processedAt?: string;
+  };
+  requestedAt?: string;
+  processedAt?: string;
+  completedAt?: string;
+  statusHistory?: ReturnRequestStatusHistory[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateReturnRequestPayload {
+  orderUuid: string;
+  type: ReturnRequestType;
+  reason: string;         // 2-200자 필수
+  detail?: string;        // 최대 2000자
+  imageUrls?: string[];   // 최대 10개 URI
+}
+
+export interface ReturnRequestPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+// GET /api/returns/my, GET /api/returns/seller 응답
+export interface ReturnRequestListResponse {
+  success: boolean;
+  data: {
+    requests: ReturnRequest[];
+    pagination: ReturnRequestPagination;
+  };
 }

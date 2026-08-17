@@ -7,8 +7,10 @@ interface DetailsStepProps {
   desiredColor: string;
   request: string;
   attachments: File[];
+  quantity?: number;
   onUpdateColor: (color: string) => void;
   onUpdateRequest: (request: string) => void;
+  onUpdateQuantity?: (quantity: number) => void;
   onAddAttachments: (files: File[]) => void;
   onRemoveAttachment: (index: number) => void;
   onNext: () => void;
@@ -17,12 +19,16 @@ interface DetailsStepProps {
   totalSteps: number;
 }
 
+const MAX_QUANTITY = 100;
+
 export function DetailsStep({
   desiredColor,
   request,
   attachments,
+  quantity = 1,
   onUpdateColor,
   onUpdateRequest,
+  onUpdateQuantity,
   onAddAttachments,
   onRemoveAttachment,
   onNext,
@@ -56,6 +62,44 @@ export function DetailsStep({
       subtitle={t('product:customOrder.styleSubtitle')}
     >
       <div className="space-y-6 flex-1">
+        {/* 주문 수량 (세트) */}
+        {onUpdateQuantity && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              주문 수량
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="수량 줄이기"
+                onClick={() => onUpdateQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+                className="w-12 h-12 rounded-xl border-2 border-gray-200 text-xl font-bold
+                         disabled:opacity-40 active:bg-gray-100 transition-colors"
+              >
+                −
+              </button>
+              <div className="flex-1 text-center">
+                <span className="text-2xl font-bold">{quantity}</span>
+                <span className="ml-1 text-sm text-gray-500">세트</span>
+              </div>
+              <button
+                type="button"
+                aria-label="수량 늘리기"
+                onClick={() => onUpdateQuantity(Math.min(MAX_QUANTITY, quantity + 1))}
+                disabled={quantity >= MAX_QUANTITY}
+                className="w-12 h-12 rounded-xl border-2 border-gray-200 text-xl font-bold
+                         disabled:opacity-40 active:bg-gray-100 transition-colors"
+              >
+                +
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              같은 디자인·같은 사이즈 기준입니다. 판매자는 수량을 반영한 총액으로 견적을 보냅니다.
+            </p>
+          </div>
+        )}
+
         {/* 원하는 컬러 */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">

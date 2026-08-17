@@ -29,6 +29,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);  // 결제 필수 동의 (전자상거래법)
   const hasLoadedRef = useRef(false);  // ✅ 중복 실행 방지용 ref
 
   // 배송지 정보
@@ -1180,10 +1181,23 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 </div>
               )}
 
+              {/* 필수 동의: 안내 문구만으로는 법적 요건을 충족하지 못해 명시적 체크박스로 수집 */}
+              <label className="flex items-start gap-2 mt-6 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded accent-[#E85A6B]"
+                />
+                <span className="text-sm text-gray-700">
+                  주문 내용을 확인했으며, <button type="button" onClick={() => window.open('/policy/terms', '_blank')} className="underline text-gray-900">이용약관</button> 및 <button type="button" onClick={() => window.open('/policy/privacy', '_blank')} className="underline text-gray-900">개인정보 처리방침</button>에 동의합니다. <span className="text-[#E85A6B]">(필수)</span>
+                </span>
+              </label>
+
               <button
                 onClick={handlePayment}
-                disabled={processing || !validateCheckout()}
-                className="w-full mt-6 bg-[#FF073A] text-white font-semibold py-3 rounded-lg hover:bg-[#E0062F] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={processing || !agreedToTerms || !validateCheckout()}
+                className="w-full mt-4 bg-[#FF073A] text-white font-semibold py-3 rounded-lg hover:bg-[#E0062F] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing ? t('order:checkout.processingPayment') : `${money(order?.finalPrice || 0)} ${t('order:checkout.placeOrder')}`}
               </button>

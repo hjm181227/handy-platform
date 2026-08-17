@@ -143,6 +143,7 @@ import {
   CouponManagement
 } from './components/pages/SellerPages';
 import { BulkProductUpload } from './components/pages/seller/BulkProductUpload';
+import { ReturnRequestManagement } from './components/pages/seller/ReturnRequestManagement';
 
 // Admin Components
 import AdminLayout from './components/admin/AdminLayout';
@@ -893,6 +894,13 @@ export function Router() {
       </RequireAuth>
     );
   }
+  else if (pathname === '/seller/returns') {
+    screen = (
+      <RequireAuth>
+        <ReturnRequestManagement onGo={nav} />
+      </RequireAuth>
+    );
+  }
   else if (pathname === '/seller/reviews') {
     screen = (
       <RequireAuth>
@@ -1263,6 +1271,65 @@ interface AdminDashboardContentProps {
 }
 
 function AdminDashboardContent({ nav, currentUser }: AdminDashboardContentProps) {
+  interface AdminDashboardStats {
+    totalUsers: number;
+    totalOrders: number;
+    totalProducts: number;
+    totalRevenue: number;
+    thisMonthRevenue: number;
+    pendingOrders: number;
+    lowStockProducts: number;
+  }
+
+  const [dashboardStats, setDashboardStats] = useState<AdminDashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+
+  const loadDashboardStats = async () => {
+    try {
+      setStatsLoading(true);
+      setStatsError(false);
+      const data = await webApiService.admin.getDashboardStats();
+      setDashboardStats(data.stats);
+    } catch (error) {
+      console.error('Failed to load admin dashboard stats:', error);
+      setStatsError(true);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value || 0);
+  const formatKrw = (value: number) =>
+    new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(value || 0);
+
+  const statCards = [
+    {
+      label: '총 회원',
+      value: dashboardStats ? `${formatNumber(dashboardStats.totalUsers)}명` : '-',
+      sub: null as string | null,
+    },
+    {
+      label: '총 주문',
+      value: dashboardStats ? `${formatNumber(dashboardStats.totalOrders)}건` : '-',
+      sub: dashboardStats ? `대기 ${formatNumber(dashboardStats.pendingOrders)}건` : null,
+    },
+    {
+      label: '총 상품',
+      value: dashboardStats ? `${formatNumber(dashboardStats.totalProducts)}개` : '-',
+      sub: dashboardStats ? `재고 부족 ${formatNumber(dashboardStats.lowStockProducts)}개` : null,
+    },
+    {
+      label: '이번 달 매출',
+      value: dashboardStats ? formatKrw(dashboardStats.thisMonthRevenue) : '-',
+      sub: dashboardStats ? `누적 ${formatKrw(dashboardStats.totalRevenue)}` : null,
+    },
+  ];
+
   return (
     <div className="p-6 space-y-6">
       {/* 대시보드 헤더 */}
@@ -1278,6 +1345,41 @@ function AdminDashboardContent({ nav, currentUser }: AdminDashboardContentProps)
           </div>
         </div>
       </div>
+
+      {/* 주요 지표 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((card) => (
+          <div key={card.label} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="text-sm text-gray-500 mb-2">{card.label}</div>
+            {statsLoading ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-7 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+              </div>
+            ) : statsError ? (
+              <div className="text-sm text-gray-400">불러오기 실패</div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-gray-900">{card.value}</div>
+                {card.sub && <div className="text-xs text-gray-500 mt-1">{card.sub}</div>}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 지표 로딩 실패 안내 */}
+      {statsError && !statsLoading && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between">
+          <p className="text-sm text-red-700">대시보드 지표를 불러오지 못했습니다.</p>
+          <button
+            onClick={() => loadDashboardStats()}
+            className="px-3 py-1.5 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
 
       {/* 대시보드 카드들 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

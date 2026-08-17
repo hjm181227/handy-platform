@@ -380,49 +380,9 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           }
 
           console.error('Failed to load seller products:', apiError);
-          // API 오류 시 사용자에게 알림
+          // API 오류 시 사용자에게 알림 (가짜 샘플 데이터로 대체하지 않는다)
           setError(t('products.loadFailed'));
-
-          // 개발 중에는 샘플 데이터 사용
-          console.warn('Using sample data for development');
-          setProducts([
-            {
-              id: '1',
-              name: 'Glossy Almond Tip – Milk Beige',
-              category: '네일 팁',
-              price: 18000,
-              stock: 245,
-              status: 'active',
-              sales: 1234,
-              views: 5678,
-              image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d46?w=100&h=100&fit=crop',
-              createdAt: '2024-08-15'
-            },
-            {
-              id: '2',
-              name: 'Square Short – Cocoa',
-              category: '네일 팁',
-              price: 16500,
-              stock: 50,
-              status: 'active',
-              sales: 987,
-              views: 3456,
-              image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=100&h=100&fit=crop',
-              createdAt: '2024-08-12'
-            },
-            {
-              id: '3',
-              name: 'Gel Polish - Rose Gold',
-              category: '네일 젤',
-              price: 22000,
-              stock: 156,
-              status: 'inactive',
-              sales: 567,
-              views: 2134,
-              image: 'https://images.unsplash.com/photo-1599948128020-9e50de75f17a?w=100&h=100&fit=crop',
-              createdAt: '2024-08-10'
-            }
-          ]);
+          setProducts([]);
         }
       } catch (error) {
         console.error('Failed to load products:', error);
@@ -2410,88 +2370,85 @@ export function SellerOrders({ onGo }: { onGo: (to: string) => void }) {
 
 // 매출 분석 페이지
 export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
-  const [ period, setPeriod ] = useState('month');
+  const [ period, setPeriod ] = useState<'6m' | '1y'>('6m');
   const [ analyticsData, setAnalyticsData ] = useState({
     revenue: {
+      month: 0,
+      today: 0,
+      growth: null as number | null,
+      chart: [] as { label: string; amount: number; orders: number }[]
+    },
+    orders: {
       total: 0,
-      growth: 0,
-      chart: [] as any[]
+      monthly: 0,
+      avgOrderValue: 0
     },
     products: {
-      topSelling: [] as any[]
-    },
-    customers: {
-      newCustomers: 0,
-      returningCustomers: 0,
-      averageOrderValue: 0
+      total: 0,
+      active: 0,
+      lowStock: 0,
+      averageRating: 0,
+      totalReviews: 0
     }
   });
   const [ isLoading, setIsLoading ] = useState(true);
   const [ error, setError ] = useState<string | null>(null);
 
-  // 분석 데이터 로드
+  // 분석 데이터 로드 (대시보드와 동일한 sellerService 경로 사용)
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // API 호출 시도
-        try {
-          const params = new URLSearchParams({
-            period,
-            startDate: '', // 계산된 시작일
-            endDate: '' // 계산된 종료일
-          });
+        const [ orderRes, productRes, revenueRes, settlementRes ] = await Promise.all([
+          sellerService.getOrderAnalyticsOverview(),
+          sellerService.getProductAnalyticsOverview(),
+          sellerService.getRevenueAnalytics(period),
+          sellerService.getSettlementSummary()
+        ]);
 
-          const response = await fetch(`/api/seller/analytics?${params}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        const orderStats = (orderRes as any)?.data;
+        const productStats = (productRes as any)?.data;
+        const revenueData = (revenueRes as any)?.data?.revenueData || [];
+        const settlement = (settlementRes as any)?.data;
 
-          if (response.ok) {
-            const data = await response.json();
-            setAnalyticsData(data.analytics);
-          } else {
-            throw new Error('API not implemented');
+        const lastMonthSales = settlement?.lastMonthSales || 0;
+        const currentMonthSales = settlement?.currentMonthSales ?? orderStats?.monthlyRevenue ?? 0;
+        const growth = lastMonthSales > 0
+          ? Math.round(((currentMonthSales - lastMonthSales) / lastMonthSales) * 1000) / 10
+          : null;
+
+        const monthlyOrders = orderStats?.monthlyOrders || 0;
+        const monthlyRevenue = orderStats?.monthlyRevenue || 0;
+
+        setAnalyticsData({
+          revenue: {
+            month: monthlyRevenue,
+            today: orderStats?.todayRevenue || 0,
+            growth,
+            chart: revenueData.map((item: any) => ({
+              label: `${String(item._id.year).slice(2)}.${String(item._id.month).padStart(2, '0')}`,
+              amount: item.revenue,
+              orders: item.orderCount
+            }))
+          },
+          orders: {
+            total: orderStats?.totalOrders || 0,
+            monthly: monthlyOrders,
+            avgOrderValue: monthlyOrders > 0 ? Math.round(monthlyRevenue / monthlyOrders) : 0
+          },
+          products: {
+            total: productStats?.totalProducts ?? 0,
+            active: productStats?.activeProducts ?? 0,
+            lowStock: productStats?.lowStockProducts ?? 0,
+            averageRating: productStats?.averageRating ?? 0,
+            totalReviews: productStats?.totalReviews ?? 0
           }
-        } catch (apiError) {
-          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
-          console.warn('Seller analytics API not implemented, using sample data');
-          setAnalyticsData({
-            revenue: {
-              total: 45800000,
-              growth: 19.5,
-              chart: [
-                { date: '08-01', amount: 1200000 },
-                { date: '08-02', amount: 1400000 },
-                { date: '08-03', amount: 1800000 },
-                { date: '08-04', amount: 1600000 },
-                { date: '08-05', amount: 2100000 },
-                { date: '08-06', amount: 1900000 },
-                { date: '08-07', amount: 2300000 }
-              ]
-            },
-            products: {
-              topSelling: [
-                { name: 'Glossy Almond Tip – Milk Beige', sales: 1234, revenue: 22212000 },
-                { name: 'Square Short – Cocoa', sales: 987, revenue: 16285500 },
-                { name: 'Gel Polish - Rose Gold', sales: 567, revenue: 12474000 }
-              ]
-            },
-            customers: {
-              newCustomers: 156,
-              returningCustomers: 89,
-              averageOrderValue: 45600
-            }
-          });
-        }
+        });
       } catch (error) {
         console.error('Failed to load analytics:', error);
-        setError('분석 데이터를 불러오는데 실패했습니다.');
+        setError('분석 데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
       } finally {
         setIsLoading(false);
       }
@@ -2499,6 +2456,35 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
 
     loadAnalytics();
   }, [ period ]);
+
+  if (isLoading) {
+    return (
+      <SellerLayout title="매출 분석" onGo={onGo}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">분석 데이터를 불러오는 중...</p>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <SellerLayout title="매출 분석" onGo={onGo}>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            다시 시도
+          </button>
+        </div>
+      </SellerLayout>
+    );
+  }
 
   return (
     <SellerLayout title="매출 분석" onGo={onGo}>
@@ -2508,13 +2494,11 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           <h2 className="text-xl font-semibold">매출 현황</h2>
           <select
             value={period}
-            onChange={(e) => setPeriod(e.target.value)}
+            onChange={(e) => setPeriod(e.target.value as '6m' | '1y')}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
           >
-            <option value="week">최근 1주일</option>
-            <option value="month">최근 1개월</option>
-            <option value="quarter">최근 3개월</option>
-            <option value="year">최근 1년</option>
+            <option value="6m">최근 6개월</option>
+            <option value="1y">최근 1년</option>
           </select>
         </div>
 
@@ -2523,11 +2507,15 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           <div className="bg-white rounded-lg p-6 border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">총 매출</p>
-                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.revenue.total)}</p>
-                <p className="text-sm text-green-600 mt-1">
-                  +{analyticsData.revenue.growth}% vs 지난 기간
-                </p>
+                <p className="text-sm text-gray-600">이번 달 매출</p>
+                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.revenue.month)}</p>
+                {analyticsData.revenue.growth !== null ? (
+                  <p className={`text-sm mt-1 ${analyticsData.revenue.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {analyticsData.revenue.growth >= 0 ? '+' : ''}{analyticsData.revenue.growth}% vs 지난 달
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 mt-1">전월 데이터 없음</p>
+                )}
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2541,9 +2529,9 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           <div className="bg-white rounded-lg p-6 border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">신규 고객</p>
-                <p className="text-3xl font-bold text-gray-900">{analyticsData.customers.newCustomers}명</p>
-                <p className="text-sm text-gray-600 mt-1">재구매: {analyticsData.customers.returningCustomers}명</p>
+                <p className="text-sm text-gray-600">이번 달 주문</p>
+                <p className="text-3xl font-bold text-gray-900">{analyticsData.orders.monthly}건</p>
+                <p className="text-sm text-gray-600 mt-1">누적 주문: {analyticsData.orders.total}건</p>
               </div>
               <div className="w-12 h-12 bg-[#FFF1F2] rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2557,8 +2545,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           <div className="bg-white rounded-lg p-6 border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">평균 주문 금액</p>
-                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.customers.averageOrderValue)}</p>
+                <p className="text-sm text-gray-600">평균 주문 금액 (이번 달)</p>
+                <p className="text-3xl font-bold text-gray-900">{money(analyticsData.orders.avgOrderValue)}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2570,49 +2558,56 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           </div>
         </div>
 
-        {/* 매출 차트 (간단한 막대 그래프) */}
+        {/* 월별 매출 차트 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">일별 매출 추이</h3>
-          <div className="h-64 flex items-end justify-between gap-2">
-            {analyticsData.revenue.chart.map((item, index) => {
-              const maxAmount = Math.max(...analyticsData.revenue.chart.map(d => d.amount));
-              const height = (item.amount / maxAmount) * 100;
+          <h3 className="text-lg font-semibold mb-4">월별 매출 추이</h3>
+          {analyticsData.revenue.chart.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-gray-400">
+              아직 매출 데이터가 없습니다
+            </div>
+          ) : (
+            <div className="h-64 flex items-end justify-between gap-2">
+              {analyticsData.revenue.chart.map((item, index) => {
+                const maxAmount = Math.max(...analyticsData.revenue.chart.map(d => d.amount), 1);
+                const height = (item.amount / maxAmount) * 100;
 
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center">
-                  <div
-                    className="w-full bg-[#E85A6B] rounded-t transition-all duration-300 hover:bg-[#E85A6B]"
-                    style={{ height: `${height}%` }}
-                    title={`${item.date}: ${money(item.amount)}`}
-                  />
-                  <div className="text-xs text-gray-500 mt-2">{item.date}</div>
-                </div>
-              );
-            })}
-          </div>
+                return (
+                  <div key={index} className="flex-1 flex flex-col items-center">
+                    <div
+                      className="w-full bg-[#E85A6B] rounded-t transition-all duration-300 hover:opacity-80"
+                      style={{ height: `${Math.max(height, 1)}%` }}
+                      title={`${item.label}: ${money(item.amount)} (주문 ${item.orders}건)`}
+                    />
+                    <div className="text-xs text-gray-500 mt-2">{item.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* 인기 상품 */}
+        {/* 상품 현황 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">인기 상품 TOP 3</h3>
-          <div className="space-y-4">
-            {analyticsData.products.topSelling.map((product, index) => (
-              <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 bg-[#FFF1F2] rounded-full flex items-center justify-center">
-                    <span className="text-[#E85A6B] font-bold">{index + 1}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-gray-500">판매량: {product.sales}개</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-lg">{money(product.revenue)}</p>
-                  <p className="text-sm text-gray-500">매출</p>
-                </div>
-              </div>
-            ))}
+          <h3 className="text-lg font-semibold mb-4">상품 현황</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">{analyticsData.products.total}</p>
+              <p className="text-sm text-gray-600">전체 상품</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">{analyticsData.products.active}</p>
+              <p className="text-sm text-gray-600">판매 중</p>
+            </div>
+            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <p className="text-2xl font-bold text-yellow-600">{analyticsData.products.lowStock}</p>
+              <p className="text-sm text-gray-600">재고 부족</p>
+            </div>
+            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
+              <p className="text-2xl font-bold text-[#E85A6B]">
+                {analyticsData.products.averageRating ? analyticsData.products.averageRating.toFixed(1) : '-'}
+              </p>
+              <p className="text-sm text-gray-600">평균 평점 ({analyticsData.products.totalReviews}개 리뷰)</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2622,101 +2617,90 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
 
 // 정산 관리 페이지
 export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
-  const [ period, setPeriod ] = useState('month');
   const [ settlementData, setSettlementData ] = useState({
     summary: {
-      totalSales: 0,
-      finalAmount: 0
+      currentMonthSales: 0,
+      lastMonthSales: 0,
+      totalPaidAmount: 0,
+      totalPendingAmount: 0
     },
-    history: [] as any[]
+    commissionPercentage: null as number | null,
+    availableAmount: null as number | null,
+    history: [] as any[],
+    bankAccount: null as { bankName: string; accountNumber: string; accountHolder: string } | null
   });
   const [ isLoading, setIsLoading ] = useState(true);
   const [ error, setError ] = useState<string | null>(null);
 
-  // 정산 데이터 로드
+  // 정산 데이터 로드 (실제 정산 API 사용 — 가짜 폴백 없음)
   useEffect(() => {
     const loadSettlements = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // API 호출 시도
-        try {
-          const params = new URLSearchParams({
-            page: '1',
-            limit: '20',
-            ...(period !== 'month' && { period }),
-          });
+        const [ summaryRes, listRes, infoRes, availableRes ] = await Promise.all([
+          sellerService.getSettlementSummary(),
+          sellerService.getSettlements({ page: 1, limit: 20 }),
+          sellerService.getMySellerInfo().catch(() => null),
+          sellerService.getAvailableSettlementAmount().catch(() => null)
+        ]);
 
-          const response = await fetch(`/api/seller/settlements?${params}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        const summary = (summaryRes as any)?.data || {};
+        // 정산 목록 API는 { settlements, pagination }을 최상위로 반환한다
+        const listData = (listRes as any)?.data ?? (listRes as any);
+        const settlements = listData?.settlements || [];
+        const info = (infoRes as any)?.data;
+        const available = (availableRes as any)?.data;
 
-          if (response.ok) {
-            const data = await response.json();
-            setSettlementData({
-              summary: data.summary || { totalSales: 0, finalAmount: 0 },
-              history: data.settlements || []
-            });
-          } else {
-            throw new Error('API not implemented');
-          }
-        } catch (apiError) {
-          // API가 아직 구현되지 않았으므로 샘플 데이터 사용
-          console.warn('Seller settlements API not implemented, using sample data');
-          setSettlementData({
-            summary: {
-              totalSales: 45800000,
-              finalAmount: 41220000
-            },
-            history: [
-              {
-                id: 'SET-202408-001',
-                period: '2024년 8월 1주차',
-                totalSales: 12500000,
-                netAmount: 11250000,
-                status: 'completed',
-                paidDate: '2024-08-08',
-                bank: '국민은행',
-                account: '123-456-789012'
-              },
-              {
-                id: 'SET-202407-004',
-                period: '2024년 7월 4주차',
-                totalSales: 8900000,
-                netAmount: 8010000,
-                status: 'completed',
-                paidDate: '2024-08-01',
-                bank: '국민은행',
-                account: '123-456-789012'
-              },
-              {
-                id: 'SET-202408-002',
-                period: '2024년 8월 2주차',
-                totalSales: 15600000,
-                netAmount: 14040000,
-                status: 'pending',
-                paidDate: null,
-                bank: '국민은행',
-                account: '123-456-789012'
-              }
-            ]
-          });
-        }
+        const rawCommission = available?.commissionPercentage ?? info?.commission;
+        const commissionPercentage = typeof rawCommission === 'number'
+          ? rawCommission
+          : (typeof rawCommission?.rate === 'number' ? rawCommission.rate : null);
+
+        setSettlementData({
+          summary: {
+            currentMonthSales: summary.currentMonthSales || 0,
+            lastMonthSales: summary.lastMonthSales || 0,
+            totalPaidAmount: summary.totalPaidAmount || 0,
+            totalPendingAmount: summary.totalPendingAmount || 0
+          },
+          commissionPercentage,
+          availableAmount: available?.availableAmount ?? null,
+          history: settlements.map((s: any) => ({
+            id: s._id || s.id,
+            period: s.period?.startDate
+              ? `${String(s.period.startDate).slice(0, 10)} ~ ${String(s.period.endDate).slice(0, 10)}`
+              : '-',
+            totalSales: s.summary?.totalSales ?? 0,
+            commission: s.summary?.commission ?? 0,
+            netAmount: s.summary?.netAmount ?? 0,
+            status: s.status,
+            paidDate: s.paidAt ? String(s.paidAt).slice(0, 10) : null
+          })),
+          bankAccount: info?.bankAccount || null
+        });
       } catch (error) {
         console.error('Failed to load settlements:', error);
-        setError('정산 데이터를 불러오는데 실패했습니다.');
+        setError('정산 데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadSettlements();
-  }, [ period ]);
+  }, []);
+
+  const growth = settlementData.summary.lastMonthSales > 0
+    ? Math.round(((settlementData.summary.currentMonthSales - settlementData.summary.lastMonthSales)
+        / settlementData.summary.lastMonthSales) * 1000) / 10
+    : null;
+
+  const maskAccountNumber = (accountNumber: string) => {
+    const digits = accountNumber.replace(/[^0-9]/g, '');
+    if (digits.length <= 5) return accountNumber;
+    return `${digits.slice(0, 3)}${'*'.repeat(digits.length - 5)}${digits.slice(-2)}`;
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -2731,38 +2715,75 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <SellerLayout title="정산 관리" onGo={onGo}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">정산 데이터를 불러오는 중...</p>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <SellerLayout title="정산 관리" onGo={onGo}>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            다시 시도
+          </button>
+        </div>
+      </SellerLayout>
+    );
+  }
+
   return (
     <SellerLayout title="정산 관리" onGo={onGo}>
       <div className="space-y-6">
         {/* 정산 요약 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold">이번 달 정산 요약</h3>
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
-            >
-              <option value="month">이번 달</option>
-              <option value="lastMonth">지난 달</option>
-              <option value="quarter">이번 분기</option>
-            </select>
+            <h3 className="text-lg font-semibold">정산 요약</h3>
+            {settlementData.commissionPercentage !== null && (
+              <span className="text-sm text-gray-500">
+                판매 수수료율: <span className="font-semibold text-gray-700">{settlementData.commissionPercentage}%</span>
+              </span>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center p-6 bg-[#FFF1F2] rounded-lg">
-              <p className="text-3xl font-bold text-[#E85A6B]">{money(settlementData.summary.totalSales)}</p>
-              <p className="text-sm text-gray-600">총 매출</p>
+              <p className="text-3xl font-bold text-[#E85A6B]">{money(settlementData.summary.currentMonthSales)}</p>
+              <p className="text-sm text-gray-600">이번 달 매출 (배송완료 기준)</p>
             </div>
             <div className="text-center p-6 bg-green-50 rounded-lg">
-              <p className="text-3xl font-bold text-green-600">{money(settlementData.summary.finalAmount)}</p>
-              <p className="text-sm text-gray-600">실 정산액</p>
+              <p className="text-3xl font-bold text-green-600">{money(settlementData.summary.totalPaidAmount)}</p>
+              <p className="text-sm text-gray-600">지급 완료 누계</p>
+            </div>
+            <div className="text-center p-6 bg-yellow-50 rounded-lg">
+              <p className="text-3xl font-bold text-yellow-600">{money(settlementData.summary.totalPendingAmount)}</p>
+              <p className="text-sm text-gray-600">정산 대기 금액</p>
             </div>
             <div className="text-center p-6 bg-purple-50 rounded-lg">
-              <p className="text-3xl font-bold text-purple-600">19.5%</p>
-              <p className="text-sm text-gray-600">전월 대비 증가</p>
+              <p className="text-3xl font-bold text-purple-600">
+                {growth !== null ? `${growth >= 0 ? '+' : ''}${growth}%` : '-'}
+              </p>
+              <p className="text-sm text-gray-600">전월 대비 매출</p>
             </div>
           </div>
+
+          {settlementData.availableAmount !== null && (
+            <p className="mt-4 text-sm text-gray-600">
+              현재 정산 가능 금액(미정산 배송완료 주문): <span className="font-semibold">{money(settlementData.availableAmount)}</span>
+            </p>
+          )}
         </div>
 
         {/* 정산 내역 */}
@@ -2770,16 +2791,6 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
           <div className="p-6 border-b">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">정산 내역</h3>
-              <button
-                onClick={() => alert('정산 내역을 Excel로 내보냅니다.')}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Excel 내보내기
-              </button>
             </div>
           </div>
 
@@ -2791,6 +2802,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">기간</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">총 매출</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수수료</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">실 정산액
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
@@ -2798,6 +2810,13 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
               </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
+              {settlementData.history.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-400">
+                    아직 정산 내역이 없습니다
+                  </td>
+                </tr>
+              )}
               {settlementData.history.map((settlement) => (
                 <tr key={settlement.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -2808,6 +2827,9 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                     {money(settlement.totalSales)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {money(settlement.commission)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
                     {money(settlement.netAmount)}
@@ -2828,43 +2850,44 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
         {/* 계좌 정보 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">정산 계좌 정보</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">은행명</label>
-              <input
-                type="text"
-                value="국민은행"
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">계좌번호</label>
-              <input
-                type="text"
-                value="123-456-789012"
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">예금주</label>
-              <input
-                type="text"
-                value="홍길동"
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-              />
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={() => alert('계좌 정보 변경 기능은 추후 구현됩니다.')}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                계좌 정보 변경
-              </button>
-            </div>
-          </div>
+          {settlementData.bankAccount ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">은행명</label>
+                  <input
+                    type="text"
+                    value={settlementData.bankAccount.bankName}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">계좌번호</label>
+                  <input
+                    type="text"
+                    value={maskAccountNumber(settlementData.bankAccount.accountNumber)}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">예금주</label>
+                  <input
+                    type="text"
+                    value={settlementData.bankAccount.accountHolder}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  />
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-gray-500">
+                계좌 정보 변경이 필요하면 고객센터로 문의해주세요.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-500">등록된 정산 계좌가 없습니다. 입점 정보에서 계좌를 등록해주세요.</p>
+          )}
         </div>
       </div>
     </SellerLayout>

@@ -26,6 +26,7 @@ export interface CustomOrderFormData {
   shape: NailShape;
   length: NailLength;
   sizes: HandSizes;
+  quantity: number;
   desiredColor: string;
   request: string;
   attachments: File[];
@@ -68,6 +69,7 @@ const initialData: CustomOrderFormData = {
     left: { ...emptyFingerSizes },
     right: { ...emptyFingerSizes },
   },
+  quantity: 1,
   desiredColor: '',
   request: '',
   attachments: [],
@@ -342,6 +344,7 @@ export function useCustomOrderFlow(productId: string) {
           shape: data.shape,
           length: data.length,
           sizes: data.sizes,
+          quantity: data.quantity > 1 ? data.quantity : undefined,
           desiredColor: data.desiredColor || undefined,
           desiredDate: data.desiredDate || undefined,
           designNotes: data.request || undefined,

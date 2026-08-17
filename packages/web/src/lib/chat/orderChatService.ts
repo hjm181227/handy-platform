@@ -5,6 +5,7 @@
 
 import type { CreateCustomOrderResponse } from '@handy-platform/shared';
 import { config } from '../../config/environment';
+import { chatFetch, isChatMarkedDown } from './chatHealth';
 
 // 백엔드 채팅 서버 URL
 const CHAT_API_URL = config.chatApiUrl;
@@ -34,11 +35,15 @@ export async function sendCustomOrderToChat(
     return { success: false, error: '로그인이 필요합니다' };
   }
 
+  if (isChatMarkedDown()) {
+    return { success: false, error: '채팅 서버에 연결할 수 없습니다. 주문은 정상 접수되었으며 알림으로 전달됩니다.' };
+  }
+
   try {
     // 1. 채팅방 생성/조회 (POST /rooms/ensure)
     console.log('[orderChatService] Ensuring chat room with seller:', sellerUuid);
 
-    const ensureResponse = await fetch(`${CHAT_API_URL}/rooms/ensure`, {
+    const ensureResponse = await chatFetch(`${CHAT_API_URL}/rooms/ensure`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +69,7 @@ export async function sendCustomOrderToChat(
     console.log('[orderChatService] Sending custom order message to room:', roomId);
 
     const clientMessageId = `order-${orderData.requestUuid}-${Date.now()}`;
-    const messageResponse = await fetch(`${CHAT_API_URL}/messages`, {
+    const messageResponse = await chatFetch(`${CHAT_API_URL}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,11 +141,15 @@ export async function sendQuoteToChat(
     return { success: false, error: '로그인이 필요합니다' };
   }
 
+  if (isChatMarkedDown()) {
+    return { success: false, error: '채팅 서버에 연결할 수 없습니다. 주문은 정상 접수되었으며 알림으로 전달됩니다.' };
+  }
+
   try {
     // 1. 채팅방 생성/조회 (POST /rooms/ensure)
     console.log('[orderChatService] Ensuring chat room with buyer:', buyerUuid);
 
-    const ensureResponse = await fetch(`${CHAT_API_URL}/rooms/ensure`, {
+    const ensureResponse = await chatFetch(`${CHAT_API_URL}/rooms/ensure`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -163,7 +172,7 @@ export async function sendQuoteToChat(
     console.log('[orderChatService] Sending quote message to room:', roomId);
 
     const clientMessageId = `quote-${quoteData.quoteId}-${Date.now()}`;
-    const messageResponse = await fetch(`${CHAT_API_URL}/messages`, {
+    const messageResponse = await chatFetch(`${CHAT_API_URL}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -154,6 +154,8 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
       case 'details':
         return (
           <DetailsStep
+            quantity={data.quantity}
+            onUpdateQuantity={(q: number) => updateData('quantity', q)}
             desiredColor={data.desiredColor}
             request={data.request}
             attachments={data.attachments}

@@ -93,6 +93,12 @@ export function ConfirmStep({
                 {NAIL_LENGTH_NAME[data.length as NailLength]}
               </p>
             </div>
+            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center">
+              <p className="text-xs text-gray-500">수량</p>
+              <p className="font-medium text-gray-900 mt-1">
+                {(data as any).quantity || 1}세트
+              </p>
+            </div>
           </div>
         </div>
 

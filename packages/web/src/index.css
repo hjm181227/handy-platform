@@ -65,9 +65,15 @@ body {
   color: #be185d;
 }
 
-/* 포커스 스타일 */
+/* 포커스 스타일: 마우스 클릭 시에는 아웃라인을 감추되,
+   키보드 탐색(:focus-visible)에서는 반드시 위치를 표시한다 (WCAG 2.4.7) */
 *:focus {
   outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #E85A6B;
+  outline-offset: 2px;
 }
 
 /* 버튼 기본 스타일 */

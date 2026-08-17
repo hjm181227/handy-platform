@@ -217,7 +217,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-400 line-through">
-                    ₩{(24900).toLocaleString()}
+                    ₩{(7900).toLocaleString()}
                   </span>
                   <span className="text-sm font-medium text-pink-600">
                     ₩{currentPlan.price.toLocaleString()}
@@ -344,8 +344,8 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                 {actionLoading
                   ? t('designTool.subscription.processing')
                   : t('designTool.subscription.upgradeWithPrice', {
-                      regularPrice: '24,900',
-                      discountPrice: '21,900',
+                      regularPrice: '7,900',
+                      discountPrice: '6,900',
                     })}
               </button>
             </div>

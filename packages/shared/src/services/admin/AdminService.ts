@@ -92,6 +92,85 @@ export interface AdminDashboardData {
   }>;
 }
 
+// 어드민 주문 목록 항목 (서버 GET /api/admin/orders 응답: Order 문서 + user)
+export interface AdminOrderListItem {
+  _id: string;
+  orderUuid?: string;
+  orderNumber: string;
+  userUuid: string;
+  user: { name: string; email: string } | null;
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  totalAmount: number;
+  items: Array<{
+    productType?: string;
+    productUuid?: string;
+    productName: string;
+    sellerName?: string;
+    sellerUuid?: string;
+    productImage?: string;
+    shape?: string;
+    size?: string;
+    quantity: number;
+    price: number;
+  }>;
+  shippingAddress?: {
+    recipientName?: string;
+    recipientPhone?: string;
+    postcode?: string;
+    roadAddress?: string;
+    detailAddress?: string;
+    [key: string]: any;
+  };
+  trackingNumber?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminOrdersListResponse {
+  orders: AdminOrderListItem[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalOrders: number;
+  };
+}
+
+// 어드민 상품 목록 항목 (서버 GET /api/admin/products 응답: Product 문서)
+export interface AdminProductListItem {
+  _id: string;
+  productUuid?: string;
+  productId?: string;
+  name: string;
+  description?: string;
+  brand?: string;
+  sku?: string;
+  price: number;
+  salePrice?: number;
+  mainImageUrl?: string;
+  stockQuantity?: number;
+  isInStock?: boolean;
+  status?: 'active' | 'inactive' | 'draft' | 'out_of_stock';
+  isFeatured?: boolean;
+  sellerId?: string;
+  sellerUuid?: string;
+  rating?: { average: number; count: number };
+  stats?: { viewsCount?: number; ordersCount?: number; reviewsCount?: number };
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  [key: string]: any;
+}
+
+export interface AdminProductsListResponse {
+  products: AdminProductListItem[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalProducts: number;
+  };
+}
+
 // SellerApplication은 types/index.ts에서 import
 
 export interface SellerApplicationDetail extends Omit<SellerApplication, 'verificationDocuments'> {
@@ -260,6 +339,11 @@ export abstract class BaseAdminService extends BaseApiService {
     return this.request<AdminDashboardData>(API_ENDPOINTS.ADMIN.DASHBOARD);
   }
 
+  /** 대시보드 집계 (GET /api/admin/dashboard) — 총 회원/주문/상품/매출 등 */
+  async getDashboardStats(): Promise<AdminDashboardData> {
+    return this.getDashboard();
+  }
+
   // === 주문 관리 ===
   
   async getOrders(params: {
@@ -281,6 +365,32 @@ export abstract class BaseAdminService extends BaseApiService {
     
     const url = `${API_ENDPOINTS.ADMIN.ORDERS}?${queryParams.toString()}`;
     return this.request<any>(url);
+  }
+
+  /**
+   * 전체 주문 목록 (GET /api/admin/orders)
+   * - search: 주문번호(orderNumber) 부분 일치 검색만 지원 (서버 스펙)
+   * - 응답: { orders: [...(user: {name,email}|null 포함)], pagination }
+   */
+  async getAllOrders(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    paymentStatus?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<AdminOrdersListResponse> {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const url = `${API_ENDPOINTS.ADMIN.ORDERS}?${queryParams.toString()}`;
+    return this.request<AdminOrdersListResponse>(url);
   }
 
   async updateOrderStatus(orderId: string, data: {
@@ -314,6 +424,30 @@ export abstract class BaseAdminService extends BaseApiService {
     return this.request<any>(url);
   }
 
+  /**
+   * 전체 상품 목록 (GET /api/admin/products)
+   * - search: 상품명(name)/SKU 부분 일치 검색 (서버 스펙)
+   * - 응답: { products: [...], pagination }
+   */
+  async getAllProducts(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<AdminProductsListResponse> {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const url = `${API_ENDPOINTS.ADMIN.PRODUCTS}?${queryParams.toString()}`;
+    return this.request<AdminProductsListResponse>(url);
+  }
+
   async updateProductStock(productId: string, stock: number): Promise<ApiResponse<any>> {
     return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.PRODUCT_STOCK(productId), {
       method: 'PUT',
@@ -322,9 +456,10 @@ export abstract class BaseAdminService extends BaseApiService {
   }
 
   async updateProductFeatured(productId: string, isFeatured: boolean): Promise<ApiResponse<any>> {
+    // 서버(PUT /api/admin/products/:id/featured)는 body 필드명을 `featured`로 검증한다
     return this.request<ApiResponse<any>>(API_ENDPOINTS.ADMIN.PRODUCT_FEATURED(productId), {
       method: 'PUT',
-      body: JSON.stringify({ isFeatured }),
+      body: JSON.stringify({ featured: isFeatured }),
     });
   }
 

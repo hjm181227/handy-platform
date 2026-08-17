@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { purchaseApiService } from '../../services/purchaseApiService';
-import { reviewService, userService } from '../../services/apiService';
-import type { CustomerOrder, DetailedReview } from '@handy-platform/shared';
+import { reviewService, userService, loyaltyService, orderService } from '../../services/apiService';
+import type { CustomerOrder, DetailedReview, ReturnRequest, ReturnRequestType } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
 import { PageHeader } from '../layout/PageHeader';
@@ -670,13 +670,345 @@ export function ShippingPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 반품/교환 내역 페이지
 export function ClaimsPage({ onGo }: { onGo: (to: string) => void }) {
-  const claims: any[] = [];
+  // 목록 상태
+  const [requests, setRequests] = useState<ReturnRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 신청 폼 상태
+  const [showForm, setShowForm] = useState(false);
+  const [deliveredOrders, setDeliveredOrders] = useState<CustomerOrder[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [selectedOrderUuid, setSelectedOrderUuid] = useState('');
+  const [requestType, setRequestType] = useState<ReturnRequestType>('return');
+  const [reason, setReason] = useState('');
+  const [detail, setDetail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // 철회 상태
+  const [withdrawingUuid, setWithdrawingUuid] = useState<string | null>(null);
+
+  const loadRequests = async (page: number = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await orderService.getMyReturnRequests({ page, limit: 10 });
+      setRequests(response.data?.requests || []);
+      setPagination(response.data?.pagination || null);
+      setCurrentPage(page);
+    } catch (err: any) {
+      console.error('Return requests loading failed:', err);
+      setError(err.message || '반품·교환 내역을 불러오는 중 오류가 발생했습니다.');
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRequests(1);
+  }, []);
+
+  // 신청 폼 진입 시 배송완료 주문 로드 (주문 내역과 동일하게 purchaseApiService 재사용)
+  const openForm = async () => {
+    setShowForm(true);
+    setSelectedOrderUuid('');
+    setRequestType('return');
+    setReason('');
+    setDetail('');
+    try {
+      setLoadingOrders(true);
+      setOrdersError(null);
+      const response = await purchaseApiService.getOrders({
+        page: 1,
+        limit: 50,
+        status: ['delivered'],
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+      if (response.success) {
+        setDeliveredOrders(response.orders || []);
+      } else {
+        throw new Error(response.message || '배송완료 주문을 불러올 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('Delivered orders loading failed:', err);
+      setOrdersError(err.message || '배송완료 주문을 불러오는 중 오류가 발생했습니다.');
+      setDeliveredOrders([]);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedOrderUuid) {
+      alert('반품·교환할 주문을 선택해주세요.');
+      return;
+    }
+    const trimmedReason = reason.trim();
+    if (trimmedReason.length < 2) {
+      alert('사유를 2자 이상 입력해주세요.');
+      return;
+    }
+    if (trimmedReason.length > 200) {
+      alert('사유는 200자 이내로 입력해주세요.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await orderService.createReturnRequest({
+        orderUuid: selectedOrderUuid,
+        type: requestType,
+        reason: trimmedReason,
+        detail: detail.trim() || undefined,
+        imageUrls: []
+      });
+      alert(`${requestType === 'return' ? '반품' : '교환'} 신청이 접수되었습니다.`);
+      setShowForm(false);
+      await loadRequests(1);
+    } catch (err: any) {
+      console.error('Return request creation failed:', err);
+      // 서버 400/409 오류는 한국어 메시지가 그대로 내려오므로 그대로 표시
+      alert(err.message || '반품·교환 신청에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleWithdraw = async (request: ReturnRequest) => {
+    if (!window.confirm('반품·교환 신청을 철회하시겠습니까?')) return;
+
+    try {
+      setWithdrawingUuid(request.returnRequestUuid);
+      await orderService.withdrawReturnRequest(request.returnRequestUuid);
+      alert('신청이 철회되었습니다.');
+      await loadRequests(currentPage);
+    } catch (err: any) {
+      console.error('Return request withdraw failed:', err);
+      alert(err.message || '신청 철회에 실패했습니다.');
+    } finally {
+      setWithdrawingUuid(null);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'requested': return { label: '접수', className: 'bg-yellow-100 text-yellow-700' };
+      case 'approved': return { label: '승인', className: 'bg-[#FFF1F2] text-[#E85A6B]' };
+      case 'rejected': return { label: '반려', className: 'bg-red-100 text-red-700' };
+      case 'completed': return { label: '완료', className: 'bg-green-100 text-green-700' };
+      case 'withdrawn': return { label: '철회', className: 'bg-gray-100 text-gray-500' };
+      default: return { label: status, className: 'bg-gray-100 text-gray-700' };
+    }
+  };
+
+  const getTypeBadge = (type: string) =>
+    type === 'return'
+      ? { label: '반품', className: 'bg-blue-100 text-blue-700' }
+      : { label: '교환', className: 'bg-purple-100 text-purple-700' };
+
+  const formatDate = (dateString?: string) =>
+    dateString ? new Date(dateString).toLocaleDateString('ko-KR') : '';
+
+  const claimsHeader = (
+    <PageHeader title="반품/교환 내역" onBack={() => showForm ? setShowForm(false) : onGo("/my")} />
+  );
+
+  // ---------- 신청 폼 화면 ----------
+  if (showForm) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {claimsHeader}
+        <div className="p-4 space-y-5 max-w-lg mx-auto">
+          <h3 className="text-lg font-semibold text-gray-900">반품·교환 신청</h3>
+
+          {/* 1. 주문 선택 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              주문 선택 <span className="text-[#E85A6B]">*</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-2">배송완료된 주문만 신청할 수 있습니다. (배송완료 후 30일 이내)</p>
+            {loadingOrders ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+              </div>
+            ) : ordersError ? (
+              <div className="bg-white rounded-lg border p-4 text-center">
+                <p className="text-sm text-red-600 mb-3">{ordersError}</p>
+                <button onClick={openForm} className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">다시 시도</button>
+              </div>
+            ) : deliveredOrders.length === 0 ? (
+              <div className="bg-white rounded-lg border p-6 text-center text-sm text-gray-500">
+                배송완료된 주문이 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {deliveredOrders.map(order => (
+                  <label
+                    key={order.id}
+                    className={`block bg-white rounded-lg border p-3 cursor-pointer transition-colors ${
+                      selectedOrderUuid === order.id ? 'border-[#E85A6B] ring-1 ring-[#E85A6B]' : 'hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="claimOrder"
+                        checked={selectedOrderUuid === order.id}
+                        onChange={() => setSelectedOrderUuid(order.id)}
+                        className="accent-[#E85A6B]"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {order.items?.[0]?.productName || '상품명'}
+                          {order.items && order.items.length > 1 && ` 외 ${order.items.length - 1}건`}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          주문번호 {order.orderNumber || order.id} · {formatDate(order.createdAt)}
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold text-[#E85A6B] flex-shrink-0">
+                        {order.totalAmount?.toLocaleString() || 0}원
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 2. 유형 선택 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              유형 선택 <span className="text-[#E85A6B]">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: 'return', label: '반품', desc: '상품 반환 후 전액 환불' },
+                { value: 'exchange', label: '교환', desc: '동일 상품으로 교환' }
+              ] as const).map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setRequestType(option.value)}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    requestType === option.value
+                      ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B]'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-sm font-semibold">{option.label}</div>
+                  <div className="text-xs mt-0.5 opacity-80">{option.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. 사유 입력 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              사유 <span className="text-[#E85A6B]">*</span>
+              <span className="ml-1 text-xs font-normal text-gray-400">(2~200자)</span>
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={200}
+              placeholder="예: 사이즈가 맞지 않아요"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+            />
+          </div>
+
+          {/* 4. 상세 내용 (선택) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              상세 내용 <span className="text-xs font-normal text-gray-400">(선택)</span>
+            </label>
+            <textarea
+              value={detail}
+              onChange={(e) => setDetail(e.target.value)}
+              maxLength={2000}
+              rows={4}
+              placeholder="상세 내용을 입력해주세요"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent resize-none"
+            />
+          </div>
+
+          {/* 제출 */}
+          <div className="flex gap-3 pb-6">
+            <button
+              onClick={() => setShowForm(false)}
+              disabled={submitting}
+              className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || loadingOrders || deliveredOrders.length === 0}
+              className="flex-1 py-3 px-4 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium disabled:opacity-50"
+            >
+              {submitting ? '신청 중...' : '신청하기'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- 목록 화면 ----------
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {claimsHeader}
+        <div className="p-4 flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B] mx-auto mb-2"></div>
+            <p className="text-gray-500">반품·교환 내역을 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {claimsHeader}
+        <div className="p-4 flex justify-center items-center min-h-64">
+          <div className="text-center space-y-4">
+            <div className="text-4xl">⚠️</div>
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={() => loadRequests(currentPage)}
+              className="bg-[#E85A6B] text-white px-6 py-2.5 rounded-lg hover:bg-[#D14A5B] transition-colors"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader title="반품/교환 내역" onBack={() => onGo("/my")} />
-      <div className="p-4">
-        {claims.length === 0 ? (
+      {claimsHeader}
+      <div className="p-4 space-y-4">
+        {/* 신청 진입 버튼 */}
+        <button
+          onClick={openForm}
+          className="w-full py-3 px-4 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
+        >
+          반품·교환 신청
+        </button>
+
+        {requests.length === 0 ? (
           <EmptyState
             title="반품/교환 내역이 없습니다"
             description="반품이나 교환 요청 내역이 없습니다."
@@ -684,8 +1016,87 @@ export function ClaimsPage({ onGo }: { onGo: (to: string) => void }) {
             onAction={() => onGo("/my/orders")}
           />
         ) : (
-          <div className="space-y-4">
-            {/* 반품/교환 내역이 있을 때 렌더링 */}
+          requests.map(request => {
+            const statusBadge = getStatusBadge(request.status);
+            const typeBadge = getTypeBadge(request.type);
+            return (
+              <div key={request.returnRequestUuid} className="bg-white rounded-lg border p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${typeBadge.className}`}>
+                      {typeBadge.label}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {formatDate(request.requestedAt || request.createdAt)}
+                    </span>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${statusBadge.className}`}>
+                    {statusBadge.label}
+                  </span>
+                </div>
+
+                <div className="mb-3 space-y-1">
+                  <div className="text-sm font-medium text-gray-900">
+                    주문번호: {request.orderNumber || request.orderUuid}
+                  </div>
+                  <div className="text-sm text-gray-700">사유: {request.reason}</div>
+                  {request.detail && (
+                    <div className="text-xs text-gray-500 whitespace-pre-line">{request.detail}</div>
+                  )}
+                </div>
+
+                {/* 반려 사유 표시 */}
+                {request.status === 'rejected' && request.rejectReason && (
+                  <div className="mb-3 bg-red-50 border border-red-100 rounded-lg p-3">
+                    <div className="text-xs font-medium text-red-700 mb-1">반려 사유</div>
+                    <p className="text-sm text-red-600">{request.rejectReason}</p>
+                  </div>
+                )}
+
+                {/* 완료 안내 */}
+                {request.status === 'completed' && (
+                  <div className="mb-3 text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg p-3">
+                    {request.type === 'return'
+                      ? '반품이 승인되어 전액 환불이 완료되었습니다.'
+                      : '교환 처리가 완료되었습니다.'}
+                  </div>
+                )}
+
+                {/* 접수 상태: 철회 버튼 */}
+                {request.status === 'requested' && (
+                  <button
+                    onClick={() => handleWithdraw(request)}
+                    disabled={withdrawingUuid === request.returnRequestUuid}
+                    className="w-full py-2 px-4 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                  >
+                    {withdrawingUuid === request.returnRequestUuid ? '철회 중...' : '신청 철회'}
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+
+        {/* 페이지네이션 */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+            <button
+              onClick={() => loadRequests(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              이전
+            </button>
+            <span className="text-sm text-gray-600">
+              {currentPage} / {pagination.totalPages}
+            </span>
+            <button
+              onClick={() => loadRequests(currentPage + 1)}
+              disabled={currentPage >= pagination.totalPages}
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              다음
+            </button>
           </div>
         )}
       </div>
@@ -1057,24 +1468,155 @@ export function ReviewsPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 쿠폰함 페이지
 export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [summary, setSummary] = useState<{ available: number; used: number; expired: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'available' | 'used' | 'expired'>('available');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await loyaltyService.getUserCoupons({ status: tab, limit: 50 });
+        const data = (res as any)?.data;
+        setCoupons(data?.coupons || []);
+        if (data?.summary) {
+          setSummary(data.summary);
+        }
+      } catch (err) {
+        console.error('Failed to load coupons:', err);
+        setError('쿠폰을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tab]);
+
+  const discountText = (coupon: any) => {
+    if (!coupon) return '';
+    if (coupon.discountType === 'percentage') return `${coupon.discountValue}% 할인`;
+    if (coupon.discountType === 'free_shipping') return '무료배송';
+    return `${Number(coupon.discountValue || 0).toLocaleString('ko-KR')}원 할인`;
+  };
+
+  const TABS: { key: 'available' | 'used' | 'expired'; label: string }[] = [
+    { key: 'available', label: `사용 가능${summary ? ` (${summary.available})` : ''}` },
+    { key: 'used', label: `사용 완료${summary ? ` (${summary.used})` : ''}` },
+    { key: 'expired', label: `기간 만료${summary ? ` (${summary.expired})` : ''}` }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="쿠폰함" onBack={() => onGo("/my")} />
-      <div className="text-center py-20">
-        <div className="text-gray-300 mb-4">
-          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
-            <path d="M20 12V6H4v6c1.1 0 2 .9 2 2s-.9 2-2 2v4h16v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-4v2.54c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V20H6v-2.54c1.19-.69 2-1.99 2-3.46s-.81-2.77-2-3.46V8h12z"/>
-          </svg>
-        </div>
-        <h3 className="text-base font-medium text-gray-600 mb-1">보유한 쿠폰이 없습니다</h3>
-        <p className="text-sm text-gray-400">이벤트나 프로모션을 통해 쿠폰을 받아보세요</p>
+
+      <div className="bg-white border-b flex">
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === t.key ? 'border-[#E85A6B] text-[#E85A6B]' : 'border-transparent text-gray-500'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-16 px-6">
+          <p className="text-sm text-red-600 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm border rounded-lg">새로고침</button>
+        </div>
+      ) : coupons.length === 0 ? (
+        <div className="text-center py-20">
+          <div className="text-gray-300 mb-4">
+            <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+              <path d="M20 12V6H4v6c1.1 0 2 .9 2 2s-.9 2-2 2v4h16v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-4v2.54c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V20H6v-2.54c1.19-.69 2-1.99 2-3.46s-.81-2.77-2-3.46V8h12z"/>
+            </svg>
+          </div>
+          <h3 className="text-base font-medium text-gray-600 mb-1">
+            {tab === 'available' ? '사용 가능한 쿠폰이 없습니다' : tab === 'used' ? '사용한 쿠폰이 없습니다' : '만료된 쿠폰이 없습니다'}
+          </h3>
+          <p className="text-sm text-gray-400">이벤트나 프로모션을 통해 쿠폰을 받아보세요</p>
+        </div>
+      ) : (
+        <div className="p-4 space-y-3">
+          {coupons.map((uc: any) => (
+            <div
+              key={uc.userCouponUuid || uc.id}
+              className={`bg-white rounded-lg border p-4 ${uc.isUsable ? '' : 'opacity-60'}`}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-lg font-bold text-[#E85A6B]">{discountText(uc.coupon)}</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{uc.coupon?.name || '쿠폰'}</p>
+                  {uc.coupon?.description && (
+                    <p className="text-xs text-gray-500 mt-1">{uc.coupon.description}</p>
+                  )}
+                </div>
+                {uc.status === 'used' && <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">사용 완료</span>}
+                {uc.isExpired && uc.status !== 'used' && <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">기간 만료</span>}
+              </div>
+              <div className="mt-3 pt-3 border-t flex justify-between text-xs text-gray-500">
+                <span>
+                  {uc.coupon?.minimumOrderAmount
+                    ? `${Number(uc.coupon.minimumOrderAmount).toLocaleString('ko-KR')}원 이상 구매 시`
+                    : '최소 주문 금액 없음'}
+                </span>
+                <span>{uc.expiresAt ? `${String(uc.expiresAt).slice(0, 10)}까지` : ''}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 // 포인트 페이지
 export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
+  const [balance, setBalance] = useState<{ balance: number; totalEarned: number; totalUsed: number; expiringAmount: number } | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [balanceRes, historyRes] = await Promise.all([
+          loyaltyService.getPointsBalance(),
+          loyaltyService.getPointsHistory({ limit: 50 })
+        ]);
+        const balanceData = (balanceRes as any)?.data;
+        setBalance({
+          balance: balanceData?.balance ?? 0,
+          totalEarned: balanceData?.totalEarned ?? 0,
+          totalUsed: balanceData?.totalUsed ?? 0,
+          expiringAmount: balanceData?.expiringPoints?.totalAmount ?? 0
+        });
+        setTransactions((historyRes as any)?.data?.transactions || []);
+      } catch (err) {
+        console.error('Failed to load points:', err);
+        setError('포인트 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const isEarn = (tx: any) => Number(tx.amount) > 0 || String(tx.type || '').startsWith('earn') || String(tx.type || '').includes('refund');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="포인트" onBack={() => onGo("/my")} />
@@ -1083,20 +1625,55 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="bg-white border-b p-6">
         <div className="text-center">
           <div className="text-sm text-gray-500 mb-1">보유 포인트</div>
-          <div className="text-3xl font-bold text-[#E85A6B] mb-4">0P</div>
+          <div className="text-3xl font-bold text-[#E85A6B]">
+            {loading ? '···' : `${(balance?.balance ?? 0).toLocaleString('ko-KR')}P`}
+          </div>
+          {!loading && balance && (
+            <div className="flex justify-center gap-6 mt-4 text-xs text-gray-500">
+              <span>총 적립 {balance.totalEarned.toLocaleString('ko-KR')}P</span>
+              <span>총 사용 {balance.totalUsed.toLocaleString('ko-KR')}P</span>
+              {balance.expiringAmount > 0 && (
+                <span className="text-red-500">30일 내 소멸 예정 {balance.expiringAmount.toLocaleString('ko-KR')}P</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* 포인트 내역 */}
-      <div className="text-center py-16">
-        <div className="text-gray-300 mb-4">
-          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H11.5v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.65c.09 1.71 1.37 2.66 2.85 2.97V19h1.72v-1.67c1.52-.29 2.72-1.16 2.72-2.74 0-2.22-1.86-2.97-3.63-3.45z"/>
-          </svg>
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <h3 className="text-base font-medium text-gray-600 mb-1">포인트 내역이 없습니다</h3>
-        <p className="text-sm text-gray-400">구매 및 리뷰 작성 시 포인트가 적립됩니다</p>
-      </div>
+      ) : error ? (
+        <div className="text-center py-16 px-6">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      ) : transactions.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-gray-300 mb-4">
+            <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H11.5v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.65c.09 1.71 1.37 2.66 2.85 2.97V19h1.72v-1.67c1.52-.29 2.72-1.16 2.72-2.74 0-2.22-1.86-2.97-3.63-3.45z"/>
+            </svg>
+          </div>
+          <h3 className="text-base font-medium text-gray-600 mb-1">포인트 내역이 없습니다</h3>
+          <p className="text-sm text-gray-400">구매 및 리뷰 작성 시 포인트가 적립됩니다</p>
+        </div>
+      ) : (
+        <div className="bg-white divide-y">
+          {transactions.map((tx: any, index: number) => (
+            <div key={tx._id || tx.id || index} className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm text-gray-900">{tx.description || (isEarn(tx) ? '포인트 적립' : '포인트 사용')}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{tx.createdAt ? String(tx.createdAt).slice(0, 10) : ''}</p>
+              </div>
+              <span className={`text-sm font-bold ${isEarn(tx) ? 'text-[#E85A6B]' : 'text-gray-500'}`}>
+                {isEarn(tx) ? '+' : ''}{Number(tx.amount || 0).toLocaleString('ko-KR')}P
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -206,7 +206,8 @@ class NailSegmentationAPI {
     try {
       // 1. 이미지 파일 읽기
       const readStartTime = Date.now();
-      const cleanUri = imageUri.replace('file://', '');
+      // file:// prefix를 모두 제거하여 순수 파일 경로만 추출
+      const cleanUri = imageUri.replace(/^file:\/\/+/, '/');
 
       // 파일 존재 확인
       const exists = await ReactNativeBlobUtil.fs.exists(cleanUri);
@@ -355,7 +356,8 @@ class NailSegmentationAPI {
 
     try {
       // 1. 파일 존재 확인
-      const cleanUri = imageUri.replace('file://', '');
+      // file:// prefix를 모두 제거하여 순수 파일 경로만 추출
+      const cleanUri = imageUri.replace(/^file:\/\/+/, '/');
       const exists = await ReactNativeBlobUtil.fs.exists(cleanUri);
       if (!exists) {
         throw new Error(`Image file not found: ${cleanUri}`);
@@ -460,6 +462,9 @@ class NailSegmentationAPI {
         maskOverlayBase64: data.mask_overlay,
         // Lambda에서 감지한 영역
         serverRegions,
+        // 카드 실측 검출 (있으면 스케일에 사용)
+        cardSource: data.card_source,
+        cardWidthPixelsDetected: data.card_width_pixels_detected ?? undefined,
       };
 
     } catch (error) {

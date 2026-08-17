@@ -24,8 +24,8 @@ export const getAppEnvironment = (): string => {
         return process.env.REACT_NATIVE_ENV;
       }
       if (__DEV__) {
-        console.log('🟢 [ENV] iOS __DEV__ mode: development');
-        return 'development';
+        console.log('🟢 [ENV] iOS __DEV__ mode: stage');
+        return 'stage';
       }
       // iOS release 빌드는 production으로 fallback (App Store 배포용)
     }

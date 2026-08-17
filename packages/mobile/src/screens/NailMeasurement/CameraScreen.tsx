@@ -57,17 +57,18 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
     setIsCapturing(true);
 
     try {
-      const photo = await cameraRef.current.takePhoto();
-
-      // tmp 파일을 cache 디렉토리로 복사 (iOS tmp 정리로 인한 파일 유실 방지)
+      // cache 디렉토리에 직접 저장 (iOS tmp 정리로 인한 파일 유실 방지)
       const cacheDir = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/nail-photos`;
       await ReactNativeBlobUtil.fs.mkdir(cacheDir).catch(() => {});
-      const filename = `nail_${Date.now()}.jpg`;
-      const cachePath = `${cacheDir}/${filename}`;
-      await ReactNativeBlobUtil.fs.cp(photo.path, cachePath);
 
-      const photoUri = `file://${cachePath}`;
-      console.log('[CameraScreen] Photo copied to cache:', photoUri);
+      const photo = await cameraRef.current.takePhoto({
+        path: cacheDir,
+      });
+
+      // photo.path를 그대로 사용 (file:// 중복 방지)
+      const photoUri = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
+      console.log('[CameraScreen] Photo path:', photo.path);
+      console.log('[CameraScreen] Photo URI:', photoUri);
       onPhotoTaken(photoUri);
     } catch (error) {
       console.error('Photo capture failed:', error);
@@ -156,14 +157,14 @@ const CameraScreen: React.FC<CameraScreenProps> = ({
       <View style={styles.instructionSection}>
         <Text style={styles.instructionTitle}>
           {isThumbOnly
-            ? '신용카드 위에 엄지를 올려주세요'
-            : '신용카드 위에 4개 손가락을 올려주세요'
+            ? '카드 아래에 엄지를 붙여주세요'
+            : '카드 아래에 4개 손가락을 붙여주세요'
           }
         </Text>
         <Text style={styles.instructionSubtitle}>
           {isThumbOnly
-            ? '손톱이 정면을 향하도록 기울이지 마세요'
-            : '검지, 중지, 약지, 소지를 나란히 펴서 촬영해주세요'
+            ? '카드 전체가 보이게 두고, 손톱은 정면을 향하도록 기울이지 마세요'
+            : '카드 전체가 보이게 두고, 검지·중지·약지·소지를 나란히 펴서 촬영해주세요'
           }
         </Text>
       </View>
