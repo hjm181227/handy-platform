@@ -981,7 +981,7 @@ export function Detail({
               <button
                 onClick={() => {
                   if (!currentUser) { openLogin(); return; }
-                  onGo(`/product/${p.productUuid}/custom-order`);
+                  onGo?.(`/product/${p.productUuid}/custom-order`);
                 }}
                 className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
               >
