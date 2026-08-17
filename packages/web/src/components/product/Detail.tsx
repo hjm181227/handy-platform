@@ -11,6 +11,25 @@ import { useAuthModal } from '../../contexts/AuthModalContext';
 import { useLikes } from '../../hooks/useLikes';
 import ProductQA from './ProductQA';
 
+// stocked(기성 재고) 상품일 때 getProduct 응답 data에 추가로 내려오는 variant 타입
+// (shared Product 타입에는 아직 없어 로컬로 선언 — shared는 병렬 작업 중이라 수정 금지)
+interface BuyerVariant {
+  variantUuid: string;
+  optionCombination: { optionType: 'shape' | 'length'; optionValue: string }[];
+  isAvailable: boolean;
+  stockDisplay: string; // '3' | '10+' | '0'
+  priceModifier: number;
+  finalPrice: number;
+}
+
+const getVariantOptionValue = (v: BuyerVariant, type: 'shape' | 'length') =>
+  v.optionCombination?.find((o) => o.optionType === type)?.optionValue;
+
+const findVariantIn = (variants: BuyerVariant[], s: string, l: string) =>
+  variants.find(
+    (v) => getVariantOptionValue(v, 'shape') === s && getVariantOptionValue(v, 'length') === l
+  );
+
 export function Detail({
   id,
   onBack,
@@ -80,8 +99,20 @@ export function Detail({
   // 상품이 로드된 후 옵션 초기화
   useEffect(() => {
     if (product) {
-      setShape(product.nailShape || "ROUND");
-      setLength(product.nailLength || "SHORT");
+      const pAny: any = product;
+      const productVariants: BuyerVariant[] =
+        pAny.fulfillmentMode === 'stocked' && Array.isArray(pAny.variants) ? pAny.variants : [];
+
+      if (productVariants.length > 0) {
+        // stocked 상품: 첫 번째 구매 가능(isAvailable) 조합으로 초기 선택
+        const initial =
+          productVariants.find((v) => v.isAvailable) || productVariants[0];
+        setShape(getVariantOptionValue(initial, 'shape') || product.nailShape || "ROUND");
+        setLength(getVariantOptionValue(initial, 'length') || product.nailLength || "SHORT");
+      } else {
+        setShape(product.nailShape || "ROUND");
+        setLength(product.nailLength || "SHORT");
+      }
     }
   }, [product]);
 
@@ -147,6 +178,17 @@ export function Detail({
     if (!currentUser) {
       openLogin();
       return;
+    }
+
+    // stocked 상품: 선택 조합이 구매 가능한지 방어적 재검증 (서버도 재검증함)
+    const pAnyCart: any = product;
+    if (pAnyCart.fulfillmentMode === 'stocked') {
+      const v = findVariantIn(pAnyCart.variants || [], shape, length);
+      if (!v || !v.isAvailable) {
+        setCartMessage('품절된 옵션입니다. 다른 옵션을 선택해주세요.');
+        setTimeout(() => setCartMessage(null), 3000);
+        return;
+      }
     }
 
     try {
@@ -220,6 +262,17 @@ export function Detail({
       setCartMessage(t('product:detailPage.navigationError'));
       setTimeout(() => setCartMessage(null), 3000);
       return;
+    }
+
+    // stocked 상품: 선택 조합이 구매 가능한지 방어적 재검증 (서버도 재검증함)
+    const pAnyBuy: any = product;
+    if (pAnyBuy.fulfillmentMode === 'stocked') {
+      const v = findVariantIn(pAnyBuy.variants || [], shape, length);
+      if (!v || !v.isAvailable) {
+        setCartMessage('품절된 옵션입니다. 다른 옵션을 선택해주세요.');
+        setTimeout(() => setCartMessage(null), 3000);
+        return;
+      }
     }
 
     try {
@@ -320,6 +373,66 @@ export function Detail({
 
   const p = product;
   const salePrice = p.salePrice || p.price;
+
+  // ── 판매 방식(fulfillmentMode) 분기 ──────────────────────────────
+  // stocked: variant(조합별 재고) 기반 선택 / made_to_order: 기존 customizable 흐름
+  const fulfillmentMode = (p as any).fulfillmentMode as 'made_to_order' | 'stocked' | undefined;
+  const isStocked = fulfillmentMode === 'stocked';
+  const variants: BuyerVariant[] =
+    isStocked && Array.isArray((p as any).variants) ? ((p as any).variants as BuyerVariant[]) : [];
+
+  const findVariant = (s: string, l: string) => findVariantIn(variants, s, l);
+
+  // variants에 존재하는 쉐입/길이만 노출 (표준 순서 유지)
+  const stockedShapes = NAIL_SHAPES.filter((s) =>
+    variants.some((v) => getVariantOptionValue(v, 'shape') === s)
+  );
+  const isShapeSoldOut = (s: string) => {
+    const shapeVariants = variants.filter((v) => getVariantOptionValue(v, 'shape') === s);
+    return shapeVariants.length > 0 && shapeVariants.every((v) => !v.isAvailable);
+  };
+  // 선택된 쉐입 기준으로 존재하는 길이만 노출
+  const stockedLengths = NAIL_LENGTHS.filter((l) => !!findVariant(shape, l));
+
+  const selectedVariant = isStocked ? findVariant(shape, length) : undefined;
+  const allSoldOut = isStocked && !variants.some((v) => v.isAvailable);
+  // stocked: 선택 조합이 구매 가능해야 함 / made_to_order: 기존 isInStock 그대로
+  const canPurchase = isStocked ? !allSoldOut && !!selectedVariant?.isAvailable : p.isInStock;
+  const unitPrice = isStocked && selectedVariant ? selectedVariant.finalPrice : salePrice;
+
+  // 추가금 라벨 (예: +1,000원)
+  const formatModifier = (mod?: number) => {
+    if (!mod) return null;
+    return mod > 0 ? `+${mod.toLocaleString()}원` : `-${Math.abs(mod).toLocaleString()}원`;
+  };
+  // 쉐입 버튼용 추가금: 현재 선택 길이와의 조합 우선, 없으면 해당 쉐입 첫 조합 기준
+  const shapeModifierLabel = (s: string) => {
+    const v =
+      findVariant(s, length) || variants.find((vv) => getVariantOptionValue(vv, 'shape') === s);
+    return formatModifier(v?.priceModifier);
+  };
+
+  // 쉐입 변경 시, 현재 길이 조합이 없거나 품절이면 해당 쉐입의 첫 구매 가능 길이로 이동
+  const handleShapeSelect = (s: string) => {
+    setShape(s);
+    const current = findVariant(s, length);
+    if (!current || !current.isAvailable) {
+      const fallback =
+        variants.find((v) => getVariantOptionValue(v, 'shape') === s && v.isAvailable) ||
+        variants.find((v) => getVariantOptionValue(v, 'shape') === s);
+      const nextLength = fallback && getVariantOptionValue(fallback, 'length');
+      if (nextLength) setLength(nextLength);
+    }
+  };
+
+  // 선택 요약 바의 재고·발송 문구
+  const stockStatusText = selectedVariant
+    ? !selectedVariant.isAvailable || selectedVariant.stockDisplay === '0'
+      ? '품절'
+      : selectedVariant.stockDisplay === '10+'
+        ? '재고 충분 · 바로 발송'
+        : `재고 ${selectedVariant.stockDisplay}개 · 바로 발송`
+    : '';
 
   // 내부 이동(추천 영역 등에서 사용) — 라우터 nav 없이도 동작하게
   const goTo = (to: string) => {
@@ -683,7 +796,38 @@ export function Detail({
             {/* 쉐입 옵션 */}
             <div>
               <div className="mb-1 text-sm text-gray-600">{t('product:detailPage.option.shape')}</div>
-              {p.nailOptions?.shapeCustomizable ? (
+              {isStocked ? (
+                // 기성 재고: variants에 존재하는 쉐입만 표시, 전 조합 품절 쉐입은 취소선+비활성
+                <div className="flex flex-wrap gap-2">
+                  {stockedShapes.map((s) => {
+                    const koreanName = NAIL_SHAPE_NAME[s] || s;
+                    const soldOut = isShapeSoldOut(s);
+                    const modifierLabel = shapeModifierLabel(s);
+
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => handleShapeSelect(s)}
+                        disabled={soldOut}
+                        className={`rounded border px-3 py-1 text-sm ${
+                          soldOut
+                            ? "bg-gray-100 text-gray-400 line-through cursor-not-allowed"
+                            : shape === s
+                              ? "bg-black text-white border-black"
+                              : "bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        {koreanName}
+                        {!soldOut && modifierLabel && (
+                          <span className={`ml-1 text-xs ${shape === s ? 'text-gray-300' : 'text-[#E85A6B]'}`}>
+                            {modifierLabel}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : p.nailOptions?.shapeCustomizable ? (
                 // 커스터마이징 가능: 선택 가능한 버튼들 표시
                 <div className="flex flex-wrap gap-2">
                   {NAIL_SHAPES.map((s) => {
@@ -714,7 +858,43 @@ export function Detail({
             {/* 길이 옵션 */}
             <div>
               <div className="mb-1 text-sm text-gray-600">{t('product:detailPage.option.length')}</div>
-              {p.nailOptions?.lengthCustomizable ? (
+              {isStocked ? (
+                // 기성 재고: 선택된 쉐입 기준 존재하는 길이만 표시, 품절 조합은 취소선+비활성+품절 라벨
+                <div className="flex flex-wrap gap-2">
+                  {stockedLengths.map((l) => {
+                    const koreanName = NAIL_LENGTH_NAME[l] || l;
+                    const v = findVariant(shape, l);
+                    const soldOut = !v?.isAvailable;
+                    const modifierLabel = formatModifier(v?.priceModifier);
+
+                    return (
+                      <button
+                        key={l}
+                        onClick={() => setLength(l)}
+                        disabled={soldOut}
+                        className={`rounded border px-3 py-1 text-sm ${
+                          soldOut
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : length === l
+                              ? "bg-black text-white border-black"
+                              : "bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className={soldOut ? "line-through" : ""}>{koreanName}</span>
+                        {soldOut ? (
+                          <span className="ml-1 text-xs">품절</span>
+                        ) : (
+                          modifierLabel && (
+                            <span className={`ml-1 text-xs ${length === l ? 'text-gray-300' : 'text-[#E85A6B]'}`}>
+                              {modifierLabel}
+                            </span>
+                          )
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : p.nailOptions?.lengthCustomizable ? (
                 // 커스터마이징 가능: 선택 가능한 버튼들 표시
                 <div className="flex flex-wrap gap-2">
                   {NAIL_LENGTHS.map((s) => {
@@ -743,6 +923,36 @@ export function Detail({
               )}
             </div>
           </div>
+
+          {/* 기성 재고: 선택 요약 바 (조합·최종가·재고·발송 안내 실시간 갱신) */}
+          {isStocked && (
+            <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm">
+              {allSoldOut ? (
+                <span className="font-medium text-red-500">품절 — 모든 옵션이 품절되었습니다</span>
+              ) : selectedVariant ? (
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span>
+                    선택: {NAIL_SHAPE_NAME[shape] || shape} · {NAIL_LENGTH_NAME[length] || length}
+                  </span>
+                  <span className="text-gray-300">|</span>
+                  <span className="font-semibold text-[#E85A6B]">{money(selectedVariant.finalPrice)}</span>
+                  <span className="text-gray-300">|</span>
+                  <span className={selectedVariant.isAvailable ? "text-gray-600" : "font-medium text-red-500"}>
+                    {stockStatusText}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-gray-500">옵션을 선택해주세요</span>
+              )}
+            </div>
+          )}
+
+          {/* 주문 제작: 제작 소요일 안내 */}
+          {!isStocked && (
+            <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600">
+              🛠 주문 후 제작 — 약 {p.processingDays}일 소요
+            </div>
+          )}
 
           {/* 수량 */}
           <div className="flex items-center gap-3 pt-2">
@@ -782,28 +992,28 @@ export function Detail({
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 onClick={addToCart}
-                disabled={addingToCart || !p.isInStock}
+                disabled={addingToCart || !canPurchase}
                 className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
                   addingToCart
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : !p.isInStock
+                    : !canPurchase
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       : 'hover:bg-gray-50'
                 }`}
               >
                 {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
-                {!p.isInStock ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('product:detail.addToCart')}
+                {!canPurchase ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('product:detail.addToCart')}
               </button>
               <button
                 onClick={buyNow}
-                disabled={addingToCart || !p.isInStock}
+                disabled={addingToCart || !canPurchase}
                 className={`rounded-lg py-2 text-white flex items-center justify-center ${
-                  addingToCart || !p.isInStock
+                  addingToCart || !canPurchase
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-black hover:bg-gray-800'
                 }`}
               >
-                {t('product:detail.buyNow')}
+                {!canPurchase ? t('product:detail.outOfStock') : t('product:detail.buyNow')}
               </button>
             </div>
           )}
@@ -873,7 +1083,12 @@ export function Detail({
       {/* 모바일 하단 고정 구매바 - productType에 따라 분기 */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white p-3 md:hidden">
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
-          <div className="text-base font-semibold">{money(salePrice)}</div>
+          <div className="text-base font-semibold">
+            {isStocked ? money(unitPrice * qty) : money(salePrice)}
+            {isStocked && qty > 1 && (
+              <span className="ml-1 text-xs font-normal text-gray-500">({qty}개)</span>
+            )}
+          </div>
           {p.productType === 'custom' ? (
             <button
               onClick={() => {
@@ -888,25 +1103,25 @@ export function Detail({
             <div className="flex gap-2">
               <button
                 onClick={addToCart}
-                disabled={addingToCart || !p.isInStock}
+                disabled={addingToCart || !canPurchase}
                 className={`rounded-lg border px-4 py-2 text-sm ${
-                  addingToCart || !p.isInStock
+                  addingToCart || !canPurchase
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                     : 'hover:bg-gray-50'
                 }`}
               >
-                {!p.isInStock ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('common:cart')}
+                {!canPurchase ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('common:cart')}
               </button>
               <button
                 onClick={buyNow}
-                disabled={addingToCart || !p.isInStock}
+                disabled={addingToCart || !canPurchase}
                 className={`rounded-lg px-4 py-2 text-sm text-white ${
-                  addingToCart || !p.isInStock
+                  addingToCart || !canPurchase
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-black hover:bg-gray-800'
                 }`}
               >
-                {t('product:detailPage.buyNowMobile')}
+                {!canPurchase ? t('product:detail.outOfStock') : t('product:detailPage.buyNowMobile')}
               </button>
             </div>
           )}

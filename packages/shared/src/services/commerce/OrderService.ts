@@ -99,7 +99,7 @@ export abstract class BaseOrderService extends BaseApiService {
     return response;
   }
 
-  // 체크아웃 초기화 - 장바구니, 바로구매, 맞춤제작 지원 (백엔드 스펙 준수)
+  // 체크아웃 초기화 - 장바구니, 바로구매, 맞춤제작, 선택 주문 지원 (백엔드 스펙 준수)
   async initializeCheckout(data?: {
     quoteUuid?: string;
     directItem?: {
@@ -107,6 +107,8 @@ export abstract class BaseOrderService extends BaseApiService {
       quantity: number;
       options?: Record<string, string>;
     };
+    // 장바구니 일부만 결제 (선택 주문) — 미지정 시 전체 장바구니
+    selectedItems?: Array<{ productUuid: string; options?: Record<string, string> }>;
     estimatedRegion?: 'general' | 'jeju' | 'remote';
   }): Promise<ApiResponse<CheckoutSession>> {
     return this.request<ApiResponse<CheckoutSession>>(

@@ -186,8 +186,21 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       // mode에 따라 requestBody 구성
       switch (checkoutMode) {
         case 'cart':
-          // 장바구니: 빈 body (서버가 장바구니를 직접 읽음)
+          // 장바구니: 기본은 빈 body (서버가 장바구니 전체를 읽음).
+          // 선택 주문이면 CartContent가 저장해 둔 선택 목록을 전달한다.
           requestBody = undefined;
+          try {
+            const selectedStr = sessionStorage.getItem('checkoutSelectedItems');
+            if (selectedStr) {
+              const selectedItems = JSON.parse(selectedStr);
+              if (Array.isArray(selectedItems) && selectedItems.length > 0) {
+                requestBody = { selectedItems };
+                console.log('📦 [CheckoutPage] Selected-items checkout:', selectedItems.length);
+              }
+            }
+          } catch {
+            sessionStorage.removeItem('checkoutSelectedItems');
+          }
           console.log('📦 [CheckoutPage] Cart checkout - server will load from user cart');
           break;
 
@@ -234,6 +247,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       const result = response;
 
       if (result.success && result.data) {
+        // 선택 주문 목록은 세션 생성에 반영됐으므로 제거 (다음 전체 주문 오염 방지)
+        sessionStorage.removeItem('checkoutSelectedItems');
+
         // ✅ Initialize 성공 — 세션 캐시 (새로고침/결제 취소 후 재진입 대비)
         sessionStorage.setItem('checkout_session', JSON.stringify({
           mode: checkoutMode,
