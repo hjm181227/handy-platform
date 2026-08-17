@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { purchaseApiService } from '../../services/purchaseApiService';
-import { reviewService, userService } from '../../services/apiService';
+import { reviewService, userService, loyaltyService } from '../../services/apiService';
 import type { CustomerOrder, DetailedReview } from '@handy-platform/shared';
 import type { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
 import { englishToKoreanFinger, ALL_FINGERS_ENGLISH } from '@handy-platform/shared/src/utils/fingerMapping';
@@ -1057,24 +1057,155 @@ export function ReviewsPage({ onGo }: { onGo: (to: string) => void }) {
 
 // 쿠폰함 페이지
 export function CouponsPage({ onGo }: { onGo: (to: string) => void }) {
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [summary, setSummary] = useState<{ available: number; used: number; expired: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'available' | 'used' | 'expired'>('available');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await loyaltyService.getUserCoupons({ status: tab, limit: 50 });
+        const data = (res as any)?.data;
+        setCoupons(data?.coupons || []);
+        if (data?.summary) {
+          setSummary(data.summary);
+        }
+      } catch (err) {
+        console.error('Failed to load coupons:', err);
+        setError('쿠폰을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tab]);
+
+  const discountText = (coupon: any) => {
+    if (!coupon) return '';
+    if (coupon.discountType === 'percentage') return `${coupon.discountValue}% 할인`;
+    if (coupon.discountType === 'free_shipping') return '무료배송';
+    return `${Number(coupon.discountValue || 0).toLocaleString('ko-KR')}원 할인`;
+  };
+
+  const TABS: { key: 'available' | 'used' | 'expired'; label: string }[] = [
+    { key: 'available', label: `사용 가능${summary ? ` (${summary.available})` : ''}` },
+    { key: 'used', label: `사용 완료${summary ? ` (${summary.used})` : ''}` },
+    { key: 'expired', label: `기간 만료${summary ? ` (${summary.expired})` : ''}` }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="쿠폰함" onBack={() => onGo("/my")} />
-      <div className="text-center py-20">
-        <div className="text-gray-300 mb-4">
-          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
-            <path d="M20 12V6H4v6c1.1 0 2 .9 2 2s-.9 2-2 2v4h16v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-4v2.54c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V20H6v-2.54c1.19-.69 2-1.99 2-3.46s-.81-2.77-2-3.46V8h12z"/>
-          </svg>
-        </div>
-        <h3 className="text-base font-medium text-gray-600 mb-1">보유한 쿠폰이 없습니다</h3>
-        <p className="text-sm text-gray-400">이벤트나 프로모션을 통해 쿠폰을 받아보세요</p>
+
+      <div className="bg-white border-b flex">
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === t.key ? 'border-[#E85A6B] text-[#E85A6B]' : 'border-transparent text-gray-500'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-16 px-6">
+          <p className="text-sm text-red-600 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm border rounded-lg">새로고침</button>
+        </div>
+      ) : coupons.length === 0 ? (
+        <div className="text-center py-20">
+          <div className="text-gray-300 mb-4">
+            <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+              <path d="M20 12V6H4v6c1.1 0 2 .9 2 2s-.9 2-2 2v4h16v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-4v2.54c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V20H6v-2.54c1.19-.69 2-1.99 2-3.46s-.81-2.77-2-3.46V8h12z"/>
+            </svg>
+          </div>
+          <h3 className="text-base font-medium text-gray-600 mb-1">
+            {tab === 'available' ? '사용 가능한 쿠폰이 없습니다' : tab === 'used' ? '사용한 쿠폰이 없습니다' : '만료된 쿠폰이 없습니다'}
+          </h3>
+          <p className="text-sm text-gray-400">이벤트나 프로모션을 통해 쿠폰을 받아보세요</p>
+        </div>
+      ) : (
+        <div className="p-4 space-y-3">
+          {coupons.map((uc: any) => (
+            <div
+              key={uc.userCouponUuid || uc.id}
+              className={`bg-white rounded-lg border p-4 ${uc.isUsable ? '' : 'opacity-60'}`}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-lg font-bold text-[#E85A6B]">{discountText(uc.coupon)}</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{uc.coupon?.name || '쿠폰'}</p>
+                  {uc.coupon?.description && (
+                    <p className="text-xs text-gray-500 mt-1">{uc.coupon.description}</p>
+                  )}
+                </div>
+                {uc.status === 'used' && <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">사용 완료</span>}
+                {uc.isExpired && uc.status !== 'used' && <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">기간 만료</span>}
+              </div>
+              <div className="mt-3 pt-3 border-t flex justify-between text-xs text-gray-500">
+                <span>
+                  {uc.coupon?.minimumOrderAmount
+                    ? `${Number(uc.coupon.minimumOrderAmount).toLocaleString('ko-KR')}원 이상 구매 시`
+                    : '최소 주문 금액 없음'}
+                </span>
+                <span>{uc.expiresAt ? `${String(uc.expiresAt).slice(0, 10)}까지` : ''}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 // 포인트 페이지
 export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
+  const [balance, setBalance] = useState<{ balance: number; totalEarned: number; totalUsed: number; expiringAmount: number } | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [balanceRes, historyRes] = await Promise.all([
+          loyaltyService.getPointsBalance(),
+          loyaltyService.getPointsHistory({ limit: 50 })
+        ]);
+        const balanceData = (balanceRes as any)?.data;
+        setBalance({
+          balance: balanceData?.balance ?? 0,
+          totalEarned: balanceData?.totalEarned ?? 0,
+          totalUsed: balanceData?.totalUsed ?? 0,
+          expiringAmount: balanceData?.expiringPoints?.totalAmount ?? 0
+        });
+        setTransactions((historyRes as any)?.data?.transactions || []);
+      } catch (err) {
+        console.error('Failed to load points:', err);
+        setError('포인트 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const isEarn = (tx: any) => Number(tx.amount) > 0 || String(tx.type || '').startsWith('earn') || String(tx.type || '').includes('refund');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="포인트" onBack={() => onGo("/my")} />
@@ -1083,20 +1214,55 @@ export function PointsPage({ onGo }: { onGo: (to: string) => void }) {
       <div className="bg-white border-b p-6">
         <div className="text-center">
           <div className="text-sm text-gray-500 mb-1">보유 포인트</div>
-          <div className="text-3xl font-bold text-[#E85A6B] mb-4">0P</div>
+          <div className="text-3xl font-bold text-[#E85A6B]">
+            {loading ? '···' : `${(balance?.balance ?? 0).toLocaleString('ko-KR')}P`}
+          </div>
+          {!loading && balance && (
+            <div className="flex justify-center gap-6 mt-4 text-xs text-gray-500">
+              <span>총 적립 {balance.totalEarned.toLocaleString('ko-KR')}P</span>
+              <span>총 사용 {balance.totalUsed.toLocaleString('ko-KR')}P</span>
+              {balance.expiringAmount > 0 && (
+                <span className="text-red-500">30일 내 소멸 예정 {balance.expiringAmount.toLocaleString('ko-KR')}P</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* 포인트 내역 */}
-      <div className="text-center py-16">
-        <div className="text-gray-300 mb-4">
-          <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H11.5v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.65c.09 1.71 1.37 2.66 2.85 2.97V19h1.72v-1.67c1.52-.29 2.72-1.16 2.72-2.74 0-2.22-1.86-2.97-3.63-3.45z"/>
-          </svg>
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <h3 className="text-base font-medium text-gray-600 mb-1">포인트 내역이 없습니다</h3>
-        <p className="text-sm text-gray-400">구매 및 리뷰 작성 시 포인트가 적립됩니다</p>
-      </div>
+      ) : error ? (
+        <div className="text-center py-16 px-6">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      ) : transactions.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-gray-300 mb-4">
+            <svg viewBox="0 0 24 24" className="w-16 h-16 mx-auto" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H11.5v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.65c.09 1.71 1.37 2.66 2.85 2.97V19h1.72v-1.67c1.52-.29 2.72-1.16 2.72-2.74 0-2.22-1.86-2.97-3.63-3.45z"/>
+            </svg>
+          </div>
+          <h3 className="text-base font-medium text-gray-600 mb-1">포인트 내역이 없습니다</h3>
+          <p className="text-sm text-gray-400">구매 및 리뷰 작성 시 포인트가 적립됩니다</p>
+        </div>
+      ) : (
+        <div className="bg-white divide-y">
+          {transactions.map((tx: any, index: number) => (
+            <div key={tx._id || tx.id || index} className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm text-gray-900">{tx.description || (isEarn(tx) ? '포인트 적립' : '포인트 사용')}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{tx.createdAt ? String(tx.createdAt).slice(0, 10) : ''}</p>
+              </div>
+              <span className={`text-sm font-bold ${isEarn(tx) ? 'text-[#E85A6B]' : 'text-gray-500'}`}>
+                {isEarn(tx) ? '+' : ''}{Number(tx.amount || 0).toLocaleString('ko-KR')}P
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
