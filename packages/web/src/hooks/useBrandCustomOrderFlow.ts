@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { NailShape, NailLength, CreateCustomOrderResponse } from '@handy-platform/shared';
 import { orderService, imageService, userService } from '../services/apiService';
 import { NailSizeData } from '@handy-platform/shared/src/services/user/UserService';
@@ -58,6 +58,50 @@ const initialData: BrandCustomOrderFormData = {
 const STEP_ORDER: BrandCustomOrderStep[] = ['shape', 'length', 'size', 'details', 'date', 'confirm', 'complete'];
 const VISIBLE_STEPS = STEP_ORDER.length - 1;
 
+// sessionStorage 초안 저장 (뒤로가기·새로고침 시 입력 유실 방지)
+const getDraftKey = (sellerUuid: string) => `customOrderDraft:brand:${sellerUuid}`;
+// complete 단계로는 복원하지 않음 (최대 confirm 단계까지)
+const DRAFT_MAX_STEP_INDEX = STEP_ORDER.indexOf('confirm');
+
+// File 객체(첨부 이미지)는 직렬화 불가하므로 제외하고 저장
+type BrandCustomOrderDraftData = Omit<BrandCustomOrderFormData, 'attachments'>;
+
+interface BrandCustomOrderDraft {
+  stepIndex: number;
+  data: BrandCustomOrderDraftData;
+  attachmentCount: number;
+  savedAt: number;
+}
+
+function readDraft(key: string): BrandCustomOrderDraft | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') {
+      return null;
+    }
+    return parsed as BrandCustomOrderDraft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft(key: string) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // 초안 삭제 실패는 무시
+  }
+}
+
+// 초안 사이즈에 유효한 값이 하나라도 있는지 확인
+function draftHasSizes(sizes: HandSizes | undefined): boolean {
+  if (!sizes?.left || !sizes?.right) return false;
+  return [...Object.values(sizes.left), ...Object.values(sizes.right)]
+    .some(v => typeof v === 'string' && v.trim() !== '');
+}
+
 interface BrandCustomOrderFlowState {
   currentStep: BrandCustomOrderStep;
   stepIndex: number;
@@ -87,11 +131,33 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
     chatRoomId: null,
   });
 
+  // 초안 복원 확인을 이미 진행한 초안 키 (StrictMode의 이중 실행 방지)
+  const draftPromptedKeyRef = useRef<string | null>(null);
+
   // 사용자 네일 사이즈 로드
   useEffect(() => {
+    const draftKey = getDraftKey(sellerUuid);
+
     const loadInitialData = async () => {
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
+
+        // 저장된 초안이 있으면 복원 여부 확인
+        let restoredDraft: BrandCustomOrderDraft | null = null;
+        if (draftPromptedKeyRef.current !== draftKey) {
+          draftPromptedKeyRef.current = draftKey;
+          const draft = readDraft(draftKey);
+          if (draft) {
+            if (window.confirm('작성 중이던 주문서가 있습니다. 이어서 작성할까요?')) {
+              restoredDraft = draft;
+              if (draft.attachmentCount > 0) {
+                window.alert('첨부했던 이미지는 저장할 수 없어 복원되지 않았습니다. 필요하시면 이미지를 다시 첨부해주세요.');
+              }
+            } else {
+              clearDraft(draftKey);
+            }
+          }
+        }
 
         const token = localStorage.getItem('accessToken');
         const nailSizeResponse = token
@@ -120,15 +186,41 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
           };
         }
 
-        setState(prev => ({
-          ...prev,
-          userNailSize: nailSizeResponse.data || null,
-          data: {
-            ...prev.data,
-            sizes: initialSizes,
-          },
-          loading: false,
-        }));
+        setState(prev => {
+          // 초안 복원: 직렬화 저장된 필드 복원 (첨부 이미지는 제외됨)
+          if (restoredDraft) {
+            const stepIndex = Math.min(Math.max(Number(restoredDraft.stepIndex) || 0, 0), DRAFT_MAX_STEP_INDEX);
+            const draftSizes = restoredDraft.data.sizes;
+            return {
+              ...prev,
+              userNailSize: nailSizeResponse.data || null,
+              stepIndex,
+              currentStep: STEP_ORDER[stepIndex],
+              data: {
+                ...initialData,
+                ...restoredDraft.data,
+                attachments: [],
+                sizes: draftHasSizes(draftSizes)
+                  ? {
+                      left: { ...emptyFingerSizes, ...draftSizes.left },
+                      right: { ...emptyFingerSizes, ...draftSizes.right },
+                    }
+                  : initialSizes,
+              },
+              loading: false,
+            };
+          }
+
+          return {
+            ...prev,
+            userNailSize: nailSizeResponse.data || null,
+            data: {
+              ...prev.data,
+              sizes: initialSizes,
+            },
+            loading: false,
+          };
+        });
       } catch (err: any) {
         setState(prev => ({
           ...prev,
@@ -139,7 +231,38 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
     };
 
     loadInitialData();
-  }, []);
+  }, [sellerUuid]);
+
+  // 상태 변경 시마다 직렬화 가능한 필드만 sessionStorage에 초안 저장
+  useEffect(() => {
+    if (state.loading || state.submitting || state.createdOrder || state.currentStep === 'complete') {
+      return;
+    }
+
+    const { attachments, ...serializable } = state.data;
+
+    // 의미 있는 진행이 없으면 저장하지 않음 (불필요한 복원 확인 방지)
+    const hasProgress =
+      state.stepIndex > 0 ||
+      serializable.desiredColor.trim() !== '' ||
+      serializable.request.trim() !== '' ||
+      serializable.desiredDate !== '' ||
+      serializable.quantity !== 1 ||
+      attachments.length > 0;
+    if (!hasProgress) return;
+
+    try {
+      const draft: BrandCustomOrderDraft = {
+        stepIndex: Math.min(state.stepIndex, DRAFT_MAX_STEP_INDEX),
+        data: serializable,
+        attachmentCount: attachments.length,
+        savedAt: Date.now(),
+      };
+      sessionStorage.setItem(getDraftKey(sellerUuid), JSON.stringify(draft));
+    } catch {
+      // 저장 실패는 무시 (초안은 부가 기능)
+    }
+  }, [state.data, state.stepIndex, state.loading, state.submitting, state.createdOrder, state.currentStep, sellerUuid]);
 
   const nextStep = useCallback(() => {
     setState(prev => {
@@ -311,6 +434,9 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
       if (!orderResponse.data) {
         throw new Error('주문서 생성 응답이 올바르지 않습니다');
       }
+
+      // 제출 성공 시 초안 삭제
+      clearDraft(getDraftKey(sellerUuid));
 
       // 3. 채팅방 생성 시도
       let chatRoomId: string | null = null;

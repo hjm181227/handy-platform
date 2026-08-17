@@ -85,6 +85,7 @@ import DesignToolManagement from './components/admin/DesignToolManagement';
 // Checkout and Order Components
 import { CheckoutPage } from './components/pages/CheckoutPage';
 import { OrderCompletePage } from './components/pages/OrderCompletePage';
+import { TrackShipmentPage } from './components/pages/TrackShipmentPage';
 import { ShippingAddressPage } from './components/pages/ShippingAddressPage';
 
 // Payment Components
@@ -566,6 +567,15 @@ export function Router() {
   }
   else if (pathname === '/payment/test') {
     screen = <PaymentTest onGo={nav} />;
+  }
+  else if (pathname.match(/^\/orders\/[^/]+\/track$/)) {
+    // 배송조회 — 일반 주문상세 매칭보다 먼저 등록해야 한다
+    const orderId = pathname.split('/')[2];
+    screen = (
+      <RequireAuth>
+        <TrackShipmentPage onGo={nav} orderId={orderId} />
+      </RequireAuth>
+    );
   }
   else if (pathname.match(/^\/orders\/(.+)$/)) {
     const orderId = pathname.split('/')[2];
@@ -1067,16 +1077,13 @@ export function Router() {
     screen = <AuthRedirect nav={nav} openModal={openLogin} />;
   }
   // ==================== Home ====================
-  else if (COMMUNITY_NAV_ENABLED) {
-    screen = (
+  else if (pathname === '/') {
+    screen = COMMUNITY_NAV_ENABLED ? (
       <CommunityHome
         nav={nav}
         openProduct={openProduct}
       />
-    );
-  }
-  else {
-    screen = (
+    ) : (
       <HomeContent
         nav={nav}
         openProduct={openProduct}
@@ -1088,6 +1095,33 @@ export function Router() {
         brands={brands}
         loadingBrands={loadingBrands}
       />
+    );
+  }
+  // ==================== 404 ====================
+  // 기존에는 매칭 실패 시 홈이 조용히 렌더되어 오타·만료 링크가 무해화됐다
+  else {
+    screen = (
+      <div className="min-h-[60vh] flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-6xl font-bold text-[#E85A6B] mb-4">404</p>
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">페이지를 찾을 수 없습니다</h1>
+          <p className="text-sm text-gray-500 mb-8">주소가 잘못되었거나, 삭제되었거나, 이동된 페이지입니다.</p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => window.history.back()}
+              className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+            >
+              이전 페이지
+            </button>
+            <button
+              onClick={() => nav('/')}
+              className="px-5 py-2.5 bg-[#E85A6B] text-white rounded-lg text-sm font-medium hover:bg-[#D14A5B]"
+            >
+              홈으로 가기
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 

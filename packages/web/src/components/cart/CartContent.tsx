@@ -96,6 +96,9 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   // 언마운트 시 아직 서버에 반영되지 않은 삭제를 flush하기 위한 참조
   const pendingRemovalRef = useRef<{ productId: string; options?: Record<string, string> } | null>(null);
 
+  // 선택 주문/삭제 관련 상태 — 기본은 전체 선택이므로 "선택 해제된 항목"만 추적한다
+  const [deselectedKeys, setDeselectedKeys] = useState<Set<string>>(new Set());
+
   // 장바구니 데이터 로딩
   const loadCart = async () => {
     try {
@@ -450,6 +453,107 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   const multiSellerTotals = cart?.multiSellerTotals;
   const cartSummary = cart?.summary;
 
+  // ===== 선택 주문/삭제 관련 파생 값 =====
+  // 아이템 식별 키 (기존 itemKey와 동일한 규칙: productUuid + options)
+  const getItemKey = (item: CartItem) => `${item.productUuid}-${JSON.stringify(item.options)}`;
+  const allItems: CartItem[] = itemsBySeller.flatMap(seller => seller.items);
+  const selectedItems = allItems.filter(item => !deselectedKeys.has(getItemKey(item)));
+  const allSelected = allItems.length > 0 && selectedItems.length === allItems.length;
+  const selectedQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const selectedSubtotal = selectedItems.reduce((sum, item) => sum + (item.subtotal ?? item.price * item.quantity), 0);
+
+  // 장바구니가 갱신되면 더 이상 존재하지 않는 아이템의 선택 해제 상태를 정리한다
+  // (새로 담긴 상품은 자동으로 "선택됨" 상태가 됨)
+  useEffect(() => {
+    if (!cart) return;
+    const validKeys = new Set(
+      (cart.itemsBySeller || []).flatMap(seller => seller.items.map(getItemKey))
+    );
+    setDeselectedKeys(prev => {
+      if (prev.size === 0) return prev;
+      const next = new Set(Array.from(prev).filter(key => validKeys.has(key)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [cart]);
+
+  // 개별 아이템 선택/해제 토글
+  const toggleItemSelection = (key: string) => {
+    setDeselectedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  // 전체선택/전체해제 토글
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setDeselectedKeys(new Set(allItems.map(getItemKey)));
+    } else {
+      setDeselectedKeys(new Set());
+    }
+  };
+
+  // 선택된 아이템 일괄 삭제
+  const removeSelectedItems = async () => {
+    if (selectedItems.length === 0) return;
+    if (!confirm(`선택한 ${selectedItems.length}개 상품을 장바구니에서 삭제하시겠습니까?`)) return;
+
+    // 대기 중인 단건 삭제(undo 타이머)가 있으면 먼저 서버에 flush하여
+    // 일괄 삭제 후 타이머가 뒤늦게 실행되며 상태를 되돌리는 문제를 방지한다
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    const pending = pendingRemovalRef.current;
+    pendingRemovalRef.current = null;
+    setPendingUndo(null);
+
+    try {
+      setLoading(true);
+
+      if (pending) {
+        try {
+          await cartService.removeFromCart(pending.productId, pending.options);
+        } catch (flushErr) {
+          console.error('Failed to flush pending cart removal before bulk delete:', flushErr);
+        }
+      }
+
+      if (allSelected) {
+        // 전체 선택 상태면 clearCart 한 번으로 처리
+        const response = await cartService.clearCart();
+        if (!response.success) {
+          throw new Error('선택 상품 삭제에 실패했습니다.');
+        }
+      } else {
+        // 부분 선택이면 아이템별로 순차 삭제
+        for (const item of selectedItems) {
+          const response = await cartService.removeFromCart(item.productUuid, item.options);
+          if (!response.success) {
+            throw new Error('일부 상품 삭제에 실패했습니다.');
+          }
+        }
+      }
+
+      await loadCart();
+      onCartUpdate?.();
+      showToast?.('선택한 상품을 삭제했습니다', 'success');
+    } catch (err: any) {
+      console.error('Remove selected items failed:', err);
+      // 일부만 삭제됐을 수 있으므로 서버 상태로 재동기화
+      await loadCart();
+      onCartUpdate?.();
+      showToast?.(err.message || '선택 상품 삭제에 실패했습니다', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 헤더 렌더링 (drawer 모드에서만 사용)
   const renderHeader = () => {
     if (mode === 'drawer') {
@@ -609,7 +713,16 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
               key={itemKey}
               className={`flex items-center gap-2 py-1.5 transition-all duration-300 ${isUpdating ? 'opacity-50' : ''} ${isRemoving ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
             >
-              {/* 삭제 버튼 - 맨 왼쪽 */}
+              {/* 선택 체크박스 - 맨 왼쪽 */}
+              <input
+                type="checkbox"
+                checked={!deselectedKeys.has(itemKey)}
+                onChange={() => toggleItemSelection(itemKey)}
+                className="w-4 h-4 accent-[#E85A6B] flex-shrink-0 cursor-pointer touch-manipulation"
+                aria-label={`${productName} 선택`}
+              />
+
+              {/* 삭제 버튼 */}
               <button
                 onClick={() => removeItem(productId, item.options, productName)}
                 disabled={isUpdating}
@@ -749,11 +862,43 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
     </div>
   );
 
+  // 전체선택 / 선택 삭제 툴바
+  const renderSelectionToolbar = () => {
+    if (allItems.length === 0) return null;
+
+    return (
+      <div className="flex items-center justify-between px-1 mb-3">
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={toggleSelectAll}
+            className="w-4 h-4 accent-[#E85A6B] cursor-pointer touch-manipulation"
+            aria-label="전체선택"
+          />
+          <span className="text-sm sm:text-base font-medium">
+            전체선택 ({selectedItems.length}/{allItems.length})
+          </span>
+        </label>
+        <button
+          onClick={removeSelectedItems}
+          disabled={selectedItems.length === 0 || loading}
+          className="text-xs sm:text-sm text-gray-500 border border-gray-300 rounded px-2 py-1 hover:text-[#E85A6B] hover:border-[#E85A6B] transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+        >
+          선택 삭제
+        </button>
+      </div>
+    );
+  };
+
   // 장바구니 아이템 렌더링 (판매자별 그룹화)
   const renderCartItems = () => {
     return (
-      <div className="space-y-6">
-        {itemsBySeller.map(seller => renderSellerGroup(seller))}
+      <div>
+        {renderSelectionToolbar()}
+        <div className="space-y-6">
+          {itemsBySeller.map(seller => renderSellerGroup(seller))}
+        </div>
       </div>
     );
   };
@@ -769,20 +914,28 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       <>
         <div className="space-y-2 text-sm sm:text-base mb-4">
           <div className="flex items-center justify-between">
-            <span>상품 금액</span>
-            <span className="font-medium">{money(totals.subtotal)}</span>
+            <span>선택 상품 금액 ({selectedQuantity}개)</span>
+            <span className="font-medium">{money(selectedSubtotal)}</span>
           </div>
 
-          {/* 배송비 표시 */}
-          {totals.shippingCost > 0 && (
-            <div className="flex items-center justify-between">
-              <span>배송비</span>
-              <span className="font-medium">{money(totals.shippingCost)}</span>
-            </div>
-          )}
-          {totals.freeShippingRemaining > 0 && (
-            <div className="text-xs text-[#E85A6B] bg-[#FFF1F2] p-2 rounded">
-              {money(totals.freeShippingRemaining)} 더 구매하면 무료배송!
+          {allSelected ? (
+            <>
+              {/* 배송비 표시 (전체 선택 시에만 서버 계산값이 유효함) */}
+              {totals.shippingCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>배송비</span>
+                  <span className="font-medium">{money(totals.shippingCost)}</span>
+                </div>
+              )}
+              {totals.freeShippingRemaining > 0 && (
+                <div className="text-xs text-[#E85A6B] bg-[#FFF1F2] p-2 rounded">
+                  {money(totals.freeShippingRemaining)} 더 구매하면 무료배송!
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+              배송비는 전체 주문 기준으로 주문 단계에서 계산됩니다
             </div>
           )}
 
@@ -790,9 +943,11 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
           <hr />
         </div>
         <div className="mb-4 flex items-center justify-between border-t pt-3">
-          <span className="font-semibold text-base sm:text-lg">총 결제금액</span>
+          <span className="font-semibold text-base sm:text-lg">
+            {allSelected ? '총 결제금액' : '선택 상품 합계'}
+          </span>
           <span className={`font-bold ${mode === 'drawer' ? 'text-lg' : 'text-xl sm:text-2xl'} text-[#E85A6B]`}>
-            {money(totals.total)}
+            {money(allSelected ? totals.total : selectedSubtotal)}
           </span>
         </div>
         <button
@@ -800,10 +955,16 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
             onCheckout();
             if (mode === 'drawer' && onClose) onClose();
           }}
-          className="w-full rounded-lg bg-black text-white font-semibold py-3 sm:py-4 hover:bg-gray-800 transition-colors touch-manipulation text-base sm:text-lg"
+          disabled={!allSelected}
+          className="w-full rounded-lg bg-black text-white font-semibold py-3 sm:py-4 hover:bg-gray-800 transition-colors touch-manipulation text-base sm:text-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
         >
           주문하기
         </button>
+        {!allSelected && (
+          <p className="mt-2 text-xs text-[#E85A6B] text-center">
+            현재는 전체 상품 주문만 지원됩니다. 선택하지 않은 상품을 삭제하거나 전체선택 후 주문해주세요.
+          </p>
+        )}
       </>
     );
 
