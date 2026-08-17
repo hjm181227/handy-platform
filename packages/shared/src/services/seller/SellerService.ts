@@ -392,6 +392,37 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<SellerOrderAnalytics>>(API_ENDPOINTS.SELLER.ORDER_ANALYTICS);
   }
 
+  // 상품 옵션(variant) 관리
+  async getProductVariants(productId: string): Promise<ApiResponse<{
+    fulfillmentMode: 'made_to_order' | 'stocked';
+    basePrice: number;
+    axes: { shapes: string[]; lengths: string[] };
+    variants: Array<{
+      variantUuid: string;
+      optionCombination: Array<{ optionType: string; optionValue: string }>;
+      stock: number;
+      priceModifier: number;
+      isActive: boolean;
+    }>;
+  }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCT_VARIANTS(productId));
+  }
+
+  async saveProductVariants(productId: string, payload: {
+    fulfillmentMode: 'made_to_order' | 'stocked';
+    variants: Array<{
+      optionCombination: Array<{ optionType: 'shape' | 'length'; optionValue: string }>;
+      stock: number;
+      priceModifier: number;
+      isActive: boolean;
+    }>;
+  }): Promise<ApiResponse<{ fulfillmentMode: string; saved: number; deactivated: number }>> {
+    return this.request(API_ENDPOINTS.SELLER.PRODUCT_VARIANTS(productId), {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
   // GET /analytics/revenue - 월별 매출 통계
   async getRevenueAnalytics(period: '6m' | '1y' = '6m'): Promise<ApiResponse<{
     revenueData: Array<{

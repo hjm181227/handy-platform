@@ -10,6 +10,7 @@ import { IoMdStar } from 'react-icons/io';
 import { FaDollarSign, FaChartLine, FaClipboardList, FaBox, FaPlus, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType, CustomOrderRequest, PrefillProductResponse } from '../../types';
+import { NAIL_SHAPE_NAME, NAIL_LENGTH_NAME } from '@handy-platform/shared';
 
 // 생산 관리 컴포넌트 임포트
 import { ProductionSettings } from './seller/ProductionSettings';
@@ -867,6 +868,23 @@ interface DetailImage {
   description: string;
 }
 
+// 판매 방식(fulfillmentMode) 및 옵션·재고 매트릭스용 상수/타입
+type FulfillmentMode = 'made_to_order' | 'stocked';
+
+interface VariantInput {
+  stock: string;
+  priceModifier: string;
+  isActive: boolean;
+}
+
+const VARIANT_SHAPES = [ 'ROUND', 'ALMOND', 'OVAL', 'STILETTO', 'SQUARE', 'COFFIN' ] as const;
+const VARIANT_LENGTHS = [ 'SHORT', 'MEDIUM', 'LONG' ] as const;
+
+// 조합 키 = shape|length (축 변경 시에도 입력값 보존용)
+const variantKey = (shape: string, length: string) => `${shape}|${length}`;
+
+const DEFAULT_VARIANT_INPUT: VariantInput = { stock: '0', priceModifier: '0', isActive: true };
+
 // 네일팁 전용 상품 등록/수정 페이지 (서버 API 스펙 완전 일치)
 export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) => void; productUuid?: string }) {
   const { t } = useTranslation('seller');
@@ -887,6 +905,9 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
     stockQuantity: '100',
     processingDays: '3',
     status: 'active',
+
+    // 판매 방식 (기본: 주문 제작 = 기존 동작)
+    fulfillmentMode: 'made_to_order' as FulfillmentMode,
 
     // 네일 전용 필드
     nailShape: 'ROUND' as NailShape,
@@ -925,6 +946,81 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
   const [ error, setError ] = useState<string | null>(null);
   const [ isLoading, setIsLoading ] = useState(false);
 
+  // 옵션·재고 매트릭스 상태
+  const [ selectedShapes, setSelectedShapes ] = useState<string[]>([]);
+  const [ selectedLengths, setSelectedLengths ] = useState<string[]>([]);
+  const [ variantInputs, setVariantInputs ] = useState<Record<string, VariantInput>>({});
+  const [ bulkStock, setBulkStock ] = useState('');
+  const [ bulkModifier, setBulkModifier ] = useState('');
+  // 수정 폼 진입 시 서버에 저장돼 있던 판매 방식 (stocked → made_to_order 전환 감지용)
+  const [ initialFulfillmentMode, setInitialFulfillmentMode ] = useState<FulfillmentMode>('made_to_order');
+
+  // 체크된 축의 데카르트 곱으로 조합 생성 (표시 순서는 상수 배열 순서 고정)
+  const variantCombos = useMemo(() =>
+    VARIANT_SHAPES.filter(shape => selectedShapes.includes(shape)).flatMap(shape =>
+      VARIANT_LENGTHS.filter(length => selectedLengths.includes(length)).map(length => ({
+        shape,
+        length,
+        key: variantKey(shape, length)
+      }))
+    ), [ selectedShapes, selectedLengths ]);
+
+  const getVariantInput = (key: string): VariantInput => variantInputs[key] ?? DEFAULT_VARIANT_INPUT;
+
+  const updateVariantInput = (key: string, patch: Partial<VariantInput>) => {
+    setVariantInputs(prev => ({
+      ...prev,
+      [key]: { ...(prev[key] ?? DEFAULT_VARIANT_INPUT), ...patch }
+    }));
+  };
+
+  const toggleShape = (shape: string) => {
+    setSelectedShapes(prev => prev.includes(shape) ? prev.filter(s => s !== shape) : [ ...prev, shape ]);
+  };
+
+  const toggleLength = (length: string) => {
+    setSelectedLengths(prev => prev.includes(length) ? prev.filter(l => l !== length) : [ ...prev, length ]);
+  };
+
+  // 일괄 적용 (현재 생성된 조합에만 적용 — 숨겨진 조합의 보존값은 건드리지 않음)
+  const applyBulkStock = () => {
+    if (bulkStock === '') return;
+    const value = String(Math.max(0, parseInt(bulkStock, 10) || 0));
+    setVariantInputs(prev => {
+      const next = { ...prev };
+      variantCombos.forEach(({ key }) => {
+        next[key] = { ...(prev[key] ?? DEFAULT_VARIANT_INPUT), stock: value };
+      });
+      return next;
+    });
+  };
+
+  const applyBulkModifier = () => {
+    if (bulkModifier === '') return;
+    const value = String(parseInt(bulkModifier, 10) || 0);
+    setVariantInputs(prev => {
+      const next = { ...prev };
+      variantCombos.forEach(({ key }) => {
+        next[key] = { ...(prev[key] ?? DEFAULT_VARIANT_INPUT), priceModifier: value };
+      });
+      return next;
+    });
+  };
+
+  // 하단 요약: 총 재고 / 조합 수 / 판매 조합 수
+  const variantSummary = useMemo(() => {
+    let totalStock = 0;
+    let activeCount = 0;
+    variantCombos.forEach(({ key }) => {
+      const input = variantInputs[key] ?? DEFAULT_VARIANT_INPUT;
+      if (input.isActive) {
+        activeCount += 1;
+        totalStock += Math.max(0, parseInt(input.stock, 10) || 0);
+      }
+    });
+    return { totalStock, activeCount, comboCount: variantCombos.length };
+  }, [ variantCombos, variantInputs ]);
+
   // 커스텀 주문서 모달 관련 상태
   const [ showOrderModal, setShowOrderModal ] = useState(false);
   const [ customOrders, setCustomOrders ] = useState<CustomOrderRequest[]>([]);
@@ -957,7 +1053,9 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           }
 
           // 폼 데이터 업데이트 (API 응답 구조에 맞게, 안전한 접근)
-          setFormData({
+          // 함수형 업데이트로 fulfillmentMode 등 별도 로드 필드 보존
+          setFormData(prev => ({
+            ...prev,
             // 상품 유형 (서버와 동일하게 소문자 사용)
             productType: (product.productType as ProductType) || 'original',
 
@@ -1000,7 +1098,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             isFeatured: Boolean(product.isFeatured),
             isNewProduct: Boolean(product.isNewProduct ?? true),
             tags: Array.isArray(product.tags) ? product.tags : []
-          });
+          }));
 
         } catch (error) {
           console.error('Failed to load product data:', error);
@@ -1012,6 +1110,43 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
 
       loadProductData();
     }
+  }, [productUuid, isEdit]);
+
+  // 수정 모드: 기존 판매 방식·옵션(variant) 불러오기
+  useEffect(() => {
+    if (!productUuid || !isEdit) return;
+
+    const loadVariants = async () => {
+      try {
+        const response = await sellerService.getProductVariants(productUuid);
+        if (!response.success || !response.data) return;
+
+        const data = response.data;
+        const mode: FulfillmentMode = data.fulfillmentMode === 'stocked' ? 'stocked' : 'made_to_order';
+        setInitialFulfillmentMode(mode);
+        setFormData(prev => ({ ...prev, fulfillmentMode: mode }));
+        setSelectedShapes(Array.isArray(data.axes?.shapes) ? data.axes.shapes : []);
+        setSelectedLengths(Array.isArray(data.axes?.lengths) ? data.axes.lengths : []);
+
+        const inputs: Record<string, VariantInput> = {};
+        (data.variants || []).forEach(variant => {
+          const shape = variant.optionCombination?.find(o => o.optionType === 'shape')?.optionValue;
+          const length = variant.optionCombination?.find(o => o.optionType === 'length')?.optionValue;
+          if (!shape || !length) return;
+          inputs[variantKey(shape, length)] = {
+            stock: String(variant.stock ?? 0),
+            priceModifier: String(variant.priceModifier ?? 0),
+            isActive: Boolean(variant.isActive)
+          };
+        });
+        setVariantInputs(inputs);
+      } catch (error) {
+        // 옵션 로드 실패는 폼 진입을 막지 않음 (기본값 = 주문 제작)
+        console.error('Failed to load product variants:', error);
+      }
+    };
+
+    loadVariants();
   }, [productUuid, isEdit]);
 
   // 커스텀 주문서 목록 불러오기
@@ -1110,6 +1245,31 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         throw new Error(t('productForm.tagsMaxValidation'));
       }
 
+      // 판매 방식 검증 + 옵션 payload 구성 (기성 재고)
+      const isStocked = formData.fulfillmentMode === 'stocked';
+      const variantPayload = isStocked
+        ? variantCombos.map(({ shape, length, key }) => {
+          const input = getVariantInput(key);
+          return {
+            optionCombination: [
+              { optionType: 'shape' as const, optionValue: shape },
+              { optionType: 'length' as const, optionValue: length }
+            ],
+            stock: Math.max(0, parseInt(input.stock, 10) || 0),
+            priceModifier: parseInt(input.priceModifier, 10) || 0,
+            isActive: input.isActive
+          };
+        })
+        : [];
+
+      if (isStocked && !variantPayload.some(v => v.isActive)) {
+        throw new Error('기성 재고 판매는 판매 중인 옵션 조합이 1개 이상 필요합니다. 제공하는 쉐입·길이를 선택하고 조합의 "판매" 체크를 확인해주세요.');
+      }
+
+      const stockedTotalStock = variantPayload
+        .filter(v => v.isActive)
+        .reduce((sum, v) => sum + v.stock, 0);
+
       // 2. 상품 데이터 구성
       // 공통 필드 (등록/수정 모두 사용)
       const commonData = {
@@ -1126,14 +1286,17 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           description: img.description,
           order: img.order || index + 1
         })),
-        stockQuantity: formData.productType === 'custom' ? 0 : parseInt(formData.stockQuantity),
+        stockQuantity: formData.productType === 'custom'
+          ? 0
+          : (isStocked ? stockedTotalStock : parseInt(formData.stockQuantity)),
         processingDays: parseInt(formData.processingDays),
         nailCategories: formData.nailCategories,
         nailShape: formData.nailShape,
         nailLength: formData.nailLength,
         nailOptions: {
-          lengthCustomizable: formData.lengthCustomizable,
-          shapeCustomizable: formData.shapeCustomizable,
+          // 기성 재고 판매는 커스텀 선택 흐름을 쓰지 않음 (조합 선택으로 대체)
+          lengthCustomizable: isStocked ? false : formData.lengthCustomizable,
+          shapeCustomizable: isStocked ? false : formData.shapeCustomizable,
           designCustomizable: formData.designCustomizable
         },
         isFeatured: formData.isFeatured,
@@ -1164,7 +1327,32 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         response = await productService.createProduct(productData);
       }
 
-      // 4. 성공 처리
+      // 4. 옵션(variant) 저장 — 상품 저장 성공 후
+      //    (신규 생성 시 서버 응답의 productUuid 사용, 없으면 productId 폴백 — variants API는 둘 다 허용)
+      const savedProductId = isEdit && productUuid
+        ? productUuid
+        : String((response?.data as any)?.productUuid || (response?.data as any)?.productId || '');
+
+      if (isStocked || (isEdit && initialFulfillmentMode === 'stocked')) {
+        try {
+          if (!savedProductId) {
+            throw new Error('상품 식별자를 확인할 수 없습니다.');
+          }
+          await sellerService.saveProductVariants(savedProductId, {
+            fulfillmentMode: formData.fulfillmentMode,
+            // 주문 제작으로 전환 시엔 빈 배열 → 서버가 기존 조합 전체 비활성 처리
+            variants: isStocked ? variantPayload : []
+          });
+        } catch (variantError) {
+          console.error('옵션·재고 저장 실패:', variantError);
+          const variantMessage = variantError instanceof Error ? variantError.message : '';
+          alert(`상품은 저장되었지만 옵션·재고 저장에 실패했습니다. 상품 수정 화면에서 다시 시도해주세요.${variantMessage ? `\n(${variantMessage})` : ''}`);
+          onGo('/seller/products');
+          return;
+        }
+      }
+
+      // 5. 성공 처리
       console.log(isEdit ? '상품 수정 성공:' : '상품 등록 성공:', response);
       alert(isEdit ? t('productForm.editSuccess') : t('productForm.createSuccess'));
       onGo('/seller/products');
@@ -1664,45 +1852,86 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           </div>
         </div>
 
+        {/* 판매 방식 선택 */}
+        <div className="bg-white rounded-lg p-6 border shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">판매 방식을 선택해주세요 *</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, fulfillmentMode: 'stocked' })}
+              className={`text-left py-4 px-4 rounded-lg border-2 transition-all ${
+                formData.fulfillmentMode === 'stocked'
+                  ? 'border-[#E85A6B] bg-[#FFF1F2]'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className={`font-semibold ${formData.fulfillmentMode === 'stocked' ? 'text-[#E85A6B]' : 'text-gray-800'}`}>
+                📦 기성 재고 판매
+              </div>
+              <p className="text-xs text-gray-500 mt-1">만들어 둔 상품을 바로 발송</p>
+              <p className="text-xs text-gray-500">옵션(쉐입·길이)별 재고 관리</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, fulfillmentMode: 'made_to_order' })}
+              className={`text-left py-4 px-4 rounded-lg border-2 transition-all ${
+                formData.fulfillmentMode === 'made_to_order'
+                  ? 'border-[#E85A6B] bg-[#FFF1F2]'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className={`font-semibold ${formData.fulfillmentMode === 'made_to_order' ? 'text-[#E85A6B]' : 'text-gray-800'}`}>
+                🛠 주문 제작
+              </div>
+              <p className="text-xs text-gray-500 mt-1">주문 받은 후 제작해 발송</p>
+              <p className="text-xs text-gray-500">쉐입·길이 커스텀 선택 가능</p>
+            </button>
+          </div>
+        </div>
+
         {/* 네일 전용 설정 - 서버 API 스펙에 맞게 완전 재구성 */}
         <div className="bg-white rounded-lg p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">네일 전용 설정</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                길이 *
-              </label>
-              <select
-                required
-                value={formData.nailLength}
-                onChange={(e) => setFormData({ ...formData, nailLength: e.target.value as NailLength })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
-              >
-                <option value="SHORT">숏 (Short)</option>
-                <option value="MEDIUM">미디움 (Medium)</option>
-                <option value="LONG">롱 (Long)</option>
-              </select>
-            </div>
+            {formData.fulfillmentMode === 'made_to_order' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    길이 *
+                  </label>
+                  <select
+                    required
+                    value={formData.nailLength}
+                    onChange={(e) => setFormData({ ...formData, nailLength: e.target.value as NailLength })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                  >
+                    <option value="SHORT">숏 (Short)</option>
+                    <option value="MEDIUM">미디움 (Medium)</option>
+                    <option value="LONG">롱 (Long)</option>
+                  </select>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                쉐잎 *
-              </label>
-              <select
-                required
-                value={formData.nailShape}
-                onChange={(e) => setFormData({ ...formData, nailShape: e.target.value as NailShape })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
-              >
-                <option value="ROUND">라운드 (Round)</option>
-                <option value="ALMOND">아몬드 (Almond)</option>
-                <option value="OVAL">오벌 (Oval)</option>
-                <option value="STILETTO">스틸레토 (Stiletto)</option>
-                <option value="SQUARE">스퀘어 (Square)</option>
-                <option value="COFFIN">코핀 (Coffin)</option>
-              </select>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    쉐잎 *
+                  </label>
+                  <select
+                    required
+                    value={formData.nailShape}
+                    onChange={(e) => setFormData({ ...formData, nailShape: e.target.value as NailShape })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                  >
+                    <option value="ROUND">라운드 (Round)</option>
+                    <option value="ALMOND">아몬드 (Almond)</option>
+                    <option value="OVAL">오벌 (Oval)</option>
+                    <option value="STILETTO">스틸레토 (Stiletto)</option>
+                    <option value="SQUARE">스퀘어 (Square)</option>
+                    <option value="COFFIN">코핀 (Coffin)</option>
+                  </select>
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1735,43 +1964,210 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               </p>
             </div>
 
-            <div className="md:col-span-3">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                커스터마이징 옵션
-              </label>
-              <div className="space-y-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.lengthCustomizable}
-                    onChange={(e) => setFormData({ ...formData, lengthCustomizable: e.target.checked })}
-                    className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">길이 변경 가능</span>
+            {formData.fulfillmentMode === 'made_to_order' && (
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  커스터마이징 옵션
                 </label>
+                <div className="space-y-3">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.lengthCustomizable}
+                      onChange={(e) => setFormData({ ...formData, lengthCustomizable: e.target.checked })}
+                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">길이 변경 가능</span>
+                  </label>
 
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.shapeCustomizable}
-                    onChange={(e) => setFormData({ ...formData, shapeCustomizable: e.target.checked })}
-                    className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">쉐잎 변경 가능</span>
-                </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.shapeCustomizable}
+                      onChange={(e) => setFormData({ ...formData, shapeCustomizable: e.target.checked })}
+                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">쉐잎 변경 가능</span>
+                  </label>
 
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.designCustomizable}
-                    onChange={(e) => setFormData({ ...formData, designCustomizable: e.target.checked })}
-                    className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">디자인 커스텀 가능</span>
-                </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.designCustomizable}
+                      onChange={(e) => setFormData({ ...formData, designCustomizable: e.target.checked })}
+                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">디자인 커스텀 가능</span>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
           </div>
+
+          {/* 옵션·재고 매트릭스 (기성 재고 판매) */}
+          {formData.fulfillmentMode === 'stocked' && (
+            <div className="mt-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  제공하는 쉐입 *
+                </label>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {VARIANT_SHAPES.map((shape) => (
+                    <label key={shape} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedShapes.includes(shape)}
+                        onChange={() => toggleShape(shape)}
+                        className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      />
+                      <span className="ml-1.5 text-sm text-gray-700">{NAIL_SHAPE_NAME[shape] || shape}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  제공하는 길이 *
+                </label>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {VARIANT_LENGTHS.map((length) => (
+                    <label key={length} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedLengths.includes(length)}
+                        onChange={() => toggleLength(length)}
+                        className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      />
+                      <span className="ml-1.5 text-sm text-gray-700">{NAIL_LENGTH_NAME[length] || length}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {variantCombos.length === 0 ? (
+                <p className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  제공할 쉐입과 길이를 각각 1개 이상 선택하면 옵션 조합 표가 생성됩니다.
+                </p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">
+                            조합 ({variantCombos.length}개 생성)
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">재고</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">추가금 (원)</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">판매</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {variantCombos.map(({ shape, length, key }) => {
+                          const input = getVariantInput(key);
+                          const stockNum = Math.max(0, parseInt(input.stock, 10) || 0);
+                          return (
+                            <tr key={key} className={input.isActive ? '' : 'bg-gray-50'}>
+                              <td className={`px-3 py-2 whitespace-nowrap ${input.isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+                                {NAIL_SHAPE_NAME[shape] || shape} · {NAIL_LENGTH_NAME[length] || length}
+                                {input.isActive && stockNum === 0 && (
+                                  <span className="ml-2 text-xs font-medium text-orange-500">품절</span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={input.stock}
+                                  onChange={(e) => updateVariantInput(key, { stock: e.target.value.replace(/[^0-9]/g, '') })}
+                                  disabled={!input.isActive}
+                                  className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                                  placeholder="0"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="number"
+                                  step="1"
+                                  value={input.priceModifier}
+                                  onChange={(e) => updateVariantInput(key, { priceModifier: e.target.value.replace(/[^0-9-]/g, '') })}
+                                  disabled={!input.isActive}
+                                  className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                                  placeholder="0"
+                                />
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={input.isActive}
+                                  onChange={(e) => updateVariantInput(key, { isActive: e.target.checked })}
+                                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={bulkStock}
+                        onChange={(e) => setBulkStock(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                        placeholder="재고"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyBulkStock}
+                        disabled={bulkStock === ''}
+                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        재고 일괄 적용
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        step="1"
+                        value={bulkModifier}
+                        onChange={(e) => setBulkModifier(e.target.value.replace(/[^0-9-]/g, ''))}
+                        className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                        placeholder="추가금"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyBulkModifier}
+                        disabled={bulkModifier === ''}
+                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        추가금 일괄 적용
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+                    <p className="text-sm font-medium text-gray-800">
+                      총 재고 {variantSummary.totalStock}개
+                      <span className="ml-1 font-normal text-gray-500">
+                        (조합 {variantSummary.comboCount}개 중 판매 {variantSummary.activeCount}개)
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      대표 쉐입·길이는 첫 번째 판매 조합으로 자동 설정됩니다.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 네일 카테고리 - 서버 API 스펙에 맞게 재구성 */}

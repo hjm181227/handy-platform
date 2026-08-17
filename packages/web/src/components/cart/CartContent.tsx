@@ -952,17 +952,27 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
         </div>
         <button
           onClick={() => {
+            // 선택 주문: 일부만 선택했으면 선택 목록을 체크아웃에 전달 (서버가 필터링)
+            if (!allSelected) {
+              const payload = selectedItems.map(item => ({
+                productUuid: item.productUuid,
+                options: item.options || {}
+              }));
+              sessionStorage.setItem('checkoutSelectedItems', JSON.stringify(payload));
+            } else {
+              sessionStorage.removeItem('checkoutSelectedItems');
+            }
             onCheckout();
             if (mode === 'drawer' && onClose) onClose();
           }}
-          disabled={!allSelected}
+          disabled={selectedItems.length === 0}
           className="w-full rounded-lg bg-black text-white font-semibold py-3 sm:py-4 hover:bg-gray-800 transition-colors touch-manipulation text-base sm:text-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
         >
-          주문하기
+          {allSelected ? '주문하기' : `선택한 ${selectedItems.length}개 상품 주문하기`}
         </button>
-        {!allSelected && (
-          <p className="mt-2 text-xs text-[#E85A6B] text-center">
-            현재는 전체 상품 주문만 지원됩니다. 선택하지 않은 상품을 삭제하거나 전체선택 후 주문해주세요.
+        {selectedItems.length === 0 && (
+          <p className="mt-2 text-xs text-gray-400 text-center">
+            주문할 상품을 선택해주세요
           </p>
         )}
       </>

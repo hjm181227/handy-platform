@@ -382,6 +382,7 @@ export const API_ENDPOINTS = {
     PRODUCT_STOCK: (productId: string) => `/api/seller/products/${productId}/stock`,     // PATCH /:id/stock
     PRODUCT_STATUS: (productId: string) => `/api/seller/products/${productId}/status`,   // PATCH /:id/status
     PRODUCT_ANALYTICS: '/api/seller/products/analytics/overview',        // GET /analytics/overview
+    PRODUCT_VARIANTS: (productId: string) => `/api/seller/products/${productId}/variants`, // GET/PUT 옵션·재고
 
     // 주문 관리 (멀티셀러 지원)
     ORDERS: '/api/seller/orders',                                        // POST / (필터링 데이터 전송)
