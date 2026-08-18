@@ -191,9 +191,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
               >
                 <IconComponent className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
                 {item.name}
-                {'badge' in item && item.badge > 0 && (
+                {'badge' in item && (item.badge ?? 0) > 0 && (
                   <span className="ml-auto min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-xs font-semibold text-white">
-                    {item.badge > 99 ? '99+' : item.badge}
+                    {(item.badge ?? 0) > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </button>

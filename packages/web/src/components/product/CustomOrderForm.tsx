@@ -58,6 +58,8 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdOrderData, setCreatedOrderData] = useState<CreateCustomOrderResponse | null>(null);
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
+  // 주문은 접수됐지만 판매자에게 채팅으로 전달되지 못한 경우
+  const [chatDeliveryFailed, setChatDeliveryFailed] = useState(false);
 
   // 상품 정보 로드
   useEffect(() => {
@@ -184,6 +186,10 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
       const chatResult = await sendCustomOrderToChat(product.sellerUuid!, orderResponse.data);
       if (chatResult.success && chatResult.roomId) {
         setChatRoomId(chatResult.roomId);
+      } else if (chatResult.deliveryFailed) {
+        // 방은 있으니 이동은 가능하게 두되, 판매자가 아직 못 받았음을 알린다
+        setChatRoomId(chatResult.roomId ?? null);
+        setChatDeliveryFailed(true);
       }
 
       // 5. 성공 모달 표시
@@ -510,6 +516,16 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
                 판매자가 주문서를 확인하면 채팅으로 연락드릴 예정이에요.
               </p>
             </div>
+
+            {/* 채팅 전달 실패 안내 — 주문은 접수됐지만 판매자가 아직 못 받은 상태 */}
+            {chatDeliveryFailed && (
+              <div className="mx-6 mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-sm text-amber-800">
+                  주문은 접수됐지만 판매자에게 채팅으로 전달하지 못했습니다.
+                  채팅방을 열어 주문서를 다시 보내주세요.
+                </p>
+              </div>
+            )}
 
             {/* 주문 요약 */}
             {createdOrderData && (

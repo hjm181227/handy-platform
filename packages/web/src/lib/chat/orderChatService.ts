@@ -14,12 +14,54 @@ export interface SendOrderToChatResult {
   success: boolean;
   roomId?: string;
   error?: string;
+  /** 방은 만들어졌지만 메시지 전달에 실패한 경우 true (주문 자체는 접수됨) */
+  deliveryFailed?: boolean;
+}
+
+/** 메시지 전달 실패 시 사용자에게 보여줄 안내. 주문/견적 자체는 이미 접수된 상태다. */
+const DELIVERY_FAILED_MESSAGE =
+  '상대방에게 채팅으로 전달하지 못했습니다. 채팅방에서 다시 보내주세요.';
+
+/**
+ * 채팅 메시지 POST. 실패 시 예외를 던진다.
+ * 커스텀 주문·견적은 채팅이 유일한 전달 경로라 일시 오류에 한 번 재시도한다.
+ */
+async function postChatMessage(
+  token: string,
+  body: Record<string, unknown>
+): Promise<void> {
+  let lastError = '';
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let response: Response;
+    try {
+      response = await chatFetch(`${CHAT_API_URL}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : 'network error';
+      continue;
+    }
+
+    if (response.ok) return;
+
+    lastError = `HTTP ${response.status}`;
+    // 4xx는 재시도해도 같은 결과다 (401/403/400 등)
+    if (response.status < 500) break;
+  }
+
+  throw new Error(`${DELIVERY_FAILED_MESSAGE} (${lastError})`);
 }
 
 /**
  * 커스텀 주문서를 채팅으로 전송
  * 1. 판매자와의 채팅방 생성/조회
- * 2. 주문서 메시지 전송 (TODO: 백엔드 API 필요)
+ * 2. 주문서 메시지 전송
  *
  * @param sellerUuid 판매자 UUID
  * @param orderData 생성된 커스텀 주문 응답 데이터
@@ -66,37 +108,30 @@ export async function sendCustomOrderToChat(
     console.log('[orderChatService] Got room ID:', roomId);
 
     // 2. 주문서 메시지 전송 (POST /messages)
+    // 방만 만들어지고 메시지가 실패하면 판매자는 주문서를 영영 받지 못한다.
+    // 채팅이 커스텀 주문의 유일한 전달 경로이므로 이 실패는 실패로 보고한다.
     console.log('[orderChatService] Sending custom order message to room:', roomId);
 
-    const clientMessageId = `order-${orderData.requestUuid}-${Date.now()}`;
-    const messageResponse = await chatFetch(`${CHAT_API_URL}/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    try {
+      await postChatMessage(token, {
         roomId: roomId,
-        clientMessageId: clientMessageId,
+        clientMessageId: `order-${orderData.requestUuid}-${Date.now()}`,
         text: '커스텀 주문서를 보냈습니다',
         messageType: 'custom_order',
         metadata: {
           customOrderId: orderData.requestUuid,
         },
-      }),
-    });
-
-    if (!messageResponse.ok) {
-      const errorText = await messageResponse.text();
-      console.error('[orderChatService] Failed to send message:', errorText);
-      // 메시지 전송 실패해도 채팅방은 생성되었으므로 부분 성공 처리
-      console.warn('[orderChatService] Chat room created but message sending failed');
-    } else {
-      const messageData = await messageResponse.json();
-      console.log('[orderChatService] Message sent successfully:', messageData);
+      });
+    } catch (deliveryError) {
+      console.error('[orderChatService] Order message delivery failed:', deliveryError);
+      return {
+        success: false,
+        deliveryFailed: true,
+        roomId: sellerUuid, // 채팅방은 있으므로 사용자가 직접 열어 재전송할 수 있다
+        error: deliveryError instanceof Error ? deliveryError.message : DELIVERY_FAILED_MESSAGE,
+      };
     }
 
-    // 성공 반환 (채팅방 생성 완료)
     return {
       success: true,
       roomId: sellerUuid, // 프론트엔드 라우팅용 (sellerUuid 사용)
@@ -169,18 +204,14 @@ export async function sendQuoteToChat(
     console.log('[orderChatService] Got room ID:', roomId);
 
     // 2. 견적서 메시지 전송 (POST /messages)
+    // 구매자는 채팅으로만 견적을 받는다. 전달 실패는 실패로 보고해야
+    // 판매자가 "보냈는데 왜 답이 없지" 상태에 빠지지 않는다.
     console.log('[orderChatService] Sending quote message to room:', roomId);
 
-    const clientMessageId = `quote-${quoteData.quoteId}-${Date.now()}`;
-    const messageResponse = await chatFetch(`${CHAT_API_URL}/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    try {
+      await postChatMessage(token, {
         roomId: roomId,
-        clientMessageId: clientMessageId,
+        clientMessageId: `quote-${quoteData.quoteId}-${Date.now()}`,
         text: '견적서를 보냈습니다',
         messageType: 'custom_order',
         metadata: {
@@ -188,20 +219,17 @@ export async function sendQuoteToChat(
           quoteId: quoteData.quoteId,
           customOrderId: quoteData.customOrderId,
         },
-      }),
-    });
-
-    if (!messageResponse.ok) {
-      const errorText = await messageResponse.text();
-      console.error('[orderChatService] Failed to send quote message:', errorText);
-      // 메시지 전송 실패해도 채팅방은 생성되었으므로 부분 성공 처리
-      console.warn('[orderChatService] Chat room created but quote message sending failed');
-    } else {
-      const messageData = await messageResponse.json();
-      console.log('[orderChatService] Quote message sent successfully:', messageData);
+      });
+    } catch (deliveryError) {
+      console.error('[orderChatService] Quote message delivery failed:', deliveryError);
+      return {
+        success: false,
+        deliveryFailed: true,
+        roomId: buyerUuid,
+        error: deliveryError instanceof Error ? deliveryError.message : DELIVERY_FAILED_MESSAGE,
+      };
     }
 
-    // 성공 반환
     return {
       success: true,
       roomId: buyerUuid,

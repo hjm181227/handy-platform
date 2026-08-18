@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Cart, CartItem, CartItemsBySeller, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
+import { Cart, CartItem, CartItemsBySeller, CartTotals, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
 import { money } from '../../utils';
 import { ShoppingCart } from 'lucide-react';
@@ -107,7 +107,8 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
 
       // 로그인되지 않은 경우 빈 장바구니로 설정
       if (!currentUser) {
-        setCart({ items: [], totals: {}, user: undefined });
+        // 빈 장바구니: totals는 렌더링 시 옵셔널 접근으로만 읽으므로 빈 객체를 그대로 둔다
+        setCart({ items: [], totals: {} as CartTotals, user: undefined });
         setLoading(false);
         return;
       }

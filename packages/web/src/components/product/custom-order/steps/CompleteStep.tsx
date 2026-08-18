@@ -5,6 +5,8 @@ import { getChatRoomPath } from '../../../../lib/chat/orderChatService';
 interface CompleteStepProps {
   orderData: CreateCustomOrderResponse | null;
   chatRoomId: string | null;
+  /** 주문은 접수됐지만 채팅으로 판매자에게 전달되지 못한 경우 */
+  chatDeliveryFailed?: boolean;
   onGoToChat: () => void;
   onContinueShopping: () => void;
 }
@@ -12,6 +14,7 @@ interface CompleteStepProps {
 export function CompleteStep({
   orderData,
   chatRoomId,
+  chatDeliveryFailed = false,
   onGoToChat,
   onContinueShopping,
 }: CompleteStepProps) {
@@ -30,6 +33,16 @@ export function CompleteStep({
         판매자가 주문서를 확인하면<br />
         채팅으로 연락드릴 예정이에요.
       </p>
+
+      {/* 채팅 전달 실패 안내 — 주문은 접수됐지만 판매자가 아직 못 받은 상태 */}
+      {chatDeliveryFailed && (
+        <div className="w-full max-w-sm bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-amber-800">
+            주문은 접수됐지만 판매자에게 채팅으로 전달하지 못했습니다.
+            채팅방을 열어 주문서를 다시 보내주세요.
+          </p>
+        </div>
+      )}
 
       {/* 주문 요약 */}
       {orderData && (

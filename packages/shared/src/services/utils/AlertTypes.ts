@@ -57,11 +57,45 @@ export interface ToastState {
   options: ToastOptions;
 }
 
+/**
+ * 큐에 적재된 알림이 실제로 가질 수 있는 옵션의 합집합.
+ * AlertState.options는 type에 따라 위 5종 중 하나가 들어오므로,
+ * 렌더러(AlertModal)가 type을 보고 분기해 읽을 수 있도록 평탄화한 형태로 정의한다.
+ */
+export interface AlertStateOptions extends BaseAlertOptions {
+  // alert / confirm / prompt 공통
+  confirmLabel?: string;
+  cancelLabel?: string;
+
+  // ErrorOptions
+  details?: string;
+  showDetails?: boolean;
+  showRetry?: boolean;
+  retryLabel?: string;
+  technical?: string;
+  maxManualRetries?: number;
+  currentRetryCount?: number;
+  disableAutoRetry?: boolean;
+
+  // PromptOptions
+  placeholder?: string;
+  defaultValue?: string;
+  multiline?: boolean;
+  maxLength?: number;
+  minLength?: number;
+  required?: boolean;
+  validation?: (value: string) => string | null;
+
+  // ToastOptions
+  duration?: number;
+  position?: 'top' | 'bottom' | 'center';
+}
+
 export interface AlertState {
   id: string;
   type: AlertType;
   message: string;
-  options: AlertOptions | ConfirmOptions | ErrorOptions | PromptOptions | ToastOptions;
+  options: AlertStateOptions;
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
 }

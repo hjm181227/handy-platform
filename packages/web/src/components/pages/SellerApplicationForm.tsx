@@ -50,7 +50,8 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
 
 const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
   const [form, setForm] = useState<SellerApplicationData>(emptyForm);
-  const [status, setStatus] = useState<SellerApplicationStatus | null>(null);
+  // 서비스 응답의 data 가 optional 이므로 undefined 도 허용한다
+  const [status, setStatus] = useState<SellerApplicationStatus | null | undefined>(null);
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +61,7 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
 
   const uploadManager = useMemo(() => new ImageUploadManager(
     (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL,
-    async () => {
+    async (): Promise<Record<string, string>> => {
       const token = localStorage.getItem('accessToken');
       return token ? { Authorization: `Bearer ${token}` } : {};
     },

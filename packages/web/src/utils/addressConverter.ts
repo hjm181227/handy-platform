@@ -1,9 +1,29 @@
 import type { 
   KoreanAddress, 
   KoreanAddressResponse, 
-  KoreanRegion,
-  ShippingAddress 
+  KoreanRegion
 } from '@handy-platform/shared';
+
+/**
+ * 이 변환기가 다루는 "구버전" 배송지 형태.
+ *
+ * 현행 shared ShippingAddress 는
+ * recipientName/recipientPhone/postcode/roadAddress/detailAddress/deliveryNote 를 쓰지만,
+ * 이 파일과 이를 호출하는 purchaseApiService 의 배송지 CRUD 경로는 아직
+ * phone/address/addressDetail/zipCode/memo 라는 옛 필드명을 전제로 한다.
+ * 현행 타입을 억지로 붙이면 계약을 왜곡하므로 레거시 형태를 별도 타입으로 명시한다.
+ */
+export interface LegacyShippingAddress {
+  id: string;
+  recipientName: string;
+  phone: string;
+  address: string;
+  addressDetail?: string;
+  zipCode: string;
+  memo?: string;
+  addressName?: string;
+  isDefault?: boolean;
+}
 
 /**
  * 주소에서 한국 지역을 자동 감지하는 함수
@@ -39,7 +59,7 @@ export const detectRegion = (address: string): KoreanRegion => {
 /**
  * 배송지명을 자동 생성하는 함수
  */
-export const generateAddressName = (address: ShippingAddress): string => {
+export const generateAddressName = (address: LegacyShippingAddress): string => {
   const addr = address.address.toLowerCase();
   
   if (addr.includes('회사') || addr.includes('오피스') || addr.includes('사무실')) {
@@ -57,8 +77,8 @@ export const generateAddressName = (address: ShippingAddress): string => {
 /**
  * KoreanAddressResponse를 ShippingAddress로 변환
  */
-export const convertToShippingAddress = (korean: KoreanAddressResponse): ShippingAddress & { addressName: string } => {
-  const baseAddress: ShippingAddress = {
+export const convertToShippingAddress = (korean: KoreanAddressResponse): LegacyShippingAddress & { addressName: string } => {
+  const baseAddress: LegacyShippingAddress = {
     id: korean.index.toString(),
     recipientName: korean.recipientName,
     phone: korean.recipientPhone,
@@ -79,7 +99,7 @@ export const convertToShippingAddress = (korean: KoreanAddressResponse): Shippin
 /**
  * ShippingAddress를 KoreanAddress로 변환
  */
-export const convertToKoreanAddress = (shipping: ShippingAddress): KoreanAddress => {
+export const convertToKoreanAddress = (shipping: LegacyShippingAddress): KoreanAddress => {
   return {
     recipientName: shipping.recipientName,
     recipientPhone: shipping.phone,
@@ -90,7 +110,7 @@ export const convertToKoreanAddress = (shipping: ShippingAddress): KoreanAddress
     extraAddress: '', // ShippingAddress에는 extraAddress가 없으므로 빈 값
     region: detectRegion(shipping.address),
     deliveryNote: shipping.memo,
-    addressName: (shipping as any).addressName || generateAddressName(shipping),
+    addressName: shipping.addressName || generateAddressName(shipping),
     isDefault: shipping.isDefault
   };
 };
@@ -98,19 +118,19 @@ export const convertToKoreanAddress = (shipping: ShippingAddress): KoreanAddress
 /**
  * ShippingAddress 배열을 KoreanAddressResponse 배열로 변환
  */
-export const convertToKoreanAddressList = (addresses: ShippingAddress[]): KoreanAddressResponse[] => {
+export const convertToKoreanAddressList = (addresses: LegacyShippingAddress[]): KoreanAddressResponse[] => {
   return addresses.map((address, index) => ({
     ...convertToKoreanAddress(address),
     index: parseInt(address.id) || index,
     lastUsed: new Date().toISOString(),
     fullAddress: `${address.address} ${address.addressDetail || ''}`.trim(),
-    displayName: `${(address as any).addressName || generateAddressName(address)} (${address.recipientName})`
+    displayName: `${address.addressName || generateAddressName(address)} (${address.recipientName})`
   }));
 };
 
 /**
  * KoreanAddressResponse 배열을 ShippingAddress 배열로 변환
  */
-export const convertToShippingAddressList = (addresses: KoreanAddressResponse[]): ShippingAddress[] => {
+export const convertToShippingAddressList = (addresses: KoreanAddressResponse[]): LegacyShippingAddress[] => {
   return addresses.map(convertToShippingAddress);
 };

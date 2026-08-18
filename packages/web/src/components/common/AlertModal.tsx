@@ -220,7 +220,7 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
               </button>
               {showDetails && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                  {alert.options.currentRetryCount > 0 && (
+                  {(alert.options.currentRetryCount ?? 0) > 0 && (
                     <div className="text-xs text-amber-600 mb-2 pb-2 border-b border-gray-200">
                       ⚠️ 재시도 횟수: {alert.options.currentRetryCount}/{alert.options.maxManualRetries || 2}
                       {alert.options.disableAutoRetry && " (자동 재시도 비활성화됨)"}
@@ -296,11 +296,11 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
               <button
                 onClick={handleRetry}
                 className={`px-4 py-2 border rounded-lg transition-colors duration-200 ${
-                  alert.options.currentRetryCount >= (alert.options.maxManualRetries || 2)
+                  (alert.options.currentRetryCount ?? 0) >= (alert.options.maxManualRetries || 2)
                     ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
                     : 'border-blue-300 text-[#E85A6B] hover:bg-[#FFF1F2] hover:border-blue-400'
                 }`}
-                disabled={alert.options.currentRetryCount >= (alert.options.maxManualRetries || 2)}
+                disabled={(alert.options.currentRetryCount ?? 0) >= (alert.options.maxManualRetries || 2)}
               >
                 {alert.options.retryLabel || '다시 시도'}
               </button>

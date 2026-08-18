@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { categoryService } from '@/services/apiService';
+import { categoryService } from '../../services/apiService';
 import type { CategoryType, CategoryIconsData } from '@handy-platform/shared';
 
 interface CategoryIconProps {

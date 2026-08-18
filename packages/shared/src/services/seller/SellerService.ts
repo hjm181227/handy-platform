@@ -846,7 +846,8 @@ export abstract class BaseSellerService extends BaseApiService {
     success: boolean;
     data: {
       sellerInfoId: string;
-      userId: string;
+      // 서버 GET /api/seller/info 는 userUuid 를 내려준다 (routes/seller.ts)
+      userUuid: string;
       brandName: string;
       brandProfile: string | null;
       acceptsCustomOrders: boolean;
@@ -868,7 +869,7 @@ export abstract class BaseSellerService extends BaseApiService {
       success: boolean;
       data: {
         sellerInfoId: string;
-        userId: string;
+        userUuid: string;
         brandName: string;
         brandProfile: string | null;
         acceptsCustomOrders: boolean;

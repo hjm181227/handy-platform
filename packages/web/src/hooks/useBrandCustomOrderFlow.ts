@@ -114,6 +114,8 @@ interface BrandCustomOrderFlowState {
   error: string | null;
   createdOrder: CreateCustomOrderResponse | null;
   chatRoomId: string | null;
+  /** 주문은 접수됐지만 판매자에게 채팅으로 전달하지 못한 경우 */
+  chatDeliveryFailed: boolean;
 }
 
 export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
@@ -129,6 +131,7 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
     error: null,
     createdOrder: null,
     chatRoomId: null,
+    chatDeliveryFailed: false,
   });
 
   // 초안 복원 확인을 이미 진행한 초안 키 (StrictMode의 이중 실행 방지)
@@ -440,14 +443,20 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
 
       // 3. 채팅방 생성 시도
       let chatRoomId: string | null = null;
+      let chatDeliveryFailed = false;
       try {
         const { sendCustomOrderToChat } = await import('../lib/chat/orderChatService');
         const chatResult = await sendCustomOrderToChat(sellerUuid, orderResponse.data);
         if (chatResult.success && chatResult.roomId) {
           chatRoomId = chatResult.roomId;
+        } else if (chatResult.deliveryFailed) {
+          // 방은 있으니 이동은 가능하게 두되, 전달 실패를 완료 화면에 알린다
+          chatRoomId = chatResult.roomId ?? null;
+          chatDeliveryFailed = true;
         }
       } catch (chatError) {
         console.warn('채팅방 생성 실패:', chatError);
+        chatDeliveryFailed = true;
       }
 
       setState(prev => ({
@@ -455,6 +464,7 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
         submitting: false,
         createdOrder: orderResponse.data ?? null,
         chatRoomId,
+        chatDeliveryFailed,
       }));
 
       nextStep();
@@ -500,6 +510,7 @@ export function useBrandCustomOrderFlow(sellerUuid: string, brandName: string) {
     error: state.error,
     createdOrder: state.createdOrder,
     chatRoomId: state.chatRoomId,
+    chatDeliveryFailed: state.chatDeliveryFailed,
     nextStep,
     prevStep,
     updateData,

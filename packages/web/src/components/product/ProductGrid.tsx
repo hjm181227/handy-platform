@@ -32,7 +32,7 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
         <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">
           {items.map((p, index) => {
             // 좋아요 API는 UUID를 요구하므로 productUuid 우선 사용
-            const productId = p.productUuid || p.id;
+            const productId = (p.productUuid || p.id) as string;
             return (
               <div key={p.productUuid || p.id || `product-${index}`} className="md:snap-start md:flex-shrink-0">
                 <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />
@@ -54,7 +54,7 @@ export function ProductGrid({ title, items, onOpen, onAdd, onLike, onGo, likedPr
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {items.map((p, index) => {
           // 좋아요 API는 UUID를 요구하므로 productUuid 우선 사용
-          const productId = p.productUuid || p.id;
+          const productId = (p.productUuid || p.id) as string;
           return (
             <div key={p.productUuid || p.id || `grid-product-${index}`}>
               <ProductCard p={p} onOpen={onOpen} onAdd={onAdd} onLike={onLike} onGo={onGo} isLiked={likedProducts.includes(productId)} />

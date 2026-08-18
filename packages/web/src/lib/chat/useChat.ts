@@ -14,16 +14,37 @@ import type { Message, UseChatReturn, ChatRoom } from './types';
 const CHAT_API_URL = config.chatApiUrl;
 
 /**
- * JWT 토큰에서 userId 추출
+ * JWT 토큰에서 userId 추출.
+ *
+ * JWT 페이로드는 base64가 아니라 base64url이고(`-`/`_`, 패딩 없음), 한글 등
+ * 비ASCII가 들어가면 atob 결과를 그대로 JSON.parse 할 수 없다. 이걸 놓치면
+ * 조용히 null이 되어 내 메시지가 전부 상대편으로 렌더된다.
  */
 function getUserIdFromToken(token: string): string | null {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const segment = token.split('.')[1];
+    if (!segment) return null;
+
+    const base64 = segment.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const binary = atob(padded);
+
+    // UTF-8 바이트열을 문자열로 복원
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const json = new TextDecoder('utf-8').decode(bytes);
+
+    const payload = JSON.parse(json);
     return payload.userId || payload.sub || payload.id || null;
-  } catch {
+  } catch (e) {
+    console.error('[useChat] Failed to decode JWT payload:', e);
     return null;
   }
 }
+
+/** 타이핑 이벤트 전송 간격 — 입력 중 이 간격으로만 서버에 알린다. */
+const TYPING_THROTTLE_MS = 2000;
+/** 마지막 입력 후 이 시간이 지나면 타이핑 종료를 알린다. */
+const TYPING_STOP_DELAY_MS = 3000;
 
 /**
  * useChat 훅
@@ -46,14 +67,25 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  /** 서버에 붙지 못한 상태. true면 전송을 막고 재시도를 안내한다. */
+  const [isDegraded, setIsDegraded] = useState(false);
+  /** 재연결 시도 횟수 — 증가시키면 초기화 effect가 다시 돈다. */
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const chatSocket = useRef(getChatSocket());
   const imageUploadManager = useRef(webApiService.createImageUploadManager());
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const useFallback = useRef(false);
   const currentUserId = useRef<string | null>(token ? getUserIdFromToken(token) : null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const actualRoomIdRef = useRef<string | null>(null);
+  /** 재전송을 위해 실패한 이미지 원본을 clientMessageId로 보관한다. */
+  const pendingImageFiles = useRef<Map<string, File>>(new Map());
+  /** partnerUsername은 표시용 힌트일 뿐이라, 값이 바뀌어도 방을 다시 열지 않는다. */
+  const partnerUsernameRef = useRef(partnerUsername);
+  partnerUsernameRef.current = partnerUsername;
+  /** 내 타이핑 상태 전송 제어 */
+  const lastTypingSentAt = useRef(0);
+  const typingStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * 소켓 연결 및 방 입장
@@ -79,7 +111,7 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
             },
             body: JSON.stringify({
               partnerId: roomId,
-              ...(partnerUsername && { partnerUsername }),
+              ...(partnerUsernameRef.current && { partnerUsername: partnerUsernameRef.current }),
             }),
           });
 
@@ -158,24 +190,28 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
             console.warn('[useChat] markAsRead failed:', e);
           }
 
-          setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
+          setCurrentRoom({ id: roomId, name: partnerUsernameRef.current || roomId, avatar: '' });
           useFallback.current = false;
+          setIsDegraded(false);
+          setError(null);
 
         } catch (connectError) {
           console.warn('[useChat] Backend connection failed:', connectError);
           useFallback.current = true;
+          setIsDegraded(true);
           setIsConnected(false);
-          setError('채팅 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          setError('채팅 서버에 연결할 수 없습니다. 메시지를 보낼 수 없습니다.');
           setMessages([]);
-          setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
+          setCurrentRoom({ id: roomId, name: partnerUsernameRef.current || roomId, avatar: '' });
         }
 
       } catch (err) {
         console.error('[useChat] Initialization error:', err);
         setError(err instanceof Error ? err.message : '채팅을 초기화하는데 실패했습니다');
         useFallback.current = true;
+        setIsDegraded(true);
         setMessages([]);
-        setCurrentRoom({ id: roomId, name: partnerUsername || roomId, avatar: '' });
+        setCurrentRoom({ id: roomId, name: partnerUsernameRef.current || roomId, avatar: '' });
       } finally {
         setIsLoading(false);
       }
@@ -189,7 +225,15 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
         chatSocket.current.leaveRoom(actualRoomIdRef.current);
       }
     };
-  }, [roomId, token, partnerUsername]);
+  }, [roomId, token, retryNonce]);
+
+  /**
+   * 연결 재시도 — 폴백 상태에서 사용자가 직접 다시 시도할 수 있게 한다.
+   * (예전에는 복구 수단이 페이지 새로고침뿐이었다)
+   */
+  const retryConnection = useCallback(() => {
+    setRetryNonce((n) => n + 1);
+  }, []);
 
   /**
    * 메시지 수신 이벤트 구독

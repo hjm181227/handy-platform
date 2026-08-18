@@ -8,6 +8,8 @@ import { useAuth } from '../../hooks/useAuth';
 interface SellerLayoutProps {
   children: React.ReactNode;
   title?: string;
+  /** 일부 화면이 넘기지만 현재 레이아웃에서는 사용하지 않는다 (레거시 prop) */
+  currentPage?: string;
   onGo: (to: string) => void;
 }
 

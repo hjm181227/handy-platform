@@ -14,6 +14,9 @@ interface CategoryItem {
   value: string;
 }
 
+/** 다중 선택(배열) 카테고리 키 — NailCategories 에서 string[] 인 항목만 */
+type MultiSelectCategoryKey = Extract<CategoryType, 'style' | 'color' | 'texture' | 'tpo'>;
+
 export function CategorySelector({ value, onChange }: CategorySelectorProps) {
   const { t } = useTranslation('product');
 
@@ -60,7 +63,7 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
     nation: [],
   };
 
-  const handleMultiSelect = (key: CategoryType, item: string, maxCount: number) => {
+  const handleMultiSelect = (key: MultiSelectCategoryKey, item: string, maxCount: number) => {
     const currentItems = value[key] || [];
     const isSelected = currentItems.includes(item);
 
@@ -82,7 +85,7 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
   };
 
   const renderMultiSelectCategory = (
-    key: CategoryType,
+    key: MultiSelectCategoryKey,
     title: string,
     maxCount: number
   ) => {

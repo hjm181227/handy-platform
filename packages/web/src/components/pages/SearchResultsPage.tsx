@@ -4,7 +4,7 @@ import { webApiService, brandService } from '../../services/apiService';
 import { TitleBar, ProductGrid } from '../product/ProductGrid';
 import { SortDropdown, parseSortValue, PRODUCT_SORT_OPTIONS } from '../common/SortDropdown';
 import { Stars } from '../ui';
-import type { Product, Brand } from '@handy-platform/shared';
+import type { Product, Brand, BrandsResponse, ProductsResponse } from '@handy-platform/shared';
 
 interface SearchResultsPageProps {
   searchQuery: string;
@@ -137,7 +137,11 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           });
       searchPromises.push(productPromise);
 
-      const [brandResponse, productResponse] = await Promise.all(searchPromises);
+      // 서로 다른 두 응답을 한 배열에 담아 Promise.all 하므로 결과 타입을 명시한다
+      const [brandResponse, productResponse] = (await Promise.all(searchPromises)) as [
+        BrandsResponse | { brands: Brand[]; pagination: null },
+        ProductsResponse & { error?: string }
+      ];
 
       // 브랜드 결과 처리
       if (brandResponse.brands) {

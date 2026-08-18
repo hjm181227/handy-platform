@@ -1,10 +1,11 @@
 import { webApiService } from './apiService';
 import { mockApiService, USE_MOCK_API } from './mockApiService';
-import { Cart, CartItem, ShippingAddress, PaymentMethod, KoreanAddress, API_BASE_URL } from '@handy-platform/shared';
+import { Cart, CartItem, ShippingAddress, PaymentMethod, KoreanAddress, ProductFilters, API_BASE_URL } from '@handy-platform/shared';
 import { 
   convertToShippingAddressList, 
   convertToKoreanAddress 
 } from '../utils/addressConverter';
+import type { LegacyShippingAddress } from '../utils/addressConverter';
 
 /**
  * Purchase API Service Adapter
@@ -100,7 +101,7 @@ export class PurchaseApiService {
     
     try {
       // ShippingAddress → KoreanAddress 변환
-      const koreanAddress = convertToKoreanAddress(address as ShippingAddress);
+      const koreanAddress = convertToKoreanAddress(address as unknown as LegacyShippingAddress);
       
       // 한국 주소 시스템으로 배송지 추가
       const response = await webApiService.address.createAddress(koreanAddress);
@@ -138,7 +139,7 @@ export class PurchaseApiService {
     
     try {
       // Partial<ShippingAddress> → KoreanAddress 변환
-      const koreanUpdates = convertToKoreanAddress(updates as ShippingAddress);
+      const koreanUpdates = convertToKoreanAddress(updates as unknown as LegacyShippingAddress);
       
       // 한국 주소 시스템으로 배송지 수정
       const response = await webApiService.address.updateAddress(addressId, koreanUpdates);
@@ -514,7 +515,7 @@ export class PurchaseApiService {
   }
 
   // 상품 관련 API
-  async getProducts(params?: { category?: string; search?: string; limit?: number }) {
+  async getProducts(params?: ProductFilters) {
     if (USE_MOCK_API) {
       return mockApiService.product.getProducts(params);
     }
