@@ -60,6 +60,16 @@
 4. **CI 게이트 복구** — `tsc --noEmit`을 웹 CI 필수 검사로 (오류 0 달성 후)
 완료 기준: 웹 tsc 오류 0 + CI 필수화.
 
+> **1-2 진행 결과 (2026-08-19)**: 440 → 44건 (90%). 근본 원인은 루트 typescript 5.0.4
+> (5.9.3으로 업그레이드, react 18.2.0 유지 확인). 남은 44건은 "코드가 틀린" 케이스로
+> 런타임 수정이 필요한 별도 배치:
+> - [ ] **실버그**: 셀러 QAManagement — shared에 서비스 메서드 자체가 없어 화면 깨질 가능성
+> - [ ] **실버그**: SupportPages 프로필 수정 응답 파싱(response.user → data.user)
+> - [ ] ProductDetail.tsx 미존재 메서드, SellerPages 리뷰→상품 수정 링크 undefined, MainHeader void 렌더
+> - [ ] 레거시 purchaseApiService 죽은 경로(주문·배송지 CRUD, 호출 0건) + addressConverter 삭제 검토
+> - [ ] 뉴스 더미(data/index.ts↔NewsPage 스키마 불일치) — 삭제 or 재작성 결정
+> - [ ] 44 → 0 후 tsc CI 게이트 복구
+
 ### 1-3. 결제 웹훅 정식 마운트 (코드 부분만, 0.5일)
 - `routes/payments.ts`의 웹훅 구현을 검토·정리해 `/api/payment/webhook/toss`로 마운트
 - `WebhookEventLog` 멱등 처리 연결, 서명 검증 정책 적용
