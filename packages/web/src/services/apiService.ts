@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react';
 import {
   createApiService,
-  BaseIntegratedApiService,
+  IntegratedApiService,
   BaseApiService,
   User,
   API_BASE_URL
@@ -73,7 +73,7 @@ const getWebAuthHeaders = async (): Promise<Record<string, string>> => {
 
 // 웹 전용 통합 API 서비스 생성
 class WebApiService {
-  private apiService: BaseIntegratedApiService;
+  private apiService: IntegratedApiService;
 
   constructor() {
     // Vite 환경변수 우선 사용
@@ -363,4 +363,4 @@ export const isAuthenticated = () => webApiService.isAuthenticated();
 export const getCurrentUser = () => webApiService.getCurrentUser();
 
 // 타입 내보내기
-export type { BaseIntegratedApiService as IntegratedApiService, User };
+export type { IntegratedApiService, User };

@@ -464,8 +464,10 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
 
       // 3. 프로필에 avatar URL 저장
       const response = await webApiService.updateUserProfile({ avatar: presignedResponse.imageUrl } as Partial<User>);
-      if (response.user) {
-        setUserInfo(prev => ({ ...prev, avatar: response.user.avatar || presignedResponse.imageUrl }));
+      // 서버 응답: { success, data: { user }, message }
+      const updatedUser = response.data?.user;
+      if (updatedUser) {
+        setUserInfo(prev => ({ ...prev, avatar: updatedUser.avatar || presignedResponse.imageUrl }));
       } else {
         setUserInfo(prev => ({ ...prev, avatar: presignedResponse.imageUrl }));
       }
@@ -637,28 +639,30 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
       return;
     }
 
+    // catch 블록에서도 참조하므로 try 밖에서 선언
+    const updateData: Partial<User> = {
+      name: userInfo.name.trim(),
+      nickname: userInfo.nickname.trim() || undefined,
+      phone: userInfo.phone.trim(),
+      address: userInfo.address ? {
+        street: userInfo.address.trim(),
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "KR"
+      } : undefined
+    };
+
     setLoading(true);
     try {
       // 실제 API 호출로 회원정보 수정
-      const updateData: Partial<User> = {
-        name: userInfo.name.trim(),
-        nickname: userInfo.nickname.trim() || undefined,
-        phone: userInfo.phone.trim(),
-        address: userInfo.address ? {
-          street: userInfo.address.trim(),
-          city: "",
-          state: "",
-          zipCode: "",
-          country: "KR"
-        } : undefined
-      };
-
       const response = await webApiService.updateUserProfile(updateData);
       console.log('🔍 프로필 업데이트 API 응답:', response);
 
-      if (response.user) {
+      // 서버 응답: { success, data: { user }, message }
+      const user = response.data?.user;
+      if (user) {
         // 서버에서 받은 최신 정보로 업데이트
-        const user = response.user;
         setUserInfo(prev => ({
           ...prev,
           name: user.name || prev.name,

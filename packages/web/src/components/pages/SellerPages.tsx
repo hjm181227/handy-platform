@@ -3543,7 +3543,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       {/* 상품 정보 */}
                       <div className="text-sm text-gray-600 mb-2">
                         <button
-                          onClick={() => onGo(`/seller/products/${review.productId}/edit`)}
+                          onClick={() => onGo(`/seller/products/${review.productUuid}/edit`)}
                           className="hover:text-[#E85A6B] hover:underline"
                         >
                           {review.productName}

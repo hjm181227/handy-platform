@@ -1158,11 +1158,10 @@ export function ReviewsPage({ onGo }: { onGo: (to: string) => void }) {
         sortOrder: 'desc'
       });
 
-      // 서버 응답: { reviews: [...], pagination: {...} }
-      const data = response.data || response;
-      if (data) {
-        setReviews(data.reviews || []);
-        setPagination(data.pagination);
+      // 서버 응답: { reviews: [...], pagination: {...} } (ApiResponse 래핑 없음)
+      if (response) {
+        setReviews(response.reviews || []);
+        setPagination(response.pagination);
         setCurrentPage(page);
       }
     } catch (err: any) {

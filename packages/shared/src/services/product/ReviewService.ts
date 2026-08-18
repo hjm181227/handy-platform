@@ -25,14 +25,16 @@ export abstract class BaseReviewService extends BaseApiService {
     return this.request<ReviewsResponse>(endpoint);
   }
 
+  // GET /api/user/reviews - 서버(routes/reviews.ts)는 ApiResponse 래핑 없이
+  // { reviews, pagination } 을 그대로 내려준다
   async getUserReviews(
     filters: { page?: number; limit?: number; sortBy?: string; sortOrder?: string } = {}
-  ): Promise<ApiResponse<{ reviews: DetailedReview[]; pagination: any }>> {
+  ): Promise<{ reviews: DetailedReview[]; pagination: any }> {
     const queryString = this.buildQueryString(filters);
-    const endpoint = queryString 
-      ? `${API_ENDPOINTS.USER.REVIEWS}?${queryString}` 
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.USER.REVIEWS}?${queryString}`
       : API_ENDPOINTS.USER.REVIEWS;
-    return this.request<ApiResponse<{ reviews: DetailedReview[]; pagination: any }>>(endpoint);
+    return this.request<{ reviews: DetailedReview[]; pagination: any }>(endpoint);
   }
 
   // 리뷰 작성 (서버 API 스펙: POST /api/products/{productUuid}/reviews)

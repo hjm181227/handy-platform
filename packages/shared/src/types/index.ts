@@ -208,16 +208,22 @@ export interface KoreanAddress {
   recipientPhone: string;
   postcode: string;
   roadAddress: string;
-  jibunAddress: string;
   detailAddress: string;
-  extraAddress: string;
-  region: KoreanRegion;
+  // 아래 3개는 서버 검증(routes/shippingAddresses.ts koreanAddressSchema)에서 optional 이다.
+  // region 은 우편번호/주소로 서버가 자동 감지하므로 생성·수정 요청 시 보내지 않아도 된다.
+  jibunAddress?: string;
+  extraAddress?: string;
+  region?: KoreanRegion;
   deliveryNote?: string;
   addressName?: string;
   isDefault?: boolean;
 }
 
+/** 배송지 응답 — 요청에서 생략 가능한 필드도 응답에는 항상 채워져 온다 */
 export interface KoreanAddressResponse extends KoreanAddress {
+  jibunAddress: string;
+  extraAddress: string;
+  region: KoreanRegion;
   index: number;
   lastUsed?: string;
   fullAddress: string;
@@ -913,7 +919,8 @@ export type WebViewMessageType =
   | 'SAVE_IMAGE_RESPONSE'       // 이미지 저장 응답
   | 'NAVIGATE_TO_MEASUREMENT'   // 손톱 사이즈 측정 화면으로 이동
   | 'NAVIGATE_TO_SIZES'         // 손톱 사이즈 목록 화면으로 이동
-  | 'NAVIGATE_BACK';            // 뒤로가기
+  | 'NAVIGATE_BACK'             // 뒤로가기
+  | 'CHAT_ROOM_STATE';          // 웹이 열고 있는 채팅방 ID (푸시 알림 억제용)
 
 export interface WebViewMessage {
   type: WebViewMessageType;

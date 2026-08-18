@@ -68,12 +68,17 @@
 > **1-2 진행 결과 (2026-08-19)**: 440 → 44건 (90%). 근본 원인은 루트 typescript 5.0.4
 > (5.9.3으로 업그레이드, react 18.2.0 유지 확인). 남은 44건은 "코드가 틀린" 케이스로
 > 런타임 수정이 필요한 별도 배치:
-> - [ ] **실버그**: 셀러 QAManagement — shared에 서비스 메서드 자체가 없어 화면 깨질 가능성
-> - [ ] **실버그**: SupportPages 프로필 수정 응답 파싱(response.user → data.user)
-> - [ ] ProductDetail.tsx 미존재 메서드, SellerPages 리뷰→상품 수정 링크 undefined, MainHeader void 렌더
-> - [ ] 레거시 purchaseApiService 죽은 경로(주문·배송지 CRUD, 호출 0건) + addressConverter 삭제 검토
-> - [ ] 뉴스 더미(data/index.ts↔NewsPage 스키마 불일치) — 삭제 or 재작성 결정
-> - [ ] 44 → 0 후 tsc CI 게이트 복구
+> - [x] **실버그**: 셀러 QAManagement — shared BaseSellerService에 Q&A 메서드 5종 추가
+>       (서버 routes/sellerProductQuestions.ts 스펙 기준). 화면 전체가 죽어 있었음
+> - [x] **실버그**: SupportPages 프로필 수정 응답 파싱(response.user → response.data.user)
+>       + catch 블록의 스코프 밖 updateData 참조 수정
+> - [x] ProductDetail.tsx 삭제(미사용 사본, 실사용은 product/Detail.tsx),
+>       SellerPages 리뷰→상품 수정 링크(productId→productUuid), MainHeader void 렌더 제거
+> - [x] 레거시 purchaseApiService 죽은 경로 삭제(주문 생성·결제·배송지/상품 CRUD, 호출 0건)
+>       + utils/addressConverter.ts 삭제
+> - [x] 뉴스 더미 재작성 — data/index.ts를 NewsPage 스키마(slug/cover/tags/body)에 맞춰 4건으로
+> - [x] **1-2 완료 (2026-08-19)**: 웹 tsc 오류 **0**, vite build 통과.
+>       배포 워크플로(staging/production) 양쪽에 `tsc --noEmit` 타입 게이트 스텝 추가
 
 ### 1-3. 결제 웹훅 정식 마운트 (코드 부분만, 0.5일)
 - `routes/payments.ts`의 웹훅 구현을 검토·정리해 `/api/payment/webhook/toss`로 마운트

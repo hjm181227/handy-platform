@@ -72,9 +72,11 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
       try {
         const statusResponse = await sellerApplicationService.getMyApplicationStatus();
         setStatus(statusResponse.data);
-        if (statusResponse.data.exists) {
+        if (statusResponse.data?.exists) {
           const detailResponse = await sellerApplicationService.getMyApplication();
-          setForm({ ...emptyForm, ...detailResponse.data.application });
+          if (detailResponse.data?.application) {
+            setForm({ ...emptyForm, ...detailResponse.data.application });
+          }
         }
       } catch (error) {
         console.error('Failed to load seller application:', error);

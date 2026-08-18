@@ -30,6 +30,12 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
+      # 타입 게이트: 웹 tsc 오류 0 유지 (build:prod 는 tsc 를 돌리지 않으므로 별도 스텝)
+      # TODO: 병렬 진행 중인 채팅 작업 커밋 후 continue-on-error 제거해 필수 검사로 전환
+      - name: Type check web app
+        continue-on-error: true
+        run: node node_modules/typescript/bin/tsc --noEmit -p packages/web/tsconfig.json
+
       - name: Build web app for production
         run: npm run build:prod
         working-directory: packages/web

@@ -1,11 +1,6 @@
 import { webApiService } from './apiService';
 import { mockApiService, USE_MOCK_API } from './mockApiService';
-import { Cart, CartItem, ShippingAddress, PaymentMethod, KoreanAddress, ProductFilters, API_BASE_URL } from '@handy-platform/shared';
-import { 
-  convertToShippingAddressList, 
-  convertToKoreanAddress 
-} from '../utils/addressConverter';
-import type { LegacyShippingAddress } from '../utils/addressConverter';
+import { PaymentMethod, API_BASE_URL } from '@handy-platform/shared';
 
 /**
  * Purchase API Service Adapter
@@ -60,142 +55,6 @@ export class PurchaseApiService {
     return webApiService.cart.clearCart();
   }
 
-  // 배송지 관련 API
-  async getShippingAddresses() {
-    if (USE_MOCK_API) {
-      return mockApiService.shipping.getShippingAddresses();
-    }
-    
-    try {
-      // 한국 주소 시스템 사용
-      const response = await webApiService.address.getAddresses();
-      
-      if (response.success && response.data?.addresses) {
-        // KoreanAddressResponse[] → ShippingAddress[] 변환
-        const convertedAddresses = convertToShippingAddressList(response.data.addresses);
-        return {
-          success: true,
-          data: convertedAddresses
-        };
-      }
-      
-      return {
-        success: false,
-        data: [],
-        message: response.message || '배송지를 불러올 수 없습니다.'
-      };
-    } catch (error: any) {
-      console.error('배송지 목록 로드 실패:', error);
-      return {
-        success: false,
-        data: [],
-        message: error.message || '배송지를 불러올 수 없습니다.'
-      };
-    }
-  }
-
-  async addShippingAddress(address: Omit<ShippingAddress, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
-    if (USE_MOCK_API) {
-      return mockApiService.shipping.addShippingAddress(address);
-    }
-    
-    try {
-      // ShippingAddress → KoreanAddress 변환
-      const koreanAddress = convertToKoreanAddress(address as unknown as LegacyShippingAddress);
-      
-      // 한국 주소 시스템으로 배송지 추가
-      const response = await webApiService.address.createAddress(koreanAddress);
-      
-      if (response.success && response.data && response.data.address) {
-        // 응답을 ShippingAddress 형태로 변환하여 반환
-        const addressData = response.data.address;
-        return {
-          success: true,
-          data: {
-            id: addressData.index.toString(),
-            ...address,
-            isDefault: addressData.isDefault || false
-          }
-        };
-      }
-      
-      return {
-        success: false,
-        message: response.message || '배송지 추가에 실패했습니다.'
-      };
-    } catch (error: any) {
-      console.error('배송지 추가 실패:', error);
-      return {
-        success: false,
-        message: error.message || '배송지 추가에 실패했습니다.'
-      };
-    }
-  }
-
-  async updateShippingAddress(addressId: string, updates: Partial<ShippingAddress>) {
-    if (USE_MOCK_API) {
-      return mockApiService.shipping.updateShippingAddress(addressId, updates);
-    }
-    
-    try {
-      // Partial<ShippingAddress> → KoreanAddress 변환
-      const koreanUpdates = convertToKoreanAddress(updates as unknown as LegacyShippingAddress);
-      
-      // 한국 주소 시스템으로 배송지 수정
-      const response = await webApiService.address.updateAddress(addressId, koreanUpdates);
-      
-      if (response.success && response.data) {
-        return {
-          success: true,
-          data: {
-            id: addressId,
-            ...updates
-          }
-        };
-      }
-      
-      return {
-        success: false,
-        message: response.message || '배송지 수정에 실패했습니다.'
-      };
-    } catch (error: any) {
-      console.error('배송지 수정 실패:', error);
-      return {
-        success: false,
-        message: error.message || '배송지 수정에 실패했습니다.'
-      };
-    }
-  }
-
-  async deleteShippingAddress(addressId: string) {
-    if (USE_MOCK_API) {
-      return mockApiService.shipping.deleteShippingAddress(addressId);
-    }
-    
-    try {
-      // 한국 주소 시스템으로 배송지 삭제
-      const response = await webApiService.address.deleteAddress(addressId);
-      
-      if (response.success) {
-        return {
-          success: true,
-          message: '배송지가 삭제되었습니다.'
-        };
-      }
-      
-      return {
-        success: false,
-        message: response.message || '배송지 삭제에 실패했습니다.'
-      };
-    } catch (error: any) {
-      console.error('배송지 삭제 실패:', error);
-      return {
-        success: false,
-        message: error.message || '배송지 삭제에 실패했습니다.'
-      };
-    }
-  }
-
   // 결제 관련 API
   async getPaymentMethods() {
     if (USE_MOCK_API) {
@@ -227,23 +86,6 @@ export class PurchaseApiService {
         createdAt: new Date().toISOString()
       }
     };
-  }
-
-  // 주문 생성
-  async createPendingOrder(cart: Cart) {
-    if (USE_MOCK_API) {
-      return mockApiService.order.createPendingOrder(cart);
-    }
-    // 실제 API 호출
-    const orderRequest = {
-      items: cart.items.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        options: item.selectedOptions || {}
-      })),
-      region: 'seoul'
-    };
-    return webApiService.order.createOrder(orderRequest);
   }
 
   // 주문 목록 조회 - webApiService를 통해 BaseApiService 활용
@@ -342,26 +184,6 @@ export class PurchaseApiService {
     }
   }
 
-  async processPayment(paymentData: {
-    orderId: string;
-    paymentMethod: string;
-    shippingAddress: ShippingAddress;
-    amount: number;
-  }) {
-    if (USE_MOCK_API) {
-      // Mock API용 데이터 변환
-      const mockPaymentData = {
-        orderId: paymentData.orderId,
-        paymentMethod: paymentData.paymentMethod,
-        shippingAddress: paymentData.shippingAddress,
-        totalAmount: paymentData.amount
-      };
-      return mockApiService.payment.processPayment(mockPaymentData);
-    }
-    // 실제 API 호출
-    return webApiService.payment.processPayment(paymentData);
-  }
-
   // 통합 결제 API 메서드들
   async preparePayment(data: {
     amount: number;
@@ -423,70 +245,6 @@ export class PurchaseApiService {
     return result;
   }
 
-  // 결제 승인 API (BaseOrderService 사용)
-  async approve(orderId: string, pgToken: string) {
-    if (USE_MOCK_API) {
-      // Mock에서는 성공 응답 반환
-      return {
-        success: true,
-        message: 'Payment approved successfully',
-        data: {
-          orderId: orderId,
-          status: 'confirmed',
-          amount: 153000,
-          approvedAt: new Date().toISOString(),
-          redirectUrl: `/orders/${orderId}`
-        }
-      };
-    }
-
-    // BaseOrderService를 통한 결제 승인 (BaseApiService 패턴 따름)
-    return webApiService.order.approvePayment(orderId, pgToken);
-  }
-
-  // 레거시: 기존 approvePayment 메서드 유지 (하위 호환성)
-  async approvePayment(data: {
-    orderId: string;
-    payMethod: string;
-    approvalData: {
-      pgToken?: string;
-      [key: string]: any;
-    };
-  }) {
-    if (USE_MOCK_API) {
-      // Mock에서는 성공 응답 반환
-      return {
-        success: true,
-        data: {
-          orderId: data.orderId,
-          transactionId: `TXN_${Date.now()}`,
-          payMethod: data.payMethod,
-          amount: {
-            total: 10000,
-            tax: 909,
-            taxFree: 0,
-            discount: 0
-          },
-          approvedAt: new Date().toISOString(),
-          itemName: '테스트 상품'
-        }
-      };
-    }
-
-    // 실제 통합 결제 API 호출
-    const token = await webApiService.auth.getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/api/payment/approve`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-
-    return response.json();
-  }
-
   async getPaymentStatus(orderId: string, payMethod?: string) {
     if (USE_MOCK_API) {
       return {
@@ -514,20 +272,6 @@ export class PurchaseApiService {
     return response.json();
   }
 
-  // 상품 관련 API
-  async getProducts(params?: ProductFilters) {
-    if (USE_MOCK_API) {
-      return mockApiService.product.getProducts(params);
-    }
-    return webApiService.product.getProducts(params || {});
-  }
-
-  async getProduct(productId: string) {
-    if (USE_MOCK_API) {
-      return mockApiService.product.getProduct(productId);
-    }
-    return webApiService.product.getProduct(productId);
-  }
 }
 
 // 싱글톤 인스턴스 export

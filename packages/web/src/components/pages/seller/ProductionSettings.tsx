@@ -38,8 +38,8 @@ export function ProductionSettings({ onGo }: ProductionSettingsProps) {
       const response = await webApiService.production.getProductionSettings();
       console.log('생산 설정 응답:', response);
       
-      // 응답 구조에 맞게 수정: response.data.productionSettings
-      const loadedSettings = response.data?.productionSettings || response.productionSettings;
+      // ProductionService.getProductionSettings 가 이미 언랩해서 내려준다
+      const loadedSettings = response.productionSettings;
       console.log('로드된 설정:', loadedSettings);
       
       // 로드된 설정이 유효한지 확인하고 기본값과 병합

@@ -195,7 +195,7 @@ export function BrandDetailPage({
     const isMatch = currentUser.userUuid === decodedSellerUuid;
 
     console.log('🔍 [BrandDetailPage] Ownership check:', {
-      currentUserId: currentUser.id,
+      currentUserUuid: currentUser.userUuid,
       decodedSellerUuid,
       isOwner: isMatch
     });

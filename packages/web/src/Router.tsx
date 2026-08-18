@@ -684,9 +684,9 @@ export function Router() {
   }
   else if (pathname === '/chat') {
     // ChatPage uses ChatUser interface (uuid, email, name)
-    // shared User uses 'id' instead of 'uuid' (value is uuid format)
+    // shared User 의 식별자는 userUuid 다
     const chatUser = currentUser ? {
-      uuid: currentUser.id,
+      uuid: currentUser.userUuid,
       email: currentUser.email,
       name: currentUser.name
     } : null;
