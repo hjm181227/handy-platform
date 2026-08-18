@@ -105,11 +105,27 @@
 
 ## Wave 3 — 외부 의존 해소 후 (심사·앱팀 완료 시점)
 
-### 3-1. 알림톡 발송 연동 (나, 1~2일) — 0-1 심사 통과 후
-- `NaverSensService`에 알림톡(`/alimtalk/v2`) 발송 메서드 추가 (기존 서명 로직 재사용)
-- `OrderNotificationService` 팬아웃에 알림톡 채널 추가 (인앱과 병행, 실패해도 인앱은 유지)
-- `notificationSettings` 수신 동의 게이트 + 발송 이력·실패 재시도(1회)
-- 템플릿 코드 5종 매핑, 스테이징 테스트 번호로 검증 후 배포
+### 3-1. 알림톡 발송 연동 — **코드 선구현 완료 (2026-08-19, 서버 748c978)**
+발송 모듈·팬아웃 연결·테스트 27케이스까지 develop 반영됨. env 미설정 시 완전 무동작.
+
+**활성화 런북 (심사 완료 통보 시 즉시 실행):**
+1. (사장님) 심사 완료 후 전달할 값 3종:
+   - `ALIMTALK_SERVICE_ID` (ncp:kkobizmsg:kr:… 형식)
+   - `ALIMTALK_PLUS_FRIEND_ID` (@채널ID)
+   - 승인된 템플릿 코드 5개 (기본 코드명 order_complete/shipping_start/seller_new_order/
+     return_received/refund_complete 와 다르면 ALIMTALK_TEMPLATE_* 오버라이드)
+2. (나) GitHub Secrets 등록 안내 + **env 배선**: 아래 6곳의 기존 `NCP_*` 라인 옆에
+   `ALIMTALK_SERVICE_ID`/`ALIMTALK_PLUS_FRIEND_ID` 동일 형태로 추가
+   - `.github/workflows/deploy.yml`, `.github/workflows/deploy-stage.yml`
+   - `scripts/deploy-bluegreen-full.sh`, `scripts/deploy-stage-simple.sh`,
+     `scripts/spot-instance-deploy.sh`, `docker-compose.stage.yml`
+3. (나) 스테이징 배포 → 테스트 전화번호로 실발송 1회 검증
+   (serviceId 콜론 인코딩 이슈 가능성 — AlimtalkService 주석 참조)
+4. (나) 프로덕션 반영
+- 주의: NCP 템플릿 등록 문안은 `services/AlimtalkService.ts`의 ALIMTALK_TEMPLATES
+  상수와 **글자 단위 일치** 필요. 검수가 문구 수정을 요구하면 코드 상수를 함께 수정
+- 미포함(후속): notificationSettings 수신 동의 게이트, 011/016~019 번호 허용,
+  개별 메시지 실패(requestStatusCode) 판정
 
 ### 3-2. 손톱 측정 UX + 앱 출시 (나 + 앱팀, 2~3일) — 0-2 파이프라인 확보 후
 - 콜드스타트: 측정 화면 진입 시 `/health` 워밍업 + 5초 경과 시 "서버 준비 중(최대 30초)" 안내
