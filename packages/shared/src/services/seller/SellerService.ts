@@ -31,7 +31,8 @@ import {
   CreateSellerCouponRequest,
   SellerCouponUsageStats,
   BulkCreateProductRequest,
-  BulkCreateResult
+  BulkCreateResult,
+  ProductQuestion
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -846,7 +847,8 @@ export abstract class BaseSellerService extends BaseApiService {
     success: boolean;
     data: {
       sellerInfoId: string;
-      userId: string;
+      // 서버 GET /api/seller/info 는 userUuid 를 내려준다 (routes/seller.ts)
+      userUuid: string;
       brandName: string;
       brandProfile: string | null;
       acceptsCustomOrders: boolean;
@@ -868,7 +870,7 @@ export abstract class BaseSellerService extends BaseApiService {
       success: boolean;
       data: {
         sellerInfoId: string;
-        userId: string;
+        userUuid: string;
         brandName: string;
         brandProfile: string | null;
         acceptsCustomOrders: boolean;
@@ -1012,6 +1014,80 @@ export abstract class BaseSellerService extends BaseApiService {
     return this.request<ApiResponse<void>>(API_ENDPOINTS.SELLER.COUPON_DETAIL(couponUuid), {
       method: 'DELETE',
     });
+  }
+
+  // ============================================
+  // 상품 Q&A 관리 (routes/sellerProductQuestions.ts 스펙 일치)
+  // ============================================
+
+  // GET /api/seller/product-questions - 판매자 상품 Q&A 목록
+  async getProductQuestions(filters: {
+    page?: number;
+    limit?: number;
+    status?: 'pending' | 'answered';
+    productUuid?: string;
+  } = {}): Promise<ApiResponse<{
+    questions: ProductQuestion[];
+    pagination: PaginationInfo;
+  }>> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.SELLER.PRODUCT_QUESTIONS}?${queryString}`
+      : API_ENDPOINTS.SELLER.PRODUCT_QUESTIONS;
+
+    return this.request<ApiResponse<{
+      questions: ProductQuestion[];
+      pagination: PaginationInfo;
+    }>>(endpoint);
+  }
+
+  // GET /api/seller/product-questions/stats - Q&A 통계
+  async getProductQuestionsStats(): Promise<ApiResponse<{
+    stats: { pending: number; answered: number; total: number };
+  }>> {
+    return this.request<ApiResponse<{
+      stats: { pending: number; answered: number; total: number };
+    }>>(API_ENDPOINTS.SELLER.PRODUCT_QUESTIONS_STATS);
+  }
+
+  // POST /api/seller/product-questions/:questionUuid/answer - 답변 등록
+  async createQuestionAnswer(
+    questionUuid: string,
+    content: string
+  ): Promise<ApiResponse<{ question: ProductQuestion }>> {
+    return this.request<ApiResponse<{ question: ProductQuestion }>>(
+      API_ENDPOINTS.SELLER.PRODUCT_QUESTION_ANSWER(questionUuid),
+      {
+        method: 'POST',
+        body: JSON.stringify({ content }),
+      }
+    );
+  }
+
+  // PUT /api/seller/product-questions/:questionUuid/answer - 답변 수정
+  async updateQuestionAnswer(
+    questionUuid: string,
+    content: string
+  ): Promise<ApiResponse<{ question: ProductQuestion }>> {
+    return this.request<ApiResponse<{ question: ProductQuestion }>>(
+      API_ENDPOINTS.SELLER.PRODUCT_QUESTION_ANSWER(questionUuid),
+      {
+        method: 'PUT',
+        body: JSON.stringify({ content }),
+      }
+    );
+  }
+
+  // DELETE /api/seller/product-questions/:questionUuid/answer - 답변 삭제 (status→pending)
+  async deleteQuestionAnswer(
+    questionUuid: string
+  ): Promise<ApiResponse<{ message: string }>> {
+    return this.request<ApiResponse<{ message: string }>>(
+      API_ENDPOINTS.SELLER.PRODUCT_QUESTION_ANSWER(questionUuid),
+      {
+        method: 'DELETE',
+      }
+    );
   }
 
   // ============================================

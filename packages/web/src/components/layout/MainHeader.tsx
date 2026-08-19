@@ -367,7 +367,6 @@ export function MainHeader({
                       className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-[100]"
                       onMouseDown={(e) => e.stopPropagation()} // 외부 클릭 이벤트 방지
                     >
-                      {console.log('Dropdown menu rendered, showUserMenu:', showUserMenu)}
                       <button
                         onClick={(e) => {
                           e.preventDefault();

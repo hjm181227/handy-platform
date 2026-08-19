@@ -12,6 +12,22 @@ type TypingCallback = (data: TypingIndicator) => void;
 type ConnectionCallback = () => void;
 type ErrorCallback = (error: Error) => void;
 type ReadCallback = (data: { roomId: string; userId: string; readAt: string }) => void;
+type UnreadTotalCallback = (data: { total: number }) => void;
+type DeletedCallback = (data: { roomId: string; messageId: string }) => void;
+
+/** 메시지 ack를 기다리는 최대 시간. 초과하면 실패로 보고하고 재전송을 유도한다. */
+const ACK_TIMEOUT_MS = 10000;
+
+/**
+ * 서버는 Mongoose 문서를 그대로 내보내므로 식별자가 `_id`다.
+ * 클라이언트 Message 타입은 `id`를 쓰기 때문에 진입 지점에서 한 번만 맞춰준다.
+ * (예전에는 `id`가 없어서 수신 메시지마다 Date.now()로 가짜 키를 만들었고,
+ *  같은 밀리초에 도착한 메시지끼리 React key가 충돌했다.)
+ */
+function normalizeMessage(raw: any): Message {
+  if (!raw || typeof raw !== 'object') return raw;
+  return { ...raw, id: raw.id ?? (raw._id != null ? String(raw._id) : undefined) };
+}
 
 export class ChatSocketService {
   private static instance: ChatSocketService | null = null;
@@ -23,6 +39,8 @@ export class ChatSocketService {
   private disconnectCallbacks: Set<ConnectionCallback> = new Set();
   private errorCallbacks: Set<ErrorCallback> = new Set();
   private readCallbacks: Set<ReadCallback> = new Set();
+  private unreadTotalCallbacks: Set<UnreadTotalCallback> = new Set();
+  private deletedCallbacks: Set<DeletedCallback> = new Set();
 
   private constructor() {
     // Private constructor for singleton
@@ -53,9 +71,6 @@ export class ChatSocketService {
 
         const serverUrl = config?.serverUrl || import.meta.env.VITE_SOCKET_URL || envConfig.chatApiUrl;
 
-        console.log('[ChatSocket] 🔍 VITE_SOCKET_URL:', import.meta.env.VITE_SOCKET_URL);
-        console.log('[ChatSocket] 🎯 Final serverUrl:', serverUrl);
-
         const socketOptions: any = {
           reconnection: config?.reconnection !== false,
           reconnectionAttempts: config?.reconnectionAttempts || 5,
@@ -63,13 +78,11 @@ export class ChatSocketService {
           transports: ['websocket', 'polling'],
         };
 
-        // 토큰이 있으면 auth에 추가
+        // 토큰이 있으면 auth에 추가 (토큰 자체는 로그에 남기지 않는다)
         if (config?.token) {
           socketOptions.auth = { token: config.token };
-          console.log('[ChatSocket] 🔐 Auth token added (length:', config.token.length, ')');
         }
 
-        console.log('[ChatSocket] 🚀 Connecting to', serverUrl, 'with options:', socketOptions);
         this.socket = io(serverUrl, socketOptions);
 
         // 타임아웃 설정 (10초)
@@ -86,9 +99,6 @@ export class ChatSocketService {
 
         // 연결 이벤트 리스너
         this.socket.on('connect', () => {
-          console.log('[ChatSocket] ✅ Connected to server successfully!');
-          console.log('[ChatSocket] ✅ Socket ID:', this.socket?.id);
-          console.log('[ChatSocket] ✅ Transport:', this.socket?.io.engine.transport.name);
           this.connectCallbacks.forEach(cb => cb());
           clearTimeoutAndResolve();
         });
@@ -99,20 +109,16 @@ export class ChatSocketService {
         });
 
         this.socket.on('connect_error', (error: any) => {
-          console.error('[ChatSocket] ❌ Connection error:', error);
-          console.error('[ChatSocket] ❌ Error message:', error.message);
-          console.error('[ChatSocket] ❌ Error data:', error.data);
-          console.error('[ChatSocket] ❌ Error type:', error.type);
-          console.error('[ChatSocket] ❌ Error description:', error.description);
+          console.error('[ChatSocket] Connection error:', error?.message ?? error);
           this.errorCallbacks.forEach(cb => cb(error));
           clearTimeout(connectionTimeout);
           reject(error);
         });
 
         // 메시지 수신
-        this.socket.on('message', (message: Message) => {
-          console.log('[ChatSocket] Message received:', message);
-          this.messageCallbacks.forEach(cb => cb(message));
+        this.socket.on('message', (message: any) => {
+          const normalized = normalizeMessage(message);
+          this.messageCallbacks.forEach(cb => cb(normalized));
         });
 
         // 타이핑 이벤트
@@ -141,8 +147,18 @@ export class ChatSocketService {
 
         // message:read 이벤트
         this.socket.on('message:read', (data: { roomId: string; userId: string; readAt: string }) => {
-          console.log('[ChatSocket] Message read event:', data);
           this.readCallbacks.forEach(cb => cb(data));
+        });
+
+        // 메시지 삭제 (상대가 지운 경우에도 즉시 자리표시자로 바뀐다)
+        this.socket.on('message:deleted', (data: { roomId: string; messageId: string }) => {
+          this.deletedCallbacks.forEach(cb => cb(data));
+        });
+
+        // 헤더 배지용 미확인 총합. 이 소켓 하나로 방 화면과 배지를 모두 처리해,
+        // 방에 들어갈 때 접속이 두 개 열리던 문제를 없앤다.
+        this.socket.on('chat:unread-total', (data: { total: number }) => {
+          this.unreadTotalCallbacks.forEach(cb => cb(data));
         });
 
       } catch (error) {
@@ -224,57 +240,59 @@ export class ChatSocketService {
   }
 
   /**
-   * 메시지 전송
+   * 메시지 전송 (ack 대기)
+   *
+   * clientMessageId를 호출자가 넘길 수 있게 열어둔 이유:
+   * 서버 멱등성 키가 {senderId, clientMessageId}라서, 재전송이 같은 키를
+   * 재사용해야 "이미 도착했는데 ack만 못 받은" 경우에 중복 저장을 막는다.
    */
-  public async sendMessage(roomId: string, text: string): Promise<Message> {
+  private emitMessage(payload: Record<string, unknown>): Promise<Message> {
     if (!this.socket?.connected) {
-      throw new Error('Socket not connected');
+      return Promise.reject(new Error('Socket not connected'));
     }
 
     return new Promise((resolve, reject) => {
-      const clientMessageId = `${Date.now()}-${Math.random()}`;
-
-      this.socket!.emit('message', {
-        roomId,
-        text,
-        clientMessageId,
-      }, (response: any) => {
-        if (response?.error) {
-          reject(new Error(response.error));
-        } else if (response?.message) {
-          resolve(response.message);
-        } else {
+      this.socket!
+        .timeout(ACK_TIMEOUT_MS)
+        .emit('message', payload, (timeoutError: Error | null, response: any) => {
+          if (timeoutError) {
+            reject(new Error('서버 응답이 없습니다. 다시 시도해주세요.'));
+            return;
+          }
+          if (response?.error) {
+            reject(new Error(response.error));
+            return;
+          }
+          if (response?.message) {
+            resolve(normalizeMessage(response.message));
+            return;
+          }
           reject(new Error('Invalid response from server'));
-        }
-      });
+        });
     });
+  }
+
+  public async sendMessage(
+    roomId: string,
+    text: string,
+    clientMessageId: string = `${Date.now()}-${Math.random()}`
+  ): Promise<Message> {
+    return this.emitMessage({ roomId, text, clientMessageId });
   }
 
   /**
    * 이미지 메시지 전송
    */
-  public async sendImageMessage(roomId: string, fileUrl: string): Promise<Message> {
-    if (!this.socket?.connected) {
-      throw new Error('Socket not connected');
-    }
-
-    return new Promise((resolve, reject) => {
-      const clientMessageId = `${Date.now()}-${Math.random()}`;
-
-      this.socket!.emit('message', {
-        roomId,
-        fileUrl,
-        messageType: 'image',
-        clientMessageId,
-      }, (response: any) => {
-        if (response?.error) {
-          reject(new Error(response.error));
-        } else if (response?.message) {
-          resolve(response.message);
-        } else {
-          reject(new Error('Invalid response from server'));
-        }
-      });
+  public async sendImageMessage(
+    roomId: string,
+    fileUrl: string,
+    clientMessageId: string = `${Date.now()}-${Math.random()}`
+  ): Promise<Message> {
+    return this.emitMessage({
+      roomId,
+      fileUrl,
+      messageType: 'image',
+      clientMessageId,
     });
   }
 
@@ -340,6 +358,22 @@ export class ChatSocketService {
   }
 
   /**
+   * 미확인 총합 이벤트 구독 (헤더 배지)
+   */
+  public onUnreadTotal(callback: UnreadTotalCallback): () => void {
+    this.unreadTotalCallbacks.add(callback);
+    return () => this.unreadTotalCallbacks.delete(callback);
+  }
+
+  /**
+   * 메시지 삭제 이벤트 구독
+   */
+  public onMessageDeleted(callback: DeletedCallback): () => void {
+    this.deletedCallbacks.add(callback);
+    return () => this.deletedCallbacks.delete(callback);
+  }
+
+  /**
    * 읽음 처리 전송
    */
   public emitMarkAsRead(roomId: string): void {
@@ -357,6 +391,8 @@ export class ChatSocketService {
     this.disconnectCallbacks.clear();
     this.errorCallbacks.clear();
     this.readCallbacks.clear();
+    this.unreadTotalCallbacks.clear();
+    this.deletedCallbacks.clear();
   }
 }
 

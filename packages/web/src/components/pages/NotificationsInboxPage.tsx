@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Notification } from '@handy-platform/shared';
+import type { UserNotification } from '@handy-platform/shared';
 import { notificationService } from '../../services/notificationService';
 import { PageHeader } from '../layout/PageHeader';
 
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function NotificationsInboxPage({ onGo }: Props) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export function NotificationsInboxPage({ onGo }: Props) {
 
   const announceChange = () => window.dispatchEvent(new Event('notifications:changed'));
 
-  const openNotification = async (notification: Notification) => {
+  const openNotification = async (notification: UserNotification) => {
     if (!notification.isRead) {
       await notificationService.markAsRead(notification._id).catch(() => undefined);
       setNotifications(current => current.map(item => item._id === notification._id ? { ...item, isRead: true } : item));

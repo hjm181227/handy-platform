@@ -51,7 +51,7 @@ export function PaymentTest({ onGo }: PaymentTestProps) {
           name: '테스트 사용자',
           phone: '010-1234-5678'
         },
-        paymentMethod: 'KAKAO_PAY',
+        paymentMethod: 'KAKAO_PAY' as const,
         useCart: false, // 테스트이므로 장바구니 사용 안함
         items: [
           {

@@ -1,10 +1,10 @@
 // 카카오 SDK 초기화 및 관리 유틸리티
 
-// 카카오 SDK 및 Daum Postcode 전역 타입 정의
+// 카카오 SDK 전역 타입 정의
+// (window.daum 은 @handy-platform/shared 의 전역 선언을 사용한다)
 declare global {
   interface Window {
     Kakao: any;
-    daum: any;
   }
 }
 

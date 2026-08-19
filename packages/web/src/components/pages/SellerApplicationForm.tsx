@@ -15,6 +15,7 @@ const emptyForm: SellerApplicationData = {
   brandName: '',
   representativeName: '',
   businessNumber: '',
+  mailOrderSalesNumber: '',
   businessType: '',
   businessCategory: '',
   contactEmail: '',
@@ -50,7 +51,8 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
 
 const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
   const [form, setForm] = useState<SellerApplicationData>(emptyForm);
-  const [status, setStatus] = useState<SellerApplicationStatus | null>(null);
+  // 서비스 응답의 data 가 optional 이므로 undefined 도 허용한다
+  const [status, setStatus] = useState<SellerApplicationStatus | null | undefined>(null);
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +62,7 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
 
   const uploadManager = useMemo(() => new ImageUploadManager(
     (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL,
-    async () => {
+    async (): Promise<Record<string, string>> => {
       const token = localStorage.getItem('accessToken');
       return token ? { Authorization: `Bearer ${token}` } : {};
     },
@@ -71,9 +73,11 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
       try {
         const statusResponse = await sellerApplicationService.getMyApplicationStatus();
         setStatus(statusResponse.data);
-        if (statusResponse.data.exists) {
+        if (statusResponse.data?.exists) {
           const detailResponse = await sellerApplicationService.getMyApplication();
-          setForm({ ...emptyForm, ...detailResponse.data.application });
+          if (detailResponse.data?.application) {
+            setForm({ ...emptyForm, ...detailResponse.data.application });
+          }
         }
       } catch (error) {
         console.error('Failed to load seller application:', error);
@@ -224,6 +228,8 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
               <Field label="브랜드명 *" value={form.brandName} onChange={(value) => update('brandName', value)} placeholder="고객에게 표시될 브랜드명" />
               <Field label="대표자명 *" value={form.representativeName || ''} onChange={(value) => update('representativeName', value)} />
               <Field label="사업자등록번호 *" value={form.businessNumber} onChange={(value) => update('businessNumber', value)} placeholder="123-45-67890" />
+              {/* 통신판매업 신고번호: 전자상거래법상 브랜드 페이지에 공개되는 항목 (미신고 판매자를 위해 선택 입력) */}
+              <Field label="통신판매업 신고번호 (선택)" value={form.mailOrderSalesNumber || ''} onChange={(value) => update('mailOrderSalesNumber', value)} placeholder="2024-용인기흥-2437" />
               <Field label="업태 *" value={form.businessType || ''} onChange={(value) => update('businessType', value)} placeholder="예: 제조업" />
               <Field label="업종·종목 *" value={form.businessCategory || ''} onChange={(value) => update('businessCategory', value)} placeholder="예: 네일용품 제조 및 판매" />
               <Field label="담당자 이메일 *" type="email" value={form.contactEmail} onChange={(value) => update('contactEmail', value)} />

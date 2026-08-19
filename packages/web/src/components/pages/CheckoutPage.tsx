@@ -9,23 +9,63 @@ import { ShippingAddressForm } from '../common/ShippingAddressForm';
 import { TossPaymentWidget, TossPaymentWidgetRef } from '../payment/TossPaymentWidget';
 import { CouponSelector } from '../checkout/CouponSelector';
 import type {
-  Cart,
+  CheckoutSession,
   Order,
+  Product,
   ShippingAddress,
   ShippingDetails,
   OrderStatus,
-  PaymentStatus
+  PaymentStatus,
+  PaymentMethod
 } from '@handy-platform/shared';
 
 interface CheckoutPageProps {
   onGo: (path: string) => void;
 }
 
+/**
+ * 체크아웃 세션 아이템.
+ * product는 서버 Product 스냅샷이지만, 이 화면은 구버전 필드(id/images.main)도
+ * 폴백으로 읽으므로 호환 필드를 optional로 덧붙인다.
+ */
+interface CheckoutSessionItem {
+  product: Product & { id?: string; images?: { main?: string } };
+  quantity: number;
+  price: number;
+  options?: Record<string, string>;
+  subtotal: number;
+}
+
+/**
+ * 이 화면의 `cart` 상태는 장바구니(Cart)가 아니라
+ * POST /api/checkout/initialize 가 돌려주는 CheckoutSession 이다.
+ */
+type CheckoutState = Omit<CheckoutSession, 'items'> & {
+  items: CheckoutSessionItem[];
+  status?: 'initialized' | 'validated';
+};
+
+/**
+ * 화면에서만 쓰는 임시 주문 표현.
+ * 결제 준비 전 단계라 서버 주문(Order)의 paymentMethod/shippingAddress가 아직 없고,
+ * 금액 필드는 CheckoutSession.totals 에서 파생시킨 값을 담는다.
+ */
+type CheckoutOrder = Omit<Order, 'paymentMethod' | 'shippingAddress' | 'items'> & {
+  paymentMethod?: PaymentMethod;
+  shippingAddress?: ShippingAddress;
+  items: CheckoutSessionItem[];
+  shipping?: ShippingDetails;
+  totalPrice: number;
+  shippingCost: number;
+  totalDiscount: number;
+  finalPrice: number;
+};
+
 export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const { t } = useTranslation(['common', 'order']);
   const { alert } = useAlert();
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [order, setOrder] = useState<Order | null>(null);
+  const [cart, setCart] = useState<CheckoutState | null>(null);
+  const [order, setOrder] = useState<CheckoutOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -45,8 +85,9 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
   const [savedAddresses, setSavedAddresses] = useState<ShippingAddress[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  // ShippingAddress.id 는 optional 이므로 undefined 도 허용한다
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null | undefined>(null);
+  const [editingAddressId, setEditingAddressId] = useState<string | null | undefined>(null);
 
   // 토스페이먼츠 결제위젯 상태
   const [tossWidgetReady, setTossWidgetReady] = useState(false);
@@ -143,7 +184,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
             console.log('♻️ [CheckoutPage] Restoring cached checkout session (mode:', cached.mode, ')');
             const cachedData = cached.data;
             setCart({ sessionId: cachedData.sessionId, ...cachedData } as any);
-            const tempOrder: Order = {
+            const tempOrder: CheckoutOrder = {
               id: `temp_${Date.now()}`,
               orderNumber: `ORDER_${Date.now()}`,
               status: 'pending',
@@ -261,12 +302,11 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
         // ✅ CheckoutData를 cart로 저장 (sessionId 포함)
         setCart({
-          sessionId: result.data.sessionId,
           ...result.data
         } as any);
 
         // ✅ order 정보는 totals에서 생성 (API 스펙 준수)
-        const tempOrder: Order = {
+        const tempOrder: CheckoutOrder = {
           id: `temp_${Date.now()}`,
           orderNumber: `ORDER_${Date.now()}`,
           status: 'pending',
@@ -293,8 +333,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
       } else {
         // 에러 코드별 사용자 친화적 메시지
-        const errorCode = result.errorCode || result.error?.code;
-        const rawError = result.error?.message || (typeof result.error === 'string' ? result.error : null);
+        // 서버 표준 에러는 { code, message } 객체, 레거시 경로는 문자열로 내려온다
+        const errorDetail = typeof result.error === 'object' ? result.error : undefined;
+        const errorCode = result.errorCode || errorDetail?.code;
+        const rawError = errorDetail?.message || (typeof result.error === 'string' ? result.error : null);
         let errorMessage = rawError || t('order:payment.orderLoadError');
 
         switch (errorCode) {

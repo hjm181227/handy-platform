@@ -15,9 +15,9 @@ export abstract class BaseAddressService extends BaseApiService {
     return this.request<ApiResponse<KoreanAddressListResponse>>(API_ENDPOINTS.SHIPPING_ADDRESSES.LIST);
   }
 
-  // 배송지 추가
-  async createAddress(address: KoreanAddress): Promise<ApiResponse<KoreanAddressResponse>> {
-    return this.request<ApiResponse<KoreanAddressResponse>>(API_ENDPOINTS.SHIPPING_ADDRESSES.CREATE, {
+  // 배송지 추가 — 서버(routes/shippingAddresses.ts)는 data: { address, message } 형태로 응답한다
+  async createAddress(address: KoreanAddress): Promise<ApiResponse<{ address: KoreanAddressResponse; message?: string }>> {
+    return this.request<ApiResponse<{ address: KoreanAddressResponse; message?: string }>>(API_ENDPOINTS.SHIPPING_ADDRESSES.CREATE, {
       method: 'POST',
       body: JSON.stringify(address),
     });

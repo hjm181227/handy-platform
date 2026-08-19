@@ -166,7 +166,8 @@ export function CustomOrderModal({ isOpen, onClose, orderDetail, loading, error 
                       </thead>
                       <tbody>
                         <tr>
-                          {Object.values(specs.sizes).map((size, idx) => (
+                          {/* 레거시(좌/우 구분 없는 평면) sizes 폴백 */}
+                          {Object.values(specs.sizes as any).map((size, idx) => (
                             <td key={idx} className="px-2 py-2.5 text-center">
                               <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
                                 {size as string}

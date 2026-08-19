@@ -1,7 +1,138 @@
-import { Product, CartItem, Cart, ShippingAddress, PaymentMethod, Order } from '@handy-platform/shared';
+/**
+ * 목 데이터 (USE_MOCK_API 분기 전용).
+ *
+ * 이 파일의 픽스처는 현행 서버 API 스펙(@handy-platform/shared)이 아니라
+ * 구버전 스펙을 흉내 낸 것이라 shared 타입과 형태가 맞지 않는다.
+ * shared 타입을 억지로 붙이면 실제 서버 계약을 왜곡하게 되므로,
+ * 목 전용 타입을 이 파일에 국소적으로 정의해서 쓴다.
+ * (USE_MOCK_API 는 false 이므로 런타임에서는 사용되지 않는다.)
+ */
+
+export interface MockProductOption {
+  name: string;
+  values: string[];
+  required: boolean;
+}
+
+export interface MockProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice: number;
+  discountRate: number;
+  images: string[];
+  category: string;
+  tags: string[];
+  sellerUuid: string;
+  sellerName: string;
+  rating: number;
+  reviewCount: number;
+  stock: number;
+  isAvailable: boolean;
+  shippingInfo: {
+    freeShipping: boolean;
+    estimatedDays: string;
+    shippingCost: number;
+  };
+  options: MockProductOption[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MockCartItem {
+  id: string;
+  productId: string;
+  product: MockProduct;
+  quantity: number;
+  selectedOptions: Record<string, string>;
+  price: number;
+  totalPrice: number;
+  subtotal: number;
+  addedAt: string;
+}
+
+export interface MockCartTotals {
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  itemCount: number;
+  freeShippingRemaining: number;
+}
+
+export interface MockCart {
+  id: string;
+  user: string;
+  items: MockCartItem[];
+  totals: MockCartTotals;
+  updatedAt: string;
+  // MockCartService.addCompatibilityFields 가 덧붙이는 구버전 호환 필드
+  totalItems?: number;
+  totalPrice?: number;
+  totalDiscount?: number;
+  shippingCost?: number;
+  finalPrice?: number;
+}
+
+export interface MockShippingAddress {
+  id: string;
+  userId: string;
+  name: string;
+  recipient: string;
+  phone: string;
+  zipCode: string;
+  address: string;
+  detailAddress: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MockPaymentMethod {
+  id: string;
+  userId: string;
+  type: string;
+  name: string;
+  provider: string;
+  cardNumber: string;
+  expiryDate: string;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface MockOrderItem {
+  id: string;
+  orderId: string;
+  productId: string;
+  product: MockProduct;
+  quantity: number;
+  selectedOptions: Record<string, string>;
+  price: number;
+  totalPrice: number;
+}
+
+export interface MockOrder {
+  id: string;
+  userId: string;
+  items: MockOrderItem[];
+  status: string;
+  paymentStatus: string;
+  shippingAddress: MockShippingAddress;
+  paymentMethod: string;
+  paymentProvider: string;
+  totalAmount: number;
+  shippingCost: number;
+  discountAmount: number;
+  finalAmount: number;
+  orderNumber: string;
+  estimatedDelivery: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Mock 상품 데이터
-export const mockProducts: Product[] = [
+export const mockProducts: MockProduct[] = [
   {
     id: 'prod_001',
     name: '프리미엄 무선 이어폰',
@@ -118,7 +249,7 @@ export const mockProducts: Product[] = [
 ];
 
 // Mock 장바구니 데이터
-export const mockCartItems: CartItem[] = [
+export const mockCartItems: MockCartItem[] = [
   {
     id: 'cart_001',
     productId: 'prod_001',
@@ -149,7 +280,7 @@ export const mockCartItems: CartItem[] = [
   }
 ];
 
-export const mockCart: Cart = {
+export const mockCart: MockCart = {
   id: 'cart_user_001',
   user: 'user_001',
   items: mockCartItems,
@@ -165,7 +296,7 @@ export const mockCart: Cart = {
 };
 
 // Mock 배송지 데이터
-export const mockShippingAddresses: ShippingAddress[] = [
+export const mockShippingAddresses: MockShippingAddress[] = [
   {
     id: 'addr_001',
     userId: 'user_001',
@@ -195,7 +326,7 @@ export const mockShippingAddresses: ShippingAddress[] = [
 ];
 
 // Mock 결제 수단 데이터
-export const mockPaymentMethods: PaymentMethod[] = [
+export const mockPaymentMethods: MockPaymentMethod[] = [
   {
     id: 'card_001',
     userId: 'user_001',
@@ -224,7 +355,8 @@ export const mockPaymentMethods: PaymentMethod[] = [
 export const mockApiDelay = (ms: number = 1000) => 
   new Promise(resolve => setTimeout(resolve, ms));
 
-export const mockApiResponse = <T>(data: T, success: boolean = true) => ({
+// 세 번째 인자(메시지)를 넘기는 호출부가 있으나 현재 구현은 이를 사용하지 않는다
+export const mockApiResponse = <T>(data: T, success: boolean = true, _message?: string) => ({
   success,
   data,
   message: success ? 'Success' : 'Error occurred',
@@ -232,7 +364,7 @@ export const mockApiResponse = <T>(data: T, success: boolean = true) => ({
 });
 
 // Mock 주문 데이터
-export const createMockOrder = (cartItems: CartItem[], shippingAddress: ShippingAddress, paymentMethod: PaymentMethod): Order => ({
+export const createMockOrder = (cartItems: MockCartItem[], shippingAddress: MockShippingAddress, paymentMethod: MockPaymentMethod): MockOrder => ({
   id: `order_${Date.now()}`,
   userId: 'user_001',
   items: cartItems.map(item => ({

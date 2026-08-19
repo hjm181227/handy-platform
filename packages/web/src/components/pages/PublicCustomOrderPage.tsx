@@ -357,7 +357,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
   const [searchQuery, setSearchQuery] = useState('');
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // 브랜드 검색
   useEffect(() => {

@@ -717,7 +717,8 @@ export abstract class BaseAdminService extends BaseApiService {
     page?: number;
     limit?: number;
     status?: 'active' | 'inactive';
-    scope?: 'platform' | 'seller';
+    // 서버(routes/adminCoupons.ts)가 읽는 쿼리 키는 scopeType 이다
+    scopeType?: 'platform' | 'seller';
     search?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';

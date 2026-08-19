@@ -84,7 +84,7 @@ export function QuoteFormModal({
       });
 
       if (!quoteResponse.success) {
-        throw new Error(quoteResponse.error || '견적서 생성에 실패했습니다');
+        throw new Error(String(quoteResponse.error || '견적서 생성에 실패했습니다'));
       }
 
       // 2. 응답에서 quoteId 추출 (백엔드에서 data.quoteUuid 반환)
@@ -108,8 +108,13 @@ export function QuoteFormModal({
       });
 
       if (!chatResult.success) {
-        console.warn('[QuoteFormModal] Chat message failed but quote was created:', chatResult.error);
-        // 채팅 전송 실패해도 견적서 생성은 성공
+        // 견적서는 저장됐지만 구매자에게 전달되지 않았다. 모달을 닫아버리면
+        // 판매자는 전달된 줄 알고 답을 기다리게 되므로 여기서 멈추고 알린다.
+        console.warn('[QuoteFormModal] Quote saved but chat delivery failed:', chatResult.error);
+        setError(
+          `견적서는 저장됐지만 구매자에게 전달하지 못했습니다. 채팅방에서 다시 보내주세요. (${chatResult.error ?? '전송 실패'})`
+        );
+        return;
       }
 
       // 4. 성공 처리

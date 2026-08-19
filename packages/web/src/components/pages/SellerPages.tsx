@@ -862,10 +862,16 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
 // 웹 전용 타입 정의 (shared 타입 사용)
 
+/**
+ * 상품 등록/수정 폼이 들고 있는 상세 이미지.
+ * 서버 DetailImage(url/description/order)와 달리, 업로드 실패 시 재시도를 위해
+ * 원본 File을 함께 보관하고 order는 제출 시점(index 기반)에 채운다.
+ */
 interface DetailImage {
   file?: File;
   url: string;
-  description: string;
+  description?: string;
+  order?: number;
 }
 
 // 판매 방식(fulfillmentMode) 및 옵션·재고 매트릭스용 상수/타입
@@ -876,6 +882,7 @@ interface VariantInput {
   priceModifier: string;
   isActive: boolean;
 }
+
 
 const VARIANT_SHAPES = [ 'ROUND', 'ALMOND', 'OVAL', 'STILETTO', 'SQUARE', 'COFFIN' ] as const;
 const VARIANT_LENGTHS = [ 'SHORT', 'MEDIUM', 'LONG' ] as const;
@@ -926,12 +933,10 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
     } as NailCategories,
 
     // 이미지
+    // 업로드 직후에는 원본 File을 함께 들고 있다가(재업로드용) 제출 시 url만 전송한다
+    mainImage: null as File | null,
     mainImageUrl: '',
-    detailImages: [] as Array<{
-      url: string;
-      description?: string;
-      order: number;
-    }>,
+    detailImages: [] as DetailImage[],
 
     // 상품 옵션
     isFeatured: false,
@@ -3538,7 +3543,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       {/* 상품 정보 */}
                       <div className="text-sm text-gray-600 mb-2">
                         <button
-                          onClick={() => onGo(`/seller/products/${review.productId}/edit`)}
+                          onClick={() => onGo(`/seller/products/${review.productUuid}/edit`)}
                           className="hover:text-[#E85A6B] hover:underline"
                         >
                           {review.productName}

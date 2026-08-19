@@ -1,3 +1,8 @@
+import type { ProductFilters } from '@handy-platform/shared';
+
+/** 서버가 받는 상품 정렬 필드 (ProductFilters.sortBy) */
+type ProductSortField = NonNullable<ProductFilters['sortBy']>;
+
 export interface SortOption {
   value: string;
   label: string;
@@ -42,8 +47,9 @@ export function SortDropdown({
 /**
  * sortBy 값을 API 파라미터 (sortBy, sortOrder)로 변환
  */
-export function parseSortValue(sortBy: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
+export function parseSortValue(sortBy: string): { sortBy: ProductSortField; sortOrder: 'asc' | 'desc' } {
   if (sortBy === 'price-asc') return { sortBy: 'price', sortOrder: 'asc' };
   if (sortBy === 'price-desc') return { sortBy: 'price', sortOrder: 'desc' };
-  return { sortBy, sortOrder: 'desc' };
+  // PRODUCT_SORT_OPTIONS 의 나머지 값(trending/createdAt/rating)은 그대로 서버 정렬 필드다
+  return { sortBy: sortBy as ProductSortField, sortOrder: 'desc' };
 }

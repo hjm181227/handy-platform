@@ -115,36 +115,42 @@ export function LikesPage({
     const price = item.target?.price ?? 0;
     const salePrice = item.target?.salePrice ?? price;
 
+    // 찜 목록 API는 상품의 축약본만 내려주므로 나머지 필드는 중립값으로 채운다
     return {
       productUuid: item.targetUuid,
       name: item.target?.name || '',
+      // ProductCard 는 브랜드명을 p.brand 에서 읽는다
+      brand: item.target?.brand || '',
       mainImageUrl: item.target?.mainImageUrl || '',
       price: price,
+      salePrice: salePrice,
       discountedPrice: salePrice,
       discountRate: price > 0 && salePrice < price ? Math.round((1 - salePrice / price) * 100) : 0,
-      seller: {
-        name: item.target?.brand || '',
-        id: '',
-        email: '',
-        businessName: '',
-        businessNumber: '',
-        status: 'active' as const,
-        createdAt: '',
-        updatedAt: ''
-      },
-      rating: {
-        average: 0,
-        count: 0
-      },
       description: '',
       category: '',
-      stock: 0,
-      status: 'active' as const,
+      detailImages: [],
+      stockQuantity: 0,
+      isInStock: true,
+      processingDays: 0,
+      nailCategories: { style: [], color: [], texture: [], tpo: [], nation: '' },
+      nailShape: 'ROUND',
+      nailLength: 'MEDIUM',
+      nailOptions: {
+        lengthCustomizable: false,
+        shapeCustomizable: false,
+        designCustomizable: false,
+      },
+      rating: { average: 0, count: 0 },
+      likesCount: 0,
+      isLiked: true,
+      tags: [],
+      stats: { viewsCount: 0, ordersCount: 0, reviewsCount: 0 },
+      status: 'active',
       isNewProduct: false,
       isFeatured: false,
       createdAt: item.likedAt,
       updatedAt: item.likedAt
-    } as Product;
+    };
   };
 
   return (
@@ -563,6 +569,8 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 }
 
 export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: string) => void; onOpen: (id: string) => void; initialUpload?: boolean }) {
+  // NAIL_* 옵션은 labelKey(i18n 키)만 가지고 있어 번역기가 필요하다
+  const { t } = useTranslation(['product', 'common']);
   const [snaps, setSnaps] = useState<any[]>([]);
   const [selectedSnap, setSelectedSnap] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -759,9 +767,12 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
                       : 'border-gray-200 text-gray-500 hover:border-gray-300'
                   }`}
                 >
-                  {filter.value
-                    ? filter.options.find(o => o.value === filter.value)?.label || filter.label
-                    : filter.label}
+                  {(() => {
+                    const selected = filter.value
+                      ? filter.options.find(o => o.value === filter.value)
+                      : undefined;
+                    return selected ? t(selected.labelKey) : filter.label;
+                  })()}
                   <svg className={`w-3 h-3 transition-transform ${openDropdown === filter.key ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -782,7 +793,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
                           onClick={() => { filter.setter(opt.value); setOpenDropdown(null); }}
                           className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${filter.value === opt.value ? 'text-[#E85A6B] font-medium' : 'text-gray-600'}`}
                         >
-                          {opt.label}
+                          {t(opt.labelKey)}
                         </button>
                       ))}
                     </div>

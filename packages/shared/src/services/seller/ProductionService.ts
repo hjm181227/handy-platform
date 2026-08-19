@@ -73,10 +73,14 @@ export abstract class BaseProductionService extends BaseApiService {
   }
 
   /**
-   * 최근 12개월간의 생산 현황 히스토리를 조회합니다.
+   * 생산 현황 히스토리를 조회합니다.
+   * @param year 조회할 년도 (생략 시 최근 12개월)
    */
-  async getProductionHistory(): Promise<ProductionHistoryApiResponse> {
-    return this.request<ProductionHistoryApiResponse>(API_ENDPOINTS.SELLER.PRODUCTION_HISTORY);
+  async getProductionHistory(year?: number): Promise<ProductionHistoryApiResponse> {
+    const endpoint = year
+      ? `${API_ENDPOINTS.SELLER.PRODUCTION_HISTORY}?year=${year}`
+      : API_ENDPOINTS.SELLER.PRODUCTION_HISTORY;
+    return this.request<ProductionHistoryApiResponse>(endpoint);
   }
 
   /**

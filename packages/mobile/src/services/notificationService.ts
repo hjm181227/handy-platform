@@ -46,6 +46,8 @@ interface ChatPushPayload {
 class NotificationService {
   private static instance: NotificationService;
   private channelCreated = false;
+  /** WebView 안의 웹 채팅 화면이 현재 열어둔 방 ID (알림 억제 판정용) */
+  private activeChatRoomId: string | null = null;
   private foregroundUnsubscribe: (() => void) | null = null;
   private tokenRefreshUnsubscribe: (() => void) | null = null;
   private notificationOpenedUnsubscribe: (() => void) | null = null;
@@ -341,9 +343,23 @@ class NotificationService {
   }
 
   /**
-   * 같은 채팅방을 보고 있으면 알림 억제
+   * 웹(WebView)이 알려준, 지금 화면에 열려 있는 채팅방 ID.
+   * 채팅 UI는 웹에만 있으므로 네이티브는 이 값을 통해서만 알 수 있다.
+   */
+  setActiveChatRoom(roomId: string | null): void {
+    this.activeChatRoomId = roomId;
+  }
+
+  /**
+   * 같은 채팅방을 보고 있으면 알림 억제.
+   *
+   * 웹이 알려준 방 ID를 우선 보고, 네이티브 소켓을 직접 쓰는 경로(브리지 CHAT
+   * 액션)를 위해 기존 판정도 남겨둔다.
    */
   private shouldSuppress(payload: ChatPushPayload): boolean {
+    if (this.activeChatRoomId && this.activeChatRoomId === payload.roomId) {
+      return true;
+    }
     try {
       const chat = getChatServiceNative();
       const currentRoom = chat.getCurrentRoomId();

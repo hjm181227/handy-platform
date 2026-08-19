@@ -30,6 +30,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
     error,
     createdOrder,
     chatRoomId,
+    chatDeliveryFailed,
     nextStep,
     prevStep,
     updateData,
@@ -202,6 +203,7 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
           <CompleteStep
             orderData={createdOrder}
             chatRoomId={chatRoomId}
+            chatDeliveryFailed={chatDeliveryFailed}
             onGoToChat={handleGoToChat}
             onContinueShopping={handleContinueShopping}
           />

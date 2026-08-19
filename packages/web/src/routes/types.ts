@@ -1,4 +1,4 @@
-import { ComponentType } from 'react';
+import { ComponentType, ReactElement } from 'react';
 
 /**
  * 레이아웃 타입
@@ -16,7 +16,7 @@ export interface RouteConfig {
   /** 렌더링할 컴포넌트 (함수형 또는 JSX 반환 함수) */
   component?: ComponentType<RouteComponentProps>;
   /** 렌더 함수 (복잡한 props 전달이 필요한 경우) */
-  render?: (props: RouteComponentProps) => JSX.Element;
+  render?: (props: RouteComponentProps) => ReactElement;
   /** 레이아웃 타입 */
   layout?: LayoutType;
   /** 인증 필요 여부 */

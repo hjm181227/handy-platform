@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next';
 import { ProductCard } from '../product/ProductCard';
 import { productService, brandService, imageService } from '../../services/apiService';
-import type { Product, ProductsResponse, BrandDetail, ProductType } from '@handy-platform/shared';
+import type { Product, ProductsResponse, BrandDetail, BrandBusinessInfo, ProductType } from '@handy-platform/shared';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { SortDropdown, PRODUCT_SORT_OPTIONS, parseSortValue } from '../common/SortDropdown';
@@ -98,6 +98,12 @@ export function BrandDetailPage({
   const [brandLoading, setBrandLoading] = useState(true);
   const [brandError, setBrandError] = useState<string | null>(null);
 
+  // 판매자 사업자 정보 (전자상거래법상 신원정보 공개용)
+  // 미승인 판매자 등 서버가 404를 주는 경우에는 null로 두고 섹션 자체를 렌더링하지 않는다
+  const [businessInfo, setBusinessInfo] = useState<BrandBusinessInfo | null>(null);
+  // 기본 펼침 — 전자상거래법 고지이자 카카오 채널 심사 증빙이라 클릭 없이 보여야 한다
+  const [showBusinessInfo, setShowBusinessInfo] = useState(true);
+
   // 인증 상태 (useAuth hook 사용)
   const { currentUser, authLoading } = useAuth();
   const { openLogin } = useAuthModal();
@@ -186,6 +192,33 @@ export function BrandDetailPage({
     fetchBrandInfo();
   }, [decodedSellerUuid]);
 
+  // 판매자 사업자 정보 가져오기 (독립적, 실패해도 페이지에 영향 없음)
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchBusinessInfo = async () => {
+      try {
+        const response = await brandService.getBrandBusinessInfo(decodedSellerUuid);
+        if (!cancelled && response.success && response.data) {
+          setBusinessInfo(response.data);
+        }
+      } catch (err) {
+        // 미승인·미등록 판매자는 404 → 섹션을 노출하지 않는다 (에러 표시도 하지 않음)
+        if (!cancelled) {
+          setBusinessInfo(null);
+        }
+      }
+    };
+
+    setBusinessInfo(null);
+    setShowBusinessInfo(false);
+    fetchBusinessInfo();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [decodedSellerUuid]);
+
   // 브랜드 소유권 확인 (useAuth 사용)
   const isOwner = useMemo(() => {
     if (!currentUser || !decodedSellerUuid) {
@@ -195,7 +228,7 @@ export function BrandDetailPage({
     const isMatch = currentUser.userUuid === decodedSellerUuid;
 
     console.log('🔍 [BrandDetailPage] Ownership check:', {
-      currentUserId: currentUser.id,
+      currentUserUuid: currentUser.userUuid,
       decodedSellerUuid,
       isOwner: isMatch
     });
@@ -1047,6 +1080,60 @@ export function BrandDetailPage({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 판매자 사업자 정보 (전자상거래법상 판매자 신원정보 제공) */}
+      {businessInfo && (
+        <div className="mt-12 rounded-xl border border-gray-200 bg-gray-50 p-5">
+          <button
+            type="button"
+            onClick={() => setShowBusinessInfo(!showBusinessInfo)}
+            aria-expanded={showBusinessInfo}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <span className="text-sm font-medium text-gray-700">판매자 사업자 정보</span>
+            <span className="text-xs text-gray-500">{showBusinessInfo ? '접기' : '펼치기'}</span>
+          </button>
+
+          {showBusinessInfo && (
+            <dl className="mt-4 space-y-2 border-t border-gray-200 pt-4 text-xs text-gray-500">
+              <div className="flex gap-3">
+                <dt className="w-28 shrink-0 text-gray-400">상호</dt>
+                <dd className="text-gray-600">{businessInfo.brandName}</dd>
+              </div>
+              {businessInfo.representativeName && (
+                <div className="flex gap-3">
+                  <dt className="w-28 shrink-0 text-gray-400">대표자</dt>
+                  <dd className="text-gray-600">{businessInfo.representativeName}</dd>
+                </div>
+              )}
+              {businessInfo.businessNumber && (
+                <div className="flex gap-3">
+                  <dt className="w-28 shrink-0 text-gray-400">사업자등록번호</dt>
+                  <dd className="text-gray-600">{businessInfo.businessNumber}</dd>
+                </div>
+              )}
+              {businessInfo.mailOrderSalesNumber && (
+                <div className="flex gap-3">
+                  <dt className="w-28 shrink-0 text-gray-400">통신판매업신고번호</dt>
+                  <dd className="text-gray-600">{businessInfo.mailOrderSalesNumber}</dd>
+                </div>
+              )}
+              {businessInfo.businessAddress && (
+                <div className="flex gap-3">
+                  <dt className="w-28 shrink-0 text-gray-400">사업장 소재지</dt>
+                  <dd className="text-gray-600">{businessInfo.businessAddress}</dd>
+                </div>
+              )}
+              {businessInfo.contactEmail && (
+                <div className="flex gap-3">
+                  <dt className="w-28 shrink-0 text-gray-400">이메일</dt>
+                  <dd className="break-all text-gray-600">{businessInfo.contactEmail}</dd>
+                </div>
+              )}
+            </dl>
+          )}
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, MessageCircleMore, Store, TriangleAlert } from 'lucide-react';
 import { config } from '../config/environment';
 import { useAuthModal } from '../contexts/AuthModalContext';
@@ -66,11 +66,48 @@ const formatLastMessage = (lastMessage?: ChatRoomResponse['lastMessage']): strin
   return lastMessage.text || '';
 };
 
+/** 한 번에 불러오는 방 개수 */
+const PAGE_SIZE = 30;
+
+/**
+ * 파트너 UUID들의 브랜드 표시 정보를 한 번에 조회한다.
+ *
+ * 예전에는 방마다 GET /api/brands/{uuid}를 병렬로 때렸는데, 그 엔드포인트는
+ * 상품 통계 집계와 최근 상품 조회까지 수행해서 방 개수만큼 무거운 쿼리가 돌았다.
+ */
+async function fetchBrandDisplayInfo(
+  partnerIds: string[]
+): Promise<Map<string, { brandName: string; brandProfile: string | null }>> {
+  const result = new Map<string, { brandName: string; brandProfile: string | null }>();
+  const uniqueIds = Array.from(new Set(partnerIds)).filter(Boolean);
+  if (uniqueIds.length === 0) return result;
+
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/api/brands/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sellerUuids: uniqueIds }),
+    });
+    if (!response.ok) return result;
+
+    const data = await response.json();
+    for (const [uuid, brand] of Object.entries(data.brands ?? {})) {
+      result.set(uuid, brand as { brandName: string; brandProfile: string | null });
+    }
+  } catch {
+    // 브랜드 조회 실패는 치명적이지 않다 — username으로 표시된다
+  }
+  return result;
+}
+
 export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
   const [rooms, setRooms] = useState<ChatRoomResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { openLogin } = useAuthModal();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const handleChatClick = (partnerId: string, partnerUsername?: string) => {
     const queryParam = partnerUsername ? `?name=${encodeURIComponent(partnerUsername)}` : '';
@@ -90,22 +127,19 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
     }
   };
 
-  // 채팅방 목록 조회 함수
-  const fetchRooms = useCallback(async () => {
-    if (!currentUser) return;
+  /**
+   * 채팅방 한 페이지를 불러와 브랜드 표시 정보를 붙인다.
+   * @param offset 건너뛸 방 개수 (0이면 처음부터)
+   */
+  const loadRoomPage = useCallback(
+    async (offset: number): Promise<{ rooms: ChatRoomResponse[]; hasMore: boolean } | null> => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('로그인이 필요합니다');
+        return null;
+      }
 
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setError('로그인이 필요합니다');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(`${CHAT_API_URL}/rooms?limit=50`, {
+      const response = await fetch(`${CHAT_API_URL}/rooms?limit=${PAGE_SIZE}&offset=${offset}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -117,52 +151,95 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
       }
 
       const data = await response.json();
-      const roomsData = data.rooms || [];
+      const roomsData: ChatRoomResponse[] = data.rooms || [];
 
-      // 각 partner에 대해 브랜드 정보 조회 (판매자인 경우 브랜드명 사용)
-      const roomsWithDisplayNames = await Promise.all(
-        roomsData.map(async (room: ChatRoomResponse) => {
-          try {
-            const brandResponse = await fetch(
-              `${config.apiBaseUrl}/api/brands/${room.partner.id}`
-            );
-            if (brandResponse.ok) {
-              const brandData = await brandResponse.json();
-              return {
-                ...room,
-                partner: {
-                  ...room.partner,
-                  displayName: brandData.brandName || room.partner.username,
-                  avatar: brandData.brandProfile || room.partner.avatar,
-                },
-              };
-            }
-          } catch {
-            // 브랜드 조회 실패 시 기존 username 사용
-          }
-          return {
-            ...room,
-            partner: {
-              ...room.partner,
-              displayName: room.partner.username,
-            },
-          };
-        })
-      );
+      const brandMap = await fetchBrandDisplayInfo(roomsData.map((room) => room.partner.id));
 
-      setRooms(roomsWithDisplayNames);
+      const withDisplayNames = roomsData.map((room) => {
+        const brand = brandMap.get(room.partner.id);
+        return {
+          ...room,
+          partner: {
+            ...room.partner,
+            displayName: brand?.brandName || room.partner.username,
+            avatar: brand?.brandProfile || room.partner.avatar,
+          },
+        };
+      });
+
+      return { rooms: withDisplayNames, hasMore: Boolean(data.pagination?.hasMore) };
+    },
+    []
+  );
+
+  // 채팅방 목록 처음부터 다시 조회
+  const fetchRooms = useCallback(async () => {
+    if (!currentUser) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const page = await loadRoomPage(0);
+      if (!page) return;
+
+      setRooms(page.rooms);
+      setHasMore(page.hasMore);
     } catch (err) {
       console.error('[ChatPage] Error fetching rooms:', err);
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser, loadRoomPage]);
+
+  // 다음 페이지 이어붙이기
+  const loadMoreRooms = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    try {
+      setIsLoadingMore(true);
+      const page = await loadRoomPage(rooms.length);
+      if (!page) return;
+
+      if (page.rooms.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      // 목록은 최근 메시지순이라 페이지 사이에 중복이 생길 수 있다
+      setRooms((prev) => {
+        const seen = new Set(prev.map((r) => r.roomId));
+        return [...prev, ...page.rooms.filter((r) => !seen.has(r.roomId))];
+      });
+      setHasMore(page.hasMore);
+    } catch (err) {
+      console.error('[ChatPage] Error loading more rooms:', err);
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, rooms.length, loadRoomPage]);
 
   // 초기 로딩
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
+
+  // 목록 끝이 보이면 다음 페이지 로드
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMoreRooms();
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadMoreRooms]);
 
   // 페이지 포커스 시 방 목록 갱신 (채팅방에서 돌아온 경우 unread 배지 업데이트)
   useEffect(() => {
@@ -264,7 +341,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
             </h2>
             <p className="text-sm text-[#A39E99] text-center">{error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={fetchRooms}
               className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D44D5E] transition-colors mt-2"
             >
               다시 시도
@@ -322,6 +399,15 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
               </div>
             </div>
           ))}
+
+          {/* 무한 스크롤 감지 지점 */}
+          {hasMore && <div ref={sentinelRef} className="h-px" />}
+
+          {isLoadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="w-5 h-5 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       )}
 

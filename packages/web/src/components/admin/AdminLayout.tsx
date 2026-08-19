@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/apiService';
 import { useMiniRouter } from '../../utils';
 import type { User } from '@handy-platform/shared';
-import { MdDashboard, MdInventory, MdStore, MdAssignment, MdViewCarousel, MdCameraAlt, MdPalette, MdAnnouncement } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdStore, MdAssignment, MdViewCarousel, MdCameraAlt, MdPalette, MdAnnouncement, MdReport } from 'react-icons/md';
 import { FaUsers, FaClipboardList, FaHome, FaSignOutAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { FiGrid } from 'react-icons/fi';
 import { RiCoupon2Line } from 'react-icons/ri';
@@ -137,6 +137,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
       icon: MdCameraAlt
     },
     {
+      name: '채팅 신고',
+      href: '/admin/chat-reports',
+      icon: MdReport
+    },
+    {
       name: '디자인 툴 구독',
       href: '/admin/design-tool',
       icon: MdPalette
@@ -191,9 +196,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentUser, authLo
               >
                 <IconComponent className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
                 {item.name}
-                {'badge' in item && item.badge > 0 && (
+                {'badge' in item && (item.badge ?? 0) > 0 && (
                   <span className="ml-auto min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-xs font-semibold text-white">
-                    {item.badge > 99 ? '99+' : item.badge}
+                    {(item.badge ?? 0) > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </button>

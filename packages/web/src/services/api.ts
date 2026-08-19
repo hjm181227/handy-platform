@@ -13,7 +13,6 @@ import {
   RegisterForm,
   LoginForm,
   ReviewForm,
-  ProductCategory,
   ApiError,
   withRetry,
   isRetryableMethod,
@@ -385,14 +384,6 @@ class WebApiService {
 
   async getProduct(id: string): Promise<ApiResponse<{ product: Product; relatedProducts: Product[] }>> {
     return this.request<ApiResponse<{ product: Product; relatedProducts: Product[] }>>(API_ENDPOINTS.PRODUCTS.DETAIL(id));
-  }
-
-  async getFeaturedProducts(limit = 8): Promise<ApiResponse<{ products: Product[] }>> {
-    return this.request<ApiResponse<{ products: Product[] }>>(`${API_ENDPOINTS.PRODUCTS.FEATURED}?limit=${limit}`);
-  }
-
-  async getCategories(): Promise<ApiResponse<{ categories: ProductCategory[] }>> {
-    return this.request<ApiResponse<{ categories: ProductCategory[] }>>(API_ENDPOINTS.PRODUCTS.CATEGORIES);
   }
 
   // ======================

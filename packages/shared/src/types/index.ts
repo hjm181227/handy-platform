@@ -1,9 +1,22 @@
 // API Response Types
+/**
+ * 서버 표준 에러 페이로드 (utils/response.ts sendError)
+ * 실응답: { success: false, error: { code, message } }
+ * 일부 레거시 경로/클라이언트 래퍼는 error를 문자열로 넣으므로 union으로 둔다.
+ */
+export interface ApiErrorDetail {
+  code?: string;
+  message?: string;
+  details?: any;
+}
+
 export interface ApiResponse<T = any> {
   success?: boolean;
   message?: string;
   data?: T;
-  error?: string;
+  error?: string | ApiErrorDetail;
+  /** 일부 엔드포인트가 최상위로 내려주는 에러 코드 */
+  errorCode?: string;
   details?: string;
 }
 
@@ -141,6 +154,14 @@ export interface DesignToolSubscribeResponse {
 }
 
 // User Related Types
+/** 회원 등급 — 서버 models/User.ts 의 membershipLevel */
+export type MembershipLevel =
+  | 'Stylish'
+  | 'Gorgeous'
+  | 'Stunning'
+  | 'Iconic'
+  | 'Breathtaking';
+
 export interface User {
   userUuid: string;  // UUID format (f47ac10b-58cc-4372-a567-0e02b2c3d479) - primary identifier
   email: string;
@@ -157,9 +178,13 @@ export interface User {
     balance: number;
     tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   };
+  membershipLevel?: MembershipLevel;
+  membershipLevelStartDate?: string;
   stats?: {
     totalOrders: number;
     totalSpent: number;
+    /** 가입일 (마이페이지 요약 응답에 포함) */
+    joinedDate?: string;
   };
   designToolAccess?: DesignToolAccess;
   createdAt: string;
@@ -183,16 +208,22 @@ export interface KoreanAddress {
   recipientPhone: string;
   postcode: string;
   roadAddress: string;
-  jibunAddress: string;
   detailAddress: string;
-  extraAddress: string;
-  region: KoreanRegion;
+  // 아래 3개는 서버 검증(routes/shippingAddresses.ts koreanAddressSchema)에서 optional 이다.
+  // region 은 우편번호/주소로 서버가 자동 감지하므로 생성·수정 요청 시 보내지 않아도 된다.
+  jibunAddress?: string;
+  extraAddress?: string;
+  region?: KoreanRegion;
   deliveryNote?: string;
   addressName?: string;
   isDefault?: boolean;
 }
 
+/** 배송지 응답 — 요청에서 생략 가능한 필드도 응답에는 항상 채워져 온다 */
 export interface KoreanAddressResponse extends KoreanAddress {
+  jibunAddress: string;
+  extraAddress: string;
+  region: KoreanRegion;
   index: number;
   lastUsed?: string;
   fullAddress: string;
@@ -242,6 +273,8 @@ export interface AuthResponse {
 
 // Product Related Types (네일팁 전용 API 스펙에 맞게 완전 재정의)
 export interface DetailImage {
+  /** 몽고 서브도큐먼트 _id (서버가 detailImages 배열과 함께 내려준다) */
+  _id?: string;
   url: string;
   description?: string;
   order: number;
@@ -313,6 +346,12 @@ export type ProductType = 'original' | 'custom';
 export interface Product {
   productUuid: string;            // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
   productId?: string;             // Sequential ID ("1", "2", "3"...) - legacy compatibility
+  /**
+   * @deprecated 서버는 응답에서 id 를 제거한다(models/Product.ts toJSON transform).
+   * 항상 undefined 이므로 신규 코드는 productUuid 를 쓸 것. `p.productUuid || p.id` 같은
+   * 구버전 폴백만 남아 있어 타입만 유지한다.
+   */
+  id?: string;
   name: string;
   description: string;
   shortDescription?: string;
@@ -345,6 +384,10 @@ export interface Product {
   isFeatured: boolean;
   isNewProduct: boolean;
   tags: string[];
+  /** 판매자 User.userUuid (서버 models/Product.ts). 일부 축약 select 응답에는 없다 */
+  sellerUuid?: string;
+  /** 판매자 브랜드명 스냅샷 (서버 models/Product.ts) */
+  sellerName?: string;
   seller?: Seller;
   stats: ProductStats;
   socialProof?: SocialProof;
@@ -415,8 +458,14 @@ export interface CreateProductRequest {
 }
 
 // 상품 업데이트 요청 인터페이스
+/**
+ * 상품 수정 요청 바디.
+ * 서버는 PUT /api/products/:productUuid 경로 파라미터로 대상을 식별하고
+ * 바디는 Partial<ProductCreateBody> 만 사용하므로 식별자는 선택 항목이다.
+ */
 export interface UpdateProductRequest extends Partial<CreateProductRequest> {
-  productId: string;
+  productUuid?: string;
+  productId?: string;
 }
 
 // 상품 검색/필터 인터페이스 (서버 API 스펙에 완전 일치)
@@ -470,15 +519,31 @@ export interface ProductVariant {
   priceModifier: number;
 }
 
+/**
+ * 장바구니 아이템.
+ * 서버(GET /api/cart)는 itemsBySeller[].items 에 아래 평탄한 형태로 내려준다:
+ *   { productUuid, name, mainImageUrl, options, quantity, price, subtotal }
+ * product/productId 는 mock·레거시 화면 호환용으로만 남아 있어 optional 이다.
+ */
 export interface CartItem {
-  productId: string;  // 서버 API 스펙에 맞춰 추가
-  product: Product;
-  variant?: ProductVariant;
+  // --- 서버 실응답 필드 ---
+  productUuid: string;
+  name?: string;
+  mainImageUrl?: string;
+  brand?: string;
   options?: Record<string, string>;
-  selectedOptions?: Record<string, string>;  // 선택된 옵션들
   quantity: number;
   price: number;
   subtotal: number;
+
+  // --- 레거시/호환 필드 ---
+  id?: string;
+  productId?: string;
+  product?: Product;
+  variant?: ProductVariant;
+  selectedOptions?: Record<string, string>;  // 선택된 옵션들
+  totalPrice?: number;
+  addedAt?: string;
 }
 
 export interface CartTotals {
@@ -621,9 +686,15 @@ export interface RemovedItem {
   nextAvailableMonth: string;
 }
 
+/**
+ * 장바구니.
+ * 서버 GET /api/cart 는 { itemsBySeller, totals } 만 내려주고,
+ * 웹의 mapApiResponseToCart 가 totals 를 CartTotals 형태로 변환한다.
+ * 그 외 필드(id/user/totalPrice 등)는 서버 응답에 없으므로 optional 이다.
+ */
 export interface Cart {
-  id: string;
-  user: string;
+  id?: string;
+  user?: string;
   items: CartItem[];
   // 새로운 판매자별 그룹화 정보
   itemsBySeller?: CartItemsBySeller[];
@@ -631,12 +702,12 @@ export interface Cart {
   summary?: CartSummary;
   // 기존 정보 (하위 호환성)
   totals: CartTotals;
-  totalItems: number;             // 총 아이템 수
-  totalPrice: number;             // 총 가격
+  totalItems?: number;            // 총 아이템 수
+  totalPrice?: number;            // 총 가격
   totalDiscount?: number;         // 총 할인 금액
-  shippingCost: number;           // 배송비
-  finalPrice: number;             // 최종 가격
-  updatedAt: string;
+  shippingCost?: number;          // 배송비
+  finalPrice?: number;            // 최종 가격
+  updatedAt?: string;
 }
 
 // Cart API 응답 타입 업데이트
@@ -661,7 +732,19 @@ export type OrderStatus =
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
+/**
+ * 주문/결제에 저장되는 결제수단.
+ * 서버 models/Order.ts 는 types/PaymentTypes.ts 의 PaymentMethod enum 값을 그대로 저장한다.
+ * 소문자 값들은 구버전 데이터 호환용으로 남겨둔다.
+ */
 export type PaymentMethod =
+  | 'CREDIT_CARD'
+  | 'BANK_TRANSFER'
+  | 'TOSS_PAY'
+  | 'TOSS_PAYMENTS'
+  | 'KAKAO_PAY'
+  | 'NAVER_PAY'
+  // 레거시(구버전 데이터)
   | 'credit_card'
   | 'debit_card'
   | 'paypal'
@@ -836,7 +919,8 @@ export type WebViewMessageType =
   | 'SAVE_IMAGE_RESPONSE'       // 이미지 저장 응답
   | 'NAVIGATE_TO_MEASUREMENT'   // 손톱 사이즈 측정 화면으로 이동
   | 'NAVIGATE_TO_SIZES'         // 손톱 사이즈 목록 화면으로 이동
-  | 'NAVIGATE_BACK';            // 뒤로가기
+  | 'NAVIGATE_BACK'             // 뒤로가기
+  | 'CHAT_ROOM_STATE';          // 웹이 열고 있는 채팅방 ID (푸시 알림 억제용)
 
 export interface WebViewMessage {
   type: WebViewMessageType;
@@ -928,6 +1012,28 @@ export interface AnalyticsEvent {
 }
 
 // Notification Types
+
+/** 인앱 알림 — 서버 models/Notification.ts */
+export type UserNotificationType =
+  | 'order_status'
+  | 'point_earned'
+  | 'promotion'
+  | 'system'
+  | 'review'
+  | 'coupon';
+
+export interface UserNotification {
+  _id: string;
+  type: UserNotificationType;
+  title: string;
+  message: string;
+  data?: Record<string, any>;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PushNotification {
   title: string;
   message: string;
@@ -1413,7 +1519,11 @@ export interface ShippingAddress {
   jibunAddress?: string;          // 지번 주소 (선택)
   detailAddress: string;
   extraAddress?: string;
-  region: 'seoul' | 'metropolitan' | 'general' | 'jeju' | 'remote';
+  /**
+   * 배송 권역. 서버(POST /api/checkout/validate)에서 postcode/roadAddress로
+   * 자동 판별하므로 클라이언트 전송 시에는 선택 항목이다.
+   */
+  region?: 'seoul' | 'metropolitan' | 'general' | 'jeju' | 'remote';
   deliveryNote?: string;
   addressName?: string;
   isDefault?: boolean;           // 기본 배송지 여부
@@ -1699,6 +1809,23 @@ export interface BrandDetail {
 export interface BrandDetailResponse {
   success: boolean;
   data: BrandDetail;
+}
+
+// 판매자 사업자 정보 (전자상거래법상 신원정보 공개용, 비인증 조회)
+// 개인정보 보호를 위해 연락처 전화번호는 서버에서 제공하지 않는다
+export interface BrandBusinessInfo {
+  brandName: string;                     // 상호(브랜드명)
+  representativeName: string | null;     // 대표자명
+  businessNumber: string | null;         // 사업자등록번호 (000-00-00000 포맷)
+  businessAddress: string | null;        // 사업장 소재지 (한 줄 문자열)
+  mailOrderSalesNumber?: string;         // 통신판매업 신고번호 (등록한 판매자만 포함)
+  contactEmail: string | null;           // 연락처 이메일
+}
+
+// 판매자 사업자 정보 응답
+export interface BrandBusinessInfoResponse {
+  success: boolean;
+  data: BrandBusinessInfo;
 }
 
 // 브랜드 업데이트 응답
@@ -2245,14 +2372,16 @@ export interface CheckoutSession {
   sessionId: string;
   orderType: 'standard' | 'custom';  // standard: 장바구니 기반, custom: 견적서 기반
   status?: 'initialized' | 'validated';
+  // 서버 utils/checkoutHelper.ts 의 CheckoutTotals 와 동일
   totals: {
     subtotal: number;
     shippingCost: number;
+    tax: number;
     discount: number;
     couponDiscount: number;
     pointsDiscount: number;
     finalTotal: number;
-    grandTotal?: number;
+    grandTotal: number;
     itemCount: number;
   };
   productionInfo: {
@@ -2304,7 +2433,14 @@ export interface PaymentPrepareResult {
 }
 
 // 결제 수단 타입
-export type PayMethod = 'KAKAO_PAY' | 'NAVER_PAY' | 'CREDIT_CARD';
+/** 서버 types/PaymentTypes.ts 의 PaymentMethod enum과 일치 */
+export type PayMethod =
+  | 'KAKAO_PAY'
+  | 'NAVER_PAY'
+  | 'CREDIT_CARD'
+  | 'BANK_TRANSFER'
+  | 'TOSS_PAY'
+  | 'TOSS_PAYMENTS';
 
 // ============================================
 // Daum Postcode API 관련 타입 정의

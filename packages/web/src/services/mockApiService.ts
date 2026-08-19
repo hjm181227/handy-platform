@@ -8,19 +8,46 @@ import {
   mockApiDelay, 
   mockApiResponse 
 } from '../data/mockData';
-import { Product, Cart, CartItem, ShippingAddress, PaymentMethod, Order } from '@handy-platform/shared';
+import type {
+  MockCart,
+  MockCartItem,
+  MockOrder,
+  MockOrderItem,
+  MockPaymentMethod,
+  MockShippingAddress
+} from '../data/mockData';
 
 /**
  * Mock API Service
  * 실제 서버 API가 준비되면 이 파일을 삭제하고 실제 API 서비스로 교체
+ *
+ * 타입은 shared(현행 서버 스펙)가 아니라 mockData.ts 의 구버전 목 타입을 쓴다.
+ * (USE_MOCK_API 는 false 이므로 런타임에서는 사용되지 않는다.)
  */
+
+/** 결제 전 임시 주문 (구버전 스펙 — 현행 Order 와 다름) */
+interface MockPendingOrder {
+  id: string;
+  items: MockCartItem[];
+  totalItems?: number;
+  totalPrice?: number;
+  totalDiscount?: number;
+  shippingCost?: number;
+  finalPrice?: number;
+  status: string;
+  paymentStatus: string;
+  shippingAddress: MockShippingAddress | null;
+  paymentMethod: MockPaymentMethod | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Mock 장바구니 서비스
 export class MockCartService {
-  private cart: Cart = { ...mockCart };
+  private cart: MockCart = { ...mockCart };
 
   // 호환성을 위한 Cart 변환 헬퍼
-  private addCompatibilityFields(cart: Cart) {
+  private addCompatibilityFields(cart: MockCart) {
     return {
       ...cart,
       totalPrice: cart.totals.subtotal,
@@ -59,7 +86,7 @@ export class MockCartService {
         this.cart.items[existingItemIndex].quantity * product.price;
     } else {
       // 새 아이템 추가
-      const newItem: CartItem = {
+      const newItem: MockCartItem = {
         id: `cart_${Date.now()}`,
         productId,
         product,
@@ -138,17 +165,18 @@ export class MockCartService {
 
 // Mock 배송지 서비스
 export class MockShippingService {
-  private addresses: ShippingAddress[] = [...mockShippingAddresses];
+  private addresses: MockShippingAddress[] = [...mockShippingAddresses];
 
   async getShippingAddresses(): Promise<any> {
     await mockApiDelay(600);
     return mockApiResponse(this.addresses);
   }
 
-  async addShippingAddress(address: Omit<ShippingAddress, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<any> {
+  // 호출부(purchaseApiService)는 현행 shared 타입을 넘기므로 목에서는 형태를 강제하지 않는다
+  async addShippingAddress(address: any): Promise<any> {
     await mockApiDelay(800);
     
-    const newAddress: ShippingAddress = {
+    const newAddress: MockShippingAddress = {
       ...address,
       id: `addr_${Date.now()}`,
       userId: 'user_001',
@@ -167,7 +195,7 @@ export class MockShippingService {
     return mockApiResponse(newAddress);
   }
 
-  async updateShippingAddress(addressId: string, updates: Partial<ShippingAddress>): Promise<any> {
+  async updateShippingAddress(addressId: string, updates: Partial<MockShippingAddress>): Promise<any> {
     await mockApiDelay(700);
     
     const addressIndex = this.addresses.findIndex(addr => addr.id === addressId);
@@ -208,17 +236,17 @@ export class MockShippingService {
 
 // Mock 결제 서비스
 export class MockPaymentService {
-  private paymentMethods: PaymentMethod[] = [...mockPaymentMethods];
+  private paymentMethods: MockPaymentMethod[] = [...mockPaymentMethods];
 
   async getPaymentMethods(): Promise<any> {
     await mockApiDelay(500);
     return mockApiResponse(this.paymentMethods);
   }
 
-  async addPaymentMethod(paymentData: Omit<PaymentMethod, 'id' | 'userId' | 'createdAt'>): Promise<any> {
+  async addPaymentMethod(paymentData: any): Promise<any> {
     await mockApiDelay(1000);
     
-    const newPaymentMethod: PaymentMethod = {
+    const newPaymentMethod: MockPaymentMethod = {
       ...paymentData,
       id: `card_${Date.now()}`,
       userId: 'user_001',
@@ -258,12 +286,12 @@ export class MockPaymentService {
 
 // Mock 주문 서비스
 export class MockOrderService {
-  private orders: Order[] = [];
+  private orders: MockPendingOrder[] = [];
   
-  async createPendingOrder(cart: Cart): Promise<any> {
+  async createPendingOrder(cart: any): Promise<any> {
     await mockApiDelay(800);
     
-    const order: Order = {
+    const order: MockPendingOrder = {
       id: `order_${Date.now()}`,
       items: cart.items,
       totalItems: cart.totalItems,
@@ -300,7 +328,7 @@ export class MockOrderService {
 
 // Mock 상품 서비스
 export class MockProductService {
-  async getProducts(params?: { category?: string; search?: string; limit?: number }): Promise<any> {
+  async getProducts(params?: { category?: string; search?: string; limit?: number | string }): Promise<any> {
     await mockApiDelay(800);
     
     let filteredProducts = [...mockProducts];
@@ -317,7 +345,7 @@ export class MockProductService {
     }
     
     if (params?.limit) {
-      filteredProducts = filteredProducts.slice(0, params.limit);
+      filteredProducts = filteredProducts.slice(0, Number(params.limit));
     }
     
     return mockApiResponse({

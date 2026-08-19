@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RankedProductCard } from '../product/RankedProductCard';
+import type { Product } from '@handy-platform/shared';
 
 type PeriodType = 'weekly' | 'monthly';
 
@@ -63,7 +64,7 @@ export function RankingPage({
   const [rankings, setRankings] = useState<RankingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [meta, setMeta] = useState<RankingResponse['data']['meta'] | null>(null);
+  const [meta, setMeta] = useState<NonNullable<RankingResponse['data']>['meta'] | null>(null);
 
   // API 호출
   const fetchRankings = useCallback(async (period: PeriodType) => {
@@ -97,7 +98,8 @@ export function RankingPage({
   }, [activePeriod, fetchRankings]);
 
   // 랭킹 데이터를 ProductCard 형식으로 변환
-  const mapRankingToProduct = (item: RankingProduct) => ({
+  // 랭킹 API 응답에는 Product 전체 필드가 없으므로 카드 표시에 필요한 부분만 채운 뷰모델이다
+  const mapRankingToProduct = (item: RankingProduct): Product => ({
     id: item.product.productUuid,
     productUuid: item.product.productUuid,
     productId: item.product.productUuid,
@@ -116,7 +118,7 @@ export function RankingPage({
       ordersCount: item.stats.orderCount,
       salesCount: item.stats.salesCount
     }
-  });
+  } as unknown as Product);
 
   const getPeriodLabel = () => {
     if (!meta) return '';

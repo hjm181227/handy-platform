@@ -30,6 +30,7 @@ export function BrandCustomOrderFlow({ sellerUuid, brandName, onBack, onGo }: Br
     error,
     createdOrder,
     chatRoomId,
+    chatDeliveryFailed,
     nextStep,
     prevStep,
     updateData,
@@ -175,6 +176,7 @@ export function BrandCustomOrderFlow({ sellerUuid, brandName, onBack, onGo }: Br
           <CompleteStep
             orderData={createdOrder}
             chatRoomId={chatRoomId}
+            chatDeliveryFailed={chatDeliveryFailed}
             onGoToChat={handleGoToChat}
             onContinueShopping={handleContinueShopping}
           />
