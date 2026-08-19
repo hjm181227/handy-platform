@@ -157,6 +157,7 @@ import CategoryManagement from './components/admin/CategoryManagement';
 import BannerManagement from './components/admin/BannerManagement';
 import AdminCouponManagement from './components/admin/AdminCouponManagement';
 import SnapManagement from './components/admin/SnapManagement';
+import ChatReportManagement from './components/admin/ChatReportManagement';
 import DecorationManagement from './components/admin/decoration';
 import AnnouncementManagement from './components/admin/announcement';
 import SellerApplicationForm from './components/pages/SellerApplicationForm';
@@ -952,6 +953,12 @@ export function Router() {
       screen = (
         <AdminLayout currentUser={currentUser} authLoading={authLoading}>
           <AdminDashboardContent nav={nav} currentUser={currentUser} />
+        </AdminLayout>
+      );
+    } else if (pathname === '/admin/chat-reports') {
+      screen = (
+        <AdminLayout currentUser={currentUser} authLoading={authLoading}>
+          <ChatReportManagement />
         </AdminLayout>
       );
     } else if (pathname === '/admin/users') {

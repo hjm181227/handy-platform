@@ -245,6 +245,88 @@ export async function sendQuoteToChat(
 }
 
 /**
+ * 상품 문의 카드 데이터
+ */
+export interface ProductInquiryData {
+  productUuid: string;
+  name: string;
+  imageUrl?: string;
+  price?: number;
+}
+
+/**
+ * 상품 페이지에서 판매자에게 문의를 시작한다.
+ *
+ * 어떤 상품에 대한 문의인지 카드로 먼저 붙여야 판매자가 맥락을 알 수 있다.
+ * 카드 없이 방만 열면 판매자는 "무슨 상품이요?"부터 물어야 한다.
+ *
+ * @param sellerUuid 판매자 UUID
+ * @param product 문의 대상 상품
+ */
+export async function sendProductInquiryToChat(
+  sellerUuid: string,
+  product: ProductInquiryData
+): Promise<SendOrderToChatResult> {
+  const token = localStorage.getItem('accessToken');
+
+  if (!token) {
+    return { success: false, error: '로그인이 필요합니다' };
+  }
+
+  if (isChatMarkedDown()) {
+    return { success: false, error: '채팅 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.' };
+  }
+
+  try {
+    const ensureResponse = await chatFetch(`${CHAT_API_URL}/rooms/ensure`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ partnerId: sellerUuid }),
+    });
+
+    if (!ensureResponse.ok) {
+      throw new Error('채팅방을 열지 못했습니다');
+    }
+
+    const roomData = await ensureResponse.json();
+
+    try {
+      await postChatMessage(token, {
+        roomId: roomData._id,
+        clientMessageId: `inquiry-${product.productUuid}-${Date.now()}`,
+        text: '상품에 대해 문의합니다',
+        messageType: 'product_inquiry',
+        metadata: {
+          productUuid: product.productUuid,
+          name: product.name,
+          imageUrl: product.imageUrl,
+          price: product.price,
+        },
+      });
+    } catch (deliveryError) {
+      console.error('[orderChatService] Product inquiry delivery failed:', deliveryError);
+      return {
+        success: false,
+        deliveryFailed: true,
+        roomId: sellerUuid,
+        error: deliveryError instanceof Error ? deliveryError.message : DELIVERY_FAILED_MESSAGE,
+      };
+    }
+
+    return { success: true, roomId: sellerUuid };
+  } catch (error) {
+    console.error('[orderChatService] Product inquiry error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다',
+    };
+  }
+}
+
+/**
  * 채팅방 ID로 이동할 경로 생성
  */
 export function getChatRoomPath(roomId: string): string {

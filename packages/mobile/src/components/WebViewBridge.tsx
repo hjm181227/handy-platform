@@ -95,7 +95,13 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'closeChat':
           console.log('🔵 [BRIDGE] closeChat 메시지 수신');
+          notificationService.setActiveChatRoom(null);
           DeviceEventEmitter.emit('closeChat');
+          break;
+        case 'CHAT_ROOM_STATE':
+          // 채팅방은 WebView 안의 웹 소켓이 여는데, 알림 억제는 네이티브가
+          // 판단한다. 웹이 현재 보고 있는 방을 알려줘야 그 방의 푸시를 끌 수 있다.
+          handleChatRoomState(message.data);
           break;
         default:
           console.log('🔴 [BRIDGE] 알 수 없는 메시지 타입:', message.type);
@@ -361,6 +367,18 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   const handleNavigateBack = () => {
     console.log('🔵 [BRIDGE] Navigate back');
     DeviceEventEmitter.emit('navigateBack');
+  };
+
+  /**
+   * 웹이 알려주는 "현재 열려 있는 채팅방" 상태.
+   *
+   * 예전에는 네이티브 소켓 싱글턴의 currentRoomId를 봤는데, 실제 방 입장은
+   * WebView 안의 웹 소켓이 해서 그 값이 늘 null이었다. 그래서 사용자가 보고
+   * 있는 방의 메시지도 OS 알림으로 계속 울렸다.
+   */
+  const handleChatRoomState = (data: any) => {
+    const roomId = data && typeof data.roomId === 'string' ? data.roomId : null;
+    notificationService.setActiveChatRoom(roomId);
   };
 
   /**

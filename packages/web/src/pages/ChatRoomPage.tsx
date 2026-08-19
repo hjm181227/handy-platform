@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, Plus, Send, EllipsisVertical, Store, X } from 'lucide-react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ChevronLeft, Plus, Send, EllipsisVertical, Store, X, ArrowDown } from 'lucide-react';
 import { useChat } from '../lib/chat';
 import { useAuth } from '../hooks/useAuth';
 import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCard';
@@ -7,6 +7,9 @@ import { CustomOrderBottomSheet } from '../components/chat/CustomOrderBottomShee
 import { QuoteMessageCard } from '../components/chat/QuoteMessageCard';
 import { QuoteBottomSheet } from '../components/chat/QuoteBottomSheet';
 import { ImageMessageBubble } from '../components/chat/ImageMessageBubble';
+import { ProductInquiryCard } from '../components/chat/ProductInquiryCard';
+import { ReportDialog } from '../components/chat/ReportDialog';
+import { blockUser, leaveChatRoom } from '../lib/chat/moderationService';
 import { config } from '../config/environment';
 import type { Message } from '../lib/chat/types';
 
@@ -41,17 +44,26 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         return;
       }
 
-      // 브랜드 정보 조회 시도 (판매자인지 확인)
+      // 브랜드 정보 조회 시도 (판매자인지 확인).
+      // GET /api/brands/{uuid}는 상품 통계 집계까지 도는 무거운 엔드포인트라,
+      // 표시용 이름·프로필만 필요한 여기서는 경량 배치 엔드포인트를 쓴다.
       try {
-        const response = await fetch(`${config.apiBaseUrl}/api/brands/${roomId}`);
+        const response = await fetch(`${config.apiBaseUrl}/api/brands/batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sellerUuids: [roomId] }),
+        });
         if (response.ok) {
-          const brandData = await response.json();
-          setDisplayName(brandData.brandName || roomId);
-          if (brandData.brandProfile) {
-            setPartnerAvatar(brandData.brandProfile);
+          const data = await response.json();
+          const brand = data.brands?.[roomId];
+          if (brand) {
+            setDisplayName(brand.brandName || roomId);
+            if (brand.brandProfile) {
+              setPartnerAvatar(brand.brandProfile);
+            }
           }
         }
-        // 404 등의 경우 roomId 유지 (구매자)
+        // 판매자가 아니면 결과에 없다 → roomId 유지 (구매자)
       } catch {
         // 브랜드 조회 실패 시 roomId 유지
       }
@@ -66,7 +78,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 로그인 체크 - 토큰 없으면 로그인 페이지로 리다이렉트
   useEffect(() => {
     if (!token) {
-      alert('로그인이 필요한 서비스입니다.');
+      // alert()은 리다이렉트를 막고 사용자를 붙잡아둔다. 아래 안내 화면으로 대체.
       nav('/login');
     }
   }, [token, nav]);
@@ -92,20 +104,50 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     sendImage,
     isLoading,
     isConnected,
+    isDegraded,
     error,
     clearError,
+    retryConnection,
+    notifyTyping,
+    stopTyping,
     isUploading,
     uploadProgress,
     isPartnerTyping,
     retryMessage,
+    deleteMessage,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
+    actualRoomId,
   } = useChat(roomId, token, partnerUsernameFromUrl);
 
   // 자동 스크롤을 위한 ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  /** 사용자가 대화 하단 근처를 보고 있는지 — 자동 스크롤 여부를 이 값으로 판단한다 */
+  const isNearBottomRef = useRef(true);
+  /** 스크롤 직전의 높이·위치. 과거 메시지를 붙인 뒤 위치를 되돌리는 데 쓴다 */
+  const lastScrollRef = useRef({ height: 0, top: 0 });
+  /** 직전 렌더의 메시지 목록 상태 (붙임 방향 판별용) */
+  const prevListRef = useRef<{ firstId: string | null; length: number }>({ firstId: null, length: 0 });
+  /** 화면 밖에서 새 메시지가 도착했을 때 표시할 점프 버튼 */
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  /** 첨부 파일 검증 실패 등 화면 내 안내 */
+  const [localNotice, setLocalNotice] = useState<string | null>(null);
+
+  // ⋮ 메뉴 (나가기·차단·신고)
+  const [showRoomMenu, setShowRoomMenu] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'leave' | 'block' | null>(null);
+  const [menuBusy, setMenuBusy] = useState(false);
+  /** 삭제 버튼을 띄울 내 메시지 (탭하면 열린다) */
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+    isNearBottomRef.current = true;
+    setHasNewMessages(false);
+  };
 
   // 주문서 바텀 시트 상태
   const [showOrderSheet, setShowOrderSheet] = useState(false);
@@ -144,16 +186,19 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
     // 10MB 제한
     if (file.size > 10 * 1024 * 1024) {
-      alert('이미지 크기는 10MB 이하만 가능합니다.');
+      setLocalNotice('이미지 크기는 10MB 이하만 보낼 수 있습니다. 더 작은 파일을 선택해주세요.');
+      e.target.value = '';
       return;
     }
 
     // 이미지 타입 검증
     if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('JPG, PNG, WebP 이미지만 지원합니다.');
+      setLocalNotice('JPG, PNG, WebP 이미지만 보낼 수 있습니다.');
+      e.target.value = '';
       return;
     }
 
+    setLocalNotice(null);
     const previewUrl = URL.createObjectURL(file);
     setSelectedImage({ file, previewUrl });
 
@@ -178,17 +223,20 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     }
   };
 
-  // 메시지 변경 시 자동 스크롤
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // 스크롤 위로 올렸을 때 이전 메시지 로드
+  // 스크롤 추적 + 위로 올렸을 때 이전 메시지 로드
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      isNearBottomRef.current = distanceFromBottom < 120;
+      if (isNearBottomRef.current) setHasNewMessages(false);
+
+      // 과거 메시지를 붙인 뒤 위치를 복원하려면 붙이기 직전의 값이 필요하다
+      lastScrollRef.current = { height: container.scrollHeight, top: container.scrollTop };
+
       if (container.scrollTop < 60 && hasMoreMessages && !isLoadingMore) {
         loadMoreMessages();
       }
@@ -198,12 +246,85 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
     return () => container.removeEventListener('scroll', handleScroll);
   }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
 
+  /**
+   * 메시지 목록이 바뀔 때의 스크롤 처리.
+   *
+   * 예전에는 messages가 바뀔 때마다 무조건 맨 아래로 스크롤해서,
+   * 위로 올려 과거 메시지를 불러오면 즉시 바닥으로 튕겨 나갔다.
+   * 이제 붙은 방향을 구분해서 처리한다:
+   *   - 위쪽에 붙음(과거 로딩) → 보던 위치 유지
+   *   - 아래쪽에 붙음(새 메시지) → 바닥 근처였으면 따라가고, 아니면 점프 버튼
+   */
+  useLayoutEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const prev = prevListRef.current;
+    const firstId = messages[0]?.id ?? null;
+    const grew = messages.length > prev.length;
+    const prependedOlder = grew && prev.firstId !== null && firstId !== prev.firstId;
+
+    if (prev.length === 0 && messages.length > 0) {
+      // 방에 처음 들어왔을 때는 애니메이션 없이 최신 메시지부터 보여준다
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      isNearBottomRef.current = true;
+    } else if (prependedOlder) {
+      const { height, top } = lastScrollRef.current;
+      container.scrollTop = container.scrollHeight - height + top;
+    } else if (grew) {
+      if (isNearBottomRef.current) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        setHasNewMessages(true);
+      }
+    }
+
+    prevListRef.current = { firstId, length: messages.length };
+    lastScrollRef.current = { height: container.scrollHeight, top: container.scrollTop };
+  }, [messages]);
+
   const handleSend = () => {
+    stopTyping();
     if (selectedImage) {
       handleImageSend();
     } else {
       sendMessage(inputText);
     }
+  };
+
+  // 입력할 때마다 상대에게 "입력 중"을 알린다 (훅 내부에서 스로틀됨)
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+    if (e.target.value.trim()) {
+      notifyTyping();
+    } else {
+      stopTyping();
+    }
+  };
+
+  // 나가기·차단은 되돌리기 번거로운 동작이라 확인을 한 번 거친다
+  const confirmPendingAction = async () => {
+    if (!pendingAction || !actualRoomId) return;
+    setMenuBusy(true);
+
+    const result =
+      pendingAction === 'leave'
+        ? await leaveChatRoom(actualRoomId)
+        : await blockUser(roomId);
+
+    setMenuBusy(false);
+    setPendingAction(null);
+
+    if (!result.success) {
+      setLocalNotice(result.error ?? '요청을 처리하지 못했습니다');
+      return;
+    }
+    nav('/chat');
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    setSelectedMessageId(null);
+    await deleteMessage(messageId);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -301,21 +422,103 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             </div>
           </div>
 
-          {/* More */}
-          <button className="flex-shrink-0">
-            <EllipsisVertical className="w-6 h-6 text-[#131211]" />
-          </button>
+          {/* More — 나가기·차단·신고 */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setShowRoomMenu((open) => !open)}
+              aria-label="채팅방 메뉴"
+              aria-haspopup="menu"
+              aria-expanded={showRoomMenu}
+            >
+              <EllipsisVertical className="w-6 h-6 text-[#131211]" />
+            </button>
+
+            {showRoomMenu && (
+              <>
+                {/* 바깥을 누르면 닫힌다 */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowRoomMenu(false)}
+                />
+                <div
+                  role="menu"
+                  className="absolute right-0 top-8 z-20 w-40 bg-white rounded-xl shadow-lg border border-[#E5E0DC] overflow-hidden"
+                >
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setShowRoomMenu(false);
+                      setPendingAction('leave');
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-[#131211] hover:bg-[#F7F5F3]"
+                  >
+                    채팅방 나가기
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setShowRoomMenu(false);
+                      setPendingAction('block');
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-[#131211] hover:bg-[#F7F5F3] border-t border-[#F5F3F1]"
+                  >
+                    차단하기
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setShowRoomMenu(false);
+                      setShowReportDialog(true);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-[#E85A6B] hover:bg-[#FFF8F5] border-t border-[#F5F3F1]"
+                  >
+                    신고하기
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
         <div className="h-px bg-[#E5E0DC]" />
       </div>
 
+      {/* 연결 끊김 배너 — 이 상태에서는 전송이 불가능하므로 재시도를 제공한다 */}
+      {isDegraded && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-between gap-3">
+          <span className="text-sm text-amber-800 flex-1">
+            채팅 서버에 연결하지 못했습니다. 메시지를 보낼 수 없습니다.
+          </span>
+          <button
+            onClick={retryConnection}
+            className="flex-shrink-0 px-3 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+          >
+            다시 연결
+          </button>
+        </div>
+      )}
+
       {/* Error Banner */}
-      {error && (
+      {error && !isDegraded && (
         <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-red-700 flex-1">{error}</span>
           <button
             onClick={clearError}
             className="ml-2 flex-shrink-0"
+            aria-label="오류 닫기"
+          >
+            <X className="w-4 h-4 text-red-500" />
+          </button>
+        </div>
+      )}
+
+      {/* 첨부 검증 등 화면 내 안내 */}
+      {localNotice && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-red-700 flex-1">{localNotice}</span>
+          <button
+            onClick={() => setLocalNotice(null)}
+            className="ml-2 flex-shrink-0"
+            aria-label="안내 닫기"
           >
             <X className="w-4 h-4 text-red-500" />
           </button>
@@ -323,7 +526,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
       )}
 
       {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto relative">
         <div className="max-w-4xl mx-auto px-4 py-4">
           {/* 이전 메시지 로딩 스피너 */}
           {isLoadingMore && (
@@ -401,6 +604,16 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                           재전송
                         </button>
                       )}
+
+                      {/* 내 메시지를 탭하면 삭제 버튼이 열린다 */}
+                      {isMe && selectedMessageId === message.id && !message.deleted && (
+                        <button
+                          onClick={() => handleDeleteMessage(message.id)}
+                          className="text-[11px] text-[#E85A6B] font-semibold self-end"
+                        >
+                          삭제
+                        </button>
+                      )}
                     <div className="flex items-end gap-1.5">
                       {/* 내 메시지: 읽음 표시 + 타임스탬프 (왼쪽) */}
                       {isMe && isGroupEnd && (
@@ -412,8 +625,19 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         </div>
                       )}
 
-                      {/* 이미지 메시지 */}
-                      {message.messageType === 'image' && message.fileUrl ? (
+                      {/* 삭제된 메시지 — 목록에서 사라지지 않고 자리표시자로 남는다 */}
+                      {message.deleted ? (
+                        <div
+                          className={`px-3.5 py-2.5 max-w-[280px] rounded-[16px] border border-dashed ${
+                            isMe ? 'border-[#E5D5D8]' : 'border-[#E5E0DC]'
+                          }`}
+                        >
+                          <p className="text-sm text-[#A39E99] italic">
+                            삭제된 메시지입니다
+                          </p>
+                        </div>
+                      ) : /* 이미지 메시지 */
+                      message.messageType === 'image' && message.fileUrl ? (
                         <ImageMessageBubble
                           fileUrl={message.fileUrl}
                           isMe={isMe}
@@ -427,6 +651,16 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                           isMine={isMe}
                           onClick={() => handleOrderCardClick(message.metadata!.customOrderId as string)}
                         />
+                      ) : /* 상품 문의 카드 */
+                      message.messageType === 'product_inquiry' && message.metadata?.productUuid ? (
+                        <ProductInquiryCard
+                          productUuid={message.metadata.productUuid}
+                          name={message.metadata.name ?? '상품'}
+                          imageUrl={message.metadata.imageUrl}
+                          price={message.metadata.price}
+                          isMine={isMe}
+                          onClick={(productUuid) => nav(`/product/${productUuid}`)}
+                        />
                       ) : message.messageType === 'custom_order' && message.metadata?.type === 'quote' && message.metadata?.quoteId ? (
                         /* 견적서 메시지 */
                         <QuoteMessageCard
@@ -435,12 +669,20 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                           onClick={() => handleQuoteCardClick(message.metadata!.quoteId as string)}
                         />
                       ) : (
-                        /* 일반 텍스트 메시지 버블 */
+                        /* 일반 텍스트 메시지 버블 — 내 메시지는 탭하면 삭제 버튼이 열린다 */
                         <div
+                          onClick={
+                            isMe
+                              ? () =>
+                                  setSelectedMessageId((current) =>
+                                    current === message.id ? null : message.id
+                                  )
+                              : undefined
+                          }
                           className={`
                             px-3.5 py-2.5 transition-all max-w-[280px]
                             ${isMe
-                              ? 'bg-[#FFE5EA] text-[#131211] rounded-[16px_4px_16px_16px]'
+                              ? 'bg-[#FFE5EA] text-[#131211] rounded-[16px_4px_16px_16px] cursor-pointer'
                               : 'bg-white text-[#131211] rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'
                             }
                           `}
@@ -484,6 +726,21 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         </div>
       </div>
 
+      {/* 새 메시지 점프 버튼 — 위쪽을 보고 있을 때만 나타난다 */}
+      {hasNewMessages && (
+        <div className="relative">
+          <button
+            onClick={() => scrollToBottom()}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5
+                       px-4 py-2 bg-[#E85A6B] text-white text-xs font-semibold rounded-full
+                       shadow-lg hover:bg-[#D44D5E] transition-colors"
+          >
+            <ArrowDown className="w-3.5 h-3.5" />
+            새 메시지
+          </button>
+        </div>
+      )}
+
       {/* Input */}
       <div className="bg-white flex-shrink-0" style={{ borderTop: '1px solid #E5E0DC' }}>
         <div className="max-w-4xl mx-auto px-4 pt-2.5 pb-8">
@@ -524,19 +781,26 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
             <textarea
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              placeholder={selectedImage ? '이미지를 전송합니다...' : '메시지 입력...'}
-              className="flex-1 h-10 px-4 py-2.5 bg-[#F7F5F3] rounded-[20px] resize-none focus:outline-none text-sm text-[#131211] placeholder:text-[#A39E99]"
+              onBlur={stopTyping}
+              placeholder={
+                isDegraded
+                  ? '연결이 끊겨 메시지를 보낼 수 없습니다'
+                  : selectedImage
+                    ? '이미지를 전송합니다...'
+                    : '메시지 입력...'
+              }
+              className="flex-1 h-10 px-4 py-2.5 bg-[#F7F5F3] rounded-[20px] resize-none focus:outline-none text-sm text-[#131211] placeholder:text-[#A39E99] disabled:opacity-60"
               rows={1}
-              disabled={!!selectedImage}
+              disabled={!!selectedImage || isDegraded}
             />
             <button
               onClick={handleSend}
-              disabled={(!inputText.trim() && !selectedImage) || isUploading}
+              disabled={(!inputText.trim() && !selectedImage) || isUploading || isDegraded}
               className={`
                 w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0
-                ${(inputText.trim() || selectedImage) && !isUploading
+                ${(inputText.trim() || selectedImage) && !isUploading && !isDegraded
                   ? 'bg-[#E85A6B] text-white hover:bg-[#D44D5E]'
                   : 'bg-[#F7F5F3] text-[#A39E99] cursor-not-allowed'
                 }
@@ -573,6 +837,58 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
         quoteId={selectedQuoteId}
         currentUserUuid={currentUser?.userUuid}
         onPurchase={handlePurchase}
+      />
+
+      {/* 나가기·차단 확인 */}
+      {pendingAction && (
+        <>
+          <div
+            className="fixed inset-0 z-[70] bg-black/50"
+            onClick={() => !menuBusy && setPendingAction(null)}
+          />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div
+              className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6"
+              role="alertdialog"
+              aria-modal="true"
+            >
+              <h2 className="text-lg font-bold text-[#131211] mb-2">
+                {pendingAction === 'leave' ? '채팅방을 나갈까요?' : `${roomName}님을 차단할까요?`}
+              </h2>
+              <p className="text-sm text-[#6B6560] mb-6">
+                {pendingAction === 'leave'
+                  ? '내 목록에서만 사라지고, 새 메시지가 오면 다시 나타납니다.'
+                  : '서로 메시지를 주고받을 수 없게 됩니다. 설정에서 차단을 해제할 수 있습니다.'}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPendingAction(null)}
+                  disabled={menuBusy}
+                  className="flex-1 py-3 bg-[#F7F5F3] text-[#131211] rounded-xl font-semibold hover:bg-[#EDE9E5] transition-colors disabled:opacity-50"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={confirmPendingAction}
+                  disabled={menuBusy}
+                  className="flex-1 py-3 bg-[#E85A6B] text-white rounded-xl font-semibold hover:bg-[#D44D5E] transition-colors disabled:opacity-50"
+                >
+                  {menuBusy ? '처리 중...' : pendingAction === 'leave' ? '나가기' : '차단하기'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 신고 */}
+      <ReportDialog
+        isOpen={showReportDialog}
+        onClose={() => setShowReportDialog(false)}
+        reportedId={roomId}
+        roomId={actualRoomId}
+        partnerName={roomName}
+        onReported={() => setLocalNotice('신고가 접수되었습니다. 확인 후 조치하겠습니다.')}
       />
     </div>
   );

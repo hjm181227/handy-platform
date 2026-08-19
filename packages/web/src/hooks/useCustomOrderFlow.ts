@@ -511,7 +511,7 @@ export function useCustomOrderFlow(productId: string) {
       setState(prev => ({
         ...prev,
         submitting: false,
-        createdOrder: orderResponse.data,
+        createdOrder: orderResponse.data ?? null,
         chatRoomId,
         chatDeliveryFailed,
       }));

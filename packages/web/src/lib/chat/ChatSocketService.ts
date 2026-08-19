@@ -12,6 +12,8 @@ type TypingCallback = (data: TypingIndicator) => void;
 type ConnectionCallback = () => void;
 type ErrorCallback = (error: Error) => void;
 type ReadCallback = (data: { roomId: string; userId: string; readAt: string }) => void;
+type UnreadTotalCallback = (data: { total: number }) => void;
+type DeletedCallback = (data: { roomId: string; messageId: string }) => void;
 
 /** 메시지 ack를 기다리는 최대 시간. 초과하면 실패로 보고하고 재전송을 유도한다. */
 const ACK_TIMEOUT_MS = 10000;
@@ -37,6 +39,8 @@ export class ChatSocketService {
   private disconnectCallbacks: Set<ConnectionCallback> = new Set();
   private errorCallbacks: Set<ErrorCallback> = new Set();
   private readCallbacks: Set<ReadCallback> = new Set();
+  private unreadTotalCallbacks: Set<UnreadTotalCallback> = new Set();
+  private deletedCallbacks: Set<DeletedCallback> = new Set();
 
   private constructor() {
     // Private constructor for singleton
@@ -143,8 +147,18 @@ export class ChatSocketService {
 
         // message:read 이벤트
         this.socket.on('message:read', (data: { roomId: string; userId: string; readAt: string }) => {
-          console.log('[ChatSocket] Message read event:', data);
           this.readCallbacks.forEach(cb => cb(data));
+        });
+
+        // 메시지 삭제 (상대가 지운 경우에도 즉시 자리표시자로 바뀐다)
+        this.socket.on('message:deleted', (data: { roomId: string; messageId: string }) => {
+          this.deletedCallbacks.forEach(cb => cb(data));
+        });
+
+        // 헤더 배지용 미확인 총합. 이 소켓 하나로 방 화면과 배지를 모두 처리해,
+        // 방에 들어갈 때 접속이 두 개 열리던 문제를 없앤다.
+        this.socket.on('chat:unread-total', (data: { total: number }) => {
+          this.unreadTotalCallbacks.forEach(cb => cb(data));
         });
 
       } catch (error) {
@@ -344,6 +358,22 @@ export class ChatSocketService {
   }
 
   /**
+   * 미확인 총합 이벤트 구독 (헤더 배지)
+   */
+  public onUnreadTotal(callback: UnreadTotalCallback): () => void {
+    this.unreadTotalCallbacks.add(callback);
+    return () => this.unreadTotalCallbacks.delete(callback);
+  }
+
+  /**
+   * 메시지 삭제 이벤트 구독
+   */
+  public onMessageDeleted(callback: DeletedCallback): () => void {
+    this.deletedCallbacks.add(callback);
+    return () => this.deletedCallbacks.delete(callback);
+  }
+
+  /**
    * 읽음 처리 전송
    */
   public emitMarkAsRead(roomId: string): void {
@@ -361,6 +391,8 @@ export class ChatSocketService {
     this.disconnectCallbacks.clear();
     this.errorCallbacks.clear();
     this.readCallbacks.clear();
+    this.unreadTotalCallbacks.clear();
+    this.deletedCallbacks.clear();
   }
 }
 

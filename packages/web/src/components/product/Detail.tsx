@@ -6,7 +6,7 @@ import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
 import { Stars } from '../ui';
 import { IoMdStar } from 'react-icons/io';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComments } from 'react-icons/fa';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { useLikes } from '../../hooks/useLikes';
 import ProductQA from './ProductQA';
@@ -57,6 +57,9 @@ export function Detail({
   const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+  // 판매자 문의(채팅) 시작 상태
+  const [startingInquiry, setStartingInquiry] = useState(false);
+  const [inquiryError, setInquiryError] = useState<string | null>(null);
   const [shape, setShape] = useState<string>("ROUND");
   const [length, setLength] = useState<string>("SHORT");
   const [qty, setQty] = useState<number>(1);
@@ -435,6 +438,50 @@ export function Detail({
     : '';
 
   // 내부 이동(추천 영역 등에서 사용) — 라우터 nav 없이도 동작하게
+  /**
+   * 판매자에게 문의 — 채팅방을 열고 어떤 상품인지 카드로 먼저 붙인다.
+   *
+   * 카드 없이 방만 열면 판매자는 "무슨 상품이요?"부터 물어야 하므로,
+   * 상품 정보 전송이 성공한 뒤에 채팅방으로 이동한다.
+   */
+  const contactSeller = async () => {
+    if (!currentUser) {
+      openLogin();
+      return;
+    }
+
+    const p = product;
+    const sellerUuid = (p as any)?.sellerUuid as string | undefined;
+    if (!p || !sellerUuid) {
+      setInquiryError('이 상품은 판매자 정보가 없어 문의할 수 없습니다.');
+      return;
+    }
+
+    setStartingInquiry(true);
+    setInquiryError(null);
+
+    const { sendProductInquiryToChat } = await import('../../lib/chat/orderChatService');
+    const result = await sendProductInquiryToChat(sellerUuid, {
+      productUuid: p.productUuid,
+      name: p.name,
+      imageUrl: p.mainImageUrl,
+      price: p.salePrice || p.price,
+    });
+
+    setStartingInquiry(false);
+
+    if (!result.success) {
+      setInquiryError(result.error ?? '문의를 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    if (onGo) {
+      onGo(`/chat/${sellerUuid}`);
+    } else {
+      goTo(`/chat/${sellerUuid}`);
+    }
+  };
+
   const goTo = (to: string) => {
     window.history.pushState({}, "", to);
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -1018,6 +1065,25 @@ export function Detail({
             </div>
           )}
 
+          {/* 판매자에게 문의 — 채팅방을 열고 상품 카드를 먼저 보낸다 */}
+          {(p as any)?.sellerUuid && (
+            <div className="pt-2">
+              <button
+                onClick={contactSeller}
+                disabled={startingInquiry}
+                className="w-full rounded-lg border border-gray-300 py-2.5 text-sm font-medium
+                           flex items-center justify-center gap-2 hover:bg-gray-50
+                           transition-colors disabled:opacity-50"
+              >
+                <FaRegComments className="w-4 h-4" />
+                {startingInquiry ? '채팅방 여는 중...' : '판매자에게 문의'}
+              </button>
+              {inquiryError && (
+                <p className="mt-2 text-xs text-red-600">{inquiryError}</p>
+              )}
+            </div>
+          )}
+
           {/* 도구 */}
           <div className="flex items-center gap-3 text-sm pt-1">
             <button onClick={() => handleLike(id)} className="flex items-center gap-1 hover:text-gray-600">
@@ -1083,6 +1149,19 @@ export function Detail({
       {/* 모바일 하단 고정 구매바 - productType에 따라 분기 */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white p-3 md:hidden">
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
+          {/* 판매자 문의 — 좁은 화면에서는 아이콘 버튼으로 자리를 아낀다 */}
+          {(p as any)?.sellerUuid && (
+            <button
+              onClick={contactSeller}
+              disabled={startingInquiry}
+              aria-label="판매자에게 문의"
+              className="flex-shrink-0 w-10 h-10 rounded-lg border border-gray-300
+                         flex items-center justify-center hover:bg-gray-50
+                         transition-colors disabled:opacity-50"
+            >
+              <FaRegComments className="w-4 h-4" />
+            </button>
+          )}
           <div className="text-base font-semibold">
             {isStocked ? money(unitPrice * qty) : money(salePrice)}
             {isStocked && qty > 1 && (

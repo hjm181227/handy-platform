@@ -5,7 +5,7 @@ import {
   CHAT_ENDPOINTS,
   getCurrentEnvironment,
 } from '@handy-platform/shared/src/config/api';
-import { getChatServiceWeb } from '@handy-platform/shared/src/services/chat/ChatService.web';
+import { getChatSocket } from '../lib/chat/ChatSocketService';
 import { chatFetch, isChatMarkedDown } from '../lib/chat/chatHealth';
 
 /**
@@ -13,6 +13,10 @@ import { chatFetch, isChatMarkedDown } from '../lib/chat/chatHealth';
  * - 마운트 시: HTTP GET /chat/unread-total로 초기 카운트 동기화
  * - 이후: Socket.IO 'chat:unread-total' 이벤트로 실시간 업데이트
  * - 탭 복귀 시: 추가 1회 HTTP refetch (Socket 재연결 갭 보완)
+ *
+ * 소켓은 채팅방 화면과 같은 싱글턴(ChatSocketService)을 쓴다. 예전에는 배지가
+ * 별도 구현(shared/ChatService.web)을 써서, 방에 들어가 있는 동안 같은 사용자가
+ * 소켓 연결을 두 개 물고 있었다.
  */
 export function useChatUnreadCount() {
   const [count, setCount] = useState(0);
@@ -80,18 +84,23 @@ export function useChatUnreadCount() {
     // 채팅 서버 다운 상태면 소켓 연결은 시도하지 않는다 (탭 복귀 refetch가
     // 성공하면 다운 표시가 풀리고, 다음 마운트부터 소켓이 다시 붙는다)
     if (!isChatMarkedDown()) {
-      const chat = getChatServiceWeb();
-      chat
-        .connect({ token })
-        .then(() => {
-          if (cancelled) return;
-          unsubscribe = chat.onUnreadTotal(({ total }) => {
-            setCount(typeof total === 'number' ? total : 0);
-          });
-        })
-        .catch((e) => {
-          console.warn('[useChatUnreadCount] Socket connect failed:', e);
-        });
+      const chat = getChatSocket();
+      // 구독을 먼저 걸어야 연결 직후 도착하는 이벤트를 놓치지 않는다
+      unsubscribe = chat.onUnreadTotal(({ total }) => {
+        setCount(typeof total === 'number' ? total : 0);
+      });
+      chat.connect({ token }).catch((e) => {
+        console.warn('[useChatUnreadCount] Socket connect failed:', e);
+      });
+      // 재연결되면 그동안 놓친 변화를 HTTP로 한 번 맞춘다
+      const unsubscribeConnect = chat.onConnect(() => {
+        if (!cancelled) void fetchTotal();
+      });
+      const prevUnsubscribe = unsubscribe;
+      unsubscribe = () => {
+        prevUnsubscribe();
+        unsubscribeConnect();
+      };
     }
 
     return () => {
