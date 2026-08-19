@@ -1811,6 +1811,23 @@ export interface BrandDetailResponse {
   data: BrandDetail;
 }
 
+// 판매자 사업자 정보 (전자상거래법상 신원정보 공개용, 비인증 조회)
+// 개인정보 보호를 위해 연락처 전화번호는 서버에서 제공하지 않는다
+export interface BrandBusinessInfo {
+  brandName: string;                     // 상호(브랜드명)
+  representativeName: string | null;     // 대표자명
+  businessNumber: string | null;         // 사업자등록번호 (000-00-00000 포맷)
+  businessAddress: string | null;        // 사업장 소재지 (한 줄 문자열)
+  mailOrderSalesNumber?: string;         // 통신판매업 신고번호 (등록한 판매자만 포함)
+  contactEmail: string | null;           // 연락처 이메일
+}
+
+// 판매자 사업자 정보 응답
+export interface BrandBusinessInfoResponse {
+  success: boolean;
+  data: BrandBusinessInfo;
+}
+
 // 브랜드 업데이트 응답
 export interface BrandUpdateResponse {
   success: boolean;

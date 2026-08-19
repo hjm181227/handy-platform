@@ -444,6 +444,7 @@ export const API_ENDPOINTS = {
   BRANDS: {
     LIST: '/api/brands/list',                                                    // POST /list - 브랜드 목록 조회
     DETAIL: (sellerUuid: string) => `/api/brands/${sellerUuid}`,                 // GET /:sellerUuid - 브랜드 상세 정보
+    BUSINESS_INFO: (sellerUuid: string) => `/api/brands/${sellerUuid}/business-info`, // GET /:sellerUuid/business-info - 판매자 사업자 정보 (공개)
     PRODUCTS: (sellerUuid: string) => `/api/brands/${sellerUuid}/products`,      // GET /:sellerUuid/products - 브랜드 상품 목록
     UPDATE_NAME: (sellerUuid: string) => `/api/brands/${sellerUuid}/name`,       // PUT /:sellerUuid/name - 브랜드명 변경
     UPDATE_PROFILE: (sellerUuid: string) => `/api/brands/${sellerUuid}/profile`, // PUT /:sellerUuid/profile - 브랜드 프로필 변경

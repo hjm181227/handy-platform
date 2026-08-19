@@ -7,6 +7,7 @@ export interface SellerApplicationData {
   brandName: string;
   representativeName?: string;
   businessNumber: string;
+  mailOrderSalesNumber?: string; // 통신판매업 신고번호 (선택, 예: 2024-용인기흥-2437)
   businessType?: string;
   businessCategory?: string;
   businessSector?: string;

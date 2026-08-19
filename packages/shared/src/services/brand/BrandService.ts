@@ -6,7 +6,8 @@ import {
   UpdateBrandProfileRequest,
   UpdateBrandBannerRequest,
   BrandUpdateResponse,
-  BrandDetailResponse
+  BrandDetailResponse,
+  BrandBusinessInfoResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -45,6 +46,25 @@ export abstract class BaseBrandService extends BaseApiService {
     const endpoint = API_ENDPOINTS.BRANDS.DETAIL(sellerUuid);
 
     const response = await this.request<BrandDetailResponse>(endpoint, {
+      method: 'GET',
+    });
+
+    return response;
+  }
+
+  /**
+   * 판매자 사업자 정보를 조회합니다 (비인증)
+   *
+   * 전자상거래법상 판매자 신원정보 공개용이며, 승인된 판매자만 데이터를 반환합니다.
+   * 미승인/미등록 판매자는 서버가 404를 반환하므로 호출부에서 ApiError(status 404)를 처리해야 합니다.
+   *
+   * @param sellerUuid 판매자 UUID
+   * @returns 상호, 대표자, 사업자등록번호, 사업장 소재지, 통신판매업 신고번호(있을 때), 이메일
+   */
+  async getBrandBusinessInfo(sellerUuid: string): Promise<BrandBusinessInfoResponse> {
+    const endpoint = API_ENDPOINTS.BRANDS.BUSINESS_INFO(sellerUuid);
+
+    const response = await this.request<BrandBusinessInfoResponse>(endpoint, {
       method: 'GET',
     });
 
