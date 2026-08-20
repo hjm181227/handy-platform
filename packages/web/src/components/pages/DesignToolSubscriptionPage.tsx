@@ -93,7 +93,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
   if (loading && !access) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
       </div>
     );
   }
@@ -113,7 +113,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* 헤더 */}
       <div className="flex items-center gap-3 mb-8">
-        <button onClick={() => onGo('/my')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => onGo('/my')} className="p-2 hover:bg-surface rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold">{t('designTool.subscriptionManagement')}</h1>
@@ -149,10 +149,10 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
       )}
 
       {/* 현재 구독 상태 */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+      <div className="bg-white border border-line rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
-            <Crown className="w-5 h-5 text-pink-500" />
+          <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center">
+            <Crown className="w-5 h-5 text-brand" />
           </div>
           <div>
             <h2 className="font-bold text-gray-900">
@@ -160,12 +160,12 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                 plan: currentPlan?.name || t('designTool.free'),
               })}
             </h2>
-            <p className="text-sm text-gray-500">{statusText[status]}</p>
+            <p className="text-sm text-muted">{statusText[status]}</p>
           </div>
         </div>
 
         {/* 구독 상세 정보 */}
-        <div className="space-y-3 border-t border-gray-100 pt-4">
+        <div className="space-y-3 border-t border-line pt-4">
           {access?.subscribedAt && (
             <InfoRow
               label={t('designTool.subscription.startDate')}
@@ -212,17 +212,17 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
               />
             ) : (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted">
                   {t('designTool.subscription.monthlyFee')}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400 line-through">
+                  <span className="text-sm text-muted line-through">
                     ₩{(7900).toLocaleString()}
                   </span>
-                  <span className="text-sm font-medium text-pink-600">
+                  <span className="text-sm font-medium text-brand">
                     ₩{currentPlan.price.toLocaleString()}
                   </span>
-                  <span className="text-xs bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full font-medium">
+                  <span className="text-xs bg-brand-100 text-brand px-1.5 py-0.5 rounded-full font-medium">
                     {t('designTool.webDiscount')}
                   </span>
                 </div>
@@ -232,7 +232,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 
         {/* 플랜 기능 목록 */}
         {currentPlan && (
-          <div className="mt-4 border-t border-gray-100 pt-4">
+          <div className="mt-4 border-t border-line pt-4">
             <p className="text-sm font-medium text-gray-700 mb-2">
               {t('designTool.subscription.includedFeatures')}
             </p>
@@ -240,9 +240,9 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
               {currentPlan.features.map((feature, idx) => (
                 <li
                   key={idx}
-                  className="flex items-center gap-2 text-sm text-gray-600"
+                  className="flex items-center gap-2 text-sm text-muted"
                 >
-                  <Check className="w-4 h-4 text-pink-500 shrink-0" />
+                  <Check className="w-4 h-4 text-brand shrink-0" />
                   {feature}
                 </li>
               ))}
@@ -253,9 +253,9 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 
       {/* 결제 수단 섹션 (Toss 구독자에게만 노출) */}
       {isPro && isTossSubscriber && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+        <div className="bg-white border border-line rounded-2xl p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <CreditCard className="w-4 h-4 text-gray-500" />
+            <CreditCard className="w-4 h-4 text-muted" />
             <h3 className="font-semibold text-gray-900">
               {t('designTool.subscription.billingMethod')}
             </h3>
@@ -269,20 +269,20 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                   : ''}
               </p>
               {access.billingMethodMeta.maskedNumber && (
-                <p className="text-sm text-gray-500 font-mono">
+                <p className="text-sm text-muted font-mono">
                   {access.billingMethodMeta.maskedNumber}
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-muted mb-4">
               {t('designTool.subscription.billingMethodUnknown')}
             </p>
           )}
           <button
             onClick={handleChangeCard}
             disabled={actionLoading}
-            className="w-full py-2.5 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="w-full py-2.5 border border-line text-ink rounded-xl text-sm font-medium hover:bg-surface disabled:opacity-50"
           >
             {t('designTool.subscription.changeCard')}
           </button>
@@ -296,35 +296,35 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
       {isPro && (
         <button
           onClick={() => onGo('/my/billing/design-tool')}
-          className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-2xl p-4 mb-6 hover:bg-gray-50"
+          className="w-full flex items-center justify-between bg-white border border-line rounded-2xl p-4 mb-6 hover:bg-surface"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Receipt className="w-4 h-4 text-gray-600" />
+            <div className="w-9 h-9 bg-surface rounded-lg flex items-center justify-center">
+              <Receipt className="w-4 h-4 text-muted" />
             </div>
             <span className="text-sm font-medium text-gray-900">
               {t('billing.history')}
             </span>
           </div>
-          <span className="text-xs text-gray-400">→</span>
+          <span className="text-xs text-muted">→</span>
         </button>
       )}
 
       {/* 플랜 변경 */}
       {isActive && !isCancelled && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+        <div className="bg-white border border-line rounded-2xl p-6 mb-6">
           <h3 className="font-semibold text-gray-900 mb-4">
             {t('designTool.subscription.changePlan')}
           </h3>
           {isPro ? (
             <div>
-              <p className="text-sm text-gray-500 mb-3">
+              <p className="text-sm text-muted mb-3">
                 {t('designTool.subscription.downgradeDesc')}
               </p>
               <button
                 onClick={() => handleChangePlan('free')}
                 disabled={actionLoading}
-                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="w-full py-3 bg-surface text-ink rounded-full font-medium text-sm hover:bg-surface-strong transition-colors disabled:opacity-50"
               >
                 {actionLoading
                   ? t('designTool.subscription.processing')
@@ -333,13 +333,13 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
             </div>
           ) : (
             <div>
-              <p className="text-sm text-gray-500 mb-3">
+              <p className="text-sm text-muted mb-3">
                 {t('designTool.subscription.upgradeDesc')}
               </p>
               <button
                 onClick={() => handleChangePlan('pro')}
                 disabled={actionLoading}
-                className="w-full py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors disabled:opacity-50"
+                className="w-full py-3 bg-brand text-white rounded-full font-medium text-sm hover:bg-brand-600 transition-colors disabled:opacity-50"
               >
                 {actionLoading
                   ? t('designTool.subscription.processing')
@@ -355,13 +355,13 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 
       {/* 취소된 구독 — 재구독 안내 */}
       {isCancelled && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 text-center">
-          <p className="text-gray-500 mb-4">
+        <div className="bg-white border border-line rounded-2xl p-6 mb-6 text-center">
+          <p className="text-muted mb-4">
             {t('designTool.subscription.cancelledMessage')}
           </p>
           <button
             onClick={() => onGo('/design-tool/subscription')}
-            className="px-6 py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors"
+            className="px-6 py-3 bg-brand text-white rounded-full font-medium text-sm hover:bg-brand-600 transition-colors"
           >
             {t('designTool.subscription.resubscribe')}
           </button>
@@ -370,13 +370,13 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 
       {/* 구독 없을 때 */}
       {(status === 'none' || status === 'expired') && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 text-center">
-          <p className="text-gray-500 mb-4">
+        <div className="bg-white border border-line rounded-2xl p-6 mb-6 text-center">
+          <p className="text-muted mb-4">
             {t('designTool.subscription.noActiveSubscription')}
           </p>
           <button
             onClick={() => onGo('/design-tool/subscription')}
-            className="px-6 py-3 bg-pink-500 text-white rounded-xl font-medium text-sm hover:bg-pink-600 transition-colors"
+            className="px-6 py-3 bg-brand text-white rounded-full font-medium text-sm hover:bg-brand-600 transition-colors"
           >
             {t('designTool.subscription.selectPlan')}
           </button>
@@ -385,7 +385,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 
       {/* 구독 취소 (만료일까지 유지 — backend Phase A에서는 즉시 해지 미지원) */}
       {isActive && isPro && !isCancelled && isTossSubscriber && (
-        <div className="border-t border-gray-100 pt-6">
+        <div className="border-t border-line pt-6">
           {showCancelConfirm ? (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
               <div className="flex items-start gap-3 mb-4">
@@ -394,7 +394,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
                   <p className="font-semibold text-gray-900">
                     {t('designTool.subscription.cancelConfirmTitle')}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted mt-1">
                     {t('designTool.subscription.cancelConfirmDesc')}
                   </p>
                 </div>
@@ -402,7 +402,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
-                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200"
+                  className="flex-1 py-2.5 bg-surface text-ink rounded-xl text-sm font-medium hover:bg-surface-strong"
                 >
                   {t('designTool.subscription.cancelButton')}
                 </button>
@@ -420,7 +420,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
           ) : (
             <button
               onClick={() => setShowCancelConfirm(true)}
-              className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+              className="text-sm text-muted hover:text-red-500 transition-colors"
             >
               {t('designTool.subscription.cancelSubscription')}
             </button>
@@ -430,9 +430,9 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 
       {/* IAP 구독자 안내 — 웹에서 직접 취소 불가 */}
       {isActive && isPro && !isTossSubscriber && access?.paymentSource && (
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-start gap-3">
-          <Info className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-gray-600">
+        <div className="bg-surface border border-line rounded-2xl p-4 flex items-start gap-3">
+          <Info className="w-4 h-4 text-muted shrink-0 mt-0.5" />
+          <p className="text-xs text-muted">
             {t('designTool.subscription.iapManageNotice', {
               source:
                 access.paymentSource === 'apple'
@@ -451,7 +451,7 @@ export function DesignToolSubscriptionPage({ onGo }: DesignToolSubscriptionPageP
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-sm text-gray-500">{label}</span>
+      <span className="text-sm text-muted">{label}</span>
       <span className="text-sm font-medium text-gray-900">{value}</span>
     </div>
   );

@@ -323,7 +323,7 @@ export function AuthModalContent() {
         {/* 뒤로가기 */}
         <button
           onClick={() => setView('login')}
-          className="flex items-center justify-center w-10 h-10 -ml-2 mb-4 rounded-full hover:bg-gray-100 transition-colors"
+          className="flex items-center justify-center w-10 h-10 -ml-2 mb-4 rounded-full hover:bg-surface transition-colors"
         >
           <svg
             className="w-6 h-6 text-gray-800"
@@ -341,7 +341,7 @@ export function AuthModalContent() {
         </button>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('auth:login.title')}</h1>
-        <p className="text-gray-500 mb-8">{t('auth:login.subtitle')}</p>
+        <p className="text-muted mb-8">{t('auth:login.subtitle')}</p>
 
         <form onSubmit={handleEmailLogin} className="space-y-4 flex-1 flex flex-col">
           {error && (
@@ -358,7 +358,7 @@ export function AuthModalContent() {
               setError('');
             }}
             placeholder={t('auth:login.emailPlaceholder')}
-            className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-brand transition-colors"
+            className="w-full rounded-xl border-2 border-line-strong px-4 py-4 text-base outline-none focus:border-brand transition-colors"
             disabled={loading}
           />
 
@@ -371,13 +371,13 @@ export function AuthModalContent() {
                 setError('');
               }}
               placeholder={t('auth:login.passwordPlaceholder')}
-              className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-brand transition-colors"
+              className="w-full rounded-xl border-2 border-line-strong px-4 py-4 pr-12 text-base outline-none focus:border-brand transition-colors"
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowPw(!showPw)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
               disabled={loading}
             >
               {showPw ? (
@@ -405,7 +405,7 @@ export function AuthModalContent() {
                 // 재설정 플로우 구현 전까지 명확한 안내로 대체
                 alert('비밀번호 재설정은 준비 중입니다.\n카카오/네이버/구글 소셜 로그인을 이용하시거나, 고객센터(support/contact)로 문의해주세요.');
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-muted hover:text-ink"
             >
               {t('auth:login.forgotPassword')}
             </button>
@@ -432,7 +432,7 @@ export function AuthModalContent() {
       <div className="flex items-center justify-end h-14">
         <button
           onClick={close}
-          className="flex items-center justify-center w-10 h-10 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="flex items-center justify-center w-10 h-10 -mr-2 rounded-full hover:bg-surface transition-colors"
           aria-label={t('common:close')}
         >
           <svg
@@ -459,7 +459,7 @@ export function AuthModalContent() {
         <div className="flex justify-center mb-3">
           <Logo size="xl" />
         </div>
-        <p className="text-gray-500 text-lg">{t('auth:brandTagline')}</p>
+        <p className="text-muted text-lg">{t('auth:brandTagline')}</p>
       </div>
 
       {/* 에러 메시지 */}
@@ -516,14 +516,14 @@ export function AuthModalContent() {
 
       {/* 구분선 */}
       <div className="flex items-center my-8">
-        <div className="flex-grow border-t border-gray-200"></div>
-        <span className="mx-4 text-sm text-gray-400">{t('common:or')}</span>
-        <div className="flex-grow border-t border-gray-200"></div>
+        <div className="flex-grow border-t border-line"></div>
+        <span className="mx-4 text-sm text-muted">{t('common:or')}</span>
+        <div className="flex-grow border-t border-line"></div>
       </div>
 
       {/* 기존 계정 이메일 로그인 링크 - 모든 환경에서 표시 */}
       <div className="text-center">
-        <span className="text-gray-500 text-sm">{t('auth:signup.alreadyHaveAccount')} </span>
+        <span className="text-muted text-sm">{t('auth:signup.alreadyHaveAccount')} </span>
         <button
           onClick={() => setView('email-login')}
           className="text-brand text-sm font-medium hover:underline"

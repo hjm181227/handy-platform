@@ -177,14 +177,14 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
     <div className="space-y-6">
       {/* 질문 입력창 */}
       {isAuthenticated && !isOwnProduct ? (
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-surface p-4 rounded-xl">
           <h3 className="font-semibold text-sm mb-2">상품 문의하기</h3>
           <textarea
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}
             placeholder="궁금한 점을 입력해주세요. (최대 1000자)"
             maxLength={1000}
-            className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand"
             rows={3}
           />
           <div className="flex items-center justify-between mt-2">
@@ -198,11 +198,11 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
               비밀글로 작성
             </label>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">{newQuestion.length}/1000</span>
+              <span className="text-xs text-muted">{newQuestion.length}/1000</span>
               <button
                 onClick={handleSubmit}
                 disabled={submitting || !newQuestion.trim()}
-                className="px-4 py-2 bg-black text-white text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-brand text-white text-sm rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? '등록 중...' : '등록'}
               </button>
@@ -210,11 +210,11 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
           </div>
         </div>
       ) : !isAuthenticated ? (
-        <div className="bg-gray-50 p-4 rounded-lg text-center">
+        <div className="bg-surface p-4 rounded-xl text-center">
           <p className="text-sm text-gray-600">로그인 후 질문하실 수 있습니다.</p>
         </div>
       ) : isOwnProduct ? (
-        <div className="bg-gray-50 p-4 rounded-lg text-center">
+        <div className="bg-surface p-4 rounded-xl text-center">
           <p className="text-sm text-gray-600">브랜드 관리자는 본인 상품에 작성할 수 없습니다.</p>
         </div>
       ) : null}
@@ -222,7 +222,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
       {/* 로딩 상태 */}
       {loading && (
         <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
         </div>
       )}
 
@@ -243,7 +243,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
       {!loading && !error && (
         <>
           {questions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted">
               <p>등록된 Q&A가 없습니다.</p>
             </div>
           ) : (
@@ -253,7 +253,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
                   {/* 질문 */}
                   <div className="mb-2">
                     <div className="flex items-start gap-2">
-                      <span className="inline-block bg-black text-white text-xs font-bold px-2 py-1 rounded flex-shrink-0">
+                      <span className="inline-block bg-ink text-white text-xs font-bold px-2 py-1 rounded flex-shrink-0">
                         Q
                       </span>
                       <div className="flex-1">
@@ -279,14 +279,14 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => setEditingId(null)}
-                                  className="text-xs text-gray-500"
+                                  className="text-xs text-muted"
                                 >
                                   취소
                                 </button>
                                 <button
                                   onClick={() => handleUpdate(qa.questionUuid)}
                                   disabled={submitting}
-                                  className="text-xs text-blue-500"
+                                  className="text-xs text-brand"
                                 >
                                   저장
                                 </button>
@@ -299,9 +299,9 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-medium">{qa.userName}</span>
                               {qa.isSecret && (
-                                <span className="text-xs text-gray-500">🔒</span>
+                                <span className="text-xs text-muted">🔒</span>
                               )}
-                              <span className="text-xs text-gray-500">{formatDate(qa.createdAt)}</span>
+                              <span className="text-xs text-muted">{formatDate(qa.createdAt)}</span>
                               {qa.status === 'pending' && (
                                 <span className="text-xs text-orange-500">답변대기</span>
                               )}
@@ -315,7 +315,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
                                 {canEdit(qa) && (
                                   <button
                                     onClick={() => startEdit(qa)}
-                                    className="text-xs text-gray-500 hover:text-gray-700"
+                                    className="text-xs text-muted hover:text-ink"
                                   >
                                     수정
                                   </button>
@@ -346,7 +346,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm font-medium text-gray-600">판매자</span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-muted">
                               {formatDate(qa.answer.answeredAt)}
                             </span>
                           </div>
@@ -368,7 +368,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={!pagination.hasPrev}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface"
               >
                 이전
               </button>
@@ -378,7 +378,7 @@ const ProductQA: React.FC<ProductQAProps> = ({ productUuid, sellerUserId }) => {
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!pagination.hasNext}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface"
               >
                 다음
               </button>

@@ -20,8 +20,8 @@ const BRAND_THEMES: Record<string, BrandTheme> = {
   'HANDY MADE': {
     backgroundImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
     mobileBackgroundImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    overlayGradient: 'from-purple-600/80 to-pink-600/70',
-    primaryColor: 'purple',
+    overlayGradient: 'from-brand-600/80 to-brand/70',
+    primaryColor: 'brand',
     description: '감성적이고 트렌디한 네일아트의 대표 브랜드'
   },
   'HANDY LAB': {
@@ -41,15 +41,15 @@ const BRAND_THEMES: Record<string, BrandTheme> = {
   'NAIL STUDIO': {
     backgroundImage: 'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
     mobileBackgroundImage: 'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    overlayGradient: 'from-rose-600/80 to-pink-600/70',
-    primaryColor: 'rose',
+    overlayGradient: 'from-brand-600/80 to-brand/70',
+    primaryColor: 'brand',
     description: '전문적인 네일 스튜디오의 노하우를 담은 프리미엄 컬렉션'
   },
   'CRYSTAL NAILS': {
     backgroundImage: 'https://images.unsplash.com/photo-1583001264273-55ff0d04b648?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
     mobileBackgroundImage: 'https://images.unsplash.com/photo-1583001264273-55ff0d04b648?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    overlayGradient: 'from-violet-600/80 to-purple-600/70',
-    primaryColor: 'violet',
+    overlayGradient: 'from-brand-600/80 to-brand/70',
+    primaryColor: 'brand',
     description: '크리스털처럼 투명하고 아름다운 네일아트의 정수'
   }
 };
@@ -555,7 +555,7 @@ export function BrandDetailPage({
           <p className="text-gray-600 mb-4">{brandError || t('brandDetail.brandNotExist')}</p>
           <button
             onClick={() => onGo('/brands')}
-            className="rounded-lg bg-black text-white px-6 py-2 hover:bg-gray-800"
+            className="rounded-full bg-brand text-white px-6 py-2 hover:bg-brand-600"
           >
             {t('brandDetail.backToBrands')}
           </button>
@@ -570,7 +570,7 @@ export function BrandDetailPage({
       <div className="mb-6">
         <button
           onClick={() => onGo('/brands')}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-ink hover:bg-surface rounded-lg transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
             <path d="M19 12H5m7-7l-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -585,7 +585,7 @@ export function BrandDetailPage({
         {/* 배경 이미지 */}
         <div
           className={`relative bg-cover bg-center bg-no-repeat text-white min-h-[300px] sm:min-h-[350px] transition-all duration-500 ${
-            imageError ? `bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700` : ''
+            imageError ? `bg-gradient-to-br from-brand-600 via-brand to-brand-700` : ''
           }`}
           style={{
             backgroundImage: !imageError && imageLoaded ? `url('${currentBackgroundImage}')` : undefined
@@ -609,8 +609,8 @@ export function BrandDetailPage({
 
           {/* 로딩 상태 스켈레톤 */}
           {!imageLoaded && !imageError && (
-            <div className="absolute inset-0 bg-gray-300 animate-pulse" role="img" aria-label={t('brandDetail.brandImageLoading')}>
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-[length:200%_100%] animate-shimmer"></div>
+            <div className="absolute inset-0 bg-surface-strong animate-pulse" role="img" aria-label={t('brandDetail.brandImageLoading')}>
+              <div className="absolute inset-0 bg-gradient-to-r from-surface-strong via-surface to-surface-strong bg-[length:200%_100%] animate-shimmer"></div>
             </div>
           )}
 
@@ -703,7 +703,7 @@ export function BrandDetailPage({
                   <span className="text-white font-medium text-xs sm:text-sm">{t('brandDetail.verifiedBrand')}</span>
                 </div>
                 {brandStats.totalProducts >= 3 && (
-                  <div className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-brand rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
                     <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
@@ -721,10 +721,10 @@ export function BrandDetailPage({
               disabled={uploadingBanner}
               title={t('brandDetail.changeBanner')}
               aria-label={t('brandDetail.changeBanner')}
-              className="absolute bottom-6 sm:bottom-8 lg:bottom-12 right-4 sm:right-6 lg:right-8 z-30 bg-white/90 backdrop-blur-sm hover:bg-white hover:shadow-xl text-gray-700 p-3 rounded-lg shadow-lg transition-all flex items-center justify-center cursor-pointer"
+              className="absolute bottom-6 sm:bottom-8 lg:bottom-12 right-4 sm:right-6 lg:right-8 z-30 bg-white/90 backdrop-blur-sm hover:bg-white hover:shadow-xl text-ink p-3 rounded-lg shadow-lg transition-all flex items-center justify-center cursor-pointer"
             >
               {uploadingBanner ? (
-                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-line border-t-brand rounded-full animate-spin"></div>
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -799,7 +799,7 @@ export function BrandDetailPage({
               }
               onGo(`/brand/${sellerUuid}/custom-order?brandName=${encodeURIComponent(brandStats.name)}`);
             }}
-            className="w-full py-4 bg-gradient-to-r from-brand to-pink-500 text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-brand-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-brand to-brand-600 text-white rounded-full font-semibold text-lg flex items-center justify-center gap-2 hover:from-brand-600 hover:to-brand-700 transition-all shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -821,8 +821,8 @@ export function BrandDetailPage({
             onClick={() => setProductTypeFilter(tab.value)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               productTypeFilter === tab.value
-                ? 'bg-black text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-ink text-white'
+                : 'bg-surface text-ink hover:bg-surface-strong'
             }`}
           >
             {tab.label}
@@ -847,7 +847,7 @@ export function BrandDetailPage({
             {/* 필터 토글 버튼 */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-strong rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
@@ -876,7 +876,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !categoryFilter
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.all')}
@@ -888,7 +888,7 @@ export function BrandDetailPage({
                       className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                         categoryFilter === category
                           ? 'bg-brand-50 text-brand'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          : 'bg-surface hover:bg-surface-strong text-ink'
                       }`}
                     >
                       {category}
@@ -906,7 +906,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !priceFilter
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.all')}
@@ -916,7 +916,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 0 && priceFilter?.max === 50000
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.under50k')}
@@ -926,7 +926,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 50000 && priceFilter?.max === 100000
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.range50to100k')}
@@ -936,7 +936,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 100000 && priceFilter?.max === Infinity
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.over100k')}
@@ -953,7 +953,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !productTypeFilter
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.all')}
@@ -963,7 +963,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       productTypeFilter === 'original'
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.original')}
@@ -973,7 +973,7 @@ export function BrandDetailPage({
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       productTypeFilter === 'custom'
                         ? 'bg-brand-50 text-brand'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-surface hover:bg-surface-strong text-ink'
                     }`}
                   >
                     {t('brandDetail.custom')}
@@ -1015,14 +1015,14 @@ export function BrandDetailPage({
             <p className="text-gray-600 mb-4">{productsError}</p>
             <button
               onClick={() => window.location.reload()}
-              className="rounded-lg bg-brand text-white px-6 py-2 hover:bg-brand-600"
+              className="rounded-full bg-brand text-white px-6 py-2 hover:bg-brand-600"
             >
               {t('retry')}
             </button>
           </div>
         ) : sortedProducts.length === 0 ? (
           <div className="text-center py-20">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">{t('brandDetail.noProducts')}</h3>
@@ -1050,13 +1050,13 @@ export function BrandDetailPage({
             {/* 무한 스크롤 로딩 인디케이터 */}
             <div ref={loadMoreRef} className="py-8 flex justify-center">
               {loadingMore && (
-                <div className="flex items-center gap-2 text-gray-500">
-                  <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                <div className="flex items-center gap-2 text-muted">
+                  <div className="w-5 h-5 border-2 border-line border-t-brand rounded-full animate-spin"></div>
                   <span>{t('brandDetail.loadingMoreProducts')}</span>
                 </div>
               )}
               {!hasMore && products.length > 0 && (
-                <p className="text-gray-400 text-sm">{t('brandDetail.allProductsLoaded')}</p>
+                <p className="text-muted text-sm">{t('brandDetail.allProductsLoaded')}</p>
               )}
             </div>
           </>
@@ -1085,7 +1085,7 @@ export function BrandDetailPage({
 
       {/* 판매자 사업자 정보 (전자상거래법상 판매자 신원정보 제공) */}
       {businessInfo && (
-        <div className="mt-12 rounded-xl border border-gray-200 bg-gray-50 p-5">
+        <div className="mt-12 rounded-xl border border-line bg-surface p-5">
           <button
             type="button"
             onClick={() => setShowBusinessInfo(!showBusinessInfo)}
@@ -1093,42 +1093,42 @@ export function BrandDetailPage({
             className="flex w-full items-center justify-between text-left"
           >
             <span className="text-sm font-medium text-gray-700">판매자 사업자 정보</span>
-            <span className="text-xs text-gray-500">{showBusinessInfo ? '접기' : '펼치기'}</span>
+            <span className="text-xs text-muted">{showBusinessInfo ? '접기' : '펼치기'}</span>
           </button>
 
           {showBusinessInfo && (
-            <dl className="mt-4 space-y-2 border-t border-gray-200 pt-4 text-xs text-gray-500">
+            <dl className="mt-4 space-y-2 border-t border-line pt-4 text-xs text-muted">
               <div className="flex gap-3">
-                <dt className="w-28 shrink-0 text-gray-400">상호</dt>
+                <dt className="w-28 shrink-0 text-muted">상호</dt>
                 <dd className="text-gray-600">{businessInfo.brandName}</dd>
               </div>
               {businessInfo.representativeName && (
                 <div className="flex gap-3">
-                  <dt className="w-28 shrink-0 text-gray-400">대표자</dt>
+                  <dt className="w-28 shrink-0 text-muted">대표자</dt>
                   <dd className="text-gray-600">{businessInfo.representativeName}</dd>
                 </div>
               )}
               {businessInfo.businessNumber && (
                 <div className="flex gap-3">
-                  <dt className="w-28 shrink-0 text-gray-400">사업자등록번호</dt>
+                  <dt className="w-28 shrink-0 text-muted">사업자등록번호</dt>
                   <dd className="text-gray-600">{businessInfo.businessNumber}</dd>
                 </div>
               )}
               {businessInfo.mailOrderSalesNumber && (
                 <div className="flex gap-3">
-                  <dt className="w-28 shrink-0 text-gray-400">통신판매업신고번호</dt>
+                  <dt className="w-28 shrink-0 text-muted">통신판매업신고번호</dt>
                   <dd className="text-gray-600">{businessInfo.mailOrderSalesNumber}</dd>
                 </div>
               )}
               {businessInfo.businessAddress && (
                 <div className="flex gap-3">
-                  <dt className="w-28 shrink-0 text-gray-400">사업장 소재지</dt>
+                  <dt className="w-28 shrink-0 text-muted">사업장 소재지</dt>
                   <dd className="text-gray-600">{businessInfo.businessAddress}</dd>
                 </div>
               )}
               {businessInfo.contactEmail && (
                 <div className="flex gap-3">
-                  <dt className="w-28 shrink-0 text-gray-400">이메일</dt>
+                  <dt className="w-28 shrink-0 text-muted">이메일</dt>
                   <dd className="break-all text-gray-600">{businessInfo.contactEmail}</dd>
                 </div>
               )}

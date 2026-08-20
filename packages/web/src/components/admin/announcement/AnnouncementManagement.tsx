@@ -23,7 +23,7 @@ const STATUS_LABELS: Record<AnnouncementStatus, string> = {
 };
 
 const STATUS_COLORS: Record<AnnouncementStatus, string> = {
-  draft: 'bg-gray-100 text-gray-800',
+  draft: 'bg-surface text-gray-800',
   published: 'bg-green-100 text-green-800',
   archived: 'bg-yellow-100 text-yellow-800',
 };
@@ -172,7 +172,7 @@ export default function AnnouncementManagement() {
         <p className="text-sm text-gray-600">총 {totalItems}개의 공지사항</p>
         <button
           onClick={handleCreate}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors"
         >
           <FiPlus className="mr-2" />
           새 공지 작성
@@ -186,7 +186,7 @@ export default function AnnouncementManagement() {
           <select
             value={filters.category}
             onChange={(e) => updateFilter('category', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="">전체</option>
             <option value="notice">공지</option>
@@ -199,7 +199,7 @@ export default function AnnouncementManagement() {
           <select
             value={filters.status}
             onChange={(e) => updateFilter('status', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="">전체</option>
             <option value="draft">초안</option>
@@ -212,7 +212,7 @@ export default function AnnouncementManagement() {
           <select
             value={filters.target}
             onChange={(e) => updateFilter('target', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="">전체</option>
             <option value="all">전체 앱</option>
@@ -223,54 +223,54 @@ export default function AnnouncementManagement() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">검색</label>
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={filters.search}
               onChange={(e) => updateFilter('search', e.target.value)}
               placeholder="제목/요약 검색..."
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
             />
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-line">
+            <thead className="bg-surface">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">대상앱</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팝업</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">배너</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">고정</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발행일</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">조회수</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">제목</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">카테고리</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">대상앱</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">상태</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">팝업</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">배너</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">고정</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">발행일</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">조회수</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">액션</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-line">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={10} className="px-6 py-12 text-center text-muted">
                     <div className="flex justify-center">
-                      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                      <div className="w-8 h-8 border-4 border-brand-200 border-t-brand rounded-full animate-spin"></div>
                     </div>
                   </td>
                 </tr>
               ) : announcements.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={10} className="px-6 py-12 text-center text-muted">
                     공지사항이 없습니다.
                   </td>
                 </tr>
               ) : (
                 announcements.map((item) => (
-                  <tr key={item.announcementUuid} className="hover:bg-gray-50">
+                  <tr key={item.announcementUuid} className="hover:bg-surface">
                     {/* 제목 */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       {(() => {
@@ -282,7 +282,7 @@ export default function AnnouncementManagement() {
                               {titleText}
                             </div>
                             {summaryText && (
-                              <div className="text-xs text-gray-400 max-w-xs truncate" title={summaryText}>
+                              <div className="text-xs text-muted max-w-xs truncate" title={summaryText}>
                                 {summaryText}
                               </div>
                             )}
@@ -299,14 +299,14 @@ export default function AnnouncementManagement() {
                     </td>
 
                     {/* 대상앱 */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {TARGET_LABELS[item.target] || item.target}
                     </td>
 
                     {/* 상태 */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[item.status] || 'bg-gray-100 text-gray-800'}`}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[item.status] || 'bg-surface text-gray-800'}`}>
                           {STATUS_LABELS[item.status] || item.status}
                         </span>
                         {/* 상태 변경 드롭다운 */}
@@ -318,7 +318,7 @@ export default function AnnouncementManagement() {
                               e.target.value = '';
                             }
                           }}
-                          className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-500 cursor-pointer"
+                          className="text-xs border border-line rounded px-1 py-0.5 text-muted cursor-pointer"
                           title="상태 변경"
                         >
                           <option value="">변경</option>
@@ -331,14 +331,14 @@ export default function AnnouncementManagement() {
 
                     {/* 팝업 */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.isPopup ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.isPopup ? 'bg-purple-100 text-purple-800' : 'bg-surface text-muted'}`}>
                         {item.isPopup ? 'ON' : 'OFF'}
                       </span>
                     </td>
 
                     {/* 배너 */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.isBanner ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.isBanner ? 'bg-indigo-100 text-indigo-800' : 'bg-surface text-muted'}`}>
                         {item.isBanner ? '✓' : '-'}
                       </span>
                     </td>
@@ -350,7 +350,7 @@ export default function AnnouncementManagement() {
                         className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${
                           item.isPinned
                             ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            : 'bg-surface text-muted hover:bg-surface-strong'
                         }`}
                         title={item.isPinned ? '고정 해제' : '상단 고정'}
                       >
@@ -359,14 +359,14 @@ export default function AnnouncementManagement() {
                     </td>
 
                     {/* 발행일 */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {item.publishedAt
                         ? new Date(item.publishedAt).toLocaleDateString('ko-KR')
                         : '-'}
                     </td>
 
                     {/* 조회수 */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {item.viewCount?.toLocaleString() || 0}
                     </td>
 
@@ -399,22 +399,22 @@ export default function AnnouncementManagement() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
+          <div className="flex items-center justify-between px-6 py-3 bg-surface border-t border-line">
+            <p className="text-sm text-muted">
               {page} / {totalPages} 페이지
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm border border-line rounded-lg hover:bg-surface-strong disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 이전
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm border border-line rounded-lg hover:bg-surface-strong disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 다음
               </button>
@@ -435,7 +435,7 @@ export default function AnnouncementManagement() {
       {/* Delete Confirmation */}
       {showDeleteModal && deleteTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-2">공지사항 삭제</h2>
             <p className="text-sm text-gray-600 mb-4">
               <strong>{typeof deleteTarget.title === 'string' ? deleteTarget.title : (deleteTarget.title?.ko || deleteTarget.title?.en || deleteTarget.title?.ja || '')}</strong> 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
@@ -446,7 +446,7 @@ export default function AnnouncementManagement() {
                   setShowDeleteModal(false);
                   setDeleteTarget(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
               >
                 취소
               </button>

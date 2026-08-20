@@ -88,7 +88,7 @@ export function Logo({ className = '', onClick, size = 'md' }: LogoProps) {
         />
       ) : (
         /* 임시 텍스트 로고: 검은색 배경에 흰색 글씨 */
-        <div className={`bg-black text-white font-bold tracking-tight ${sizeStyles[size]}`}>
+        <div className={`bg-ink text-white font-bold tracking-tight ${sizeStyles[size]}`}>
           {logoData.text}
         </div>
       )}

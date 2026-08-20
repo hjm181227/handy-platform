@@ -31,8 +31,8 @@ export function SelectionCard({
         relative w-full p-4 rounded-2xl border-2 text-left
         transition-all duration-200
         ${selected
-          ? 'border-black bg-gray-50'
-          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+          ? 'border-brand bg-brand-50'
+          : 'border-line bg-white hover:border-line-strong hover:bg-surface'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         ${className}
@@ -40,7 +40,7 @@ export function SelectionCard({
     >
       {/* 선택 체크 표시 */}
       {selected && (
-        <div className="absolute top-3 right-3 w-6 h-6 bg-black rounded-full flex items-center justify-center">
+        <div className="absolute top-3 right-3 w-6 h-6 bg-brand rounded-full flex items-center justify-center">
           <FaCheck className="w-3 h-3 text-white" />
         </div>
       )}
@@ -48,7 +48,7 @@ export function SelectionCard({
       {/* 콘텐츠 */}
       <div className="flex items-center gap-4">
         {icon && (
-          <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
+          <div className="flex-shrink-0 w-12 h-12 bg-surface rounded-xl flex items-center justify-center text-2xl">
             {icon}
           </div>
         )}
@@ -89,20 +89,20 @@ export function SelectionGridCard({
         relative flex flex-col items-center justify-center p-4 rounded-xl border-2
         transition-all duration-200 min-h-[100px]
         ${selected
-          ? 'border-black bg-black text-white'
-          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+          ? 'border-ink bg-ink text-white'
+          : 'border-line bg-white text-ink hover:border-line-strong'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
     >
       {icon && (
-        <div className={`text-2xl mb-2 ${selected ? 'text-white' : 'text-gray-600'}`}>
+        <div className={`text-2xl mb-2 ${selected ? 'text-white' : 'text-ink'}`}>
           {icon}
         </div>
       )}
       <span className="font-medium text-sm">{label}</span>
       {description && (
-        <span className={`text-xs mt-1 ${selected ? 'text-gray-300' : 'text-gray-400'}`}>
+        <span className={`text-xs mt-1 ${selected ? 'text-gray-300' : 'text-muted'}`}>
           {description}
         </span>
       )}

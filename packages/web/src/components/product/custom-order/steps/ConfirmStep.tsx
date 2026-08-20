@@ -61,8 +61,8 @@ export function ConfirmStep({
         )}
 
         {/* 브랜드/상품 정보 */}
-        <div className="bg-gray-50 rounded-xl p-4">
-          <p className="text-sm text-gray-500">브랜드</p>
+        <div className="bg-surface rounded-xl p-4">
+          <p className="text-sm text-muted">브랜드</p>
           <p className="font-semibold text-gray-900 mt-1">
             {product?.seller?.companyName || product?.brand || brandName || '브랜드 정보 없음'}
           </p>
@@ -75,26 +75,26 @@ export function ConfirmStep({
             <h3 className="font-semibold text-gray-900">쉐입 & 길이</h3>
             <button
               onClick={() => onEdit(0)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-muted hover:text-ink"
             >
               <FaEdit className="w-4 h-4" />
             </button>
           </div>
           <div className="flex gap-4">
-            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-500">쉐입</p>
+            <div className="flex-1 bg-surface rounded-lg p-3 text-center">
+              <p className="text-xs text-muted">쉐입</p>
               <p className="font-medium text-gray-900 mt-1">
                 {NAIL_SHAPE_NAME[data.shape as NailShape]}
               </p>
             </div>
-            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-500">길이</p>
+            <div className="flex-1 bg-surface rounded-lg p-3 text-center">
+              <p className="text-xs text-muted">길이</p>
               <p className="font-medium text-gray-900 mt-1">
                 {NAIL_LENGTH_NAME[data.length as NailLength]}
               </p>
             </div>
-            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-500">수량</p>
+            <div className="flex-1 bg-surface rounded-lg p-3 text-center">
+              <p className="text-xs text-muted">수량</p>
               <p className="font-medium text-gray-900 mt-1">
                 {(data as any).quantity || 1}세트
               </p>
@@ -108,19 +108,19 @@ export function ConfirmStep({
             <h3 className="font-semibold text-gray-900">사이즈</h3>
             <button
               onClick={() => onEdit(2)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-muted hover:text-ink"
             >
               <FaEdit className="w-4 h-4" />
             </button>
           </div>
           <div className="space-y-2.5">
             <div>
-              <p className="text-xs text-gray-500 mb-1.5">왼손</p>
+              <p className="text-xs text-muted mb-1.5">왼손</p>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(data.sizes.left).map(([finger, size]) => (
                   <span
                     key={finger}
-                    className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm"
+                    className="bg-surface px-3 py-1.5 rounded-lg text-sm"
                   >
                     {FINGER_NAMES[finger as keyof FingerSizes]}: {size}mm
                   </span>
@@ -128,12 +128,12 @@ export function ConfirmStep({
               </div>
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-1.5">오른손</p>
+              <p className="text-xs text-muted mb-1.5">오른손</p>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(data.sizes.right).map(([finger, size]) => (
                   <span
                     key={finger}
-                    className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm"
+                    className="bg-surface px-3 py-1.5 rounded-lg text-sm"
                   >
                     {FINGER_NAMES[finger as keyof FingerSizes]}: {size}mm
                   </span>
@@ -150,20 +150,20 @@ export function ConfirmStep({
               <h3 className="font-semibold text-gray-900">스타일 요청</h3>
               <button
                 onClick={() => onEdit(3)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted hover:text-ink"
               >
                 <FaEdit className="w-4 h-4" />
               </button>
             </div>
             {data.desiredColor && (
               <div className="mb-3">
-                <p className="text-xs text-gray-500">원하는 컬러</p>
+                <p className="text-xs text-muted">원하는 컬러</p>
                 <p className="text-sm text-gray-900 mt-1">{data.desiredColor}</p>
               </div>
             )}
             {data.request && (
               <div>
-                <p className="text-xs text-gray-500">요청사항</p>
+                <p className="text-xs text-muted">요청사항</p>
                 <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">{data.request}</p>
               </div>
             )}
@@ -177,7 +177,7 @@ export function ConfirmStep({
               <h3 className="font-semibold text-gray-900">참고 이미지</h3>
               <button
                 onClick={() => onEdit(3)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted hover:text-ink"
               >
                 <FaEdit className="w-4 h-4" />
               </button>
@@ -186,7 +186,7 @@ export function ConfirmStep({
               {data.attachments.map((file, index) => (
                 <div
                   key={index}
-                  className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0"
+                  className="w-16 h-16 bg-surface rounded-lg overflow-hidden flex-shrink-0"
                 >
                   {file.type.startsWith('image/') && (
                     <img
@@ -207,7 +207,7 @@ export function ConfirmStep({
             <h3 className="font-semibold text-gray-900">수령 희망일</h3>
             <button
               onClick={() => onEdit(4)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-muted hover:text-ink"
             >
               <FaEdit className="w-4 h-4" />
             </button>
@@ -225,7 +225,7 @@ export function ConfirmStep({
         >
           주문서 보내기
         </OrderStepButton>
-        <p className="text-xs text-gray-400 text-center mt-3">
+        <p className="text-xs text-muted text-center mt-3">
           주문서 제출 후 판매자가 확인하면 채팅으로 안내해드려요
         </p>
       </div>

@@ -148,7 +148,7 @@ export function SizeStep({
       <button
         type="button"
         onClick={handleMeasure}
-        className="flex items-center gap-2 px-5 h-10 border border-ink rounded-xl text-[14px] font-semibold text-ink hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2 px-5 h-10 border border-ink rounded-xl text-[14px] font-semibold text-ink hover:bg-surface transition-colors"
       >
         <ScanLine className="w-4 h-4" />
         {t('product:customOrder.measureSize')}
@@ -201,7 +201,7 @@ export function SizeStep({
           <button
             type="button"
             onClick={handleMeasure}
-            className="flex items-center justify-center gap-2 w-full h-10 border-[1.5px] border-brand rounded-xl text-[13px] font-semibold text-brand hover:bg-red-50 transition-colors"
+            className="flex items-center justify-center gap-2 w-full h-10 border-[1.5px] border-brand rounded-xl text-[13px] font-semibold text-brand hover:bg-brand-50 transition-colors"
           >
             <ScanLine className="w-4 h-4" />
             {t('product:customOrder.measureRemaining')}

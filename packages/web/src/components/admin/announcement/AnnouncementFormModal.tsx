@@ -202,7 +202,7 @@ export function AnnouncementFormModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             {mode === 'create' ? '새 공지사항 작성' : '공지사항 수정'}
@@ -210,7 +210,7 @@ export function AnnouncementFormModal({
 
           <div className="space-y-4">
             {/* 언어 탭 */}
-            <div className="flex gap-1 mb-3 border-b border-gray-200">
+            <div className="flex gap-1 mb-3 border-b border-line">
               {langs.map(l => (
                 <button
                   key={l.code}
@@ -218,8 +218,8 @@ export function AnnouncementFormModal({
                   onClick={() => setActiveLang(l.code)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-t ${
                     activeLang === l.code
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-400 hover:text-gray-600'
+                      ? 'bg-ink text-white'
+                      : 'text-muted hover:text-gray-600'
                   }`}
                 >
                   {l.label}
@@ -236,7 +236,7 @@ export function AnnouncementFormModal({
                 type="text"
                 value={form.title[activeLang]}
                 onChange={(e) => setForm({ ...form, title: { ...form.title, [activeLang]: e.target.value } })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder={`공지사항 제목을 입력하세요 (${activeLang})`}
               />
             </div>
@@ -248,7 +248,7 @@ export function AnnouncementFormModal({
                 type="text"
                 value={form.summary[activeLang]}
                 onChange={(e) => setForm({ ...form, summary: { ...form.summary, [activeLang]: e.target.value } })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder={`공지사항 요약 (${activeLang})`}
               />
             </div>
@@ -260,7 +260,7 @@ export function AnnouncementFormModal({
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value as AnnouncementCategory })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 >
                   <option value="notice">공지</option>
                   <option value="event">이벤트</option>
@@ -272,7 +272,7 @@ export function AnnouncementFormModal({
                 <select
                   value={form.target}
                   onChange={(e) => setForm({ ...form, target: e.target.value as AnnouncementTarget })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 >
                   <option value="all">전체</option>
                   <option value="design-tool">디자인 툴</option>
@@ -284,7 +284,7 @@ export function AnnouncementFormModal({
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value as AnnouncementStatus })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 >
                   <option value="draft">초안</option>
                   <option value="published">발행됨</option>
@@ -300,7 +300,7 @@ export function AnnouncementFormModal({
                 value={form.content[activeLang]}
                 onChange={(e) => setForm({ ...form, content: { ...form.content, [activeLang]: e.target.value } })}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder={`공지사항 본문을 입력하세요 (${activeLang})`}
               />
             </div>
@@ -320,7 +320,7 @@ export function AnnouncementFormModal({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    className="px-4 py-2 border border-line rounded-lg text-sm font-medium text-ink bg-white hover:bg-surface"
                   >
                     이미지 선택
                   </button>
@@ -344,9 +344,9 @@ export function AnnouncementFormModal({
               </div>
               {isUploading && (
                 <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-surface-strong rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-brand h-2 rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -362,7 +362,7 @@ export function AnnouncementFormModal({
                   type="checkbox"
                   checked={form.isPopup}
                   onChange={(e) => setForm({ ...form, isPopup: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-brand border-line-strong rounded focus:ring-brand"
                 />
                 <span className="text-sm text-gray-700">팝업 노출</span>
               </label>
@@ -371,7 +371,7 @@ export function AnnouncementFormModal({
                   type="checkbox"
                   checked={form.isPinned}
                   onChange={(e) => setForm({ ...form, isPinned: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-brand border-line-strong rounded focus:ring-brand"
                 />
                 <span className="text-sm text-gray-700">상단 고정</span>
               </label>
@@ -384,7 +384,7 @@ export function AnnouncementFormModal({
                   type="checkbox"
                   checked={form.isBanner}
                   onChange={(e) => setForm({ ...form, isBanner: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-brand border-line-strong rounded focus:ring-brand"
                 />
                 <span className="text-sm text-gray-700">배너 캐러셀 노출</span>
               </label>
@@ -399,7 +399,7 @@ export function AnnouncementFormModal({
                   min="0"
                   value={form.bannerOrder}
                   onChange={(e) => setForm({ ...form, bannerOrder: parseInt(e.target.value) || 0 })}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-24 px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
             )}
@@ -412,7 +412,7 @@ export function AnnouncementFormModal({
                   type="datetime-local"
                   value={form.publishedAt}
                   onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
               <div>
@@ -421,7 +421,7 @@ export function AnnouncementFormModal({
                   type="datetime-local"
                   value={form.expiresAt}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
             </div>
@@ -431,7 +431,7 @@ export function AnnouncementFormModal({
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
             >
               <FiX className="inline mr-1" />
               취소
@@ -439,7 +439,7 @@ export function AnnouncementFormModal({
             <button
               onClick={handleSubmit}
               disabled={(!form.title.ko.trim() && !form.title.en.trim() && !form.title.ja.trim()) || submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiCheck className="inline mr-1" />
               {submitting ? '저장 중...' : mode === 'create' ? '생성' : '수정'}

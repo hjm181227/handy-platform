@@ -16,23 +16,23 @@ export function OrderStepButton({
   className = '',
   ...props
 }: OrderStepButtonProps) {
-  const baseStyles = 'py-4 px-6 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-center';
+  const baseStyles = 'py-4 px-6 rounded-full font-semibold text-base transition-all duration-200 flex items-center justify-center';
 
   const variantStyles = {
     primary: `
-      bg-black text-white
-      hover:bg-gray-800
+      bg-brand text-white
+      hover:bg-brand-600
       disabled:opacity-40
     `,
     secondary: `
-      bg-gray-100 text-gray-800
-      hover:bg-gray-200
-      disabled:bg-gray-100 disabled:text-gray-400
+      bg-surface text-ink
+      hover:bg-surface-strong
+      disabled:bg-surface disabled:text-muted
     `,
     outline: `
-      bg-white text-black border-2 border-black
-      hover:bg-gray-50
-      disabled:border-gray-300 disabled:text-gray-400
+      bg-white text-ink border-2 border-line
+      hover:bg-surface
+      disabled:border-line disabled:text-muted
     `,
   };
 

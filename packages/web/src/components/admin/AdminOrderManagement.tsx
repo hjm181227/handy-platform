@@ -152,10 +152,10 @@ const AdminOrderManagement: React.FC = () => {
 
   const getPaymentStatusBadge = (paymentStatus: string) => {
     const paymentConfig = {
-      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: '결제 대기' },
+      pending: { bg: 'bg-surface', text: 'text-gray-800', label: '결제 대기' },
       paid: { bg: 'bg-green-100', text: 'text-green-800', label: '결제 완료' },
       failed: { bg: 'bg-red-100', text: 'text-red-800', label: '결제 실패' },
-      refunded: { bg: 'bg-gray-100', text: 'text-gray-600', label: '환불됨' },
+      refunded: { bg: 'bg-surface', text: 'text-gray-600', label: '환불됨' },
     };
 
     const config = paymentConfig[paymentStatus as keyof typeof paymentConfig] || paymentConfig.pending;
@@ -177,7 +177,7 @@ const AdminOrderManagement: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* 헤더 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-line p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">주문 관리</h1>
@@ -198,7 +198,7 @@ const AdminOrderManagement: React.FC = () => {
               placeholder="주문번호로 검색..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
             />
           </div>
           <select
@@ -207,7 +207,7 @@ const AdminOrderManagement: React.FC = () => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
           >
             {statusOptions.map(option => (
               <option key={option.value} value={option.value}>{option.label}</option>
@@ -217,10 +217,10 @@ const AdminOrderManagement: React.FC = () => {
       </div>
 
       {/* 주문 목록 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-line">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-600">주문 목록을 불러오는 중...</p>
           </div>
         ) : error ? (
@@ -233,14 +233,14 @@ const AdminOrderManagement: React.FC = () => {
             <p className="text-gray-600 mb-4">{error}</p>
             <button
               onClick={() => loadOrders()}
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-white bg-brand rounded-full hover:bg-brand-600 transition-colors"
             >
               다시 시도
             </button>
           </div>
         ) : orders.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted mb-4">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
@@ -249,55 +249,55 @@ const AdminOrderManagement: React.FC = () => {
               {searchQuery || statusFilter ? '검색 조건에 맞는 주문이 없습니다.' : '등록된 주문이 없습니다.'}
             </p>
             {(searchQuery || statusFilter) && (
-              <p className="text-gray-500 text-sm">다른 검색 조건을 시도해보세요.</p>
+              <p className="text-muted text-sm">다른 검색 조건을 시도해보세요.</p>
             )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-surface border-b border-line">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     주문 정보
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     고객 정보
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     판매자
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     주문 금액
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     상태
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     작업
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-line">
                 {orders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={order._id} className="hover:bg-surface transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
-                        <div className="text-sm text-gray-500">{order.items?.length || 0}개 상품</div>
-                        <div className="text-xs text-gray-400">{formatDate(order.createdAt)}</div>
+                        <div className="text-sm text-muted">{order.items?.length || 0}개 상품</div>
+                        <div className="text-xs text-muted">{formatDate(order.createdAt)}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{order.user?.name || '알 수 없음'}</div>
-                        <div className="text-sm text-gray-500">{order.user?.email || '-'}</div>
-                        <div className="text-xs text-gray-400">{order.shippingAddress?.recipientPhone || '-'}</div>
+                        <div className="text-sm text-muted">{order.user?.email || '-'}</div>
+                        <div className="text-xs text-muted">{order.shippingAddress?.recipientPhone || '-'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{order.items?.[0]?.sellerName || '-'}</div>
                       {order.items && order.items.length > 1 && (
-                        <div className="text-xs text-gray-500">외 {order.items.length - 1}개 상품</div>
+                        <div className="text-xs text-muted">외 {order.items.length - 1}개 상품</div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -323,7 +323,7 @@ const AdminOrderManagement: React.FC = () => {
                           value={order.status}
                           onChange={(e) => handleStatusChange(order, e.target.value)}
                           disabled={actionLoading}
-                          className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          className="text-xs border border-line-strong rounded px-2 py-1 focus:ring-1 focus:ring-brand focus:border-brand"
                         >
                           {statusOptions.slice(1).map(option => (
                             <option key={option.value} value={option.value}>{option.label}</option>
@@ -340,7 +340,7 @@ const AdminOrderManagement: React.FC = () => {
 
         {/* 페이지네이션 */}
         {!loading && !error && pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-line">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 총 {pagination.totalOrders}건 중 {((pagination.currentPage - 1) * PAGE_SIZE) + 1}-
@@ -350,7 +350,7 @@ const AdminOrderManagement: React.FC = () => {
                 <button
                   onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={pagination.currentPage === 1 || loading}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm border border-line rounded-md hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   이전
                 </button>
@@ -360,7 +360,7 @@ const AdminOrderManagement: React.FC = () => {
                 <button
                   onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
                   disabled={pagination.currentPage === pagination.totalPages || loading}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm border border-line rounded-md hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   다음
                 </button>
@@ -373,13 +373,13 @@ const AdminOrderManagement: React.FC = () => {
       {/* 주문 상세 정보 모달 */}
       {showDetailModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-line">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">주문 상세 정보</h3>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted hover:text-gray-600"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -395,28 +395,28 @@ const AdminOrderManagement: React.FC = () => {
                   <h4 className="text-md font-semibold text-gray-900 mb-3">주문 정보</h4>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="text-gray-500">주문번호:</span>
+                      <span className="text-muted">주문번호:</span>
                       <span className="ml-2 text-gray-900 font-medium">{selectedOrder.orderNumber}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">주문일시:</span>
+                      <span className="text-muted">주문일시:</span>
                       <span className="ml-2 text-gray-900">{formatDate(selectedOrder.createdAt)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">최근 업데이트:</span>
+                      <span className="text-muted">최근 업데이트:</span>
                       <span className="ml-2 text-gray-900">{formatDate(selectedOrder.updatedAt)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">상태:</span>
+                      <span className="text-muted">상태:</span>
                       <span className="ml-2">{getStatusBadge(selectedOrder.status)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">결제 상태:</span>
+                      <span className="text-muted">결제 상태:</span>
                       <span className="ml-2">{getPaymentStatusBadge(selectedOrder.paymentStatus)}</span>
                     </div>
                     {selectedOrder.trackingNumber && (
                       <div>
-                        <span className="text-gray-500">운송장 번호:</span>
+                        <span className="text-muted">운송장 번호:</span>
                         <span className="ml-2 text-gray-900">{selectedOrder.trackingNumber}</span>
                       </div>
                     )}
@@ -427,11 +427,11 @@ const AdminOrderManagement: React.FC = () => {
                   <h4 className="text-md font-semibold text-gray-900 mb-3">고객 정보</h4>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="text-gray-500">이름:</span>
+                      <span className="text-muted">이름:</span>
                       <span className="ml-2 text-gray-900">{selectedOrder.user?.name || '알 수 없음'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">이메일:</span>
+                      <span className="text-muted">이메일:</span>
                       <span className="ml-2 text-gray-900">{selectedOrder.user?.email || '-'}</span>
                     </div>
                   </div>
@@ -441,18 +441,18 @@ const AdminOrderManagement: React.FC = () => {
               {/* 배송지 정보 */}
               <div>
                 <h4 className="text-md font-semibold text-gray-900 mb-3">배송지 정보</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-surface p-4 rounded-lg">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500">받는 분:</span>
+                      <span className="text-muted">받는 분:</span>
                       <span className="ml-2 text-gray-900">{selectedOrder.shippingAddress?.recipientName || '-'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">연락처:</span>
+                      <span className="text-muted">연락처:</span>
                       <span className="ml-2 text-gray-900">{selectedOrder.shippingAddress?.recipientPhone || '-'}</span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-gray-500">주소:</span>
+                      <span className="text-muted">주소:</span>
                       <span className="ml-2 text-gray-900">{formatShippingAddress(selectedOrder)}</span>
                     </div>
                   </div>
@@ -462,24 +462,24 @@ const AdminOrderManagement: React.FC = () => {
               {/* 주문 상품 */}
               <div>
                 <h4 className="text-md font-semibold text-gray-900 mb-3">주문 상품</h4>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="border border-line rounded-lg overflow-hidden">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-surface">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">상품명</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">판매자</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">옵션</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">수량</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">가격</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">소계</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">상품명</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">판매자</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">옵션</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">수량</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">가격</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">소계</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-line">
                       {(selectedOrder.items || []).map((item, index) => (
                         <tr key={index}>
                           <td className="px-4 py-3 text-sm text-gray-900">{item.productName}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{item.sellerName || '-'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500">
+                          <td className="px-4 py-3 text-sm text-muted">{item.sellerName || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-muted">
                             {[
                               item.shape ? `쉐입: ${item.shape}` : null,
                               item.size ? `사이즈: ${item.size}` : null,
@@ -493,7 +493,7 @@ const AdminOrderManagement: React.FC = () => {
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-gray-50">
+                    <tfoot className="bg-surface">
                       <tr>
                         <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
                           총 결제 금액:
@@ -508,26 +508,26 @@ const AdminOrderManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-between">
+            <div className="p-6 border-t border-line flex justify-between">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-ink bg-surface rounded-lg hover:bg-surface-strong transition-colors"
               >
                 닫기
               </button>
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500">상태 변경:</span>
+                <span className="text-sm text-muted">상태 변경:</span>
                 <select
                   value={selectedOrder.status}
                   onChange={(e) => handleStatusChange(selectedOrder, e.target.value)}
                   disabled={actionLoading}
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="border border-line-strong rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand focus:border-brand"
                 >
                   {statusOptions.slice(1).map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
-                {actionLoading && <span className="text-sm text-gray-500">처리 중...</span>}
+                {actionLoading && <span className="text-sm text-muted">처리 중...</span>}
               </div>
             </div>
           </div>

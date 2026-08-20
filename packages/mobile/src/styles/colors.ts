@@ -1,39 +1,39 @@
-// 힙한 핑크/흰색 메인 색상 팔레트 (React Native용)
+// Handy 브랜드 팔레트 (tailwind.config.js 토큰과 동일한 값) (React Native용)
 export const colors = {
-  // 메인 브랜드 색상 (힙한 핑크 톤)
+  // 메인 브랜드 색상 (brand)
   primary: {
-    50: '#fdf2f8',   // 매우 연한 핑크 (배경용)
-    100: '#fce7f3',  // 연한 핑크
-    200: '#fbcfe8',  // 밝은 핑크
-    300: '#f9a8d4',  // 중간 밝은 핑크
-    400: '#f472b6',  // 메인 핑크
-    500: '#ec4899',  // 진한 핑크 (메인 브랜드)
-    600: '#db2777',  // 더 진한 핑크
-    700: '#be185d',  // 어두운 핑크
-    800: '#9d174d',  // 매우 어두운 핑크
-    900: '#831843',  // 가장 어두운 핑크
+    50: '#FFF1F2',   // brand-50
+    100: '#FFE4E6',  // brand-100
+    200: '#FECDD3',  // brand-200
+    300: '#F7A8B4',  // brand-300
+    400: '#EF7A8B',  // brand-400
+    500: '#E85A6B',  // brand (메인)
+    600: '#D14A5B',  // brand-600
+    700: '#B23A49',  // brand-700
+    800: '#8E2E3A',  // brand-800
+    900: '#6B222C',  // brand-900
   },
 
   // 서브 색상 (흰색 기반)
   white: '#ffffff',
-  cream: '#fffbf7',      // 따뜻한 흰색
-  offWhite: '#fafafa',   // 오프 화이트
+  cream: '#FFFBF7',      // 따뜻한 흰색
+  offWhite: '#F7F5F3',   // 오프 화이트
   
-  // 그레이스케일 (힙한 느낌)
+  // 웜 뉴트럴 (surface / line / muted / ink)
   gray: {
-    50: '#fafafa',
-    100: '#f5f5f5',
-    200: '#e5e5e5',
-    300: '#d4d4d4',
-    400: '#a3a3a3',
-    500: '#737373',
-    600: '#525252',
-    700: '#404040',
-    800: '#262626',
-    900: '#171717',
+    50: '#F7F5F3',
+    100: '#EEEBE8',
+    200: '#E5E0DC',
+    300: '#D0C9C3',
+    400: '#A39E99',
+    500: '#837E79',
+    600: '#6D6C6A',
+    700: '#4A4846',
+    800: '#2A2827',
+    900: '#131211',
   },
 
-  // 상태 색상 (핑크 톤으로 조화)
+  // 상태 색상
   success: '#22c55e',
   warning: '#f59e0b',
   error: '#ef4444',
@@ -50,26 +50,26 @@ export const colors = {
   // 배경 색상
   background: {
     primary: '#ffffff',
-    secondary: '#fdf2f8',
-    tertiary: '#fce7f3',
-    dark: '#171717',
+    secondary: '#FFF1F2',
+    tertiary: '#FFE4E6',
+    dark: '#131211',
   },
 
   // 텍스트 색상
   text: {
-    primary: '#171717',
-    secondary: '#525252',
-    tertiary: '#a3a3a3',
+    primary: '#131211',
+    secondary: '#6D6C6A',
+    tertiary: '#A39E99',
     inverse: '#ffffff',
-    brand: '#ec4899',
+    brand: '#E85A6B',
   },
 
   // 보더 색상
   border: {
-    light: '#f5f5f5',
-    medium: '#e5e5e5',
-    dark: '#d4d4d4',
-    brand: '#f9a8d4',
+    light: '#EEEBE8',
+    medium: '#E5E0DC',
+    dark: '#D0C9C3',
+    brand: '#FECDD3',
   },
 };
 

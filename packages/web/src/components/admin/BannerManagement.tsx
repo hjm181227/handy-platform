@@ -459,7 +459,7 @@ const BannerManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -470,18 +470,18 @@ const BannerManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">배너 관리</h1>
-          <p className="text-sm text-gray-500 mt-1">이벤트 배너를 관리합니다</p>
+          <p className="text-sm text-muted mt-1">이벤트 배너를 관리합니다</p>
         </div>
         <button
           onClick={openCreateModal}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors font-medium"
         >
           + 배너 추가
         </button>
       </div>
 
       {/* 필터 및 검색 */}
-      <div className="bg-white p-4 rounded-lg shadow space-y-3">
+      <div className="bg-white p-4 rounded-xl shadow space-y-3">
         <div className="flex gap-4 flex-wrap">
           {/* 상태 필터 */}
           <div>
@@ -489,7 +489,7 @@ const BannerManagement: React.FC = () => {
             <select
               value={filterActive}
               onChange={(e) => setFilterActive(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
             >
               <option value="all">전체</option>
               <option value="active">활성</option>
@@ -505,30 +505,30 @@ const BannerManagement: React.FC = () => {
               placeholder="제목 또는 설명으로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
             />
           </div>
         </div>
       </div>
 
       {/* 배너 리스트 */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-line">
+          <thead className="bg-surface">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">순서</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">미리보기</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">링크 URL</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">기간</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">클릭수</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">순서</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">미리보기</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">제목</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">링크 URL</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">기간</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">클릭수</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">상태</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">작업</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-line">
             {banners.map((banner) => (
-              <tr key={banner._id} className="hover:bg-gray-50">
+              <tr key={banner._id} className="hover:bg-surface">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {banner.displayOrder}
                 </td>
@@ -536,13 +536,13 @@ const BannerManagement: React.FC = () => {
                   <img
                     src={banner.imageUrl}
                     alt={banner.title}
-                    className="h-16 w-32 object-cover rounded border border-gray-200"
+                    className="h-16 w-32 object-cover rounded border border-line"
                   />
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm font-medium text-gray-900">{banner.title}</div>
                   {banner.description && (
-                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">{banner.description}</div>
+                    <div className="text-xs text-muted mt-1 line-clamp-2">{banner.description}</div>
                   )}
                 </td>
                 <td className="px-6 py-4">
@@ -556,17 +556,17 @@ const BannerManagement: React.FC = () => {
                       {banner.redirectUrl}
                     </a>
                   ) : (
-                    <span className="text-sm text-gray-400">-</span>
+                    <span className="text-sm text-muted">-</span>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                   {banner.startDate || banner.endDate ? (
                     <div>
                       {banner.startDate && <div>{new Date(banner.startDate).toLocaleDateString()}</div>}
                       {banner.endDate && <div>~ {new Date(banner.endDate).toLocaleDateString()}</div>}
                     </div>
                   ) : (
-                    <span className="text-gray-400">-</span>
+                    <span className="text-muted">-</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -578,7 +578,7 @@ const BannerManagement: React.FC = () => {
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       banner.isActive
                         ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                        : 'bg-surface text-gray-800'
                     }`}
                   >
                     {banner.isActive ? '활성' : '비활성'}
@@ -602,7 +602,7 @@ const BannerManagement: React.FC = () => {
             ))}
             {banners.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-12 text-center text-muted">
                   배너가 없습니다.
                 </td>
               </tr>
@@ -617,7 +617,7 @@ const BannerManagement: React.FC = () => {
           <button
             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            className="px-4 py-2 border border-line rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface"
           >
             이전
           </button>
@@ -627,7 +627,7 @@ const BannerManagement: React.FC = () => {
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            className="px-4 py-2 border border-line rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface"
           >
             다음
           </button>
@@ -637,7 +637,7 @@ const BannerManagement: React.FC = () => {
       {/* 생성 모달 */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">배너 추가</h2>
             <div className="space-y-4">
               <div>
@@ -646,7 +646,7 @@ const BannerManagement: React.FC = () => {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                   placeholder="배너 제목"
                 />
               </div>
@@ -656,7 +656,7 @@ const BannerManagement: React.FC = () => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                   placeholder="배너 설명"
                   rows={3}
                 />
@@ -669,7 +669,7 @@ const BannerManagement: React.FC = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageSelect}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-line rounded-lg"
                 />
                 {imagePreview && (
                   <div className="mt-2 relative">
@@ -684,13 +684,13 @@ const BannerManagement: React.FC = () => {
                 )}
                 {isUploading && (
                   <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-surface-strong rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        className="bg-brand h-2 rounded-full transition-all"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">업로드 중... {uploadProgress}%</p>
+                    <p className="text-xs text-muted mt-1">업로드 중... {uploadProgress}%</p>
                   </div>
                 )}
               </div>
@@ -699,22 +699,22 @@ const BannerManagement: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   상세 이미지 (이벤트 페이지)
-                  <span className="text-xs text-gray-400 ml-1">최대 10장</span>
+                  <span className="text-xs text-muted ml-1">최대 10장</span>
                 </label>
-                <p className="text-xs text-gray-500 mb-2">배너 클릭 시 보여질 상세 페이지 이미지입니다. 권장: 너비 1080px, 장당 2MB 이하 (1080px 초과 시 자동 축소)</p>
+                <p className="text-xs text-muted mb-2">배너 클릭 시 보여질 상세 페이지 이미지입니다. 권장: 너비 1080px, 장당 2MB 이하 (1080px 초과 시 자동 축소)</p>
                 <input
                   ref={detailFileInputRef}
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={handleDetailImageSelect}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-line rounded-lg"
                 />
                 {detailImagePreviews.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {detailImagePreviews.map((img, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
-                        <span className="text-xs text-gray-500 font-medium w-6 text-center">{index + 1}</span>
+                      <div key={index} className="flex items-center gap-2 p-2 bg-surface rounded-lg border">
+                        <span className="text-xs text-muted font-medium w-6 text-center">{index + 1}</span>
                         <img
                           src={img.imageUrl}
                           alt={`상세 ${index + 1}`}
@@ -728,14 +728,14 @@ const BannerManagement: React.FC = () => {
                           <button
                             onClick={() => handleDetailImageMoveUp(index)}
                             disabled={index === 0}
-                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                            className="text-muted hover:text-gray-700 disabled:opacity-30 text-xs px-1"
                           >
                             ▲
                           </button>
                           <button
                             onClick={() => handleDetailImageMoveDown(index)}
                             disabled={index === detailImagePreviews.length - 1}
-                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                            className="text-muted hover:text-gray-700 disabled:opacity-30 text-xs px-1"
                           >
                             ▼
                           </button>
@@ -758,10 +758,10 @@ const BannerManagement: React.FC = () => {
                   type="text"
                   value={formData.redirectUrl}
                   onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                   placeholder="https://example.com 또는 /design-tool 같은 내부 경로"
                 />
-                <p className="text-xs text-gray-500 mt-1">상세 이미지가 없을 때 배너를 누르면 이 URL로 이동합니다. (외부 URL은 새 탭에서 열림)</p>
+                <p className="text-xs text-muted mt-1">상세 이미지가 없을 때 배너를 누르면 이 URL로 이동합니다. (외부 URL은 새 탭에서 열림)</p>
               </div>
 
               <div>
@@ -770,7 +770,7 @@ const BannerManagement: React.FC = () => {
                   type="date"
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
 
@@ -780,7 +780,7 @@ const BannerManagement: React.FC = () => {
                   type="date"
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
             </div>
@@ -788,14 +788,14 @@ const BannerManagement: React.FC = () => {
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-line rounded-lg hover:bg-surface"
               >
                 취소
               </button>
               <button
                 onClick={handleCreate}
                 disabled={isUploading || detailImagePreviews.some(img => img.isUploading)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50"
               >
                 {isUploading ? '업로드 중...' : '생성'}
               </button>
@@ -807,7 +807,7 @@ const BannerManagement: React.FC = () => {
       {/* 수정 모달 */}
       {showEditModal && selectedBanner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">배너 수정</h2>
             <div className="space-y-4">
               <div>
@@ -816,7 +816,7 @@ const BannerManagement: React.FC = () => {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
 
@@ -825,7 +825,7 @@ const BannerManagement: React.FC = () => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                   rows={3}
                 />
               </div>
@@ -837,7 +837,7 @@ const BannerManagement: React.FC = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageSelect}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-line rounded-lg"
                 />
                 {imagePreview && (
                   <div className="mt-2 relative">
@@ -854,13 +854,13 @@ const BannerManagement: React.FC = () => {
                 )}
                 {isUploading && (
                   <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-surface-strong rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        className="bg-brand h-2 rounded-full transition-all"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">업로드 중... {uploadProgress}%</p>
+                    <p className="text-xs text-muted mt-1">업로드 중... {uploadProgress}%</p>
                   </div>
                 )}
               </div>
@@ -869,22 +869,22 @@ const BannerManagement: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   상세 이미지 (이벤트 페이지)
-                  <span className="text-xs text-gray-400 ml-1">최대 10장</span>
+                  <span className="text-xs text-muted ml-1">최대 10장</span>
                 </label>
-                <p className="text-xs text-gray-500 mb-2">배너 클릭 시 보여질 상세 페이지 이미지입니다. 권장: 너비 1080px, 장당 2MB 이하 (1080px 초과 시 자동 축소)</p>
+                <p className="text-xs text-muted mb-2">배너 클릭 시 보여질 상세 페이지 이미지입니다. 권장: 너비 1080px, 장당 2MB 이하 (1080px 초과 시 자동 축소)</p>
                 <input
                   ref={detailFileInputRef}
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={handleDetailImageSelect}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-line rounded-lg"
                 />
                 {detailImagePreviews.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {detailImagePreviews.map((img, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
-                        <span className="text-xs text-gray-500 font-medium w-6 text-center">{index + 1}</span>
+                      <div key={index} className="flex items-center gap-2 p-2 bg-surface rounded-lg border">
+                        <span className="text-xs text-muted font-medium w-6 text-center">{index + 1}</span>
                         <img
                           src={img.imageUrl}
                           alt={`상세 ${index + 1}`}
@@ -898,14 +898,14 @@ const BannerManagement: React.FC = () => {
                           <button
                             onClick={() => handleDetailImageMoveUp(index)}
                             disabled={index === 0}
-                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                            className="text-muted hover:text-gray-700 disabled:opacity-30 text-xs px-1"
                           >
                             ▲
                           </button>
                           <button
                             onClick={() => handleDetailImageMoveDown(index)}
                             disabled={index === detailImagePreviews.length - 1}
-                            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
+                            className="text-muted hover:text-gray-700 disabled:opacity-30 text-xs px-1"
                           >
                             ▼
                           </button>
@@ -928,10 +928,10 @@ const BannerManagement: React.FC = () => {
                   type="text"
                   value={formData.redirectUrl}
                   onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                   placeholder="https://example.com 또는 /design-tool 같은 내부 경로"
                 />
-                <p className="text-xs text-gray-500 mt-1">상세 이미지가 없을 때 배너를 누르면 이 URL로 이동합니다. (외부 URL은 새 탭에서 열림)</p>
+                <p className="text-xs text-muted mt-1">상세 이미지가 없을 때 배너를 누르면 이 URL로 이동합니다. (외부 URL은 새 탭에서 열림)</p>
               </div>
 
               <div>
@@ -940,7 +940,7 @@ const BannerManagement: React.FC = () => {
                   type="date"
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
 
@@ -950,7 +950,7 @@ const BannerManagement: React.FC = () => {
                   type="date"
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
             </div>
@@ -958,14 +958,14 @@ const BannerManagement: React.FC = () => {
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-line rounded-lg hover:bg-surface"
               >
                 취소
               </button>
               <button
                 onClick={handleUpdate}
                 disabled={isUploading || detailImagePreviews.some(img => img.isUploading)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50"
               >
                 {isUploading ? '업로드 중...' : '저장'}
               </button>
@@ -977,7 +977,7 @@ const BannerManagement: React.FC = () => {
       {/* 삭제 모달 */}
       {showDeleteModal && selectedBanner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">배너 삭제</h2>
             <p className="text-gray-700 mb-6">
               <strong>{selectedBanner.title}</strong> 배너를 삭제하시겠습니까?
@@ -985,7 +985,7 @@ const BannerManagement: React.FC = () => {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-line rounded-lg hover:bg-surface"
               >
                 취소
               </button>

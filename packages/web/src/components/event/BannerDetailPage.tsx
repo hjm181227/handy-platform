@@ -122,24 +122,24 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
         {/* 모바일 로딩 */}
         <div className="md:hidden">
           <div className="animate-pulse">
-            <div className="w-full h-[260px] bg-gray-200" />
+            <div className="w-full h-[260px] bg-surface" />
             <div className="p-5 space-y-3">
-              <div className="h-5 bg-gray-200 rounded w-1/3" />
-              <div className="h-7 bg-gray-200 rounded w-3/4" />
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="h-5 bg-surface rounded w-1/3" />
+              <div className="h-7 bg-surface rounded w-3/4" />
+              <div className="h-4 bg-surface rounded w-full" />
+              <div className="h-4 bg-surface rounded w-2/3" />
             </div>
           </div>
         </div>
         {/* 데스크톱 로딩 */}
         <div className="hidden md:block mx-auto max-w-7xl px-4 py-6">
           <div className="animate-pulse">
-            <div className="h-5 bg-gray-200 rounded w-32 mb-6" />
-            <div className="w-full h-[350px] bg-gray-200 rounded-2xl" />
+            <div className="h-5 bg-surface rounded w-32 mb-6" />
+            <div className="w-full h-[350px] bg-surface rounded-2xl" />
             <div className="mt-6 space-y-3">
-              <div className="h-8 bg-gray-200 rounded w-1/2" />
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="h-8 bg-surface rounded w-1/2" />
+              <div className="h-4 bg-surface rounded w-full" />
+              <div className="h-4 bg-surface rounded w-2/3" />
             </div>
           </div>
         </div>
@@ -165,16 +165,16 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
         </header>
         <div className="mx-auto max-w-7xl px-4 py-6">
           <div className="text-center py-20">
-            <div className="text-gray-400 mb-3">
+            <div className="text-muted mb-3">
               <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <p className="text-lg font-medium text-gray-600 mb-1">배너를 찾을 수 없습니다</p>
-            <p className="text-sm text-gray-400 mb-5">{error || '존재하지 않거나 만료된 이벤트입니다.'}</p>
+            <p className="text-sm text-muted mb-5">{error || '존재하지 않거나 만료된 이벤트입니다.'}</p>
             <button
               onClick={() => onGo('/event')}
-              className="rounded-lg bg-black text-white px-6 py-2 hover:bg-gray-800"
+              className="rounded-full bg-brand text-white px-6 py-2 hover:bg-brand-600"
             >
               이벤트 목록으로 돌아가기
             </button>
@@ -196,7 +196,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
           <div className="mb-6">
             <button
               onClick={() => onGo('/event')}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-ink hover:bg-surface rounded-lg transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
                 <path d="M19 12H5m7-7l-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -251,7 +251,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                       </svg>
                     </div>
                     <div className="text-sm font-bold text-gray-900 mb-1">이벤트 기간</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-muted">
                       {banner.startDate && formatDateFull(banner.startDate)}
                       {banner.startDate && banner.endDate && ' ~ '}
                       {banner.endDate && formatDateFull(banner.endDate)}
@@ -267,7 +267,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                     </svg>
                   </div>
                   <div className="text-sm font-bold text-gray-900 mb-1">진행 상태</div>
-                  <div className="text-xs text-gray-500">{status.label}</div>
+                  <div className="text-xs text-muted">{status.label}</div>
                 </div>
 
                 {/* D-day */}
@@ -279,7 +279,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                       </svg>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">{getDday(banner.endDate)}</div>
-                    <div className="text-xs text-gray-500">남은 기간</div>
+                    <div className="text-xs text-muted">남은 기간</div>
                   </div>
                 )}
 
@@ -340,7 +340,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                       onClick={() => handleBannerClick(related, onGo)}
                       className="cursor-pointer group"
                     >
-                      <div className="relative w-full overflow-hidden rounded-xl bg-gray-100">
+                      <div className="relative w-full overflow-hidden rounded-xl bg-surface">
                         <img
                           src={related.imageUrl}
                           alt={related.title}
@@ -350,7 +350,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                       </div>
                       <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-1">{related.title}</p>
                       {(related.startDate || related.endDate) && (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted mt-1">
                           {related.startDate && new Date(related.startDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
                           {related.startDate && related.endDate && ' ~ '}
                           {related.endDate && new Date(related.endDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
@@ -428,10 +428,10 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
           {/* 기간 + D-day */}
           {(banner.startDate || banner.endDate) && (
             <div className="flex items-center gap-2 mb-4">
-              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-[13px] text-gray-500">
+              <span className="text-[13px] text-muted">
                 {banner.startDate && formatDate(banner.startDate)}
                 {banner.startDate && banner.endDate && ' ~ '}
                 {banner.endDate && formatDate(banner.endDate)}
@@ -446,14 +446,14 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
 
           {/* 설명 */}
           {banner.description && (
-            <p className="text-[14px] text-gray-500 leading-relaxed whitespace-pre-line">
+            <p className="text-[14px] text-muted leading-relaxed whitespace-pre-line">
               {banner.description}
             </p>
           )}
         </div>
 
         {/* 구분선 */}
-        <div className="h-2 bg-gray-100" />
+        <div className="h-2 bg-surface" />
 
         {/* 상세 이미지 */}
         {banner.detailImages && banner.detailImages.length > 0 && (
@@ -474,7 +474,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                   ))}
               </div>
             </div>
-            <div className="h-2 bg-gray-100" />
+            <div className="h-2 bg-surface" />
           </>
         )}
 
@@ -492,7 +492,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                       onClick={() => handleBannerClick(related, onGo)}
                       className="flex-shrink-0 w-[160px] cursor-pointer"
                     >
-                      <div className="w-full h-[100px] rounded-xl overflow-hidden bg-gray-100 mb-2">
+                      <div className="w-full h-[100px] rounded-xl overflow-hidden bg-surface mb-2">
                         <img
                           src={related.imageUrl}
                           alt={related.title}
@@ -502,7 +502,7 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                       </div>
                       <p className="text-[12px] font-semibold text-gray-900 line-clamp-1">{related.title}</p>
                       {(related.startDate || related.endDate) && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">
+                        <p className="text-[11px] text-muted mt-0.5">
                           {related.startDate && new Date(related.startDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
                           {related.startDate && related.endDate && ' ~ '}
                           {related.endDate && new Date(related.endDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}

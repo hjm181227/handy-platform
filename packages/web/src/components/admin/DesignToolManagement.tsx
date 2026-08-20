@@ -55,7 +55,7 @@ const statusBadgeClass = (status: SubscriptionStatus): string => {
     case 'trial':
       return 'bg-purple-100 text-purple-700';
     default:
-      return 'bg-gray-100 text-gray-600';
+      return 'bg-surface text-gray-600';
   }
 };
 
@@ -201,25 +201,25 @@ const DesignToolManagement: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">디자인 툴 구독 관리</h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted">
           전체 구독자 조회, 필터링, 환불/취소/권한 부여 등 운영 액션
         </p>
       </div>
 
       {/* KPI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500">전체 조회된 구독</p>
+        <div className="bg-white border border-line rounded-xl p-5">
+          <p className="text-sm text-muted">전체 조회된 구독</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{total.toLocaleString()}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500">현재 페이지 활성 구독</p>
+        <div className="bg-white border border-line rounded-xl p-5">
+          <p className="text-sm text-muted">현재 페이지 활성 구독</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
             {activeCount.toLocaleString()}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500">페이지</p>
+        <div className="bg-white border border-line rounded-xl p-5">
+          <p className="text-sm text-muted">페이지</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
             {page} / {totalPages}
           </p>
@@ -227,14 +227,14 @@ const DesignToolManagement: React.FC = () => {
       </div>
 
       {/* 필터 */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+      <div className="bg-white border border-line rounded-xl p-4 mb-4 flex flex-wrap gap-3">
         <select
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value as SubscriptionStatus | '');
             setPage(1);
           }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-3 py-2 border border-line rounded-lg text-sm"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -248,7 +248,7 @@ const DesignToolManagement: React.FC = () => {
             setPlanFilter(e.target.value as DesignToolPlanId | '');
             setPage(1);
           }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-3 py-2 border border-line rounded-lg text-sm"
         >
           {PLAN_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -262,7 +262,7 @@ const DesignToolManagement: React.FC = () => {
             setSourceFilter(e.target.value as PaymentSource | '');
             setPage(1);
           }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-3 py-2 border border-line rounded-lg text-sm"
         >
           {SOURCE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -272,47 +272,47 @@ const DesignToolManagement: React.FC = () => {
         </select>
         <button
           onClick={() => load()}
-          className="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600"
+          className="px-4 py-2 bg-brand text-white rounded-full text-sm font-medium hover:bg-brand-600"
         >
           새로고침
         </button>
       </div>
 
       {/* 리스트 */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-line rounded-xl overflow-hidden">
         {loading && (
           <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
           </div>
         )}
         {!loading && error && (
           <div className="p-6 text-red-600 text-sm">{error}</div>
         )}
         {!loading && !error && items.length === 0 && (
-          <div className="p-12 text-center text-gray-500 text-sm">
+          <div className="p-12 text-center text-muted text-sm">
             조건에 맞는 구독이 없습니다.
           </div>
         )}
         {!loading && !error && items.length > 0 && (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-line">
+            <thead className="bg-surface">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   이메일
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   플랜
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   상태
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   결제 소스
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   만료일
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">
                   마지막 결제
                 </th>
                 <th className="px-6 py-3"></th>
@@ -320,14 +320,14 @@ const DesignToolManagement: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {items.map((item) => (
-                <tr key={item.userUuid} className="hover:bg-gray-50">
+                <tr key={item.userUuid} className="hover:bg-surface">
                   <td className="px-6 py-3 text-sm text-gray-900">{item.email}</td>
                   <td className="px-6 py-3 text-sm">
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         item.plan === 'pro'
-                          ? 'bg-pink-100 text-pink-700'
-                          : 'bg-gray-100 text-gray-700'
+                          ? 'bg-brand-100 text-brand-700'
+                          : 'bg-surface text-gray-700'
                       }`}
                     >
                       {item.plan.toUpperCase()}
@@ -342,15 +342,15 @@ const DesignToolManagement: React.FC = () => {
                       {item.status}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-sm text-gray-500">
+                  <td className="px-6 py-3 text-sm text-muted">
                     {item.paymentSource ?? '-'}
                   </td>
-                  <td className="px-6 py-3 text-sm text-gray-500">
+                  <td className="px-6 py-3 text-sm text-muted">
                     {item.expiresAt
                       ? new Date(item.expiresAt).toLocaleDateString('ko-KR')
                       : '-'}
                   </td>
-                  <td className="px-6 py-3 text-sm text-gray-500">
+                  <td className="px-6 py-3 text-sm text-muted">
                     {item.lastPaymentAt
                       ? new Date(item.lastPaymentAt).toLocaleDateString('ko-KR')
                       : '-'}
@@ -358,7 +358,7 @@ const DesignToolManagement: React.FC = () => {
                   <td className="px-6 py-3 text-sm">
                     <button
                       onClick={() => openDetail(item)}
-                      className="px-3 py-1.5 text-xs text-pink-700 border border-pink-200 rounded-lg hover:bg-pink-50"
+                      className="px-3 py-1.5 text-xs text-brand-700 border border-brand-200 rounded-lg hover:bg-brand-50"
                     >
                       상세
                     </button>
@@ -376,7 +376,7 @@ const DesignToolManagement: React.FC = () => {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm disabled:opacity-40"
+            className="px-3 py-1.5 border border-line rounded-lg text-sm disabled:opacity-40"
           >
             이전
           </button>
@@ -386,7 +386,7 @@ const DesignToolManagement: React.FC = () => {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm disabled:opacity-40"
+            className="px-3 py-1.5 border border-line rounded-lg text-sm disabled:opacity-40"
           >
             다음
           </button>
@@ -403,14 +403,14 @@ const DesignToolManagement: React.FC = () => {
             className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-pink-50 to-purple-50 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-line bg-gradient-to-r from-brand-50 to-brand-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">{selected.email}</h3>
-                <p className="text-xs text-gray-500 font-mono">{selected.userUuid}</p>
+                <p className="text-xs text-muted font-mono">{selected.userUuid}</p>
               </div>
               <button
                 onClick={closeDetail}
-                className="text-gray-400 hover:text-gray-600 p-1"
+                className="text-muted hover:text-gray-600 p-1"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -426,7 +426,7 @@ const DesignToolManagement: React.FC = () => {
             <div className="px-6 py-4 overflow-y-auto">
               {detailLoading && (
                 <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand" />
                 </div>
               )}
 
@@ -478,9 +478,9 @@ const DesignToolManagement: React.FC = () => {
                   <div className="mb-5">
                     <p className="text-sm font-medium text-gray-900 mb-2">결제 이력</p>
                     {detailPayments.length === 0 ? (
-                      <p className="text-xs text-gray-500">기록 없음</p>
+                      <p className="text-xs text-muted">기록 없음</p>
                     ) : (
-                      <ul className="divide-y divide-gray-100 border border-gray-200 rounded-lg">
+                      <ul className="divide-y divide-gray-100 border border-line rounded-lg">
                         {detailPayments.map((p) => (
                           <li
                             key={p.id}
@@ -496,7 +496,7 @@ const DesignToolManagement: React.FC = () => {
                                     p.status === 'completed'
                                       ? 'bg-green-100 text-green-700'
                                       : p.status === 'refunded'
-                                      ? 'bg-gray-100 text-gray-600'
+                                      ? 'bg-surface text-gray-600'
                                       : p.status === 'failed'
                                       ? 'bg-red-100 text-red-700'
                                       : 'bg-amber-100 text-amber-700'
@@ -505,7 +505,7 @@ const DesignToolManagement: React.FC = () => {
                                   {p.status}
                                 </span>
                               </div>
-                              <p className="text-gray-500 mt-0.5">
+                              <p className="text-muted mt-0.5">
                                 {new Date(p.paidAt).toLocaleString('ko-KR')}
                               </p>
                             </div>
@@ -515,7 +515,7 @@ const DesignToolManagement: React.FC = () => {
                                   href={p.receiptUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-pink-600 hover:underline"
+                                  className="text-brand-600 hover:underline"
                                 >
                                   영수증
                                 </a>
@@ -540,18 +540,18 @@ const DesignToolManagement: React.FC = () => {
             </div>
 
             {/* 액션 */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 justify-end">
+            <div className="px-6 py-4 bg-surface border-t border-line flex flex-wrap gap-2 justify-end">
               <button
                 onClick={() => handleGrant('pro')}
                 disabled={actionLoading}
-                className="px-3 py-2 text-xs border border-pink-200 text-pink-700 rounded-lg hover:bg-pink-50 disabled:opacity-50"
+                className="px-3 py-2 text-xs border border-brand-200 text-brand-700 rounded-lg hover:bg-brand-50 disabled:opacity-50"
               >
                 Pro 부여
               </button>
               <button
                 onClick={() => handleGrant('free')}
                 disabled={actionLoading}
-                className="px-3 py-2 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="px-3 py-2 text-xs border border-line text-ink rounded-lg hover:bg-surface disabled:opacity-50"
               >
                 Free 부여
               </button>
@@ -576,7 +576,7 @@ const DesignToolManagement: React.FC = () => {
               </button>
               <button
                 onClick={closeDetail}
-                className="px-3 py-2 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-3 py-2 text-xs bg-white border border-line text-ink rounded-lg hover:bg-surface"
               >
                 닫기
               </button>
@@ -591,7 +591,7 @@ const DesignToolManagement: React.FC = () => {
 function KV({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+      <p className="text-xs text-muted mb-0.5">{label}</p>
       <p className="text-sm font-medium text-gray-900">{value}</p>
     </div>
   );

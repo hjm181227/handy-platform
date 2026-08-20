@@ -40,8 +40,8 @@ export function ShapeStep({
     >
       {/* 고정 쉐입 안내 */}
       {fixed && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-4 flex items-center gap-3">
-          <FaLock className="text-gray-400 w-4 h-4 flex-shrink-0" />
+        <div className="bg-surface rounded-xl p-4 mb-4 flex items-center gap-3">
+          <FaLock className="text-muted w-4 h-4 flex-shrink-0" />
           <p className="text-sm text-gray-600">
             {t('product:customOrder.shapeFixed', { shape: getShapeName(shape) })}
           </p>
@@ -62,17 +62,17 @@ export function ShapeStep({
               className={`
                 relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all
                 ${isSelected
-                  ? 'border-pink-500 bg-pink-500 text-white'
+                  ? 'border-brand bg-brand text-white'
                   : isDisabled
-                    ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed opacity-40'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-pink-200 hover:bg-pink-50'
+                    ? 'border-gray-100 bg-surface text-gray-300 cursor-not-allowed opacity-40'
+                    : 'border-line bg-white text-ink hover:border-brand-200 hover:bg-brand-50'
                 }
               `}
             >
               {/* 선택 체크 */}
               {isSelected && (
                 <div className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                  <FaCheck className="w-3 h-3 text-pink-500" />
+                  <FaCheck className="w-3 h-3 text-brand" />
                 </div>
               )}
 
@@ -86,7 +86,7 @@ export function ShapeStep({
 
               {/* 설명 (선택된 경우에만 표시) */}
               {isSelected && (
-                <span className="text-xs mt-1 text-pink-100 text-center line-clamp-2">
+                <span className="text-xs mt-1 text-brand-100 text-center line-clamp-2">
                   {getShapeDescription(s)}
                 </span>
               )}
@@ -96,8 +96,8 @@ export function ShapeStep({
       </div>
 
       {/* 선택된 쉐입 설명 */}
-      <div className="bg-pink-50 rounded-xl p-4 mt-4">
-        <p className="text-sm text-pink-800">
+      <div className="bg-brand-50 rounded-xl p-4 mt-4">
+        <p className="text-sm text-brand-700">
           <span className="font-semibold">{getShapeName(shape)}</span>
           <span className="mx-2">·</span>
           {getShapeDescription(shape)}

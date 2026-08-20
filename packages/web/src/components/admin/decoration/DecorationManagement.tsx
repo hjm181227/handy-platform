@@ -241,7 +241,7 @@ export default function DecorationManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
+      <div className="mb-6 border-b border-line">
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'assets' as ActiveTab, label: '에셋 관리' },
@@ -252,8 +252,8 @@ export default function DecorationManagement() {
               onClick={() => setActiveTab(tab.id)}
               className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-muted hover:text-gray-700 hover:border-line'
               }`}
             >
               {tab.label}
@@ -270,7 +270,7 @@ export default function DecorationManagement() {
             <p className="text-sm text-gray-600">총 {totalItems}개의 에셋</p>
             <button
               onClick={handleCreateAsset}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors"
             >
               <FiPlus className="mr-2" />
               새 에셋 추가
@@ -284,7 +284,7 @@ export default function DecorationManagement() {
               <select
                 value={filters.assetType}
                 onChange={(e) => updateFilter('assetType', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="">전체</option>
                 <option value="part">Part</option>
@@ -296,7 +296,7 @@ export default function DecorationManagement() {
               <select
                 value={filters.category}
                 onChange={(e) => updateFilter('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="">전체</option>
                 {categories.map((c) => (
@@ -311,7 +311,7 @@ export default function DecorationManagement() {
               <select
                 value={filters.accessTier}
                 onChange={(e) => updateFilter('accessTier', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="">전체</option>
                 <option value="free">Free</option>
@@ -324,7 +324,7 @@ export default function DecorationManagement() {
               <select
                 value={filters.status}
                 onChange={(e) => updateFilter('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="">전체</option>
                 <option value="active">활성</option>
@@ -336,13 +336,13 @@ export default function DecorationManagement() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">검색</label>
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" />
                 <input
                   type="text"
                   value={filters.search}
                   onChange={(e) => updateFilter('search', e.target.value)}
                   placeholder="이름 검색..."
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function DecorationManagement() {
               <select
                 value={filters.sort}
                 onChange={(e) => updateFilter('sort', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="newest">최신순</option>
                 <option value="name">이름순</option>
@@ -361,39 +361,39 @@ export default function DecorationManagement() {
           </div>
 
           {/* Asset Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-xl shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-line">
+                <thead className="bg-surface">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">미리보기</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">타입</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Access</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">생성일</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">미리보기</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">이름</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">타입</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">카테고리</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Access</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">상태</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">생성일</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">액션</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-line">
                   {loading && decorations.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-12 text-center text-muted">
                         <div className="flex justify-center">
-                          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                          <div className="w-8 h-8 border-4 border-brand-200 border-t-brand rounded-full animate-spin"></div>
                         </div>
                       </td>
                     </tr>
                   ) : !loading && decorations.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-12 text-center text-muted">
                         에셋이 없습니다.
                       </td>
                     </tr>
                   ) : (
                     decorations.map((asset) => (
-                      <tr key={asset.decorationAssetUuid} className="hover:bg-gray-50">
+                      <tr key={asset.decorationAssetUuid} className="hover:bg-surface">
                         <td className="px-6 py-4 whitespace-nowrap">
                           {asset.assets?.previewUrl ? (
                             <img
@@ -402,17 +402,17 @@ export default function DecorationManagement() {
                               className="w-10 h-10 object-contain rounded"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-gray-400 text-xs">N/A</div>
+                            <div className="w-10 h-10 bg-surface rounded flex items-center justify-center text-muted text-xs">N/A</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {asset.name?.ko || asset.name?.en}
-                          <span className="block text-xs text-gray-400">{asset.name?.en}</span>
+                          <span className="block text-xs text-muted">{asset.name?.en}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <AssetTypeBadge type={asset.assetType} />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                           {getCategoryName(asset.category)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -423,7 +423,7 @@ export default function DecorationManagement() {
                             <StatusBadge status={asset.status} />
                           </button>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                           {new Date(asset.createdAt).toLocaleDateString('ko-KR')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -456,11 +456,11 @@ export default function DecorationManagement() {
             <div ref={sentinelRef} className="h-4" />
             {loading && decorations.length > 0 && (
               <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand" />
               </div>
             )}
             {!hasMore && decorations.length > 0 && (
-              <p className="text-center text-sm text-gray-400 py-4">모든 항목을 불러왔습니다</p>
+              <p className="text-center text-sm text-muted py-4">모든 항목을 불러왔습니다</p>
             )}
           </div>
 
@@ -477,7 +477,7 @@ export default function DecorationManagement() {
           {/* Delete Confirmation */}
           {showDeleteModal && deleteTarget && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="bg-white rounded-xl max-w-md w-full p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-2">에셋 삭제</h2>
                 <p className="text-sm text-gray-600 mb-4">
                   <strong>{deleteTarget.name?.ko || deleteTarget.name?.en}</strong> 에셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
@@ -488,7 +488,7 @@ export default function DecorationManagement() {
                       setShowDeleteModal(false);
                       setDeleteTarget(null);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
                   >
                     취소
                   </button>
@@ -512,61 +512,61 @@ export default function DecorationManagement() {
             <p className="text-sm text-gray-600">총 {categories.length}개의 카테고리</p>
             <button
               onClick={handleCreateCategory}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors"
             >
               <FiPlus className="mr-2" />
               새 카테고리 추가
             </button>
           </div>
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-xl shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-line">
+                <thead className="bg-surface">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름(KO)</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">에셋 타입</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">정렬</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Slug</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">이름(KO)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">에셋 타입</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">정렬</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">상태</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">액션</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-line">
                   {catLoading ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={7} className="px-6 py-12 text-center text-muted">
                         <div className="flex justify-center">
-                          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                          <div className="w-8 h-8 border-4 border-brand-200 border-t-brand rounded-full animate-spin"></div>
                         </div>
                       </td>
                     </tr>
                   ) : categories.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={7} className="px-6 py-12 text-center text-muted">
                         카테고리가 없습니다.
                       </td>
                     </tr>
                   ) : (
                     categories.map((cat) => (
-                      <tr key={cat.decorationCategoryUuid} className="hover:bg-gray-50">
+                      <tr key={cat.decorationCategoryUuid} className="hover:bg-surface">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">
                           {cat.slug}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cat.name?.en}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cat.name?.ko}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                          <span className="px-2 py-1 text-xs font-medium bg-surface text-gray-700 rounded-full">
                             {cat.assetType}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cat.sortOrder}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">{cat.sortOrder}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button onClick={() => handleToggleCategoryStatus(cat)}>
                             <span
                               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                cat.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                cat.isActive ? 'bg-green-100 text-green-800' : 'bg-surface text-gray-800'
                               }`}
                             >
                               {cat.isActive ? '활성' : '비활성'}
@@ -612,7 +612,7 @@ export default function DecorationManagement() {
           {/* Category Delete Confirmation */}
           {showCatDeleteModal && catDeleteTarget && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="bg-white rounded-xl max-w-md w-full p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-2">카테고리 삭제</h2>
                 <p className="text-sm text-gray-600 mb-4">
                   <strong>{catDeleteTarget.name?.ko || catDeleteTarget.name?.en}</strong> 카테고리를 삭제하시겠습니까?
@@ -623,7 +623,7 @@ export default function DecorationManagement() {
                       setShowCatDeleteModal(false);
                       setCatDeleteTarget(null);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
                   >
                     취소
                   </button>

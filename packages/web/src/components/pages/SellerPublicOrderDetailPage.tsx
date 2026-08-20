@@ -220,20 +220,20 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
       <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden">
         {/* Handle (mobile) */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <span className="w-10 h-1 rounded-full bg-gray-300" />
+          <span className="w-10 h-1 rounded-full bg-line-strong" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
           <h3 id="quote-modal-title" className="text-base font-semibold text-gray-900">
             견적서 작성
           </h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface transition-colors"
             aria-label="닫기"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -257,12 +257,12 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
                   onChange={e => setPrice(e.target.value)}
                   placeholder="예: 50000"
                   required
-                  className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                  className="w-full px-4 py-3 pr-10 border border-line-strong rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">원</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">원</span>
               </div>
               {price && !isNaN(Number(price)) && Number(price) > 0 && (
-                <p className="mt-1 text-xs text-gray-500">{formatPrice(Number(price))}원</p>
+                <p className="mt-1 text-xs text-muted">{formatPrice(Number(price))}원</p>
               )}
             </div>
 
@@ -281,16 +281,16 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
                   onChange={e => setProcessingDays(e.target.value)}
                   placeholder="예: 7"
                   required
-                  className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                  className="w-full px-4 py-3 pr-10 border border-line-strong rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">일</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">일</span>
               </div>
             </div>
 
             {/* Notes */}
             <div>
               <label htmlFor="quote-notes" className="block text-sm font-medium text-gray-700 mb-1.5">
-                메모 <span className="text-xs font-normal text-gray-400">(선택)</span>
+                메모 <span className="text-xs font-normal text-muted">(선택)</span>
               </label>
               <textarea
                 id="quote-notes"
@@ -298,7 +298,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
                 value={sellerNotes}
                 onChange={e => setSellerNotes(e.target.value)}
                 placeholder="고객에게 전달할 메모를 입력해주세요"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                className="w-full px-4 py-3 border border-line-strong rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
               />
             </div>
 
@@ -319,7 +319,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="flex-1 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 disabled:opacity-60 transition-colors"
+              className="flex-1 py-3 border border-line text-ink text-sm font-medium rounded-xl hover:bg-surface disabled:opacity-60 transition-colors"
             >
               취소
             </button>
@@ -350,7 +350,7 @@ function InlineToast({ message, type }: { message: string; type: 'success' | 'er
   return (
     <div
       className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all
-        ${type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'}`}
+        ${type === 'success' ? 'bg-ink text-white' : 'bg-red-600 text-white'}`}
       role="status"
       aria-live="polite"
     >
@@ -518,12 +518,12 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
   return (
     <div className="min-h-screen bg-surface">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
+      <header className="sticky top-0 z-10 bg-white border-b border-line">
         <div className="flex items-center gap-3 px-4 h-14">
           <button
             onClick={() => history.back()}
             aria-label="뒤로 가기"
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface transition-colors"
           >
             <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -537,7 +537,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
       {loading && (
         <div className="flex flex-col items-center justify-center py-24 gap-3" aria-label="불러오는 중">
           <Spinner className="w-8 h-8 text-brand" />
-          <span className="text-sm text-gray-500">주문서 불러오는 중...</span>
+          <span className="text-sm text-muted">주문서 불러오는 중...</span>
         </div>
       )}
 
@@ -567,18 +567,18 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
           <section className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
             {/* Title */}
             <div>
-              <p className="text-xs text-gray-400 mb-1">주문서 제목</p>
+              <p className="text-xs text-muted mb-1">주문서 제목</p>
               <p className="text-base font-semibold text-gray-900 leading-snug">{order.title}</p>
             </div>
 
             {/* Meta grid */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-0.5">고객 ID</p>
+              <div className="bg-surface rounded-xl p-3">
+                <p className="text-xs text-muted mb-0.5">고객 ID</p>
                 <p className="text-sm font-medium text-gray-800 truncate">{order.userUuid}</p>
               </div>
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-0.5">등록일</p>
+              <div className="bg-surface rounded-xl p-3">
+                <p className="text-xs text-muted mb-0.5">등록일</p>
                 <p className="text-sm font-medium text-gray-800">{formatDate(order.createdAt)}</p>
               </div>
             </div>
@@ -590,14 +590,14 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
 
             {/* Shape + length */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-1">쉐입</p>
+              <div className="bg-surface rounded-xl p-3">
+                <p className="text-xs text-muted mb-1">쉐입</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {SHAPE_LABELS[specs.shape] ?? specs.shape}
                 </p>
               </div>
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-1">길이</p>
+              <div className="bg-surface rounded-xl p-3">
+                <p className="text-xs text-muted mb-1">길이</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {LENGTH_LABELS[specs.length] ?? specs.length}
                 </p>
@@ -606,11 +606,11 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
 
             {/* Sizes table */}
             <div>
-              <p className="text-xs text-gray-400 mb-2">사이즈 (mm)</p>
-              <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+              <p className="text-xs text-muted mb-2">사이즈 (mm)</p>
+              <div className="bg-surface rounded-xl overflow-hidden border border-line">
                 <table className="w-full text-center">
                   <thead>
-                    <tr className="bg-gray-100">
+                    <tr className="bg-surface-strong">
                       <th className="py-2 px-2 w-12" />
                       {FINGERS.map(finger => (
                         <th key={finger} className="py-2 px-1 text-xs font-medium text-gray-600">
@@ -626,9 +626,9 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                       return (
                         <tr
                           key={hand}
-                          className={rowIdx === 0 ? 'border-b border-gray-200' : ''}
+                          className={rowIdx === 0 ? 'border-b border-line' : ''}
                         >
-                          <td className="py-2.5 px-2 text-xs font-medium text-gray-500">
+                          <td className="py-2.5 px-2 text-xs font-medium text-muted">
                             {hand === 'left' ? '왼손' : '오른손'}
                           </td>
                           {FINGERS.map(finger => (
@@ -652,13 +652,13 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                 <SectionHeading>추가 요청</SectionHeading>
                 {specs.desiredColor && (
                   <div className="flex items-start gap-3">
-                    <span className="text-xs text-gray-500 min-w-[80px]">원하는 색상</span>
+                    <span className="text-xs text-muted min-w-[80px]">원하는 색상</span>
                     <span className="text-sm font-medium text-gray-900">{specs.desiredColor}</span>
                   </div>
                 )}
                 {specs.desiredDate && (
                   <div className="flex items-start gap-3">
-                    <span className="text-xs text-gray-500 min-w-[80px]">수령 희망일</span>
+                    <span className="text-xs text-muted min-w-[80px]">수령 희망일</span>
                     <span className="text-sm font-medium text-gray-900">
                       {formatDate(specs.desiredDate)}
                     </span>
@@ -666,7 +666,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                 )}
                 {specs.designNotes && (
                   <div>
-                    <p className="text-xs text-gray-500 mb-1.5">요청사항</p>
+                    <p className="text-xs text-muted mb-1.5">요청사항</p>
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
                       <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
                         {specs.designNotes}
@@ -687,7 +687,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                   <button
                     key={idx}
                     onClick={() => setLightboxIndex(idx)}
-                    className="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-1"
+                    className="aspect-square rounded-xl overflow-hidden bg-surface hover:opacity-90 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-1"
                     aria-label={`참고 이미지 ${idx + 1} 크게 보기`}
                   >
                     <img
@@ -716,23 +716,23 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">견적 가격</span>
+                  <span className="text-sm text-muted">견적 가격</span>
                   <span className="text-sm font-bold text-gray-900">{formatPrice(myQuote.price)}원</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">제작 기간</span>
+                  <span className="text-sm text-muted">제작 기간</span>
                   <span className="text-sm font-semibold text-gray-900">{myQuote.processingDays}일</span>
                 </div>
                 {myQuote.notes && (
                   <div>
-                    <p className="text-sm text-gray-500 mb-1.5">메모</p>
-                    <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-sm text-muted mb-1.5">메모</p>
+                    <div className="bg-surface rounded-xl p-3">
                       <p className="text-sm text-gray-800 whitespace-pre-wrap">{myQuote.notes}</p>
                     </div>
                   </div>
                 )}
-                <div className="pt-1 border-t border-gray-100">
-                  <p className="text-xs text-gray-400">
+                <div className="pt-1 border-t border-line">
+                  <p className="text-xs text-muted">
                     발송일: {formatDate(myQuote.issuedAt)}
                   </p>
                 </div>
@@ -744,7 +744,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
 
       {/* ── Floating bottom bar (quote CTA) ── */}
       {!loading && !fetchError && order && !alreadyQuoted && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 py-3 pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-line px-4 py-3 pb-safe">
           <div className="max-w-2xl mx-auto">
             <button
               onClick={() => {

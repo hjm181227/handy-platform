@@ -146,7 +146,7 @@ export function QuoteFormModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line">
             <div className="flex items-center gap-2">
               <Receipt className="w-5 h-5 text-brand" />
               <h2 className="text-lg font-bold text-gray-900">견적서 작성</h2>
@@ -179,10 +179,10 @@ export function QuoteFormModal({
                   value={formatDisplayPrice(price)}
                   onChange={handlePriceChange}
                   placeholder="0"
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-right"
+                  className="w-full px-4 py-3 pr-12 border border-line-strong rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-right"
                   disabled={loading}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">원</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted">원</span>
               </div>
             </div>
 
@@ -197,29 +197,29 @@ export function QuoteFormModal({
                   value={estimatedDays}
                   onChange={handleDaysChange}
                   placeholder="0"
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-right"
+                  className="w-full px-4 py-3 pr-12 border border-line-strong rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-right"
                   disabled={loading}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">일</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted">일</span>
               </div>
-              <p className="mt-1 text-xs text-gray-500">제작 완료까지 예상되는 기간을 입력해주세요</p>
+              <p className="mt-1 text-xs text-muted">제작 완료까지 예상되는 기간을 입력해주세요</p>
             </div>
 
             {/* 메모 입력 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                메모 <span className="text-gray-400">(선택)</span>
+                메모 <span className="text-muted">(선택)</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="구매자에게 전달할 메모를 입력해주세요"
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none text-sm"
+                className="w-full px-4 py-3 border border-line-strong rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none text-sm"
                 disabled={loading}
                 maxLength={500}
               />
-              <p className="mt-1 text-xs text-gray-400 text-right">{notes.length}/500</p>
+              <p className="mt-1 text-xs text-muted text-right">{notes.length}/500</p>
             </div>
 
             {/* 버튼 */}
@@ -227,7 +227,7 @@ export function QuoteFormModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+                className="flex-1 py-3 bg-surface text-ink rounded-xl hover:bg-surface-strong transition-colors font-medium"
                 disabled={loading}
               >
                 취소

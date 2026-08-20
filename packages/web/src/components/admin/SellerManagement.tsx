@@ -38,7 +38,7 @@ const SellerManagement: React.FC = () => {
       'pending': { label: '검토 중', className: 'bg-yellow-100 text-yellow-800' },
       'rejected': { label: '거부됨', className: 'bg-red-100 text-red-800' }
     };
-    return statusMap[status as keyof typeof statusMap] || { label: '미인증', className: 'bg-gray-100 text-gray-800' };
+    return statusMap[status as keyof typeof statusMap] || { label: '미인증', className: 'bg-surface text-gray-800' };
   };
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -137,7 +137,7 @@ const SellerManagement: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* 헤더 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-line p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">판매자 관리</h1>
@@ -158,13 +158,13 @@ const SellerManagement: React.FC = () => {
               placeholder="판매자명, 이메일, 회사명으로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
           >
             <option value="">전체 상태</option>
             <option value="active">활성</option>
@@ -173,7 +173,7 @@ const SellerManagement: React.FC = () => {
           <select
             value={verificationFilter}
             onChange={(e) => setVerificationFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
           >
             <option value="">전체 인증</option>
             <option value="verified">인증됨</option>
@@ -184,51 +184,51 @@ const SellerManagement: React.FC = () => {
       </div>
 
       {/* 판매자 목록 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-line">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-600">판매자 목록을 불러오는 중...</p>
           </div>
         ) : sellers.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted mb-4">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
             <p className="text-gray-600 mb-2">등록된 판매자가 없습니다.</p>
-            <p className="text-gray-500 text-sm">판매자 신청이 승인되면 여기에 표시됩니다.</p>
+            <p className="text-muted text-sm">판매자 신청이 승인되면 여기에 표시됩니다.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-surface border-b border-line">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     판매자 정보
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     회사 정보
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     활동 통계
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     상태
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     작업
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-line">
                 {sellers.map((seller) => (
-                  <tr key={seller.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={seller.id} className="hover:bg-surface transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-brand to-brand-600 flex items-center justify-center">
                             <span className="text-white text-sm font-semibold">
                               {seller.name?.charAt(0)?.toUpperCase() || 'S'}
                             </span>
@@ -236,8 +236,8 @@ const SellerManagement: React.FC = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{seller.name}</div>
-                          <div className="text-sm text-gray-500">{seller.email}</div>
-                          <div className="text-xs text-gray-400">가입: {formatDate(seller.createdAt)}</div>
+                          <div className="text-sm text-muted">{seller.email}</div>
+                          <div className="text-xs text-muted">가입: {formatDate(seller.createdAt)}</div>
                         </div>
                       </div>
                     </td>
@@ -245,10 +245,10 @@ const SellerManagement: React.FC = () => {
                       <div className="text-sm text-gray-900">
                         {seller.sellerInfo?.companyName || '정보 없음'}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted">
                         {seller.sellerInfo?.businessNumber || '-'}
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-muted">
                         {seller.sellerInfo?.contactPhone || '-'}
                       </div>
                     </td>
@@ -307,7 +307,7 @@ const SellerManagement: React.FC = () => {
 
         {/* 페이지네이션 */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-line">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 총 {pagination.totalSellers}명 중 {((pagination.currentPage - 1) * 20) + 1}-
@@ -317,7 +317,7 @@ const SellerManagement: React.FC = () => {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))}
                   disabled={pagination.currentPage === 1 || loading}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm border border-line rounded-md hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   이전
                 </button>
@@ -327,7 +327,7 @@ const SellerManagement: React.FC = () => {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.min(prev.totalPages, prev.currentPage + 1) }))}
                   disabled={pagination.currentPage === pagination.totalPages || loading}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm border border-line rounded-md hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   다음
                 </button>
@@ -340,13 +340,13 @@ const SellerManagement: React.FC = () => {
       {/* 판매자 상세 정보 모달 */}
       {showDetailModal && selectedSeller && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-line">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">판매자 상세 정보</h3>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted hover:text-gray-600"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -361,19 +361,19 @@ const SellerManagement: React.FC = () => {
                 <h4 className="text-md font-semibold text-gray-900 mb-3">기본 정보</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-500">이름:</span>
+                    <span className="text-muted">이름:</span>
                     <span className="ml-2 text-gray-900">{selectedSeller.name}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">이메일:</span>
+                    <span className="text-muted">이메일:</span>
                     <span className="ml-2 text-gray-900">{selectedSeller.email}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">가입일:</span>
+                    <span className="text-muted">가입일:</span>
                     <span className="ml-2 text-gray-900">{formatDate(selectedSeller.createdAt)}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">상태:</span>
+                    <span className="text-muted">상태:</span>
                     <span className={`ml-2 ${selectedSeller.isActive ? 'text-green-600' : 'text-red-600'}`}>
                       {selectedSeller.isActive ? '활성' : '비활성'}
                     </span>
@@ -387,23 +387,23 @@ const SellerManagement: React.FC = () => {
                   <h4 className="text-md font-semibold text-gray-900 mb-3">판매자 정보</h4>
                   <div className="grid grid-cols-1 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500">회사명:</span>
+                      <span className="text-muted">회사명:</span>
                       <span className="ml-2 text-gray-900">{selectedSeller.sellerInfo.companyName}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">사업자등록번호:</span>
+                      <span className="text-muted">사업자등록번호:</span>
                       <span className="ml-2 text-gray-900">{selectedSeller.sellerInfo.businessNumber}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">연락처:</span>
+                      <span className="text-muted">연락처:</span>
                       <span className="ml-2 text-gray-900">{selectedSeller.sellerInfo.contactPhone}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">주소:</span>
+                      <span className="text-muted">주소:</span>
                       <span className="ml-2 text-gray-900">{selectedSeller.sellerInfo.address}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">인증 상태:</span>
+                      <span className="text-muted">인증 상태:</span>
                       <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVerificationStatusDisplay(selectedSeller.sellerInfo.status).className}`}>
                         {getVerificationStatusDisplay(selectedSeller.sellerInfo.status).label}
                       </span>
@@ -425,21 +425,21 @@ const SellerManagement: React.FC = () => {
                       <div className="text-2xl font-bold text-green-600">{selectedSeller.sellerInfo.totalOrders}</div>
                       <div className="text-sm text-green-800">총 주문</div>
                     </div>
-                    <div className="bg-purple-50 p-4 rounded-lg text-center">
-                      <div className="text-lg font-bold text-purple-600">
+                    <div className="bg-brand-50 p-4 rounded-lg text-center">
+                      <div className="text-lg font-bold text-brand-600">
                         {formatCurrency(selectedSeller.sellerInfo.totalRevenue)}
                       </div>
-                      <div className="text-sm text-purple-800">총 매출</div>
+                      <div className="text-sm text-brand-700">총 매출</div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+            <div className="p-6 border-t border-line flex justify-end space-x-3">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-ink bg-surface rounded-lg hover:bg-surface-strong transition-colors"
               >
                 닫기
               </button>

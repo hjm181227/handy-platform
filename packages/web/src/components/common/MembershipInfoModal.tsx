@@ -30,7 +30,7 @@ export const MembershipInfoModal: React.FC<MembershipInfoModalProps> = ({
           <h2 className="text-lg font-bold">회원등급 안내</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-surface rounded-full transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -50,8 +50,8 @@ export const MembershipInfoModal: React.FC<MembershipInfoModalProps> = ({
                   key={level}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     isCurrentLevel
-                      ? 'border-black bg-gray-50'
-                      : 'border-gray-200'
+                      ? 'border-ink bg-surface'
+                      : 'border-line'
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -69,7 +69,7 @@ export const MembershipInfoModal: React.FC<MembershipInfoModalProps> = ({
                           {style.fullName}
                         </span>
                         {isCurrentLevel && (
-                          <span className="text-xs bg-black text-white px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-ink text-white px-2 py-0.5 rounded-full">
                             현재 등급
                           </span>
                         )}
@@ -85,13 +85,13 @@ export const MembershipInfoModal: React.FC<MembershipInfoModalProps> = ({
                     <div className="ml-13 pl-13 space-y-1 text-sm">
                       {style.benefit && (
                         <div className="flex items-start gap-2">
-                          <span className="text-gray-500 shrink-0">혜택:</span>
+                          <span className="text-muted shrink-0">혜택:</span>
                           <span className="text-gray-700">{style.benefit}</span>
                         </div>
                       )}
                       {style.requirement && (
                         <div className="flex items-start gap-2">
-                          <span className="text-gray-500 shrink-0">조건:</span>
+                          <span className="text-muted shrink-0">조건:</span>
                           <span className="text-gray-700">{style.requirement}</span>
                         </div>
                       )}
@@ -104,10 +104,10 @@ export const MembershipInfoModal: React.FC<MembershipInfoModalProps> = ({
         </div>
 
         {/* 푸터 */}
-        <div className="p-4 border-t bg-gray-50">
+        <div className="p-4 border-t bg-surface">
           <button
             onClick={onClose}
-            className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            className="w-full py-3 bg-brand text-white rounded-full font-medium hover:bg-brand-600 transition-colors"
           >
             확인
           </button>

@@ -98,7 +98,7 @@ const SnapManagement: React.FC = () => {
       pending: '대기',
     };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-surface text-gray-800'}`}>
         {labels[status] || status}
       </span>
     );
@@ -108,7 +108,7 @@ const SnapManagement: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">스냅 관리</h1>
-        <p className="mt-1 text-sm text-gray-500">총 {totalItems}개의 스냅</p>
+        <p className="mt-1 text-sm text-muted">총 {totalItems}개의 스냅</p>
       </div>
 
       {/* 필터 & 검색 */}
@@ -119,16 +119,16 @@ const SnapManagement: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="제목, 설명, 태그 검색..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 px-4 py-2 border border-line-strong rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand"
           />
-          <button type="submit" className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+          <button type="submit" className="px-4 py-2 bg-brand text-white text-sm rounded-full hover:bg-brand-600">
             검색
           </button>
         </form>
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
-          className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-4 py-2 border border-line rounded-lg text-sm"
         >
           <option value="all">전체 상태</option>
           <option value="active">활성</option>
@@ -140,27 +140,27 @@ const SnapManagement: React.FC = () => {
       {/* 테이블 */}
       {loading ? (
         <div className="text-center py-10">
-          <div className="inline-block w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-2 border-line border-t-brand rounded-full animate-spin" />
         </div>
       ) : snaps.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">스냅이 없습니다.</div>
+        <div className="text-center py-10 text-muted">스냅이 없습니다.</div>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-white rounded-xl border overflow-hidden">
+          <table className="min-w-full divide-y divide-line">
+            <thead className="bg-surface">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이미지</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">제목</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">작성자</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">좋아요/조회/댓글</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">관리</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">이미지</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">제목</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">작성자</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">상태</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-muted uppercase">좋아요/조회/댓글</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">날짜</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-muted uppercase">관리</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-line">
               {snaps.map((snap) => (
-                <tr key={snap.id} className="hover:bg-gray-50">
+                <tr key={snap.id} className="hover:bg-surface">
                   <td className="px-4 py-3">
                     <img
                       src={snap.imageUrl}
@@ -170,19 +170,19 @@ const SnapManagement: React.FC = () => {
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm font-medium text-gray-900 line-clamp-1">{snap.title || '(제목 없음)'}</p>
-                    <p className="text-xs text-gray-500 line-clamp-1">
+                    <p className="text-xs text-muted line-clamp-1">
                       {snap.tags?.map(t => `#${t}`).join(' ')}
                     </p>
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-gray-900">{snap.creator?.nickname || snap.creator?.name || '-'}</p>
-                    <p className="text-xs text-gray-500">{snap.creator?.email || ''}</p>
+                    <p className="text-xs text-muted">{snap.creator?.email || ''}</p>
                   </td>
                   <td className="px-4 py-3">{getStatusBadge(snap.status)}</td>
                   <td className="px-4 py-3 text-center text-xs text-gray-600">
                     {snap.likesCount} / {snap.viewsCount} / {snap.commentsCount}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td className="px-4 py-3 text-xs text-muted">
                     {new Date(snap.createdAt).toLocaleDateString('ko-KR')}
                   </td>
                   <td className="px-4 py-3">
@@ -190,7 +190,7 @@ const SnapManagement: React.FC = () => {
                       <select
                         value={snap.status}
                         onChange={(e) => handleStatusChange(snap.id, e.target.value)}
-                        className="px-2 py-1 border border-gray-300 rounded text-xs"
+                        className="px-2 py-1 border border-line rounded text-xs"
                       >
                         <option value="active">활성</option>
                         <option value="hidden">숨김</option>

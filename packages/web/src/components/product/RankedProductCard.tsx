@@ -40,7 +40,7 @@ export function RankedProductCard({
 
           {/* 랭킹 번호 배지 */}
           <div className="absolute left-2 top-2">
-            <div className="w-5 h-5 rounded bg-black text-white flex items-center justify-center text-xs font-bold shadow-lg">
+            <div className="w-5 h-5 rounded bg-ink text-white flex items-center justify-center text-xs font-bold shadow-lg">
               {rank}
             </div>
           </div>

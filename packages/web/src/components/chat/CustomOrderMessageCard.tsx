@@ -29,12 +29,12 @@ const LENGTH_LABELS: Record<string, string> = {
 // 상태 한글 변환 및 색상
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
   pending:       { label: '상담중',   bgColor: 'bg-amber-100',  textColor: 'text-amber-600' },
-  quoted:        { label: '견적완료', bgColor: 'bg-purple-100',  textColor: 'text-purple-700' },
+  quoted:        { label: '견적완료', bgColor: 'bg-brand-100',  textColor: 'text-brand-700' },
   approved:      { label: '결제대기', bgColor: 'bg-green-100',   textColor: 'text-green-700' },
   in_production: { label: '제작중',   bgColor: 'bg-brand-50',    textColor: 'text-brand' },
   completed:     { label: '완료',     bgColor: 'bg-emerald-100', textColor: 'text-emerald-700' },
   rejected:      { label: '거절됨',   bgColor: 'bg-red-100',     textColor: 'text-red-700' },
-  cancelled:     { label: '취소됨',   bgColor: 'bg-gray-100',    textColor: 'text-gray-500' },
+  cancelled:     { label: '취소됨',   bgColor: 'bg-surface',    textColor: 'text-muted' },
 };
 
 export function CustomOrderMessageCard({ customOrderId, isMine, onClick }: CustomOrderMessageCardProps) {

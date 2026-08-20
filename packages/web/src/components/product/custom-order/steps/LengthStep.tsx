@@ -47,8 +47,8 @@ export function LengthStep({
     >
       {/* 고정 길이 안내 */}
       {fixed && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-4 flex items-center gap-3">
-          <FaLock className="text-gray-400 w-4 h-4 flex-shrink-0" />
+        <div className="bg-surface rounded-xl p-4 mb-4 flex items-center gap-3">
+          <FaLock className="text-muted w-4 h-4 flex-shrink-0" />
           <p className="text-sm text-gray-600">
             {t('product:customOrder.lengthFixed', { length: getLengthName(length) })}
           </p>
@@ -69,16 +69,16 @@ export function LengthStep({
               className={`
                 relative w-full p-4 rounded-2xl border-2 text-left transition-all
                 ${isSelected
-                  ? 'border-pink-500 bg-pink-50'
+                  ? 'border-brand bg-brand-50'
                   : isDisabled
-                    ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-40'
-                    : 'border-gray-200 bg-white hover:border-pink-200'
+                    ? 'border-gray-100 bg-surface cursor-not-allowed opacity-40'
+                    : 'border-line bg-white hover:border-brand-200'
                 }
               `}
             >
               {/* 선택 체크 */}
               {isSelected && (
-                <div className="absolute top-4 right-4 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-4 right-4 w-6 h-6 bg-brand rounded-full flex items-center justify-center">
                   <FaCheck className="w-3 h-3 text-white" />
                 </div>
               )}
@@ -89,10 +89,10 @@ export function LengthStep({
 
                 {/* 텍스트 정보 */}
                 <div className="flex-1 pr-8">
-                  <p className={`font-semibold ${isSelected ? 'text-pink-700' : 'text-gray-900'}`}>
+                  <p className={`font-semibold ${isSelected ? 'text-brand-700' : 'text-gray-900'}`}>
                     {getLengthName(l)}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">{getLengthDescription(l)}</p>
+                  <p className="text-sm text-muted mt-1">{getLengthDescription(l)}</p>
 
                   {/* 추천 태그 */}
                   <div className="flex flex-wrap gap-1.5 mt-2">
@@ -102,8 +102,8 @@ export function LengthStep({
                         className={`
                           text-xs px-2 py-0.5 rounded-full
                           ${isSelected
-                            ? 'bg-pink-200 text-pink-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-brand-100 text-brand-700'
+                            : 'bg-surface text-muted'
                           }
                         `}
                       >

@@ -211,15 +211,15 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4">
         <p className="text-gray-600">{error || '상품을 찾을 수 없습니다.'}</p>
         <button onClick={onBack} className="text-brand hover:underline">
           돌아가기
@@ -229,11 +229,11 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface">
       {/* 헤더 */}
       <header className="sticky top-0 bg-white border-b z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
+          <button onClick={onBack} className="p-2 -ml-2 hover:bg-surface rounded-full">
             <FaArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-semibold">커스텀 주문서 작성</h1>
@@ -264,8 +264,8 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
                 onClick={() => setShape(s)}
                 className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                   shape === s
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? 'border-ink bg-ink text-white'
+                    : 'border-line bg-white text-ink hover:border-line-strong'
                 }`}
               >
                 {NAIL_SHAPE_NAME[s]}
@@ -287,8 +287,8 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
                 onClick={() => setLength(l)}
                 className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                   length === l
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? 'border-ink bg-ink text-white'
+                    : 'border-line bg-white text-ink hover:border-line-strong'
                 }`}
               >
                 {NAIL_LENGTH_NAME[l]}
@@ -305,14 +305,14 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
 
           <div className="space-y-4">
               {/* 왼손/오른손 탭 */}
-              <div className="flex rounded-lg bg-gray-100 p-1">
+              <div className="flex rounded-lg bg-surface p-1">
                 <button
                   type="button"
                   onClick={() => setActiveHand('left')}
                   className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeHand === 'left'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white text-ink shadow-sm'
+                      : 'text-muted hover:text-ink'
                   }`}
                 >
                   왼손 {Object.values(sizes.left).every(s => s.trim() !== '') ? '✓' : ''}
@@ -322,8 +322,8 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
                   onClick={() => setActiveHand('right')}
                   className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeHand === 'right'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white text-ink shadow-sm'
+                      : 'text-muted hover:text-ink'
                   }`}
                 >
                   오른손 {Object.values(sizes.right).every(s => s.trim() !== '') ? '✓' : ''}
@@ -340,12 +340,12 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
                       value={sizes[activeHand][finger]}
                       onChange={(e) => handleSizeChange(activeHand, finger, e.target.value)}
                       placeholder="예: 5"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-line-strong rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
                     />
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 * 양손 모든 손가락의 네일 사이즈를 입력해주세요
               </p>
           </div>
@@ -361,9 +361,9 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
             value={desiredColor}
             onChange={(e) => setDesiredColor(e.target.value)}
             placeholder="예: 연한 핑크, 베이지, 빨간색 등"
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full px-3 py-3 border border-line-strong rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
           />
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted mt-2">
             원하는 색상을 자유롭게 입력해주세요
           </p>
         </div>
@@ -378,21 +378,21 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
             onChange={(e) => setRequest(e.target.value)}
             placeholder="용도, 느낌, 사진 등등 자세하게 작성해주실수록 더 좋아요~ 첨부자료도 물론 가능합니다!"
             rows={4}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+            className="w-full px-3 py-3 border border-line-strong rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
           />
 
           {/* 첨부파일 목록 */}
           {attachments.length > 0 && (
             <div className="mt-3 space-y-2">
               {attachments.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                <div key={index} className="flex items-center gap-2 px-3 py-2 bg-surface rounded-lg">
                   <span className="flex-1 text-sm text-gray-600 truncate">{file.name}</span>
                   <button
                     type="button"
                     onClick={() => removeAttachment(index)}
-                    className="p-1 hover:bg-gray-200 rounded"
+                    className="p-1 hover:bg-surface-strong rounded"
                   >
-                    <FaTimes className="w-3 h-3 text-gray-500" />
+                    <FaTimes className="w-3 h-3 text-muted" />
                   </button>
                 </div>
               ))}
@@ -400,8 +400,8 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
           )}
 
           {/* 파일 첨부 버튼 */}
-          <label className="mt-3 flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-            <FaPlus className="w-4 h-4 text-gray-500" />
+          <label className="mt-3 flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-line rounded-lg cursor-pointer hover:bg-surface transition-colors">
+            <FaPlus className="w-4 h-4 text-muted" />
             <span className="text-sm text-gray-600">파일 첨부</span>
             <input
               type="file"
@@ -423,23 +423,23 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
             value={desiredDate}
             onChange={(e) => setDesiredDate(e.target.value)}
             min={getMinDate()}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full px-3 py-3 border border-line-strong rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
           />
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted mt-2">
             제작 기간을 고려하여 최소 7일 이후 날짜를 선택해주세요
           </p>
         </div>
 
         {/* 주문하기 버튼 */}
-        <div className="sticky bottom-0 bg-gray-50 pt-4 pb-6">
+        <div className="sticky bottom-0 bg-surface pt-4 pb-6">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className={`w-full py-4 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+            className={`w-full py-4 font-semibold rounded-full transition-colors flex items-center justify-center gap-2 ${
               submitting
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-black hover:bg-gray-800 text-white'
+                : 'bg-brand hover:bg-brand-600 text-white'
             }`}
           >
             {submitting ? (
@@ -487,9 +487,9 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
 
             {/* 주문 요약 */}
             {createdOrderData && (
-              <div className="mx-6 mb-6 p-4 bg-gray-50 rounded-xl">
+              <div className="mx-6 mb-6 p-4 bg-surface rounded-xl">
                 <p className="text-sm font-medium text-gray-900 mb-1">{createdOrderData.title}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   {NAIL_SHAPE_NAME[createdOrderData.specifications.shape as NailShape]} · {NAIL_LENGTH_NAME[createdOrderData.specifications.length as NailLength]}
                 </p>
               </div>
@@ -500,7 +500,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
               {chatRoomId && (
                 <button
                   onClick={() => onGo(getChatRoomPath(chatRoomId))}
-                  className="w-full py-3.5 bg-purple-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
+                  className="w-full py-3.5 bg-brand text-white rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-brand-600 transition-colors"
                 >
                   <FaComments className="w-4 h-4" />
                   채팅으로 이동
@@ -511,7 +511,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
                   setShowSuccessModal(false);
                   onBack();
                 }}
-                className="w-full py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+                className="w-full py-3.5 bg-surface text-ink rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-surface-strong transition-colors"
               >
                 <FaShoppingBag className="w-4 h-4" />
                 계속 쇼핑하기

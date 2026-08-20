@@ -138,22 +138,22 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
   if (!isInitialized || !socialState) {
     return (
       <div className="mx-auto max-w-md px-4 py-6">
-        <div className="rounded-lg bg-gray-100 px-4 py-3 text-[15px] font-semibold">
+        <div className="rounded-xl bg-surface px-4 py-3 text-[15px] font-semibold">
           {t('common:signup')}
         </div>
         <div className="mt-8 text-center">
           {!isInitialized ? (
             <>
               <div className="text-lg">{t('auth:social.preparingPage')}</div>
-              <div className="mt-2 text-sm text-gray-600">{t('auth:social.pleaseWait')}</div>
+              <div className="mt-2 text-sm text-muted">{t('auth:social.pleaseWait')}</div>
             </>
           ) : (
             <>
               <div className="text-lg">{t('auth:social.socialInfoNotFound')}</div>
-              <div className="mt-2 text-sm text-gray-600">{t('auth:social.redirectingToLogin')}</div>
+              <div className="mt-2 text-sm text-muted">{t('auth:social.redirectingToLogin')}</div>
               <button
                 onClick={() => onGo('/login')}
-                className="mt-4 rounded-lg bg-brand px-4 py-2 text-white hover:bg-brand-600"
+                className="mt-4 rounded-full bg-brand px-4 py-2 text-white hover:bg-brand-600"
               >
                 {t('auth:social.goNow')}
               </button>
@@ -173,7 +173,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <div className="rounded-lg bg-gray-100 px-4 py-3 text-[15px] font-semibold">
+      <div className="rounded-xl bg-surface px-4 py-3 text-[15px] font-semibold">
         {t('auth:social.providerSignup', { provider: providerName })}
       </div>
 
@@ -192,7 +192,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
             value={additionalInfo.phone}
             onChange={(e) => setAdditionalInfo(prev => ({ ...prev, phone: e.target.value }))}
             placeholder={t('auth:social.phonePlaceholderOptional')}
-            className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-brand"
+            className="w-full rounded-xl border border-line-strong px-4 py-3 text-sm outline-none focus:border-brand"
             disabled={loading}
           />
         </div>
@@ -211,7 +211,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full rounded-full bg-brand py-3 text-sm font-medium text-white hover:bg-brand-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {loading ? t('auth:signup.signingUp') : t('auth:signup.signupComplete')}
         </button>
@@ -221,7 +221,7 @@ export function SocialSignupPage({ onGo }: { onGo: (to: string) => void }) {
           type="button"
           onClick={handleCancel}
           disabled={loading}
-          className="w-full rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-full border border-line py-3 text-sm font-medium text-ink hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('common:cancel')}
         </button>
