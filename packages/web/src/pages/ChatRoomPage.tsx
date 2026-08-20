@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronLeft, Plus, Send, EllipsisVertical, Store, X, ArrowDown } from 'lucide-react';
+import { ChevronLeft, Plus, Send, EllipsisVertical, Store, X, ArrowDown, Sparkles } from 'lucide-react';
 import { useChat } from '../lib/chat';
 import { useAuth } from '../hooks/useAuth';
 import { CustomOrderMessageCard } from '../components/chat/CustomOrderMessageCard';
@@ -10,6 +10,7 @@ import { ImageMessageBubble } from '../components/chat/ImageMessageBubble';
 import { ProductInquiryCard } from '../components/chat/ProductInquiryCard';
 import { ReportDialog } from '../components/chat/ReportDialog';
 import { blockUser, leaveChatRoom } from '../lib/chat/moderationService';
+import { fetchAssistStatus, refineDraft } from '../lib/chat/assistService';
 import { config } from '../config/environment';
 import type { Message } from '../lib/chat/types';
 
@@ -134,6 +135,42 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   const [hasNewMessages, setHasNewMessages] = useState(false);
   /** 첨부 파일 검증 실패 등 화면 내 안내 */
   const [localNotice, setLocalNotice] = useState<string | null>(null);
+
+  // ✨ 상담 어시스턴트 (초안 다듬기) — 서버 상태로 노출 여부를 정한다
+  const [assistEnabled, setAssistEnabled] = useState(false);
+  const [assistPreview, setAssistPreview] = useState<string | null>(null);
+  const [isRefining, setIsRefining] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAssistStatus().then((status) => {
+      if (!cancelled) setAssistEnabled(status.enabled);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleRefine = async () => {
+    // actualRoomId가 없으면 아직 방이 만들어지기 전이라 문맥·권한 검증이 불가
+    if (!inputText.trim() || isRefining || !actualRoomId) return;
+    setIsRefining(true);
+    setLocalNotice(null);
+    const result = await refineDraft(actualRoomId, inputText.trim().slice(0, 1000));
+    setIsRefining(false);
+    if (result.success) {
+      setAssistPreview(result.refined);
+    } else {
+      setAssistPreview(null);
+      setLocalNotice(result.error);
+    }
+  };
+
+  /** 미리보기를 입력창에 반영 — 사용자는 이어서 수정한 뒤 직접 전송한다 */
+  const handleAssistApply = () => {
+    if (assistPreview) setInputText(assistPreview);
+    setAssistPreview(null);
+  };
 
   // ⋮ 메뉴 (나가기·차단·신고)
   const [showRoomMenu, setShowRoomMenu] = useState(false);
@@ -761,6 +798,38 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             </div>
           )}
 
+          {/* ✨ 다듬기 미리보기 — 적용해도 사용자가 수정 후 직접 전송한다 */}
+          {assistPreview && (
+            <div className="mb-3 p-3 rounded-xl border border-[#E85A6B]/30 bg-[#FDF4F5]">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#E85A6B]" />
+                <span className="text-xs font-semibold text-[#E85A6B]">다듬은 문장</span>
+              </div>
+              <p className="text-sm text-[#131211] whitespace-pre-wrap break-words mb-2.5">{assistPreview}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAssistApply}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#E85A6B] text-white hover:bg-[#D44D5E] transition-colors"
+                >
+                  적용
+                </button>
+                <button
+                  onClick={handleRefine}
+                  disabled={isRefining}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-[#E5E0DC] text-[#131211] hover:bg-[#F7F5F3] transition-colors disabled:opacity-50"
+                >
+                  {isRefining ? '다듬는 중...' : '다시 다듬기'}
+                </button>
+                <button
+                  onClick={() => setAssistPreview(null)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg text-[#A39E99] hover:bg-[#F7F5F3] transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2.5">
             {/* 파일 첨부 버튼 */}
             <input
@@ -795,6 +864,28 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
               rows={1}
               disabled={!!selectedImage || isDegraded}
             />
+            {/* ✨ 초안 다듬기 (상담 어시스턴트) */}
+            {assistEnabled && (
+              <button
+                onClick={handleRefine}
+                disabled={!inputText.trim() || isRefining || isDegraded || !!selectedImage || !actualRoomId}
+                className={`
+                  w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0
+                  ${inputText.trim() && !isRefining && !isDegraded && !selectedImage && actualRoomId
+                    ? 'bg-[#FDF4F5] text-[#E85A6B] hover:bg-[#FBE9EC]'
+                    : 'bg-[#F7F5F3] text-[#A39E99] cursor-not-allowed'
+                  }
+                `}
+                aria-label="문장 다듬기"
+                title="문장 다듬기"
+              >
+                {isRefining ? (
+                  <div className="w-4 h-4 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Sparkles className="w-[18px] h-[18px]" />
+                )}
+              </button>
+            )}
             <button
               onClick={handleSend}
               disabled={(!inputText.trim() && !selectedImage) || isUploading || isDegraded}
