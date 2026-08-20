@@ -48,7 +48,7 @@ function PublicConfirmStep({
           <h1 className="text-lg font-bold">주문서 확인</h1>
         </div>
         <div className="h-1 bg-gray-100">
-          <div className="h-full bg-[#E85A6B] transition-all" style={{ width: `${(stepIndex / totalSteps) * 100}%` }} />
+          <div className="h-full bg-brand transition-all" style={{ width: `${(stepIndex / totalSteps) * 100}%` }} />
         </div>
       </div>
 
@@ -67,14 +67,14 @@ function PublicConfirmStep({
             <span className="text-sm text-gray-500">쉐입</span>
             <div className="flex items-center gap-2">
               <span className="font-medium">{shapeLabel[data.shape] || data.shape}</span>
-              <button onClick={() => onEdit(0)} className="text-xs text-[#E85A6B]">수정</button>
+              <button onClick={() => onEdit(0)} className="text-xs text-brand">수정</button>
             </div>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-gray-500">길이</span>
             <div className="flex items-center gap-2">
               <span className="font-medium">{lengthLabel[data.length] || data.length}</span>
-              <button onClick={() => onEdit(1)} className="text-xs text-[#E85A6B]">수정</button>
+              <button onClick={() => onEdit(1)} className="text-xs text-brand">수정</button>
             </div>
           </div>
           {data.desiredColor && (
@@ -95,7 +95,7 @@ function PublicConfirmStep({
         <div>
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-medium text-gray-700">손가락 사이즈</p>
-            <button onClick={() => onEdit(2)} className="text-xs text-[#E85A6B]">수정</button>
+            <button onClick={() => onEdit(2)} className="text-xs text-brand">수정</button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {(['left', 'right'] as const).map(hand => (
@@ -121,7 +121,7 @@ function PublicConfirmStep({
           <div>
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium text-gray-700">요청사항</p>
-              <button onClick={() => onEdit(3)} className="text-xs text-[#E85A6B]">수정</button>
+              <button onClick={() => onEdit(3)} className="text-xs text-brand">수정</button>
             </div>
             <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">{data.request}</p>
           </div>
@@ -157,7 +157,7 @@ function PublicConfirmStep({
         <button
           onClick={onSubmit}
           disabled={submitting}
-          className="w-full py-4 bg-[#E85A6B] text-white rounded-xl font-bold text-base disabled:opacity-50"
+          className="w-full py-4 bg-brand text-white rounded-xl font-bold text-base disabled:opacity-50"
         >
           {submitting ? '등록 중...' : '주문서 등록하기'}
         </button>
@@ -184,7 +184,7 @@ function PublicCompleteStep({ onGoToManagement }: { onGoToManagement: () => void
         <div className="space-y-3 w-full max-w-xs mx-auto">
           <button
             onClick={onGoToManagement}
-            className="w-full py-3.5 bg-[#E85A6B] text-white rounded-xl font-bold"
+            className="w-full py-3.5 bg-brand text-white rounded-xl font-bold"
           >
             내 주문서 관리
           </button>
@@ -244,7 +244,7 @@ function PublicDetailsStep({
           <h1 className="text-lg font-bold">디자인 상세</h1>
         </div>
         <div className="h-1 bg-gray-100">
-          <div className="h-full bg-[#E85A6B] transition-all" style={{ width: `${(stepIndex / totalSteps) * 100}%` }} />
+          <div className="h-full bg-brand transition-all" style={{ width: `${(stepIndex / totalSteps) * 100}%` }} />
         </div>
       </div>
 
@@ -259,7 +259,7 @@ function PublicDetailsStep({
             value={title}
             onChange={e => onUpdateTitle(e.target.value)}
             placeholder="예: 봄 꽃 네일 맞춤 주문"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#E85A6B]"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-brand"
             maxLength={100}
           />
         </div>
@@ -287,7 +287,7 @@ function PublicDetailsStep({
             value={desiredColor}
             onChange={e => onUpdateColor(e.target.value)}
             placeholder="원하는 컬러를 입력해주세요 (선택)"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#E85A6B]"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-brand"
           />
         </div>
 
@@ -298,7 +298,7 @@ function PublicDetailsStep({
             onChange={e => onUpdateRequest(e.target.value)}
             placeholder="원하는 디자인을 자세히 설명해주세요"
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#E85A6B] resize-none"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-brand resize-none"
           />
         </div>
 
@@ -317,7 +317,7 @@ function PublicDetailsStep({
                 </button>
               </div>
             ))}
-            <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#E85A6B]">
+            <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#999" strokeWidth="2" strokeLinecap="round"/></svg>
               <input
                 type="file"
@@ -338,7 +338,7 @@ function PublicDetailsStep({
         <button
           onClick={onNext}
           disabled={!title.trim()}
-          className="w-full py-4 bg-[#E85A6B] text-white rounded-xl font-bold disabled:opacity-50"
+          className="w-full py-4 bg-brand text-white rounded-xl font-bold disabled:opacity-50"
         >
           다음
         </button>
@@ -416,7 +416,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
         </div>
 
         <div className="flex flex-col items-center justify-center px-6 pt-20">
-          <div className="w-16 h-16 bg-[#FFF1F2] rounded-full flex items-center justify-center mb-6">
+          <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-6">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
               <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="#E85A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -429,7 +429,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
           <div className="flex gap-4 w-full max-w-xs">
             <button
               onClick={() => setHasBrand(true)}
-              className="flex-1 py-4 rounded-2xl border-2 border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B] font-bold text-lg hover:bg-[#FFE4E8] transition-colors"
+              className="flex-1 py-4 rounded-2xl border-2 border-brand bg-brand-50 text-brand font-bold text-lg hover:bg-[#FFE4E8] transition-colors"
             >
               O
             </button>
@@ -472,7 +472,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="브랜드명을 검색하세요"
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#E85A6B]"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-brand"
             autoFocus
           />
         </div>
@@ -480,7 +480,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
         {/* 브랜드 목록 */}
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
           </div>
         ) : brands.length === 0 ? (
           <div className="text-center py-8">
@@ -496,7 +496,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
                 onClick={() => onSelectBrand(brand.sellerUuid, brand.brandName)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
               >
-                <div className="w-11 h-11 rounded-full bg-[#FFF1F2] flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div className="w-11 h-11 rounded-full bg-brand-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {brand.brandProfile ? (
                     <img
                       src={brand.brandProfile}
@@ -505,11 +505,11 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
-                        target.parentElement!.innerHTML = `<span class="text-base font-bold text-[#E85A6B]">${brand.brandName.charAt(0)}</span>`;
+                        target.parentElement!.innerHTML = `<span class="text-base font-bold text-brand">${brand.brandName.charAt(0)}</span>`;
                       }}
                     />
                   ) : (
-                    <span className="text-base font-bold text-[#E85A6B]">
+                    <span className="text-base font-bold text-brand">
                       {brand.brandName.charAt(0)}
                     </span>
                   )}
@@ -532,7 +532,7 @@ function BrandPreStep({ onSelectBrand, onSkip, onBack }: {
         <div className="mt-6 pt-4 border-t">
           <button
             onClick={onSkip}
-            className="w-full py-3 text-sm text-gray-500 hover:text-[#E85A6B] transition-colors"
+            className="w-full py-3 text-sm text-gray-500 hover:text-brand transition-colors"
           >
             브랜드 없이 공개 주문서로 진행하기 →
           </button>
@@ -608,7 +608,7 @@ export function PublicCustomOrderPage({ onGo }: { onGo: (to: string) => void }) 
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto mb-4"></div>
           <p className="text-gray-500">주문서를 준비하고 있어요...</p>
         </div>
       </div>

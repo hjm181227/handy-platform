@@ -29,7 +29,7 @@ export function ToastNotification() {
           flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
           ${toastType === 'success' ? 'bg-green-50' :
             toastType === 'error' ? 'bg-red-50' :
-            'bg-[#FFF1F2]'}
+            'bg-brand-50'}
         `}>
           <span className="text-xl">
             {toastType === 'success' ? '✓' :

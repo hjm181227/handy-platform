@@ -539,7 +539,7 @@ export function BrandDetailPage({
     return (
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="text-center py-20">
-          <div className="w-16 h-16 border-4 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-brand/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">{t('brandDetail.loadingBrand')}</p>
         </div>
       </div>
@@ -738,8 +738,8 @@ export function BrandDetailPage({
         <div className="bg-white rounded-b-2xl -mt-4 relative z-10 p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center group cursor-pointer">
-              <div className="w-12 h-12 mx-auto mb-3 bg-[#FFF1F2] rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 mx-auto mb-3 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </div>
@@ -799,7 +799,7 @@ export function BrandDetailPage({
               }
               onGo(`/brand/${sellerUuid}/custom-order?brandName=${encodeURIComponent(brandStats.name)}`);
             }}
-            className="w-full py-4 bg-gradient-to-r from-[#E85A6B] to-pink-500 text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-[#d14a5b] hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-brand to-pink-500 text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-brand-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -838,7 +838,7 @@ export function BrandDetailPage({
               {productTypeFilter === 'original' ? t('brandDetail.originalProducts') :
                productTypeFilter === 'custom' ? t('brandDetail.customProducts') : t('brandDetail.allProducts')}
             </h2>
-            <span className="px-3 py-1 bg-[#FFF1F2] text-[#E85A6B] rounded-full text-sm font-medium">
+            <span className="px-3 py-1 bg-brand-50 text-brand rounded-full text-sm font-medium">
               {t('count', { count: sortedProducts.length })}
             </span>
           </div>
@@ -875,7 +875,7 @@ export function BrandDetailPage({
                     onClick={() => setCategoryFilter(null)}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !categoryFilter
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -887,7 +887,7 @@ export function BrandDetailPage({
                       onClick={() => setCategoryFilter(category)}
                       className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                         categoryFilter === category
-                          ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                          ? 'bg-brand-50 text-brand'
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                       }`}
                     >
@@ -905,7 +905,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter(null)}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !priceFilter
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -915,7 +915,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter({ min: 0, max: 50000 })}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 0 && priceFilter?.max === 50000
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -925,7 +925,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter({ min: 50000, max: 100000 })}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 50000 && priceFilter?.max === 100000
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -935,7 +935,7 @@ export function BrandDetailPage({
                     onClick={() => setPriceFilter({ min: 100000, max: Infinity })}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       priceFilter?.min === 100000 && priceFilter?.max === Infinity
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -952,7 +952,7 @@ export function BrandDetailPage({
                     onClick={() => setProductTypeFilter(null)}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       !productTypeFilter
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -962,7 +962,7 @@ export function BrandDetailPage({
                     onClick={() => setProductTypeFilter('original')}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       productTypeFilter === 'original'
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -972,7 +972,7 @@ export function BrandDetailPage({
                     onClick={() => setProductTypeFilter('custom')}
                     className={`block w-full text-left px-3 py-2 rounded-lg text-sm ${
                       productTypeFilter === 'custom'
-                        ? 'bg-[#FFF1F2] text-[#E85A6B]'
+                        ? 'bg-brand-50 text-brand'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -1003,7 +1003,7 @@ export function BrandDetailPage({
       <div className="mb-8">
         {productsLoading ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 border-4 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-brand/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">{t('brandDetail.loadingProducts')}</p>
           </div>
         ) : productsError ? (
@@ -1015,7 +1015,7 @@ export function BrandDetailPage({
             <p className="text-gray-600 mb-4">{productsError}</p>
             <button
               onClick={() => window.location.reload()}
-              className="rounded-lg bg-[#E85A6B] text-white px-6 py-2 hover:bg-[#D14A5B]"
+              className="rounded-lg bg-brand text-white px-6 py-2 hover:bg-brand-600"
             >
               {t('retry')}
             </button>

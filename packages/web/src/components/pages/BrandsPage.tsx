@@ -88,7 +88,7 @@ export function BrandsPage({
         className="bg-white rounded-2xl p-4 flex flex-col items-center gap-2.5 cursor-pointer hover:shadow-md transition-shadow"
       >
         {/* 프로필 이미지 */}
-        <div className="w-14 h-14 rounded-full bg-[#FFF1F2] flex items-center justify-center overflow-hidden">
+        <div className="w-14 h-14 rounded-full bg-brand-50 flex items-center justify-center overflow-hidden">
           {brand.brandProfile ? (
             <img
               src={brand.brandProfile}
@@ -97,11 +97,11 @@ export function BrandsPage({
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
-                target.parentElement!.innerHTML = `<span class="text-xl font-bold text-[#E85A6B]">${brand.brandName.charAt(0)}</span>`;
+                target.parentElement!.innerHTML = `<span class="text-xl font-bold text-brand">${brand.brandName.charAt(0)}</span>`;
               }}
             />
           ) : (
-            <span className="text-xl font-bold text-[#E85A6B]">
+            <span className="text-xl font-bold text-brand">
               {brand.brandName.charAt(0)}
             </span>
           )}
@@ -128,14 +128,14 @@ export function BrandsPage({
           <span className="text-[11px] font-medium text-gray-400">
             {t('brandPage.productCount', { count: brand.stats.totalProducts })}
           </span>
-          <span className="text-[11px] font-medium text-[#E85A6B]">
+          <span className="text-[11px] font-medium text-brand">
             {t('brandPage.orderCount', { count: brand.stats.totalOrders })}
           </span>
         </div>
 
         {/* HOT 뱃지 */}
         {isHot && (
-          <span className="bg-[#FFF1F2] text-[#E85A6B] text-[10px] font-bold px-2 py-0.5 rounded-lg">
+          <span className="bg-brand-50 text-brand text-[10px] font-bold px-2 py-0.5 rounded-lg">
             HOT
           </span>
         )}
@@ -148,7 +148,7 @@ export function BrandsPage({
     return (
       <div className="mx-auto max-w-7xl px-4 py-5">
         <div className="text-center py-20">
-          <div className="w-12 h-12 border-4 border-[#E85A6B]/20 border-t-[#E85A6B] rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-brand/20 border-t-brand rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm text-gray-500">{t('brandPage.loadingBrands')}</p>
         </div>
       </div>
@@ -163,7 +163,7 @@ export function BrandsPage({
           <p className="text-sm text-gray-500 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-lg bg-[#E85A6B] text-white px-6 py-2 text-sm hover:bg-[#D14A5B]"
+            className="rounded-lg bg-brand text-white px-6 py-2 text-sm hover:bg-brand-600"
           >
             {t('retry')}
           </button>
@@ -198,7 +198,7 @@ export function BrandsPage({
                 setCurrentPage(1);
               }}
               placeholder={t('brandPage.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#E85A6B] focus:ring-1 focus:ring-[#E85A6B] placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand placeholder-gray-400"
             />
           </div>
 
@@ -210,7 +210,7 @@ export function BrandsPage({
                 onClick={() => handleSortChange(i)}
                 className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   activeSort === i
-                    ? 'bg-[#E85A6B] text-white'
+                    ? 'bg-brand text-white'
                     : 'bg-white border hover:bg-gray-50'
                 }`}
               >
@@ -262,7 +262,7 @@ export function BrandsPage({
                     onClick={() => setCurrentPage(pageNum)}
                     className={`w-8 h-8 text-sm rounded-lg ${
                       currentPage === pageNum
-                        ? 'bg-[#E85A6B] text-white'
+                        ? 'bg-brand text-white'
                         : 'bg-white border border-gray-200 hover:bg-gray-50'
                     }`}
                   >

@@ -85,7 +85,7 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
           )}
 
           <div className="flex items-center justify-center gap-2 text-gray-500">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#E85A6B]"></div>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand"></div>
             <p className="text-sm">{t('common:redirecting')}</p>
           </div>
         </div>
@@ -113,7 +113,7 @@ export function PaymentCancel({ onGo }: PaymentCancelProps) {
               if (mode && allowed.includes(mode) && mode !== 'cart') url = `/checkout?mode=${mode}`;
               onGo(url);
             }}
-            className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
+            className="w-full bg-brand text-white py-2 px-4 rounded-lg hover:bg-brand-600"
           >
             {t('common:retryPayment')}
           </button>

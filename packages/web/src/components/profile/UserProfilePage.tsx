@@ -176,8 +176,8 @@ export default function UserProfilePage({ userUuid, onGo, onOpen, initialView = 
               onClick={() => handleViewChange(view)}
               className={`flex-1 py-3 text-sm ${
                 activeView === view
-                  ? 'text-[#131211] font-bold'
-                  : 'text-[#A39E99] font-medium'
+                  ? 'text-ink font-bold'
+                  : 'text-muted font-medium'
               }`}
             >
               {view === 'grid' ? t('mypage:profile.snaps') : view === 'followers' ? t('mypage:profile.followers') : t('mypage:profile.following')}

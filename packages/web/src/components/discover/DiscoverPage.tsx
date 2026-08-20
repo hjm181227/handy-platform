@@ -91,7 +91,7 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
           <div className="flex gap-2 overflow-x-auto pb-1">
             <button
               onClick={() => setActiveTag(null)}
-              className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${!activeTag ? 'bg-[#E85A6B] text-white' : 'bg-[#FFF1F2] text-[#E85A6B] hover:bg-[#E85A6B]/10'}`}
+              className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${!activeTag ? 'bg-brand text-white' : 'bg-brand-50 text-brand hover:bg-brand/10'}`}
             >
               {t('product:discover.all')}
             </button>
@@ -99,7 +99,7 @@ export default function DiscoverPage({ onGo, onOpen }: DiscoverPageProps) {
               <button
                 key={tag.tag}
                 onClick={() => setActiveTag(tag.tag)}
-                className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${activeTag === tag.tag ? 'bg-[#E85A6B] text-white' : 'bg-[#FFF1F2] text-[#E85A6B] hover:bg-[#E85A6B]/10'}`}
+                className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${activeTag === tag.tag ? 'bg-brand text-white' : 'bg-brand-50 text-brand hover:bg-brand/10'}`}
               >
                 #{tag.tag}
               </button>

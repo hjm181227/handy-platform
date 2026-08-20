@@ -82,7 +82,7 @@ export function MobileBottomNav({ currentPath, onGo, onCategoryOpen }: MobileBot
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label={specialLabel}
               >
-                <div className="w-11 h-11 bg-[#E85A6B] rounded-full flex items-center justify-center shadow-md -mt-2">
+                <div className="w-11 h-11 bg-brand rounded-full flex items-center justify-center shadow-md -mt-2">
                   <Plus size={24} style={{ color: '#fff' }} />
                 </div>
               </button>

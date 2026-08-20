@@ -32,7 +32,7 @@ const getStatusBadge = (status: string) => {
 
 const getTypeBadge = (type: string) =>
   type === 'return'
-    ? { label: '반품', className: 'bg-[#FFF1F2] text-[#E85A6B]' }
+    ? { label: '반품', className: 'bg-brand-50 text-brand' }
     : { label: '교환', className: 'bg-purple-100 text-purple-700' };
 
 const formatDate = (dateString?: string) => {
@@ -181,7 +181,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                 onClick={() => setStatusFilter(tab.key)}
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                   statusFilter === tab.key
-                    ? 'border-[#E85A6B] text-[#E85A6B]'
+                    ? 'border-brand text-brand'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -194,14 +194,14 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
         {/* 목록 */}
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
           </div>
         ) : error ? (
           <div className="bg-white rounded-lg border p-8 text-center space-y-4">
             <p className="text-sm text-red-600">{error}</p>
             <button
               onClick={() => loadRequests(currentPage)}
-              className="px-4 py-2 text-sm bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
+              className="px-4 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
             >
               다시 시도
             </button>
@@ -277,7 +277,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                           <button
                             onClick={() => handleApprove(request)}
                             disabled={isProcessing}
-                            className="px-4 py-2 text-sm bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors disabled:opacity-50 whitespace-nowrap"
+                            className="px-4 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50 whitespace-nowrap"
                           >
                             {isProcessing ? '처리 중...' : '승인'}
                           </button>
@@ -346,7 +346,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
               maxLength={1000}
               rows={4}
               placeholder="반려 사유를 5자 이상 입력해주세요"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent resize-none mb-1"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent resize-none mb-1"
             />
             <p className="text-xs text-gray-400 mb-4">{rejectReason.trim().length}자 / 최소 5자</p>
             <div className="flex gap-3">

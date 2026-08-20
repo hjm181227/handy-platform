@@ -43,10 +43,10 @@ const FINGER_LABELS: Record<string, string> = {
 
 // 상태 설정
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-  pending:       { label: '상담중',   bgColor: 'bg-[#FEF3C7]',  textColor: 'text-[#D97706]' },
+  pending:       { label: '상담중',   bgColor: 'bg-amber-100',  textColor: 'text-amber-600' },
   quoted:        { label: '견적완료', bgColor: 'bg-purple-100',  textColor: 'text-purple-700' },
   approved:      { label: '결제대기', bgColor: 'bg-green-100',   textColor: 'text-green-700' },
-  in_production: { label: '제작중',   bgColor: 'bg-[#FFF1F2]',    textColor: 'text-[#E85A6B]' },
+  in_production: { label: '제작중',   bgColor: 'bg-brand-50',    textColor: 'text-brand' },
   completed:     { label: '완료',     bgColor: 'bg-emerald-100', textColor: 'text-emerald-700' },
   rejected:      { label: '거절됨',   bgColor: 'bg-red-100',     textColor: 'text-red-700' },
   cancelled:     { label: '취소됨',   bgColor: 'bg-gray-100',    textColor: 'text-gray-500' },
@@ -151,16 +151,16 @@ export function CustomOrderBottomSheet({
       >
         {/* 드래그 핸들 */}
         <div className="flex-shrink-0 flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-[#D0C9C3] rounded-full" />
+          <div className="w-10 h-1 bg-line-strong rounded-full" />
         </div>
 
         {/* 헤더 */}
         <div className="flex-shrink-0 flex items-center gap-3 px-5 pb-4">
-          <ClipboardList className="w-6 h-6 text-[#E85A6B] flex-shrink-0" />
+          <ClipboardList className="w-6 h-6 text-brand flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-[#131211]">커스텀 주문서 상세</h2>
+            <h2 className="text-lg font-bold text-ink">커스텀 주문서 상세</h2>
             {data && (
-              <p className="text-xs text-[#A39E99]">
+              <p className="text-xs text-muted">
                 {data.brandName ? `${data.brandName}` : ''}
                 {data.status && ` · ${statusConfig.label}`}
               </p>
@@ -170,28 +170,28 @@ export function CustomOrderBottomSheet({
             onClick={handleClose}
             className="w-6 h-6 flex items-center justify-center flex-shrink-0"
           >
-            <X className="w-6 h-6 text-[#A39E99]" />
+            <X className="w-6 h-6 text-muted" />
           </button>
         </div>
-        <div className="h-px bg-[#F5F3F1]" />
+        <div className="h-px bg-surface" />
 
         {/* 본문 - 스크롤 가능 */}
         <div className="flex-1 overflow-y-auto min-h-0 p-6">
           {/* 로딩 상태 */}
           {loading && (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-              <p className="text-[#A39E99]">주문서 정보를 불러오는 중...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto mb-4"></div>
+              <p className="text-muted">주문서 정보를 불러오는 중...</p>
             </div>
           )}
 
           {/* 에러 상태 */}
           {error && !loading && (
             <div className="text-center py-12">
-              <div className="w-12 h-12 bg-[#FEF3C7] rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-6 h-6 text-[#D97706]" />
+              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-6 h-6 text-amber-600" />
               </div>
-              <p className="text-[#A39E99]">{error}</p>
+              <p className="text-muted">{error}</p>
             </div>
           )}
 
@@ -200,70 +200,70 @@ export function CustomOrderBottomSheet({
             <div className="space-y-6">
               {/* 주문 정보 */}
               <div>
-                <h3 className="text-[15px] font-bold text-[#131211] mb-3">주문 정보</h3>
+                <h3 className="text-[15px] font-bold text-ink mb-3">주문 정보</h3>
                 <div className="space-y-3">
                   <div className="flex">
-                    <span className="text-sm text-[#A39E99] w-20">모양</span>
-                    <span className="text-sm font-medium text-[#131211]">{shapeLabel}</span>
+                    <span className="text-sm text-muted w-20">모양</span>
+                    <span className="text-sm font-medium text-ink">{shapeLabel}</span>
                   </div>
                   <div className="flex">
-                    <span className="text-sm text-[#A39E99] w-20">길이</span>
-                    <span className="text-sm font-medium text-[#131211]">{lengthLabel}</span>
+                    <span className="text-sm text-muted w-20">길이</span>
+                    <span className="text-sm font-medium text-ink">{lengthLabel}</span>
                   </div>
                   {data.title && (
                     <div className="flex">
-                      <span className="text-sm text-[#A39E99] w-20">스타일</span>
-                      <span className="text-sm font-medium text-[#131211]">{data.title}</span>
+                      <span className="text-sm text-muted w-20">스타일</span>
+                      <span className="text-sm font-medium text-ink">{data.title}</span>
                     </div>
                   )}
                   {data.desiredColor && (
                     <div className="flex">
-                      <span className="text-sm text-[#A39E99] w-20">컬러</span>
-                      <span className="text-sm font-medium text-[#131211]">{data.desiredColor}</span>
+                      <span className="text-sm text-muted w-20">컬러</span>
+                      <span className="text-sm font-medium text-ink">{data.desiredColor}</span>
                     </div>
                   )}
                   {data.desiredDate && (
                     <div className="flex">
-                      <span className="text-sm text-[#A39E99] w-20">희망일</span>
-                      <span className="text-sm font-medium text-[#131211]">
+                      <span className="text-sm text-muted w-20">희망일</span>
+                      <span className="text-sm font-medium text-ink">
                         {new Date(data.desiredDate).toLocaleDateString('ko-KR')}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="h-px bg-[#F5F3F1]" />
+              <div className="h-px bg-surface" />
 
               {/* 양손 사이즈 */}
               {/* 사이즈 정보 */}
               <div>
-                <h3 className="text-[15px] font-bold text-[#131211] mb-3">사이즈 정보</h3>
-                <div className="bg-[#F7F5F3] rounded-[10px] overflow-hidden">
+                <h3 className="text-[15px] font-bold text-ink mb-3">사이즈 정보</h3>
+                <div className="bg-surface rounded-[10px] overflow-hidden">
                   {data.sizes.left ? (
                     <table className="w-full">
                       <thead>
-                        <tr className="bg-[#EEEBE8]">
-                          <th className="px-2 py-2 text-xs font-medium text-[#A39E99] text-center w-10"></th>
+                        <tr className="bg-surface-strong">
+                          <th className="px-2 py-2 text-xs font-medium text-muted text-center w-10"></th>
                           {Object.keys(data.sizes.left).map((finger) => (
-                            <th key={finger} className="px-2 py-2 text-xs font-medium text-[#A39E99] text-center">
+                            <th key={finger} className="px-2 py-2 text-xs font-medium text-muted text-center">
                               {FINGER_LABELS[finger] || finger}
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-b border-[#EEEBE8]">
-                          <td className="px-2 py-2.5 text-xs font-medium text-[#A39E99] text-center">왼손</td>
+                        <tr className="border-b border-surface-strong">
+                          <td className="px-2 py-2.5 text-xs font-medium text-muted text-center">왼손</td>
                           {Object.values(data.sizes.left).map((size, idx) => (
-                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-[#131211]">
+                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-ink">
                               {size}
                             </td>
                           ))}
                         </tr>
                         <tr>
-                          <td className="px-2 py-2.5 text-xs font-medium text-[#A39E99] text-center">오른손</td>
+                          <td className="px-2 py-2.5 text-xs font-medium text-muted text-center">오른손</td>
                           {Object.values(data.sizes.right).map((size, idx) => (
-                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-[#131211]">
+                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-ink">
                               {size}
                             </td>
                           ))}
@@ -273,9 +273,9 @@ export function CustomOrderBottomSheet({
                   ) : (
                     <table className="w-full">
                       <thead>
-                        <tr className="bg-[#EEEBE8]">
+                        <tr className="bg-surface-strong">
                           {Object.keys(data.sizes).map((finger) => (
-                            <th key={finger} className="px-2 py-2 text-xs font-medium text-[#A39E99] text-center">
+                            <th key={finger} className="px-2 py-2 text-xs font-medium text-muted text-center">
                               {FINGER_LABELS[finger] || finger}
                             </th>
                           ))}
@@ -284,7 +284,7 @@ export function CustomOrderBottomSheet({
                       <tbody>
                         <tr>
                           {Object.values(data.sizes).map((size, idx) => (
-                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-[#131211]">
+                            <td key={idx} className="px-2 py-2.5 text-center text-sm font-medium text-ink">
                               {String(size)}
                             </td>
                           ))}
@@ -294,19 +294,19 @@ export function CustomOrderBottomSheet({
                   )}
                 </div>
               </div>
-              <div className="h-px bg-[#F5F3F1]" />
+              <div className="h-px bg-surface" />
 
               {/* 참고 이미지 */}
               {data.referenceImages && data.referenceImages.length > 0 && (
                 <>
                   <div>
-                    <h3 className="text-[15px] font-bold text-[#131211] mb-3">참고 이미지</h3>
+                    <h3 className="text-[15px] font-bold text-ink mb-3">참고 이미지</h3>
                     <div className="flex gap-2.5">
                       {data.referenceImages.map((url, idx) => (
                         <button
                           key={idx}
                           onClick={() => setSelectedImage(url)}
-                          className="w-[100px] h-[100px] rounded-xl overflow-hidden bg-[#F5F3F1] hover:opacity-90 transition-opacity flex-shrink-0"
+                          className="w-[100px] h-[100px] rounded-xl overflow-hidden bg-surface hover:opacity-90 transition-opacity flex-shrink-0"
                         >
                           <img
                             src={url}
@@ -317,17 +317,17 @@ export function CustomOrderBottomSheet({
                       ))}
                     </div>
                   </div>
-                  <div className="h-px bg-[#F5F3F1]" />
+                  <div className="h-px bg-surface" />
                 </>
               )}
 
               {/* 요청사항 */}
               {data.designNotes && (
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#131211] mb-2.5">요청사항</h3>
-                  <div className="bg-[#FEF9E7] rounded-[10px] p-3.5 flex gap-2">
-                    <MessageSquare className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" />
-                    <p className="text-[13px] text-[#92400E] whitespace-pre-wrap">{data.designNotes}</p>
+                  <h3 className="text-[15px] font-bold text-ink mb-2.5">요청사항</h3>
+                  <div className="bg-amber-50 rounded-[10px] p-3.5 flex gap-2">
+                    <MessageSquare className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-[13px] text-amber-800 whitespace-pre-wrap">{data.designNotes}</p>
                   </div>
                 </div>
               )}
@@ -347,7 +347,7 @@ export function CustomOrderBottomSheet({
           {isSeller && data && data.status === 'pending' && currentUserUuid && data.sellerUuid === currentUserUuid ? (
             <button
               onClick={() => setShowQuoteModal(true)}
-              className="w-full h-14 bg-[#131211] text-white rounded-2xl hover:bg-[#2a2928] transition-colors font-semibold text-base flex items-center justify-center gap-2"
+              className="w-full h-14 bg-ink text-white rounded-2xl hover:bg-ink transition-colors font-semibold text-base flex items-center justify-center gap-2"
             >
               <FileText className="w-5 h-5" />
               견적서 작성하기
@@ -355,7 +355,7 @@ export function CustomOrderBottomSheet({
           ) : (
             <button
               onClick={handleClose}
-              className="w-full h-14 bg-[#131211] text-white rounded-2xl hover:bg-[#2a2928] transition-colors font-semibold text-base"
+              className="w-full h-14 bg-ink text-white rounded-2xl hover:bg-ink transition-colors font-semibold text-base"
             >
               닫기
             </button>

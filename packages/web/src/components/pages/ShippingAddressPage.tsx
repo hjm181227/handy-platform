@@ -116,7 +116,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
               <p className="text-gray-600">{t('order:shipping.loading')}</p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
           </div>
           <button
             onClick={startAdd}
-            className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg hover:bg-[#D14A5B] text-sm font-medium"
+            className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-600 text-sm font-medium"
           >
             {t('order:shipping.addNewShort')}
           </button>
@@ -167,7 +167,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
             <p className="text-gray-500 mb-4">{t('order:shipping.noAddressesDesc')}</p>
             <button
               onClick={startAdd}
-              className="bg-[#E85A6B] text-white px-6 py-2 rounded-lg hover:bg-[#D14A5B]"
+              className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-brand-600"
             >
               {t('order:shipping.addFirst')}
             </button>
@@ -183,7 +183,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                         {address.addressName || t('order:checkout.addressLabel')}
                       </h3>
                       {address.isDefault && (
-                        <span className="bg-[#FFF1F2] text-[#D14A5B] px-2 py-1 rounded-full text-xs font-medium">
+                        <span className="bg-brand-50 text-brand-600 px-2 py-1 rounded-full text-xs font-medium">
                           {t('order:shipping.defaultAddress')}
                         </span>
                       )}
@@ -194,7 +194,7 @@ export function ShippingAddressPage({ onGo }: ShippingAddressPageProps) {
                     {!address.isDefault && (
                       <button
                         onClick={() => handleSetDefault(address.index)}
-                        className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
+                        className="text-brand hover:text-brand text-sm font-medium"
                       >
                         {t('order:shipping.setDefault')}
                       </button>

@@ -207,7 +207,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError(""); }}
             placeholder={t('auth:login.emailPlaceholder')}
-            className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-[#E85A6B] transition-colors"
+            className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 text-base outline-none focus:border-brand transition-colors"
             disabled={loading}
           />
 
@@ -217,7 +217,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
               placeholder={t('auth:login.passwordPlaceholder')}
-              className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-[#E85A6B] transition-colors"
+              className="w-full rounded-xl border-2 border-gray-200 px-4 py-4 pr-12 text-base outline-none focus:border-brand transition-colors"
               disabled={loading}
             />
             <button
@@ -256,7 +256,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-[#E85A6B] py-4 text-base font-semibold text-white hover:bg-[#D14A5B] disabled:bg-gray-300 transition-colors"
+            className="w-full rounded-xl bg-brand py-4 text-base font-semibold text-white hover:bg-brand-600 disabled:bg-gray-300 transition-colors"
           >
             {loading ? t('auth:login.loggingIn') : t('auth:login.loginButton')}
           </button>
@@ -330,7 +330,7 @@ export function LoginPage({ onGo }: { onGo: (to: string) => void }) {
         <span className="text-gray-500 text-sm">{t('auth:signup.alreadyHaveAccount')} </span>
         <button
           onClick={() => setShowEmailLogin(true)}
-          className="text-[#E85A6B] text-sm font-medium hover:underline"
+          className="text-brand text-sm font-medium hover:underline"
         >
           {t('common:login')}
         </button>

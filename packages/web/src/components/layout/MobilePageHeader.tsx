@@ -186,7 +186,7 @@ export function MobilePageHeader({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSearchSuggestions(true)}
                   placeholder={resolvedPlaceholder}
-                  className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
+                  className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none text-sm text-gray-700"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                   {searchQuery && (

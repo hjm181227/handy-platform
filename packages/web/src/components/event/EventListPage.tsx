@@ -76,7 +76,7 @@ export function EventListPage({ onGo }: EventListPageProps) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-5">
         <div className="text-center py-20">
-          <div className="w-12 h-12 border-4 border-[#E85A6B]/20 border-t-[#E85A6B] rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-brand/20 border-t-brand rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm text-gray-500">이벤트를 불러오는 중...</p>
         </div>
       </div>
@@ -178,7 +178,7 @@ export function EventListPage({ onGo }: EventListPageProps) {
                   </div>
                   {/* D-day 뱃지 */}
                   {banner.endDate && new Date(banner.endDate) >= new Date() && (
-                    <div className="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[11px] font-bold text-[#E85A6B]">
+                    <div className="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[11px] font-bold text-brand">
                       {getDday(banner.endDate)}
                     </div>
                   )}

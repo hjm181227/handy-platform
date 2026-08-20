@@ -77,7 +77,7 @@ export function TermsAgreement({
                 <div className="font-semibold text-gray-800">{userInfo.name}</div>
                 <div className="text-sm text-gray-600">{userInfo.email}</div>
                 {userInfo.provider && (
-                  <div className="text-xs text-[#E85A6B] mt-1">
+                  <div className="text-xs text-brand mt-1">
                     {getProviderLabel(userInfo.provider)} {t('auth:social.signingUpWith', { provider: '' }).trim()}
                   </div>
                 )}
@@ -89,7 +89,7 @@ export function TermsAgreement({
         <div className="text-sm font-semibold text-gray-800">{displayTitle}</div>
 
         {description && (
-          <div className="text-sm text-gray-600 bg-[#FFF1F2] p-3 rounded">
+          <div className="text-sm text-gray-600 bg-brand-50 p-3 rounded">
             {description}
           </div>
         )}
@@ -121,7 +121,7 @@ export function TermsAgreement({
           <button
             type="button"
             onClick={() => setShowPolicy('terms')}
-            className="text-[#E85A6B] hover:text-[#D14A5B] text-xs underline"
+            className="text-brand hover:text-brand-600 text-xs underline"
           >
             {t('common:seeMore')}
           </button>
@@ -142,7 +142,7 @@ export function TermsAgreement({
           <button
             type="button"
             onClick={() => setShowPolicy('privacy')}
-            className="text-[#E85A6B] hover:text-[#D14A5B] text-xs underline"
+            className="text-brand hover:text-brand-600 text-xs underline"
           >
             {t('common:seeMore')}
           </button>
@@ -163,7 +163,7 @@ export function TermsAgreement({
           <button
             type="button"
             onClick={() => setShowPolicy('personalData')}
-            className="text-[#E85A6B] hover:text-[#D14A5B] text-xs underline"
+            className="text-brand hover:text-brand-600 text-xs underline"
           >
             {t('common:seeMore')}
           </button>
@@ -184,7 +184,7 @@ export function TermsAgreement({
         </label>
 
         {/* 필수 약관 안내 */}
-        <div className="text-xs text-gray-600 bg-[#FFF1F2] p-2 rounded flex items-center gap-1">
+        <div className="text-xs text-gray-600 bg-brand-50 p-2 rounded flex items-center gap-1">
           <span className="material-symbols-outlined text-sm">lightbulb</span>
           {t('auth:signup.termsRequired')}
         </div>

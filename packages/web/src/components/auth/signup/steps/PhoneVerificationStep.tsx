@@ -228,7 +228,7 @@ export function PhoneVerificationStep({
           title={t('auth:phone.enterCodeTitle')}
           subtitle={
             <>
-              <span className="text-[#E85A6B] font-medium">{phone}</span>
+              <span className="text-brand font-medium">{phone}</span>
               {t('auth:phone.sentTo')}
             </>
           }
@@ -265,7 +265,7 @@ export function PhoneVerificationStep({
             disabled={!canResend || loading}
             className={`text-sm ${
               canResend && !loading
-                ? 'text-[#E85A6B] hover:underline'
+                ? 'text-brand hover:underline'
                 : 'text-gray-400 cursor-not-allowed'
             }`}
           >

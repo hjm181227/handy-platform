@@ -43,7 +43,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#E85A6B] focus:ring-2 focus:ring-[#E85A6B]/10"
+        className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/10"
       />
     </label>
   );
@@ -184,7 +184,7 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
   if (status?.status === 'pending' || status?.status === 'approved') {
     const approved = status.status === 'approved';
     return (
-      <main className="min-h-screen bg-[#FAF8F7] px-4 py-12">
+      <main className="min-h-screen bg-surface px-4 py-12">
         <section className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
           <div className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full text-3xl ${approved ? 'bg-green-100' : 'bg-amber-100'}`}>
             {approved ? '✓' : '⌛'}
@@ -192,7 +192,7 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
           <h1 className="text-2xl font-bold text-gray-950">{approved ? '입점 승인이 완료되었습니다' : '입점 신청을 검토하고 있습니다'}</h1>
           <p className="mt-3 text-gray-600">{approved ? '이제 상품을 등록하고 판매를 시작할 수 있습니다.' : '담당자가 신청 내용을 확인한 뒤 결과를 알려드립니다.'}</p>
           {message && <p className="mt-5 rounded-xl bg-gray-50 p-3 text-sm text-gray-700">{message}</p>}
-          <button onClick={() => onGo(approved ? '/seller' : '/')} className="mt-7 w-full rounded-xl bg-[#E85A6B] px-5 py-3 font-semibold text-white">
+          <button onClick={() => onGo(approved ? '/seller' : '/')} className="mt-7 w-full rounded-xl bg-brand px-5 py-3 font-semibold text-white">
             {approved ? '판매자 센터로 이동' : '홈으로 이동'}
           </button>
         </section>
@@ -201,12 +201,12 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF8F7] px-4 py-8">
+    <main className="min-h-screen bg-surface px-4 py-8">
       <section className="mx-auto max-w-3xl">
         <button onClick={() => onGo('/')} className="mb-5 text-sm text-gray-500">← 나중에 계속하기</button>
         <div className="rounded-3xl bg-white p-6 shadow-sm md:p-9">
           <div className="mb-7">
-            <p className="text-sm font-semibold text-[#E85A6B]">Handy 파트너 입점</p>
+            <p className="text-sm font-semibold text-brand">Handy 파트너 입점</p>
             <h1 className="mt-1 text-3xl font-bold text-gray-950">브랜드의 판매를 시작해 보세요</h1>
             <p className="mt-2 text-gray-600">작성 중 언제든 저장하고 다시 이어갈 수 있습니다.</p>
           </div>
@@ -217,7 +217,7 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
 
           <div className="mb-8 grid grid-cols-3 gap-2">
             {steps.map((name, index) => (
-              <div key={name} className={`whitespace-nowrap rounded-xl px-1 py-3 text-center text-xs font-medium sm:px-3 sm:text-sm ${index === step ? 'bg-[#E85A6B] text-white' : index < step ? 'bg-[#FFF1F2] text-[#D14A5B]' : 'bg-gray-100 text-gray-400'}`}>
+              <div key={name} className={`whitespace-nowrap rounded-xl px-1 py-3 text-center text-xs font-medium sm:px-3 sm:text-sm ${index === step ? 'bg-brand text-white' : index < step ? 'bg-brand-50 text-brand-600' : 'bg-gray-100 text-gray-400'}`}>
                 {index + 1}. {name}
               </div>
             ))}
@@ -268,12 +268,12 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
             </div>
           )}
 
-          {message && <div className="mt-6 rounded-xl bg-[#FFF1F2] p-4 text-sm text-[#B43C4D]">{message}</div>}
+          {message && <div className="mt-6 rounded-xl bg-brand-50 p-4 text-sm text-[#B43C4D]">{message}</div>}
 
           <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
             {step > 0 && <button type="button" onClick={() => setStep((current) => current - 1)} className="rounded-xl border border-gray-300 px-5 py-3 font-medium">이전</button>}
-            <button type="button" disabled={saving} onClick={() => saveDraft()} className="rounded-xl border border-[#E85A6B] px-5 py-3 font-medium text-[#D14A5B] disabled:opacity-50">임시저장</button>
-            <button type="button" disabled={saving || uploading} onClick={step === steps.length - 1 ? submit : next} className="ml-auto rounded-xl bg-[#E85A6B] px-6 py-3 font-semibold text-white disabled:opacity-50">
+            <button type="button" disabled={saving} onClick={() => saveDraft()} className="rounded-xl border border-brand px-5 py-3 font-medium text-brand-600 disabled:opacity-50">임시저장</button>
+            <button type="button" disabled={saving || uploading} onClick={step === steps.length - 1 ? submit : next} className="ml-auto rounded-xl bg-brand px-6 py-3 font-semibold text-white disabled:opacity-50">
               {saving ? '저장 중…' : step === steps.length - 1 ? '입점 신청 제출' : '저장하고 다음'}
             </button>
           </div>

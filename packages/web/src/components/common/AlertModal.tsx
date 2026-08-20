@@ -123,13 +123,13 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         ) : (
-          <svg className="w-12 h-12 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         );
       case 'prompt':
         return (
-          <svg className="w-12 h-12 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
         );
@@ -162,8 +162,8 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
         };
       default:
         return {
-          confirmButton: 'bg-[#E85A6B] hover:bg-[#D14A5B] text-white',
-          border: 'border-[#E85A6B]/20'
+          confirmButton: 'bg-brand hover:bg-brand-600 text-white',
+          border: 'border-brand/20'
         };
     }
   };
@@ -246,7 +246,7 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
                   }}
                   placeholder={alert.options.placeholder}
                   maxLength={alert.options.maxLength}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] resize-none ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand focus:border-brand resize-none ${
                     inputError ? 'border-red-300' : 'border-gray-300'
                   }`}
                   rows={4}
@@ -262,7 +262,7 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
                   }}
                   placeholder={alert.options.placeholder}
                   maxLength={alert.options.maxLength}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand focus:border-brand ${
                     inputError ? 'border-red-300' : 'border-gray-300'
                   }`}
                   autoFocus
@@ -298,7 +298,7 @@ export function AlertModal({ alert, onResolve, onReject }: AlertModalProps) {
                 className={`px-4 py-2 border rounded-lg transition-colors duration-200 ${
                   (alert.options.currentRetryCount ?? 0) >= (alert.options.maxManualRetries || 2)
                     ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
-                    : 'border-blue-300 text-[#E85A6B] hover:bg-[#FFF1F2] hover:border-blue-400'
+                    : 'border-blue-300 text-brand hover:bg-brand-50 hover:border-blue-400'
                 }`}
                 disabled={(alert.options.currentRetryCount ?? 0) >= (alert.options.maxManualRetries || 2)}
               >

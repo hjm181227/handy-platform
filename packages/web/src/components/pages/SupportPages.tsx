@@ -134,7 +134,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
 
           <button
             type="submit"
-            className="w-full bg-[#E85A6B] text-white py-3 rounded-lg font-medium hover:bg-[#D14A5B]"
+            className="w-full bg-brand text-white py-3 rounded-lg font-medium hover:bg-brand-600"
           >
             {t('support.submitInquiry')}
           </button>
@@ -152,7 +152,7 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
           <h3 className="font-medium">{t('support.inquiryHistory')}</h3>
           <button
             onClick={() => setShowNewInquiry(true)}
-            className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#D14A5B]"
+            className="bg-brand text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-600"
           >
             {t('support.newInquiry')}
           </button>
@@ -188,9 +188,9 @@ export function ContactPage({ onGo }: { onGo: (to: string) => void }) {
                 <div className="p-4">
                   <div className="text-sm text-gray-700 mb-3">{inquiry.content}</div>
                   {inquiry.answer && (
-                    <div className="bg-[#FFF1F2] border-l-4 border-blue-400 p-3">
-                      <div className="font-medium text-sm text-[#D14A5B] mb-1">{t('support.answer')}</div>
-                      <div className="text-sm text-[#E85A6B]">{inquiry.answer}</div>
+                    <div className="bg-brand-50 border-l-4 border-blue-400 p-3">
+                      <div className="font-medium text-sm text-brand-600 mb-1">{t('support.answer')}</div>
+                      <div className="text-sm text-brand">{inquiry.answer}</div>
                     </div>
                   )}
                 </div>
@@ -329,7 +329,7 @@ export function NotificationsPage({ onGo }: { onGo: (to: string) => void }) {
       <button
         onClick={onToggle}
         className={`w-12 h-6 rounded-full transition-colors ${
-          enabled ? 'bg-[#E85A6B]' : 'bg-gray-300'
+          enabled ? 'bg-brand' : 'bg-gray-300'
         }`}
       >
         <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -720,7 +720,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         <PageHeader onBack={() => onGo("/my")} title={t('support.settingsTitle')} />
         <div className="p-4 flex justify-center items-center min-h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E85A6B] mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-2"></div>
             <p className="text-gray-500">{t('support.loadingUserInfo')}</p>
           </div>
         </div>
@@ -738,7 +738,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-[#E85A6B] text-white px-4 py-2 rounded-lg hover:bg-[#D14A5B]"
+              className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-600"
             >
               {t('retry')}
             </button>
@@ -769,7 +769,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                   {(userInfo.nickname || userInfo.name || '?').charAt(0)}
                 </div>
               )}
-              <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#E85A6B] flex items-center justify-center border-2 border-white">
+              <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-brand flex items-center justify-center border-2 border-white">
                 {avatarUploading ? (
                   <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
@@ -802,7 +802,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <button
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
               disabled={loading}
-              className="text-sm text-[#E85A6B] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm text-brand hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? t('support.saving') : isEditing ? t('save') : t('edit')}
             </button>
@@ -913,7 +913,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                 onClick={() => setUserInfo(prev => ({ ...prev, marketingConsent: !prev.marketingConsent }))}
                 disabled={loading}
                 className={`w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
-                  userInfo.marketingConsent ? 'bg-[#E85A6B]' : 'bg-gray-300'
+                  userInfo.marketingConsent ? 'bg-brand' : 'bg-gray-300'
                 }`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -940,9 +940,9 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
                   onGo("/seller/register");
                 }
               }}
-              className="w-full bg-white border border-[#E85A6B]/20 rounded-lg p-4 text-left hover:bg-[#FFF1F2]"
+              className="w-full bg-white border border-brand/20 rounded-lg p-4 text-left hover:bg-brand-50"
             >
-              <div className="font-medium text-[#E85A6B]">{t('support.switchToSeller')}</div>
+              <div className="font-medium text-brand">{t('support.switchToSeller')}</div>
               <div className="text-sm text-gray-600">{t('support.switchToSellerDesc')}</div>
             </button>
           )}
@@ -1001,7 +1001,7 @@ export function PromoPage({ onGo }: { onGo: (to: string) => void }) {
             <div className="text-sm opacity-90 mb-1">월 구독료</div>
             <div className="text-2xl font-bold">9,900원</div>
           </div>
-          <button className="bg-white text-[#E85A6B] px-8 py-3 rounded-lg font-medium hover:bg-[#FFF1F2]">
+          <button className="bg-white text-brand px-8 py-3 rounded-lg font-medium hover:bg-brand-50">
             멤버십 가입하기
           </button>
         </div>

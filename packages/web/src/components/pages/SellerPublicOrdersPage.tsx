@@ -88,7 +88,7 @@ export function SellerPublicOrdersPage({ onGo }: { onGo: (to: string) => void })
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5]">
+    <div className="min-h-screen bg-surface">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
         <div className="flex items-center gap-3 px-4 h-14">
@@ -120,7 +120,7 @@ export function SellerPublicOrdersPage({ onGo }: { onGo: (to: string) => void })
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <svg
-              className="animate-spin w-8 h-8 text-[#E85A6B]"
+              className="animate-spin w-8 h-8 text-brand"
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -163,7 +163,7 @@ export function SellerPublicOrdersPage({ onGo }: { onGo: (to: string) => void })
             <p className="text-sm text-gray-600 text-center">{error}</p>
             <button
               onClick={() => fetchOrders(1, false)}
-              className="px-4 py-2 bg-[#E85A6B] text-white text-sm font-medium rounded-lg hover:bg-[#d44d5e] transition-colors"
+              className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition-colors"
             >
               다시 시도
             </button>
@@ -210,9 +210,9 @@ export function SellerPublicOrdersPage({ onGo }: { onGo: (to: string) => void })
                   {/* Top row: nickname + quote sent badge */}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-[#FCE8EB] flex items-center justify-center flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center flex-shrink-0">
                         <svg
-                          className="w-4 h-4 text-[#E85A6B]"
+                          className="w-4 h-4 text-brand"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >
@@ -225,7 +225,7 @@ export function SellerPublicOrdersPage({ onGo }: { onGo: (to: string) => void })
                     </div>
 
                     {order.myQuoteStatus !== null && (
-                      <span className="flex-shrink-0 px-2 py-0.5 bg-[#FCE8EB] text-[#E85A6B] text-xs font-medium rounded-full">
+                      <span className="flex-shrink-0 px-2 py-0.5 bg-brand-50 text-brand text-xs font-medium rounded-full">
                         견적 보냄
                       </span>
                     )}
@@ -296,7 +296,7 @@ export function SellerPublicOrdersPage({ onGo }: { onGo: (to: string) => void })
                   {loadingMore ? (
                     <>
                       <svg
-                        className="animate-spin w-4 h-4 text-[#E85A6B]"
+                        className="animate-spin w-4 h-4 text-brand"
                         fill="none"
                         viewBox="0 0 24 24"
                       >

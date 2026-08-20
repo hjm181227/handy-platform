@@ -222,7 +222,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
         <p className="text-gray-600">{error || '상품을 찾을 수 없습니다.'}</p>
-        <button onClick={onBack} className="text-[#E85A6B] hover:underline">
+        <button onClick={onBack} className="text-brand hover:underline">
           돌아가기
         </button>
       </div>

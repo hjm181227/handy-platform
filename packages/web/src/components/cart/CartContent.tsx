@@ -616,12 +616,12 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       <div className="space-y-2 mb-4">
         {/* 다중 판매자 안내 */}
         {cartSummary?.hasMultipleSellers && (
-          <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-3">
+          <div className="bg-brand-50 border border-brand/20 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <div className="text-[#E85A6B] text-lg sm:text-xl flex-shrink-0">🚚</div>
+              <div className="text-brand text-lg sm:text-xl flex-shrink-0">🚚</div>
               <div className="min-w-0">
-                <div className="text-[#D14A5B] font-medium text-sm sm:text-base">다중 판매자 주문</div>
-                <div className="text-[#E85A6B] text-xs sm:text-sm mt-0.5 sm:mt-1">
+                <div className="text-brand-600 font-medium text-sm sm:text-base">다중 판매자 주문</div>
+                <div className="text-brand text-xs sm:text-sm mt-0.5 sm:mt-1">
                   {cartSummary.totalSellers}개 판매자로부터 주문하여 개별 배송될 수 있습니다.
                 </div>
               </div>
@@ -719,7 +719,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
                 type="checkbox"
                 checked={!deselectedKeys.has(itemKey)}
                 onChange={() => toggleItemSelection(itemKey)}
-                className="w-4 h-4 accent-[#E85A6B] flex-shrink-0 cursor-pointer touch-manipulation"
+                className="w-4 h-4 accent-brand flex-shrink-0 cursor-pointer touch-manipulation"
                 aria-label={`${productName} 선택`}
               />
 
@@ -851,7 +851,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
                   배송비: {money(seller.shipping.shippingCost)}
                 </span>
                 {seller.shipping.freeShippingRemaining > 0 && (
-                  <div className="text-[10px] sm:text-xs text-[#E85A6B] mt-0.5 sm:mt-1">
+                  <div className="text-[10px] sm:text-xs text-brand mt-0.5 sm:mt-1">
                     {money(seller.shipping.freeShippingRemaining)} 더 구매하면 무료배송
                   </div>
                 )}
@@ -874,7 +874,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
             type="checkbox"
             checked={allSelected}
             onChange={toggleSelectAll}
-            className="w-4 h-4 accent-[#E85A6B] cursor-pointer touch-manipulation"
+            className="w-4 h-4 accent-brand cursor-pointer touch-manipulation"
             aria-label="전체선택"
           />
           <span className="text-sm sm:text-base font-medium">
@@ -884,7 +884,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
         <button
           onClick={removeSelectedItems}
           disabled={selectedItems.length === 0 || loading}
-          className="text-xs sm:text-sm text-gray-500 border border-gray-300 rounded px-2 py-1 hover:text-[#E85A6B] hover:border-[#E85A6B] transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+          className="text-xs sm:text-sm text-gray-500 border border-gray-300 rounded px-2 py-1 hover:text-brand hover:border-brand transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
         >
           선택 삭제
         </button>
@@ -929,7 +929,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
                 </div>
               )}
               {totals.freeShippingRemaining > 0 && (
-                <div className="text-xs text-[#E85A6B] bg-[#FFF1F2] p-2 rounded">
+                <div className="text-xs text-brand bg-brand-50 p-2 rounded">
                   {money(totals.freeShippingRemaining)} 더 구매하면 무료배송!
                 </div>
               )}
@@ -947,7 +947,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
           <span className="font-semibold text-base sm:text-lg">
             {allSelected ? '총 결제금액' : '선택 상품 합계'}
           </span>
-          <span className={`font-bold ${mode === 'drawer' ? 'text-lg' : 'text-xl sm:text-2xl'} text-[#E85A6B]`}>
+          <span className={`font-bold ${mode === 'drawer' ? 'text-lg' : 'text-xl sm:text-2xl'} text-brand`}>
             {money(allSelected ? totals.total : selectedSubtotal)}
           </span>
         </div>

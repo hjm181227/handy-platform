@@ -245,8 +245,8 @@ export function BannerDetailPage({ bannerId, onGo }: BannerDetailPageProps) {
                 {/* 기간 */}
                 {(banner.startDate || banner.endDate) && (
                   <div className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-3 bg-[#FFF1F2] rounded-xl flex items-center justify-center">
-                      <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 mx-auto mb-3 bg-brand-50 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>

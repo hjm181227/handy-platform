@@ -76,7 +76,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
             <span className="text-sm font-medium">{brand.stats.averageRating.toFixed(1)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[#E85A6B] font-medium">{brand.stats.totalOrders}</span>
+            <span className="text-brand font-medium">{brand.stats.totalOrders}</span>
             <span>{t('product:search.orders')}</span>
           </div>
         </div>
@@ -238,7 +238,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
         <TitleBar title={`${t('product:search.title')}: ${searchQuery || t('product:search.viewAll')}`} desc={`${t('product:search.searching')}`} />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-gray-600 text-lg">{t('product:search.searching')}</p>
             <p className="text-gray-400 text-sm mt-2">{t('product:search.pleaseWait')}</p>
           </div>
@@ -264,7 +264,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
             <div className="flex gap-3">
               <button
                 onClick={handleRetry}
-                className="px-6 py-2.5 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
+                className="px-6 py-2.5 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
               >
                 {t('common:retry')}
               </button>
@@ -311,7 +311,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               {searchQuery && (
                 <button
                   onClick={() => performSearch('')}
-                  className="px-6 py-2.5 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
+                  className="px-6 py-2.5 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
                 >
                   {t('product:search.viewAll')}
                 </button>
@@ -370,7 +370,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
           {searchQuery && totalCount > 0 && (
             <button
               onClick={() => performSearch('')}
-              className="text-sm text-[#E85A6B] hover:text-[#D14A5B] hover:underline"
+              className="text-sm text-brand hover:text-brand-600 hover:underline"
             >
               {t('product:search.viewAll')}
             </button>
@@ -390,7 +390,7 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
               {brands.length > 6 && (
                 <button
                   onClick={() => window.location.href = '/brands'}
-                  className="text-sm text-[#E85A6B] hover:text-[#D14A5B] hover:underline"
+                  className="text-sm text-brand hover:text-brand-600 hover:underline"
                 >
                   {t('product:search.viewAllBrands')} →
                 </button>
@@ -430,11 +430,11 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
                 <button
                   onClick={loadMoreProducts}
                   disabled={loadingMore}
-                  className="flex items-center gap-2 px-8 py-2.5 border border-[#E85A6B] text-[#E85A6B] rounded-lg hover:bg-[#E85A6B]/10 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-8 py-2.5 border border-brand text-brand rounded-lg hover:bg-brand/10 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loadingMore ? (
                     <>
-                      <span className="w-4 h-4 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin"></span>
                       {t('product:categoryPage.loadingMore')}
                     </>
                   ) : (
@@ -449,21 +449,21 @@ export function SearchResultsPage({ searchQuery, onOpen, onAdd, onLike, likedPro
         {/* 검색 결과가 적을 때 추가 안내 */}
         {totalCount > 0 && totalCount < 5 && (
           <div className="mt-8">
-            <div className="bg-[#FFF1F2] rounded-lg p-6 text-center">
+            <div className="bg-brand-50 rounded-lg p-6 text-center">
               <h4 className="text-lg font-medium text-blue-900 mb-2">{t('product:search.wantMore')}</h4>
-              <p className="text-[#E85A6B] mb-4">
+              <p className="text-brand mb-4">
                 {t('product:search.trySuggestion')}
               </p>
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => performSearch('')}
-                  className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
                 >
                   {t('product:search.viewAll')}
                 </button>
                 <button
                   onClick={() => window.location.href = '/brands'}
-                  className="px-4 py-2 border border-blue-300 text-[#E85A6B] rounded-lg hover:bg-[#E85A6B]/10 transition-colors text-sm font-medium"
+                  className="px-4 py-2 border border-blue-300 text-brand rounded-lg hover:bg-brand/10 transition-colors text-sm font-medium"
                 >
                   {t('product:search.browseBrands')}
                 </button>

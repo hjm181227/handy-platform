@@ -127,7 +127,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div
-                className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">{t('dashboard.loadingData')}</p>
             </div>
           </div>
@@ -170,8 +170,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               <p className="text-sm text-gray-600">{t('dashboard.todaySales')}</p>
               <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}</p>
             </div>
-            <div className="w-12 h-12 bg-[#FFF1F2] rounded-full flex items-center justify-center flex-shrink-0">
-              <FaDollarSign className="w-6 h-6 text-[#E85A6B]" />
+            <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaDollarSign className="w-6 h-6 text-brand" />
             </div>
           </div>
 
@@ -216,7 +216,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => onGo('/seller/products/new')}
-              className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#E85A6B] hover:bg-[#FFF1F2] transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-brand hover:bg-brand-50 transition-colors"
             >
               <FaPlus className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm font-medium">{t('dashboard.registerProduct')}</span>
@@ -254,7 +254,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
             <h3 className="text-lg font-semibold">{t('dashboard.recentOrders')}</h3>
             <button
               onClick={() => onGo('/seller/orders')}
-              className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
+              className="text-brand hover:text-brand text-sm font-medium"
             >
               {t('dashboard.viewAll')}
             </button>
@@ -264,8 +264,8 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               <p className="text-2xl font-bold text-yellow-600">{dashboardData.orders.pending}</p>
               <p className="text-sm text-gray-600">{t('dashboard.pendingLabel')}</p>
             </div>
-            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
-              <p className="text-2xl font-bold text-[#E85A6B]">{dashboardData.orders.processing}</p>
+            <div className="text-center p-4 bg-brand-50 rounded-lg">
+              <p className="text-2xl font-bold text-brand">{dashboardData.orders.processing}</p>
               <p className="text-sm text-gray-600">{t('dashboard.processingLabel')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -285,14 +285,14 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
             <h3 className="text-lg font-semibold">{t('dashboard.productStatus')}</h3>
             <button
               onClick={() => onGo('/seller/products')}
-              className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
+              className="text-brand hover:text-brand text-sm font-medium"
             >
               {t('dashboard.viewAll')}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
-              <p className="text-2xl font-bold text-[#E85A6B]">{dashboardData.products.total}</p>
+            <div className="text-center p-4 bg-brand-50 rounded-lg">
+              <p className="text-2xl font-bold text-brand">{dashboardData.products.total}</p>
               <p className="text-sm text-gray-600">{t('dashboard.totalProducts')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -525,7 +525,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 placeholder={t('products.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               />
               <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
                    viewBox="0 0 24 24">
@@ -537,7 +537,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
             >
               <option value="all">{t('products.allProducts')}</option>
               <option value="active">{t('products.onSale')}</option>
@@ -572,7 +572,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
             <button
               onClick={() => onGo('/seller/products/bulk-upload')}
-              className="px-4 py-2 border border-[#E85A6B] text-[#E85A6B] rounded-lg hover:bg-[#FFF1F2] flex items-center gap-2"
+              className="px-4 py-2 border border-brand text-brand rounded-lg hover:bg-brand-50 flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -582,7 +582,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
             <button
               onClick={() => onGo('/seller/products/new')}
-              className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] flex items-center gap-2"
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -598,7 +598,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
           {isLoading && (
             <div className="flex justify-center items-center py-12">
               <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
                 <span className="text-gray-600">{t('products.loadingProducts')}</span>
               </div>
             </div>
@@ -617,7 +617,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
+                className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600"
               >
                 {t('common:retry')}
               </button>
@@ -636,7 +636,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                         type="checkbox"
                         checked={filteredProducts.length > 0 && selectedProductUuids.size === filteredProducts.length}
                         onChange={toggleSelectAll}
-                        className="h-4 w-4 text-[#E85A6B] rounded border-gray-300 focus:ring-[#E85A6B]"
+                        className="h-4 w-4 text-brand rounded border-gray-300 focus:ring-brand"
                       />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.productHeader')}
@@ -661,7 +661,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                           type="checkbox"
                           checked={selectedProductUuids.has(product.productUuid)}
                           onChange={() => toggleSelectProduct(product.productUuid)}
-                          className="h-4 w-4 text-[#E85A6B] rounded border-gray-300 focus:ring-[#E85A6B]"
+                          className="h-4 w-4 text-brand rounded border-gray-300 focus:ring-brand"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -697,7 +697,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => onGo(`/seller/products/${product.productUuid}/edit`)}
-                            className="text-[#E85A6B] hover:text-blue-900"
+                            className="text-brand hover:text-blue-900"
                           >
                             {t('products.edit')}
                           </button>
@@ -734,7 +734,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                   <div className="mt-6">
                     <button
                       onClick={() => onGo('/seller/products/new')}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#E85A6B] hover:bg-[#D14A5B]"
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand hover:bg-brand-600"
                     >
                       <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -1705,7 +1705,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
       {isLoading && (
         <div className="flex justify-center items-center py-12">
           <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
             <span className="text-gray-600">{t('productForm.loadingProduct')}</span>
           </div>
         </div>
@@ -1743,7 +1743,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 onClick={() => setFormData({ ...formData, productType: 'original' })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
                   formData.productType === 'original'
-                    ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B]'
+                    ? 'border-brand bg-brand-50 text-brand'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                 }`}
               >
@@ -1754,7 +1754,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 onClick={() => setFormData({ ...formData, productType: 'custom' })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
                   formData.productType === 'custom'
-                    ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B]'
+                    ? 'border-brand bg-brand-50 text-brand'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                 }`}
               >
@@ -1808,7 +1808,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="네일 팁 상품명을 입력하세요"
               />
             </div>
@@ -1823,7 +1823,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 min="0"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="가격을 입력하세요"
               />
             </div>
@@ -1835,7 +1835,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="active">판매중</option>
                 <option value="inactive">판매중지</option>
@@ -1850,7 +1850,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="네일 팁에 대한 상세한 설명을 입력하세요"
               />
             </div>
@@ -1866,11 +1866,11 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               onClick={() => setFormData({ ...formData, fulfillmentMode: 'stocked' })}
               className={`text-left py-4 px-4 rounded-lg border-2 transition-all ${
                 formData.fulfillmentMode === 'stocked'
-                  ? 'border-[#E85A6B] bg-[#FFF1F2]'
+                  ? 'border-brand bg-brand-50'
                   : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
-              <div className={`font-semibold ${formData.fulfillmentMode === 'stocked' ? 'text-[#E85A6B]' : 'text-gray-800'}`}>
+              <div className={`font-semibold ${formData.fulfillmentMode === 'stocked' ? 'text-brand' : 'text-gray-800'}`}>
                 📦 기성 재고 판매
               </div>
               <p className="text-xs text-gray-500 mt-1">만들어 둔 상품을 바로 발송</p>
@@ -1881,11 +1881,11 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               onClick={() => setFormData({ ...formData, fulfillmentMode: 'made_to_order' })}
               className={`text-left py-4 px-4 rounded-lg border-2 transition-all ${
                 formData.fulfillmentMode === 'made_to_order'
-                  ? 'border-[#E85A6B] bg-[#FFF1F2]'
+                  ? 'border-brand bg-brand-50'
                   : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
-              <div className={`font-semibold ${formData.fulfillmentMode === 'made_to_order' ? 'text-[#E85A6B]' : 'text-gray-800'}`}>
+              <div className={`font-semibold ${formData.fulfillmentMode === 'made_to_order' ? 'text-brand' : 'text-gray-800'}`}>
                 🛠 주문 제작
               </div>
               <p className="text-xs text-gray-500 mt-1">주문 받은 후 제작해 발송</p>
@@ -1909,7 +1909,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                     required
                     value={formData.nailLength}
                     onChange={(e) => setFormData({ ...formData, nailLength: e.target.value as NailLength })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   >
                     <option value="SHORT">숏 (Short)</option>
                     <option value="MEDIUM">미디움 (Medium)</option>
@@ -1925,7 +1925,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                     required
                     value={formData.nailShape}
                     onChange={(e) => setFormData({ ...formData, nailShape: e.target.value as NailShape })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   >
                     <option value="ROUND">라운드 (Round)</option>
                     <option value="ALMOND">아몬드 (Almond)</option>
@@ -1961,7 +1961,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                     e.preventDefault();
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="제작에 필요한 일수를 입력하세요"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -1980,7 +1980,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       type="checkbox"
                       checked={formData.lengthCustomizable}
                       onChange={(e) => setFormData({ ...formData, lengthCustomizable: e.target.checked })}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">길이 변경 가능</span>
                   </label>
@@ -1990,7 +1990,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       type="checkbox"
                       checked={formData.shapeCustomizable}
                       onChange={(e) => setFormData({ ...formData, shapeCustomizable: e.target.checked })}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">쉐잎 변경 가능</span>
                   </label>
@@ -2000,7 +2000,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       type="checkbox"
                       checked={formData.designCustomizable}
                       onChange={(e) => setFormData({ ...formData, designCustomizable: e.target.checked })}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">디자인 커스텀 가능</span>
                   </label>
@@ -2023,7 +2023,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         type="checkbox"
                         checked={selectedShapes.includes(shape)}
                         onChange={() => toggleShape(shape)}
-                        className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                        className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                       />
                       <span className="ml-1.5 text-sm text-gray-700">{NAIL_SHAPE_NAME[shape] || shape}</span>
                     </label>
@@ -2042,7 +2042,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         type="checkbox"
                         checked={selectedLengths.includes(length)}
                         onChange={() => toggleLength(length)}
-                        className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                        className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                       />
                       <span className="ml-1.5 text-sm text-gray-700">{NAIL_LENGTH_NAME[length] || length}</span>
                     </label>
@@ -2088,7 +2088,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                                   value={input.stock}
                                   onChange={(e) => updateVariantInput(key, { stock: e.target.value.replace(/[^0-9]/g, '') })}
                                   disabled={!input.isActive}
-                                  className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                                  className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
                                   placeholder="0"
                                 />
                               </td>
@@ -2099,7 +2099,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                                   value={input.priceModifier}
                                   onChange={(e) => updateVariantInput(key, { priceModifier: e.target.value.replace(/[^0-9-]/g, '') })}
                                   disabled={!input.isActive}
-                                  className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                                  className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
                                   placeholder="0"
                                 />
                               </td>
@@ -2108,7 +2108,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                                   type="checkbox"
                                   checked={input.isActive}
                                   onChange={(e) => updateVariantInput(key, { isActive: e.target.checked })}
-                                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                                  className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                                 />
                               </td>
                             </tr>
@@ -2126,7 +2126,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         step="1"
                         value={bulkStock}
                         onChange={(e) => setBulkStock(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                        className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
                         placeholder="재고"
                       />
                       <button
@@ -2144,7 +2144,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         step="1"
                         value={bulkModifier}
                         onChange={(e) => setBulkModifier(e.target.value.replace(/[^0-9-]/g, ''))}
-                        className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                        className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
                         placeholder="추가금"
                       />
                       <button
@@ -2205,7 +2205,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.style.includes(style.value) && formData.nailCategories.style.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{style.name}</span>
                   </label>
@@ -2238,7 +2238,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.color.includes(color.value) && formData.nailCategories.color.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{color.name}</span>
                   </label>
@@ -2271,7 +2271,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.texture.includes(texture.value) && formData.nailCategories.texture.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{texture.name}</span>
                   </label>
@@ -2304,7 +2304,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.tpo.includes(tpo.value) && formData.nailCategories.tpo.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{tpo.name}</span>
                   </label>
@@ -2335,7 +2335,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           });
                         }
                       }}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300"
+                      className="h-4 w-4 text-brand focus:ring-brand border-gray-300"
                     />
                     <span className="ml-2 text-sm text-gray-700">{nation.name}</span>
                   </label>
@@ -2368,7 +2368,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             ) : (
               <label
                 className={`w-48 h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center transition-colors cursor-pointer ${
-                  mainImageUploading ? 'border-[#E85A6B] bg-[#FFF1F2]' : 'border-gray-300 hover:border-[#E85A6B] hover:bg-[#FFF1F2]'
+                  mainImageUploading ? 'border-brand bg-brand-50' : 'border-gray-300 hover:border-brand hover:bg-brand-50'
                 }`}>
                 <input
                   type="file"
@@ -2380,8 +2380,8 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 {mainImageUploading ? (
                   <>
                     <div
-                      className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <span className="text-sm text-[#E85A6B]">업로드 중...</span>
+                      className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <span className="text-sm text-brand">업로드 중...</span>
                   </>
                 ) : (
                   <>
@@ -2423,7 +2423,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   draggedIndex === index
                     ? 'opacity-50 scale-95 rotate-2'
                     : dragOverIndex === index
-                      ? 'border-[#E85A6B] bg-[#FFF1F2] scale-105'
+                      ? 'border-brand bg-brand-50 scale-105'
                       : 'hover:border-gray-400 hover:shadow-md'
                 }`}
               >
@@ -2431,7 +2431,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-6 h-6 bg-[#E85A6B] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      className="w-6 h-6 bg-brand text-white rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
                     <span className="text-sm text-gray-500">번째 이미지</span>
@@ -2453,7 +2453,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         type="button"
                         onClick={() => retryImageUpload(index)}
                         disabled={detailImageUploading}
-                        className="px-2 py-1 text-xs bg-[#E85A6B] text-white rounded hover:bg-[#E85A6B] disabled:opacity-50"
+                        className="px-2 py-1 text-xs bg-brand text-white rounded hover:bg-brand disabled:opacity-50"
                       >
                         재시도
                       </button>
@@ -2496,7 +2496,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   placeholder="이미지 설명을 입력하세요"
                   value={image.description}
                   onChange={(e) => updateDetailImageDescription(index, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none focus:ring-2 focus:ring-brand focus:border-transparent"
                   rows={3}
                 />
               </div>
@@ -2506,7 +2506,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             {formData.detailImages.length < 10 && (
               <div
                 className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center transition-colors ${
-                  detailImageUploading ? 'border-[#E85A6B] bg-[#FFF1F2]' : 'border-gray-300 hover:border-[#E85A6B] hover:bg-[#FFF1F2]'
+                  detailImageUploading ? 'border-brand bg-brand-50' : 'border-gray-300 hover:border-brand hover:bg-brand-50'
                 }`}>
                 <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
                   <input
@@ -2519,8 +2519,8 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   {detailImageUploading ? (
                     <>
                       <div
-                        className="w-8 h-8 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <span className="text-sm text-[#E85A6B]">업로드 중...</span>
+                        className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mb-2"></div>
+                      <span className="text-sm text-brand">업로드 중...</span>
                     </>
                   ) : (
                     <>
@@ -2541,17 +2541,17 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             )}
           </div>
 
-          <div className="mt-6 p-4 bg-[#FFF1F2] rounded-lg">
+          <div className="mt-6 p-4 bg-brand-50 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 text-[#E85A6B] mt-0.5">
+              <div className="w-5 h-5 text-brand mt-0.5">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <div className="text-sm text-[#E85A6B]">
+              <div className="text-sm text-brand">
                 <p className="font-medium mb-1">상세 이미지 관리 팁</p>
-                <ul className="space-y-1 text-[#E85A6B]">
+                <ul className="space-y-1 text-brand">
                   <li>• 드래그하여 이미지 순서를 변경할 수 있습니다</li>
                   <li>• 각 이미지에 설명을 추가하면 고객이 더 잘 이해할 수 있어요</li>
                   <li>• 최대 10장까지 업로드 가능합니다</li>
@@ -2572,7 +2572,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               <input
                 type="text"
                 placeholder="태그를 입력하고 엔터를 누르세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ',') {
                     e.preventDefault();
@@ -2595,7 +2595,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 {formData.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFF1F2] text-[#D14A5B]"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-brand-50 text-brand-600"
                   >
                     {tag}
                     <button
@@ -2604,7 +2604,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         const newTags = formData.tags.filter((_, i) => i !== index);
                         setFormData({ ...formData, tags: newTags });
                       }}
-                      className="ml-2 text-[#E85A6B] hover:text-[#D14A5B]"
+                      className="ml-2 text-brand hover:text-brand-600"
                     >
                       ×
                     </button>
@@ -2629,7 +2629,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   type="checkbox"
                   checked={formData.isFeatured}
                   onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                  className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                 />
                 <div className="ml-3">
                   <span className="text-sm font-medium text-gray-900">추천 상품 설정</span>
@@ -2644,7 +2644,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   type="checkbox"
                   checked={formData.isNewProduct}
                   onChange={(e) => setFormData({ ...formData, isNewProduct: e.target.checked })}
-                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                  className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
                 />
                 <div className="ml-3">
                   <span className="text-sm font-medium text-gray-900">신상품 설정</span>
@@ -2667,7 +2667,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? t('productForm.saving') : isEdit ? t('productForm.editComplete') : t('productForm.registerComplete')}
           </button>
@@ -2694,7 +2694,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             <div className="flex-1 overflow-y-auto">
               {loadingOrders ? (
                 <div className="flex items-center justify-center py-8">
-                  <svg className="animate-spin w-8 h-8 text-[#E85A6B]" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin w-8 h-8 text-brand" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -2732,7 +2732,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {order.nailShape && (
-                            <span className="text-xs bg-[#FFF1F2] text-[#E85A6B] px-2 py-0.5 rounded">
+                            <span className="text-xs bg-brand-50 text-brand px-2 py-0.5 rounded">
                               {order.nailShape}
                             </span>
                           )}
@@ -2863,7 +2863,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
       <SellerLayout title="매출 분석" onGo={onGo}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">분석 데이터를 불러오는 중...</p>
           </div>
         </div>
@@ -2896,7 +2896,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as '6m' | '1y')}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="6m">최근 6개월</option>
             <option value="1y">최근 1년</option>
@@ -2934,8 +2934,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
                 <p className="text-3xl font-bold text-gray-900">{analyticsData.orders.monthly}건</p>
                 <p className="text-sm text-gray-600 mt-1">누적 주문: {analyticsData.orders.total}건</p>
               </div>
-              <div className="w-12 h-12 bg-[#FFF1F2] rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
@@ -2975,7 +2975,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center">
                     <div
-                      className="w-full bg-[#E85A6B] rounded-t transition-all duration-300 hover:opacity-80"
+                      className="w-full bg-brand rounded-t transition-all duration-300 hover:opacity-80"
                       style={{ height: `${Math.max(height, 1)}%` }}
                       title={`${item.label}: ${money(item.amount)} (주문 ${item.orders}건)`}
                     />
@@ -3003,8 +3003,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
               <p className="text-2xl font-bold text-yellow-600">{analyticsData.products.lowStock}</p>
               <p className="text-sm text-gray-600">재고 부족</p>
             </div>
-            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
-              <p className="text-2xl font-bold text-[#E85A6B]">
+            <div className="text-center p-4 bg-brand-50 rounded-lg">
+              <p className="text-2xl font-bold text-brand">
                 {analyticsData.products.averageRating ? analyticsData.products.averageRating.toFixed(1) : '-'}
               </p>
               <p className="text-sm text-gray-600">평균 평점 ({analyticsData.products.totalReviews}개 리뷰)</p>
@@ -3108,7 +3108,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
       case 'pending':
         return <span className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-medium">정산 대기</span>;
       case 'processing':
-        return <span className="px-3 py-1 text-xs bg-[#FFF1F2] text-[#D14A5B] rounded-full font-medium">정산 중</span>;
+        return <span className="px-3 py-1 text-xs bg-brand-50 text-brand-600 rounded-full font-medium">정산 중</span>;
       case 'completed':
         return <span className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">정산 완료</span>;
       default:
@@ -3121,7 +3121,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
       <SellerLayout title="정산 관리" onGo={onGo}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">정산 데이터를 불러오는 중...</p>
           </div>
         </div>
@@ -3160,8 +3160,8 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center p-6 bg-[#FFF1F2] rounded-lg">
-              <p className="text-3xl font-bold text-[#E85A6B]">{money(settlementData.summary.currentMonthSales)}</p>
+            <div className="text-center p-6 bg-brand-50 rounded-lg">
+              <p className="text-3xl font-bold text-brand">{money(settlementData.summary.currentMonthSales)}</p>
               <p className="text-sm text-gray-600">이번 달 매출 (배송완료 기준)</p>
             </div>
             <div className="text-center p-6 bg-green-50 rounded-lg">
@@ -3438,7 +3438,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === 'all'
-                    ? 'bg-[#FFF1F2] text-[#E85A6B] border border-[#E85A6B]/20'
+                    ? 'bg-brand-50 text-brand border border-brand/20'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -3520,7 +3520,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
               </div>
             ) : (
               filteredReviews.map((review) => (
-                <div key={review.id} className={`p-6 ${!review.isRead ? 'bg-[#FFF1F2]' : ''}`}>
+                <div key={review.id} className={`p-6 ${!review.isRead ? 'bg-brand-50' : ''}`}>
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="flex-1">
                       {/* 리뷰 헤더 */}
@@ -3544,7 +3544,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       <div className="text-sm text-gray-600 mb-2">
                         <button
                           onClick={() => onGo(`/seller/products/${review.productUuid}/edit`)}
-                          className="hover:text-[#E85A6B] hover:underline"
+                          className="hover:text-brand hover:underline"
                         >
                           {review.productName}
                         </button>
@@ -3571,9 +3571,9 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
 
                       {/* 답글 */}
                       {review.hasReply && review.reply && (
-                        <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-[#E85A6B]">
+                        <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-brand">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-medium text-[#E85A6B]">판매자 답글</span>
+                            <span className="text-sm font-medium text-brand">판매자 답글</span>
                             <span className="text-xs text-gray-500">{review.replyDate}</span>
                           </div>
                           <div className="text-sm text-gray-700">{review.reply}</div>
@@ -3594,7 +3594,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       {!review.hasReply && (
                         <button
                           onClick={() => writeReply(review.id)}
-                          className="px-3 py-2 text-sm bg-[#FFF1F2] text-[#E85A6B] rounded-lg hover:bg-blue-200 transition-colors"
+                          className="px-3 py-2 text-sm bg-brand-50 text-brand rounded-lg hover:bg-blue-200 transition-colors"
                         >
                           답글 작성
                         </button>
@@ -3924,7 +3924,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       <SellerLayout title="브랜드 관리" onGo={onGo}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
           </div>
         </div>
@@ -4008,7 +4008,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
                     uploadingLogo
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                      : 'bg-brand text-white hover:bg-brand-600'
                   }`}
                 >
                   {uploadingLogo ? '업로드 중...' : '이미지 변경'}
@@ -4066,7 +4066,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
                     uploadingBanner
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                      : 'bg-brand text-white hover:bg-brand-600'
                   }`}
                 >
                   {uploadingBanner ? '업로드 중...' : '배너 변경'}
@@ -4093,7 +4093,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   type="text"
                   value={newBrandName}
                   onChange={(e) => setNewBrandName(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none"
                   placeholder="브랜드명을 입력하세요"
                   maxLength={200}
                 />
@@ -4103,7 +4103,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                     savingName || !newBrandName.trim()
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                      : 'bg-brand text-white hover:bg-brand-600'
                   }`}
                 >
                   {savingName ? '저장 중...' : '저장'}
@@ -4121,7 +4121,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 <span className="text-lg font-medium text-gray-900">{brandInfo?.brandName || '(설정되지 않음)'}</span>
                 <button
                   onClick={() => setIsEditingName(true)}
-                  className="px-4 py-2 text-sm font-medium text-[#E85A6B] bg-[#FFF1F2] rounded-lg hover:bg-[#E85A6B]/10 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-brand bg-brand-50 rounded-lg hover:bg-brand/10 transition-colors"
                 >
                   수정
                 </button>
@@ -4148,9 +4148,9 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
               <button
                 onClick={handleToggleCustomOrder}
                 disabled={savingCustomOrder}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#E85A6B] focus:ring-offset-2 ${
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
                   savingCustomOrder ? 'opacity-50 cursor-not-allowed' : ''
-                } ${brandInfo?.acceptsCustomOrders ? 'bg-[#E85A6B]' : 'bg-gray-200'}`}
+                } ${brandInfo?.acceptsCustomOrders ? 'bg-brand' : 'bg-gray-200'}`}
                 role="switch"
                 aria-checked={brandInfo?.acceptsCustomOrders}
               >
@@ -4241,7 +4241,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 <div className="mt-4 flex justify-end">
                   <button
                     onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#E85A6B] rounded-lg hover:bg-[#D14A5B] transition-colors flex items-center gap-2"
+                    className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-600 transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -4255,14 +4255,14 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
         )}
 
         {/* 안내 메시지 */}
-        <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-4">
+        <div className="bg-brand-50 border border-brand/20 rounded-lg p-4">
           <div className="flex gap-3">
-            <svg className="w-5 h-5 text-[#E85A6B] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 text-brand flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <div className="text-sm text-[#D14A5B]">
+            <div className="text-sm text-brand-600">
               <p className="font-medium mb-1">브랜드 정보 안내</p>
-              <ul className="list-disc list-inside space-y-1 text-[#E85A6B]">
+              <ul className="list-disc list-inside space-y-1 text-brand">
                 <li>브랜드 로고는 정사각형 이미지(512x512px)를 권장합니다.</li>
                 <li>브랜드 배너는 가로형 이미지(1920x600px)를 권장합니다.</li>
                 <li>브랜드명은 고객에게 노출되는 중요한 정보입니다.</li>

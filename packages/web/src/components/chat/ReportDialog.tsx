@@ -71,13 +71,13 @@ export const ReportDialog: React.FC<ReportDialogProps> = ({
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <TriangleAlert className="w-5 h-5 text-[#E85A6B]" />
+              <TriangleAlert className="w-5 h-5 text-brand" />
               <h2 id="report-dialog-title" className="text-lg font-bold text-gray-900">
                 신고하기
               </h2>
             </div>
             <button onClick={onClose} aria-label="닫기">
-              <X className="w-6 h-6 text-[#A39E99]" />
+              <X className="w-6 h-6 text-muted" />
             </button>
           </div>
 
@@ -109,7 +109,7 @@ export const ReportDialog: React.FC<ReportDialogProps> = ({
                       value={value}
                       checked={reason === value}
                       onChange={() => setReason(value)}
-                      className="accent-[#E85A6B]"
+                      className="accent-brand"
                     />
                     <span className="text-sm text-gray-900">
                       {REPORT_REASON_LABELS[value]}
@@ -133,7 +133,7 @@ export const ReportDialog: React.FC<ReportDialogProps> = ({
                 rows={3}
                 maxLength={1000}
                 placeholder="어떤 일이 있었는지 알려주시면 확인에 도움이 됩니다"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none text-sm focus:ring-2 focus:ring-brand focus:border-brand"
                 disabled={submitting}
               />
               <p className="mt-1 text-xs text-gray-400 text-right">
@@ -152,7 +152,7 @@ export const ReportDialog: React.FC<ReportDialogProps> = ({
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex-1 py-3 bg-[#E85A6B] text-white rounded-xl font-semibold hover:bg-[#D44D5E] transition-colors disabled:opacity-50"
+                className="flex-1 py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-600 transition-colors disabled:opacity-50"
               >
                 {submitting ? '접수 중...' : '신고하기'}
               </button>

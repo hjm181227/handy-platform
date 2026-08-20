@@ -326,7 +326,7 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
                     className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-colors ${
                       isFollowing
                         ? 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-500'
-                        : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                        : 'bg-brand text-white hover:bg-brand-600'
                     }`}
                   >
                     {isFollowing ? '팔로잉' : '팔로우'}
@@ -422,7 +422,7 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
                   <button
                     key={index}
                     onClick={() => { onTagClick?.(tag); onClose(); }}
-                    className="px-3 py-1.5 bg-[#FFF1F2] text-[#E85A6B] text-xs font-medium rounded-full hover:bg-[#FFE4E6] transition-colors"
+                    className="px-3 py-1.5 bg-brand-50 text-brand text-xs font-medium rounded-full hover:bg-[#FFE4E6] transition-colors"
                   >
                     #{tag}
                   </button>
@@ -461,7 +461,7 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
                       )}
                       <p className="text-[11px] text-gray-800 font-medium line-clamp-2 leading-tight">{product.name || '상품 보기'}</p>
                       {product.price && (
-                        <p className="text-xs font-bold text-[#E85A6B] mt-0.5">
+                        <p className="text-xs font-bold text-brand mt-0.5">
                           {product.salePrice ? (
                             <>{product.salePrice.toLocaleString()}원</>
                           ) : (
@@ -515,7 +515,7 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
                   onClick={() => setReportReason(r.value)}
                   className={`px-4 py-2.5 rounded-xl text-sm text-left transition-colors ${
                     reportReason === r.value
-                      ? 'bg-[#FFF1F2] text-[#E85A6B] font-semibold border border-[#E85A6B]'
+                      ? 'bg-brand-50 text-brand font-semibold border border-brand'
                       : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-transparent'
                   }`}
                 >
@@ -529,7 +529,7 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
                 onChange={e => setReportDescription(e.target.value)}
                 maxLength={500}
                 placeholder="상세 설명을 입력해주세요 (최대 500자)"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none h-24 focus:outline-none focus:border-[#E85A6B] mb-4"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none h-24 focus:outline-none focus:border-brand mb-4"
               />
             )}
             <div className="flex gap-3">
@@ -542,7 +542,7 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
               <button
                 onClick={handleReport}
                 disabled={!reportReason || reportLoading}
-                className="flex-1 py-2.5 rounded-xl bg-[#E85A6B] text-white text-sm font-medium hover:bg-[#D14A5B] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {reportLoading ? '처리중...' : '신고하기'}
               </button>

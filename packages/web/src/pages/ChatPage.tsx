@@ -257,42 +257,42 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-[#E5E0DC] sticky top-0 z-10 flex-shrink-0">
+        <div className="bg-white border-b border-line sticky top-0 z-10 flex-shrink-0">
           <div className="h-14 px-4 flex items-center gap-3">
             <button
               onClick={handleBack}
               className="flex-shrink-0"
               aria-label="뒤로가기"
             >
-              <ChevronLeft className="w-6 h-6 text-[#131211]" />
+              <ChevronLeft className="w-6 h-6 text-ink" />
             </button>
-            <h1 className="text-base font-bold text-[#131211]">채팅</h1>
+            <h1 className="text-base font-bold text-ink">채팅</h1>
           </div>
         </div>
 
         {/* 로그인 유도 UI */}
-        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
+        <div className="flex-1 bg-surface flex items-start justify-center pt-[100px] px-10">
           <div className="flex flex-col items-center gap-4">
             <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-              <MessageCircleMore className="w-9 h-9 text-[#A39E99]" />
+              <MessageCircleMore className="w-9 h-9 text-muted" />
             </div>
-            <h2 className="text-xl font-bold text-[#131211] text-center">
+            <h2 className="text-xl font-bold text-ink text-center">
               로그인이 필요합니다
             </h2>
-            <p className="text-sm text-[#A39E99] text-center">
+            <p className="text-sm text-muted text-center">
               채팅 기능을 이용하려면 로그인해주세요.<br />
               판매자와 실시간으로 소통할 수 있습니다.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mt-4">
               <button
                 onClick={openLogin}
-                className="flex-1 px-6 py-3 bg-[#E85A6B] text-white font-semibold rounded-lg hover:bg-[#D44D5E] transition-colors"
+                className="flex-1 px-6 py-3 bg-brand text-white font-semibold rounded-lg hover:bg-brand-600 transition-colors"
               >
                 로그인
               </button>
               <button
                 onClick={() => nav('/register')}
-                className="flex-1 px-6 py-3 border border-[#E5E0DC] text-[#131211] font-semibold rounded-lg hover:bg-[#F7F5F3] transition-colors"
+                className="flex-1 px-6 py-3 border border-line text-ink font-semibold rounded-lg hover:bg-surface transition-colors"
               >
                 회원가입
               </button>
@@ -306,43 +306,43 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
   return (
     <div className="min-h-screen bg-white relative flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-[#E5E0DC] sticky top-0 z-10 flex-shrink-0">
+      <div className="bg-white border-b border-line sticky top-0 z-10 flex-shrink-0">
         <div className="h-14 px-4 flex items-center gap-3">
           <button
             onClick={handleBack}
             className="flex-shrink-0"
             aria-label="뒤로가기"
           >
-            <ChevronLeft className="w-6 h-6 text-[#131211]" />
+            <ChevronLeft className="w-6 h-6 text-ink" />
           </button>
-          <h1 className="text-base font-bold text-[#131211]">채팅</h1>
+          <h1 className="text-base font-bold text-ink">채팅</h1>
         </div>
       </div>
 
       {/* 로딩 상태 */}
       {isLoading && (
-        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px]">
+        <div className="flex-1 bg-surface flex items-start justify-center pt-[100px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-            <p className="text-[#A39E99]">채팅방 목록을 불러오는 중...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+            <p className="text-muted">채팅방 목록을 불러오는 중...</p>
           </div>
         </div>
       )}
 
       {/* 에러 상태 */}
       {error && !isLoading && (
-        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
+        <div className="flex-1 bg-surface flex items-start justify-center pt-[100px] px-10">
           <div className="flex flex-col items-center gap-4">
             <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-              <TriangleAlert className="w-9 h-9 text-[#E85A6B]" />
+              <TriangleAlert className="w-9 h-9 text-brand" />
             </div>
-            <h2 className="text-xl font-bold text-[#131211] text-center">
+            <h2 className="text-xl font-bold text-ink text-center">
               오류가 발생했습니다
             </h2>
-            <p className="text-sm text-[#A39E99] text-center">{error}</p>
+            <p className="text-sm text-muted text-center">{error}</p>
             <button
               onClick={fetchRooms}
-              className="px-6 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D44D5E] transition-colors mt-2"
+              className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors mt-2"
             >
               다시 시도
             </button>
@@ -357,7 +357,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
             <div
               key={room.roomId}
               onClick={() => handleChatClick(room.partner.id, room.partner.displayName || room.partner.username)}
-              className={`border-b border-[#F5F3F1] hover:bg-[#FFF8F5] cursor-pointer transition-colors ${room.unreadCount > 0 ? 'bg-[#FFF8F5]' : 'bg-white'}`}
+              className={`border-b border-surface hover:bg-surface cursor-pointer transition-colors ${room.unreadCount > 0 ? 'bg-surface' : 'bg-white'}`}
             >
               <div className="px-4 py-4 flex items-center gap-4">
                 {/* Avatar */}
@@ -365,8 +365,8 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                   {room.partner.avatar ? (
                     <img src={room.partner.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-[#F2EAE3] flex items-center justify-center">
-                      <Store className="w-6 h-6 text-[#A39E99]" />
+                    <div className="w-12 h-12 rounded-full bg-surface-strong flex items-center justify-center">
+                      <Store className="w-6 h-6 text-muted" />
                     </div>
                   )}
                 </div>
@@ -374,14 +374,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-[#131211] truncate">
+                    <h3 className="font-semibold text-ink truncate">
                       {room.partner.displayName || room.partner.username || '알 수 없음'}
                     </h3>
-                    <span className="text-xs text-[#A39E99] ml-2 flex-shrink-0">
+                    <span className="text-xs text-muted ml-2 flex-shrink-0">
                       {room.lastMessageAt ? formatTime(room.lastMessageAt) : ''}
                     </span>
                   </div>
-                  <p className="text-sm text-[#A39E99] truncate">
+                  <p className="text-sm text-muted truncate">
                     {formatLastMessage(room.lastMessage)}
                   </p>
                 </div>
@@ -389,7 +389,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 {/* Unread Badge */}
                 {room.unreadCount > 0 && (
                   <div className="flex-shrink-0">
-                    <div className="w-[22px] h-[22px] rounded-full bg-[#E85A6B] flex items-center justify-center">
+                    <div className="w-[22px] h-[22px] rounded-full bg-brand flex items-center justify-center">
                       <span className="text-[11px] text-white font-bold leading-none">
                         {room.unreadCount > 99 ? '99+' : room.unreadCount}
                       </span>
@@ -405,7 +405,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
 
           {isLoadingMore && (
             <div className="flex justify-center py-4">
-              <div className="w-5 h-5 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-brand border-t-transparent rounded-full animate-spin" />
             </div>
           )}
         </div>
@@ -413,15 +413,15 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
 
       {/* Empty State (if no chats) */}
       {!isLoading && !error && rooms.length === 0 && (
-        <div className="flex-1 bg-[#F7F5F3] flex items-start justify-center pt-[100px] px-10">
+        <div className="flex-1 bg-surface flex items-start justify-center pt-[100px] px-10">
           <div className="flex flex-col items-center gap-4">
             <div className="w-[72px] h-[72px] bg-white rounded-[20px] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-              <MessageCircleMore className="w-9 h-9 text-[#A39E99]" />
+              <MessageCircleMore className="w-9 h-9 text-muted" />
             </div>
-            <h2 className="text-xl font-bold text-[#131211] text-center">
+            <h2 className="text-xl font-bold text-ink text-center">
               아직 대화가 없습니다
             </h2>
-            <p className="text-sm text-[#A39E99] text-center">
+            <p className="text-sm text-muted text-center">
               판매자나 고객센터와 대화를 시작해보세요.
             </p>
           </div>

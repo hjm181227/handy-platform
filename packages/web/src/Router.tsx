@@ -1042,7 +1042,7 @@ export function Router() {
             <p className="text-gray-600 mb-4">요청하신 관리자 페이지를 찾을 수 없습니다.</p>
             <button
               onClick={() => nav('/admin')}
-              className="px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B]"
+              className="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-600"
             >
               관리자 대시보드로 돌아가기
             </button>
@@ -1110,7 +1110,7 @@ export function Router() {
     screen = (
       <div className="min-h-[60vh] flex items-center justify-center px-6">
         <div className="text-center">
-          <p className="text-6xl font-bold text-[#E85A6B] mb-4">404</p>
+          <p className="text-6xl font-bold text-brand mb-4">404</p>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">페이지를 찾을 수 없습니다</h1>
           <p className="text-sm text-gray-500 mb-8">주소가 잘못되었거나, 삭제되었거나, 이동된 페이지입니다.</p>
           <div className="flex items-center justify-center gap-3">
@@ -1122,7 +1122,7 @@ export function Router() {
             </button>
             <button
               onClick={() => nav('/')}
-              className="px-5 py-2.5 bg-[#E85A6B] text-white rounded-lg text-sm font-medium hover:bg-[#D14A5B]"
+              className="px-5 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-600"
             >
               홈으로 가기
             </button>

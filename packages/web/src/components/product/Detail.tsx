@@ -666,7 +666,7 @@ export function Detail({
                             console.error('Failed to vote helpful:', err);
                           }
                         }}
-                        className="flex items-center gap-1 hover:text-[#E85A6B]"
+                        className="flex items-center gap-1 hover:text-brand"
                       >
                         <span>👍</span>
                         <span>{t('product:detailPage.review.helpful')} ({review.helpful?.upVotes || 0})</span>
@@ -866,7 +866,7 @@ export function Detail({
                       >
                         {koreanName}
                         {!soldOut && modifierLabel && (
-                          <span className={`ml-1 text-xs ${shape === s ? 'text-gray-300' : 'text-[#E85A6B]'}`}>
+                          <span className={`ml-1 text-xs ${shape === s ? 'text-gray-300' : 'text-brand'}`}>
                             {modifierLabel}
                           </span>
                         )}
@@ -932,7 +932,7 @@ export function Detail({
                           <span className="ml-1 text-xs">품절</span>
                         ) : (
                           modifierLabel && (
-                            <span className={`ml-1 text-xs ${length === l ? 'text-gray-300' : 'text-[#E85A6B]'}`}>
+                            <span className={`ml-1 text-xs ${length === l ? 'text-gray-300' : 'text-brand'}`}>
                               {modifierLabel}
                             </span>
                           )
@@ -982,7 +982,7 @@ export function Detail({
                     선택: {NAIL_SHAPE_NAME[shape] || shape} · {NAIL_LENGTH_NAME[length] || length}
                   </span>
                   <span className="text-gray-300">|</span>
-                  <span className="font-semibold text-[#E85A6B]">{money(selectedVariant.finalPrice)}</span>
+                  <span className="font-semibold text-brand">{money(selectedVariant.finalPrice)}</span>
                   <span className="text-gray-300">|</span>
                   <span className={selectedVariant.isAvailable ? "text-gray-600" : "font-medium text-red-500"}>
                     {stockStatusText}

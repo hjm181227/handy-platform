@@ -383,7 +383,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
         {/* Step 1: 템플릿 다운로드 */}
         <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
           <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
-            <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-[#E85A6B] text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">1</span>
+            <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">1</span>
             Excel 템플릿 다운로드
           </h2>
           <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
@@ -404,12 +404,12 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
         {/* Step 2: Excel 파일 업로드 */}
         <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
           <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
-            <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-[#E85A6B] text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">2</span>
+            <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">2</span>
             Excel 파일 업로드
           </h2>
           <div
             className={`border-2 border-dashed rounded-lg p-5 md:p-8 text-center cursor-pointer transition-colors ${
-              dragOver ? 'border-[#E85A6B] bg-[#FFF1F2]' : 'border-gray-300 hover:border-gray-400'
+              dragOver ? 'border-brand bg-brand-50' : 'border-gray-300 hover:border-gray-400'
             }`}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -437,7 +437,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
         {parsedProducts.length > 0 && (
           <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
             <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-[#E85A6B] text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">3</span>
+              <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">3</span>
               이미지 일괄 업로드
             </h2>
             <p className="text-xs md:text-sm text-gray-600 mb-1.5">
@@ -507,7 +507,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
           <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4">
               <h2 className="text-base md:text-lg font-semibold text-gray-900">
-                <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-[#E85A6B] text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">4</span>
+                <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">4</span>
                 미리보기 및 검증
               </h2>
               <div className="flex items-center gap-3 text-xs md:text-sm flex-wrap">
@@ -723,7 +723,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                   </span>
                 ) : (
                   <span>
-                    선택된 유효 상품 <b className="text-[#E85A6B]">{selectedValidRows}</b>개
+                    선택된 유효 상품 <b className="text-brand">{selectedValidRows}</b>개
                   </span>
                 )}
               </div>
@@ -753,7 +753,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting || selectedValidRows === 0}
-                    className="flex-1 sm:flex-none px-5 py-2.5 sm:py-2 text-sm bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-none px-5 py-2.5 sm:py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>

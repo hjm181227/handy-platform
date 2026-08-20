@@ -31,8 +31,8 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({
       className={`
         w-[260px] flex items-center gap-3 p-3 text-left transition-colors
         ${isMine
-          ? 'bg-[#FFE5EA] rounded-[16px_4px_16px_16px] hover:bg-[#FFD9E1]'
-          : 'bg-white rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:bg-[#FFF8F5]'
+          ? 'bg-brand-100 rounded-[16px_4px_16px_16px] hover:bg-[#FFD9E1]'
+          : 'bg-white rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:bg-surface'
         }
       `}
     >
@@ -43,16 +43,16 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({
           className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
         />
       ) : (
-        <div className="w-14 h-14 rounded-lg bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
-          <Package className="w-6 h-6 text-[#A39E99]" />
+        <div className="w-14 h-14 rounded-lg bg-surface-strong flex items-center justify-center flex-shrink-0">
+          <Package className="w-6 h-6 text-muted" />
         </div>
       )}
 
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-[#A39E99] mb-0.5">상품 문의</p>
-        <p className="text-sm font-semibold text-[#131211] truncate">{name}</p>
+        <p className="text-[11px] font-semibold text-muted mb-0.5">상품 문의</p>
+        <p className="text-sm font-semibold text-ink truncate">{name}</p>
         {typeof price === 'number' && (
-          <p className="text-sm text-[#131211] tabular-nums">
+          <p className="text-sm text-ink tabular-nums">
             {price.toLocaleString('ko-KR')}원
           </p>
         )}

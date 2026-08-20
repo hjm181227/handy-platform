@@ -197,7 +197,7 @@ export function CategoryPage({
             <select
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#E85A6B]"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand"
             >
               {SORT_OPTION_KEYS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -230,7 +230,7 @@ export function CategoryPage({
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => fetchProducts(1, false)}
-              className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
             >
               {t('common:retry')}
             </button>
@@ -246,7 +246,7 @@ export function CategoryPage({
             <p className="text-gray-500 mb-2">{t('categoryPage.noProducts')}</p>
             <button
               onClick={() => onGo('/category')}
-              className="text-[#E85A6B] hover:underline text-sm"
+              className="text-brand hover:underline text-sm"
             >
               {t('categoryPage.browseOther')}
             </button>
@@ -276,7 +276,7 @@ export function CategoryPage({
             <div ref={observerRef} className="h-20 flex items-center justify-center">
               {loadingMore && (
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 border-2 border-[#E85A6B]/20 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-brand/20 border-t-blue-600 rounded-full animate-spin" />
                   <span className="text-sm text-gray-500">{t('categoryPage.loadingMore')}</span>
                 </div>
               )}

@@ -168,7 +168,7 @@ export function NewProductsPage({
                   onClick={() => handleSortChange(option.value)}
                   className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                     sortBy === option.value
-                      ? 'bg-[#E85A6B] text-white'
+                      ? 'bg-brand text-white'
                       : 'bg-white border hover:bg-gray-50'
                   }`}
                 >
@@ -201,7 +201,7 @@ export function NewProductsPage({
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => fetchProducts(1, false)}
-              className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
             >
               {t('common:retry')}
             </button>
@@ -217,7 +217,7 @@ export function NewProductsPage({
             <p className="text-gray-500 mb-2">{t('product:newProducts.noProducts')}</p>
             <button
               onClick={() => onGo('/')}
-              className="text-[#E85A6B] hover:underline text-sm"
+              className="text-brand hover:underline text-sm"
             >
               {t('product:newProducts.goHome')}
             </button>
@@ -247,7 +247,7 @@ export function NewProductsPage({
             <div ref={observerRef} className="h-20 flex items-center justify-center">
               {loadingMore && (
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 border-2 border-[#E85A6B]/20 border-t-[#E85A6B] rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-brand/20 border-t-brand rounded-full animate-spin" />
                   <span className="text-sm text-gray-500">{t('product:newProducts.loadingMore')}</span>
                 </div>
               )}

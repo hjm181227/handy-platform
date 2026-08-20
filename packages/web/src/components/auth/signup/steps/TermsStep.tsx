@@ -84,7 +84,7 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
           className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 transition-colors mb-4"
         >
           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-            allAgreed ? 'bg-[#E85A6B] border-[#E85A6B]' : 'border-gray-300'
+            allAgreed ? 'bg-brand border-brand' : 'border-gray-300'
           }`}>
             {allAgreed && (
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +108,7 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
                 className="flex items-center gap-3 flex-1"
               >
                 <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                  agreed[term.key] ? 'bg-[#E85A6B]' : 'bg-gray-200'
+                  agreed[term.key] ? 'bg-brand' : 'bg-gray-200'
                 }`}>
                   {agreed[term.key] && (
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@ export function TermsStep({ onNext, onBack, stepIndex = 1, totalSteps = 5 }: Ter
                   )}
                 </div>
                 <span className="text-gray-700">
-                  <span className={term.required ? 'text-[#E85A6B]' : 'text-gray-400'}>
+                  <span className={term.required ? 'text-brand' : 'text-gray-400'}>
                     [{term.required ? t('common:required') : t('common:optional')}]
                   </span>{' '}
                   {term.label}

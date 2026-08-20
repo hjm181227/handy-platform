@@ -32,7 +32,7 @@ export function LanguageSelector({ variant = 'buttons', className = '' }: Langua
       <select
         value={currentLang}
         onChange={(e) => handleChange(e.target.value as SupportedLanguage)}
-        className={`rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#E85A6B] ${className}`}
+        className={`rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand ${className}`}
       >
         {SUPPORTED_LANGUAGES.map((lang) => (
           <option key={lang} value={lang}>
@@ -51,7 +51,7 @@ export function LanguageSelector({ variant = 'buttons', className = '' }: Langua
           onClick={() => handleChange(lang)}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             currentLang === lang
-              ? 'bg-[#E85A6B] text-white'
+              ? 'bg-brand text-white'
               : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
           }`}
         >
