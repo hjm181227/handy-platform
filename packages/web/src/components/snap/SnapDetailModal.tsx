@@ -440,7 +440,6 @@ export default function SnapDetailModal({ snap, onClose, onCreatorClick, onProdu
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[15px] font-bold text-gray-900">연관 상품</span>
-                  <button className="text-xs text-gray-400 font-medium">더보기 &rarr;</button>
                 </div>
                 <div className="flex gap-2.5 overflow-x-auto pb-2">
                   {snap.relatedProducts.map((product: any) => (

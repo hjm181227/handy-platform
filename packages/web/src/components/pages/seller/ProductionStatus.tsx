@@ -314,7 +314,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
               {t('production.noDataDesc', { year: selectedYear })}
             </p>
             <button
-              onClick={() => onGo('/seller/production/settings')}
+              onClick={() => onGo('/seller/production')}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               {t('production.configureProduction')}

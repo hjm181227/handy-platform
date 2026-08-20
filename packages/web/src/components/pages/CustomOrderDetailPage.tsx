@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { orderService } from '../../services/apiService';
 import type { CustomOrderDetail, QuoteDetail } from '@handy-platform/shared';
-import { ArrowLeft, Clock, Edit3, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Clock, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: '견적 대기중', color: '#F59E0B', bg: '#FEF3C7' },
@@ -129,15 +129,6 @@ export function CustomOrderDetailPage({ uuid, onGo }: CustomOrderDetailPageProps
         <div className="rounded-2xl bg-white border border-line p-4">
           <div className="flex items-start justify-between mb-3">
             <h2 className="text-lg font-bold text-ink">{order.title}</h2>
-            {isPending && (
-              <button
-                onClick={() => onGo(`/custom-order/edit/${uuid}`)}
-                className="flex items-center gap-1 text-xs text-muted hover:text-brand transition-colors"
-              >
-                <Edit3 size={14} />
-                수정
-              </button>
-            )}
           </div>
 
           {order.visibility === 'public' && (

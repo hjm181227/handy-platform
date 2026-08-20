@@ -949,6 +949,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
         <SnapDetailModal
           snap={selectedSnap}
           onClose={handleCloseModal}
+          onCreatorClick={(uuid) => onGo(`/user/${uuid}`)}
           onProductClick={(id) => { onOpen(id); handleCloseModal(); }}
           onTagClick={(tag) => { setActiveTag(tag); handleCloseModal(); }}
           onDelete={(uuid) => { setSnaps(prev => prev.filter(s => (s.id || s.snapUuid) !== uuid)); handleCloseModal(); }}

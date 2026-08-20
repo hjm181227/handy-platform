@@ -676,7 +676,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         sessionStorage.removeItem('checkout_mode');
         sessionStorage.removeItem('checkoutData');
         // 주문 완료 페이지로 이동
-        onGo(`/order-complete?orderId=${orderId}`);
+        onGo(`/orders/${orderId}`);
       } else {
         throw new Error(skipResponse.error || t('order:checkout.skipPaymentFailed'));
       }

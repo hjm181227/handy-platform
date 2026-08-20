@@ -291,7 +291,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
                 로그인
               </button>
               <button
-                onClick={() => nav('/register')}
+                onClick={() => nav('/signup')}
                 className="flex-1 px-6 py-3 border border-line text-ink font-semibold rounded-lg hover:bg-surface transition-colors"
               >
                 회원가입

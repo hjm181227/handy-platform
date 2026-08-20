@@ -702,12 +702,6 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                             {t('products.edit')}
                           </button>
                           <button
-                            onClick={() => onGo(`/seller/products/${product.productUuid}/analytics`)}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            {t('products.analytics')}
-                          </button>
-                          <button
                             onClick={() => handleDeleteClick(product)}
                             className="text-red-600 hover:text-red-900"
                           >
@@ -3607,12 +3601,6 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                           답글 수정
                         </button>
                       )}
-                      <button
-                        onClick={() => alert('신고 처리 기능은 추후 구현됩니다.')}
-                        className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                      >
-                        신고 처리
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -4240,7 +4228,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
               {brandInfo.sellerUuid && (
                 <div className="mt-4 flex justify-end">
                   <button
-                    onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
+                    onClick={() => onGo(`/brand/${brandInfo.sellerUuid}`)}
                     className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-600 transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

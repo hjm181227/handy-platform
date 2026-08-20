@@ -418,18 +418,6 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                         </span>
                       )}
                     </label>
-
-                    {/* 일괄 처리 버튼들 */}
-                    {selectedOrders.size > 0 && (
-                      <div className="flex gap-2">
-                        <button className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium">
-                          {t('orders.batchConfirm')}
-                        </button>
-                        <button className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
-                          {t('orders.batchShip')}
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
 

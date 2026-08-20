@@ -193,10 +193,6 @@ export function NewsPage({
             <div className="text-lg font-semibold">HANDY 뉴스레터</div>
             <p className="text-sm text-white/80">이벤트와 신상 소식을 가장 먼저 받아보세요.</p>
           </div>
-          <div className="flex w-full md:w-auto items-center gap-2 rounded-full bg-white px-3 py-2">
-            <input placeholder="이메일 주소" className="w-full text-sm text-black outline-none"/>
-            <button onClick={()=>alert("구독 신청(데모)")} className="rounded-full bg-black px-4 py-1.5 text-sm">구독</button>
-          </div>
         </div>
       </section>
     </div>

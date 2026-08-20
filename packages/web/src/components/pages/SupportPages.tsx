@@ -925,14 +925,6 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         <div className="mt-6 space-y-3">
-          <button
-            onClick={() => alert("비밀번호 변경 페이지로 이동")}
-            className="w-full bg-white border rounded-lg p-4 text-left hover:bg-gray-50"
-          >
-            <div className="font-medium">{t('support.changePassword')}</div>
-            <div className="text-sm text-gray-600">{t('support.changePasswordDesc')}</div>
-          </button>
-
           {userInfo.role !== 'seller' && (
             <button
               onClick={() => {
@@ -997,13 +989,10 @@ export function PromoPage({ onGo }: { onGo: (to: string) => void }) {
         <div className="text-center">
           <div className="text-3xl font-bold mb-2">HANDY+</div>
           <div className="text-blue-100 mb-4">프리미엄 멤버십</div>
-          <div className="bg-white/20 rounded-lg p-4 mb-4">
+          <div className="bg-white/20 rounded-lg p-4">
             <div className="text-sm opacity-90 mb-1">월 구독료</div>
             <div className="text-2xl font-bold">9,900원</div>
           </div>
-          <button className="bg-white text-brand px-8 py-3 rounded-lg font-medium hover:bg-brand-50">
-            멤버십 가입하기
-          </button>
         </div>
       </div>
 

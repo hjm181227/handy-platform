@@ -657,7 +657,10 @@ export function ShippingPage({ onGo }: { onGo: (to: string) => void }) {
                   예상 도착일: {order.estimatedDelivery}
                 </div>
               </div>
-              <button className="w-full py-2 px-4 text-sm bg-brand text-white rounded-lg hover:bg-brand-600">
+              <button
+                onClick={() => onGo(`/orders/${order.id}/track`)}
+                className="w-full py-2 px-4 text-sm bg-brand text-white rounded-lg hover:bg-brand-600"
+              >
                 실시간 배송조회
               </button>
             </div>

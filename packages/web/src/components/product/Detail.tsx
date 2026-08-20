@@ -780,7 +780,16 @@ export function Detail({
               </ul>
             </div>
             <div className="text-center">
-              <button className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm">{t('product:detailPage.contactCustomerService')}</button>
+              <button
+                onClick={() => {
+                  if (onGo) {
+                    onGo('/support/contact');
+                  } else {
+                    window.location.href = '/support/contact';
+                  }
+                }}
+                className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm"
+              >{t('product:detailPage.contactCustomerService')}</button>
             </div>
           </div>
         );

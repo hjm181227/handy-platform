@@ -225,12 +225,12 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
           <p>주문 관련 문의사항이 있으시면</p>
           <p>
             고객센터 
-            <button 
-              onClick={() => alert('고객센터 연결 기능은 추후 구현됩니다.')}
+            <a
+              href="tel:1588-0000"
               className="text-brand hover:underline ml-1"
             >
               1588-0000
-            </button>
+            </a>
             로 연락해주세요.
           </p>
         </div>
