@@ -368,20 +368,20 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">대량 상품 등록</h1>
-            <p className="text-xs md:text-sm text-gray-500 leading-relaxed">
+            <p className="text-xs md:text-sm text-muted leading-relaxed">
               Excel 템플릿으로 최대 50개 상품을 한 번에 등록
             </p>
           </div>
           <button
             onClick={() => onGo('/seller/products')}
-            className="self-start px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="self-start px-3 py-1.5 text-sm text-ink border border-line rounded-lg hover:bg-surface"
           >
             ← 상품 목록
           </button>
         </div>
 
         {/* Step 1: 템플릿 다운로드 */}
-        <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
+        <div className="bg-white rounded-xl border shadow-sm p-4 md:p-6">
           <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
             <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">1</span>
             Excel 템플릿 다운로드
@@ -402,27 +402,27 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* Step 2: Excel 파일 업로드 */}
-        <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
+        <div className="bg-white rounded-xl border shadow-sm p-4 md:p-6">
           <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
             <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">2</span>
             Excel 파일 업로드
           </h2>
           <div
             className={`border-2 border-dashed rounded-lg p-5 md:p-8 text-center cursor-pointer transition-colors ${
-              dragOver ? 'border-brand bg-brand-50' : 'border-gray-300 hover:border-gray-400'
+              dragOver ? 'border-brand bg-brand-50' : 'border-line-strong hover:border-muted'
             }`}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
           >
-            <svg className="mx-auto w-10 h-10 md:w-12 md:h-12 text-gray-400 mb-2 md:mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto w-10 h-10 md:w-12 md:h-12 text-muted mb-2 md:mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
             <p className="text-sm md:text-base text-gray-600 font-medium">
               {isUploading ? '파일 처리 중...' : 'Excel 파일을 드래그하거나 클릭하여 업로드'}
             </p>
-            <p className="text-xs text-gray-400 mt-1">.xlsx, .xls</p>
+            <p className="text-xs text-muted mt-1">.xlsx, .xls</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -435,21 +435,21 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
 
         {/* Step 3: 이미지 일괄 업로드 (Excel 파싱 후 표시) */}
         {parsedProducts.length > 0 && (
-          <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
+          <div className="bg-white rounded-xl border shadow-sm p-4 md:p-6">
             <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">
               <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">3</span>
               이미지 일괄 업로드
             </h2>
             <p className="text-xs md:text-sm text-gray-600 mb-1.5">
-              파일명이 <code className="bg-gray-100 px-1 rounded text-xs">행번호_main.jpg</code> 형식이면 자동 매핑됩니다.
+              파일명이 <code className="bg-surface px-1 rounded text-xs">행번호_main.jpg</code> 형식이면 자동 매핑됩니다.
             </p>
-            <p className="text-xs text-gray-400 mb-3 md:mb-4">
+            <p className="text-xs text-muted mb-3 md:mb-4">
               예: 1_main.jpg → 1번 행, 2_main.png → 2번 행
             </p>
 
             <div
               className={`border-2 border-dashed rounded-lg p-4 md:p-6 text-center cursor-pointer transition-colors mb-3 md:mb-4 ${
-                imageDragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                imageDragOver ? 'border-brand bg-brand-50' : 'border-line-strong hover:border-muted'
               }`}
               onClick={() => imageInputRef.current?.click()}
               onDragOver={(e) => { e.preventDefault(); setImageDragOver(true); }}
@@ -464,11 +464,11 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                 <p className="text-sm text-gray-600">이미지 업로드 중...</p>
               ) : (
                 <>
-                  <svg className="mx-auto w-8 h-8 md:w-10 md:h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="mx-auto w-8 h-8 md:w-10 md:h-10 text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <p className="text-sm text-gray-600">이미지를 드래그하거나 클릭하여 업로드</p>
-                  <p className="text-xs text-gray-400 mt-0.5">복수 선택 가능</p>
+                  <p className="text-xs text-muted mt-0.5">복수 선택 가능</p>
                 </>
               )}
               <input
@@ -493,7 +493,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                         alt={img.filename}
                         className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border"
                       />
-                      <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 max-w-[64px] md:max-w-[80px] truncate">{img.filename}</p>
+                      <p className="text-[10px] md:text-xs text-muted mt-0.5 max-w-[64px] md:max-w-[80px] truncate">{img.filename}</p>
                     </div>
                   ))}
                 </div>
@@ -504,7 +504,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
 
         {/* Step 4: 미리보기 테이블 */}
         {parsedProducts.length > 0 && (
-          <div className="bg-white rounded-lg border shadow-sm p-4 md:p-6">
+          <div className="bg-white rounded-xl border shadow-sm p-4 md:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4">
               <h2 className="text-base md:text-lg font-semibold text-gray-900">
                 <span className="inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full bg-brand text-white text-xs md:text-sm font-bold mr-1.5 md:mr-2">4</span>
@@ -514,7 +514,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                 <span className="text-gray-600">전체: <b>{totalRows}</b></span>
                 <span className="text-green-600">유효: <b>{validRows}</b></span>
                 <span className="text-red-600">오류: <b>{errorRows}</b></span>
-                <span className="text-blue-600">선택: <b>{selectedValidRows}</b></span>
+                <span className="text-brand">선택: <b>{selectedValidRows}</b></span>
               </div>
             </div>
 
@@ -542,7 +542,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                     className={`rounded-lg border p-3 ${
                       resultItem?.success ? 'bg-green-50 border-green-200' :
                       resultItem && !resultItem.success ? 'bg-red-50 border-red-200' :
-                      !isFullyValid ? 'bg-yellow-50 border-yellow-200' : 'border-gray-200'
+                      !isFullyValid ? 'bg-yellow-50 border-yellow-200' : 'border-line'
                     }`}
                   >
                     <div className="flex items-start gap-2.5">
@@ -555,7 +555,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                       {hasImage ? (
                         <img src={product.mainImageUrl} alt="" className="w-12 h-12 object-cover rounded flex-shrink-0" />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 bg-surface rounded flex items-center justify-center flex-shrink-0">
                           <select
                             className="text-[10px] border rounded px-0.5 py-0.5 w-full h-full bg-transparent"
                             value=""
@@ -570,7 +570,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-[10px] text-gray-400">#{product._rowIndex}</span>
+                          <span className="text-[10px] text-muted">#{product._rowIndex}</span>
                           {resultItem?.success ? (
                             <span className="text-[10px] text-green-600 font-medium">등록됨</span>
                           ) : resultItem ? (
@@ -587,12 +587,12 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                           {product.salePrice && (
                             <span className="text-red-500 line-through text-[10px]">{product.salePrice.toLocaleString()}원</span>
                           )}
-                          <span className="text-gray-400">|</span>
+                          <span className="text-muted">|</span>
                           <span>재고 {product.stockQuantity ?? 0}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">{product.nailShape}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">{product.nailLength}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-surface rounded text-muted">{product.nailShape}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-surface rounded text-muted">{product.nailLength}</span>
                         </div>
                       </div>
                     </div>
@@ -617,7 +617,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
             <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b">
+                  <tr className="bg-surface border-b">
                     <th className="px-3 py-2 text-left">
                       <input
                         type="checkbox"
@@ -650,7 +650,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                         className={`border-b ${
                           resultItem?.success ? 'bg-green-50' :
                           resultItem && !resultItem.success ? 'bg-red-50' :
-                          !isFullyValid ? 'bg-yellow-50' : 'hover:bg-gray-50'
+                          !isFullyValid ? 'bg-yellow-50' : 'hover:bg-surface'
                         }`}
                       >
                         <td className="px-3 py-2">
@@ -661,7 +661,7 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                             className="rounded"
                           />
                         </td>
-                        <td className="px-3 py-2 text-gray-500">{product._rowIndex}</td>
+                        <td className="px-3 py-2 text-muted">{product._rowIndex}</td>
                         <td className="px-3 py-2">
                           {resultItem?.success ? (
                             <span className="text-green-600 font-medium">✓ 등록됨</span>
@@ -746,14 +746,14 @@ export function BulkProductUpload({ onGo }: { onGo: (to: string) => void }) {
                 <div className="flex gap-2 sm:gap-3">
                   <button
                     onClick={() => onGo('/seller/products')}
-                    className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50"
+                    className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm border border-line text-ink rounded-lg hover:bg-surface"
                   >
                     취소
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting || selectedValidRows === 0}
-                    className="flex-1 sm:flex-none px-5 py-2.5 sm:py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-none px-5 py-2.5 sm:py-2 text-sm bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>

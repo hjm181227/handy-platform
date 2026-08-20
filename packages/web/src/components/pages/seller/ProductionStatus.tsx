@@ -108,8 +108,8 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
       <SellerLayout title={t('production.title')} onGo={onGo}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-50 rounded-full mb-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand border-t-transparent"></div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('production.loading')}</h3>
             <p className="text-gray-600">{t('common:pleaseWait')}</p>
@@ -123,7 +123,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
     return (
       <SellerLayout title={t('production.title')} onGo={onGo}>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center max-w-md w-full">
+          <div className="bg-white rounded-xl shadow-sm border border-line p-8 text-center max-w-md w-full">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -161,7 +161,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-line-strong rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand"
             >
               {availableYears.map(year => (
                 <option key={year} value={year}>{t('production.yearLabel', { year })}</option>
@@ -169,13 +169,13 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
             </select>
 
             {/* 뷰 모드 전환 */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-line-strong rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode('chart')}
                 className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                   viewMode === 'chart'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-brand text-white'
+                    : 'bg-white text-gray-700 hover:bg-surface'
                 }`}
               >
                 <FaChartBar className="w-4 h-4" />
@@ -183,10 +183,10 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
               </button>
               <button
                 onClick={() => setViewMode('table')}
-                className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 border-l border-gray-300 ${
+                className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 border-l border-line-strong ${
                   viewMode === 'table'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-brand text-white'
+                    : 'bg-white text-gray-700 hover:bg-surface'
                 }`}
               >
                 <FaTable className="w-4 h-4" />
@@ -198,39 +198,39 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
 
         {/* 연간 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl border border-line p-6 hover:shadow-md transition-shadow">
             <div className="text-sm text-gray-600 mb-2">{t('production.totalOrders')}</div>
-            <div className="text-3xl font-bold text-blue-600">{yearlySummary.totalOrders.toLocaleString()}</div>
-            <div className="text-sm text-gray-500 mt-1">{t('production.itemUnit')}</div>
+            <div className="text-3xl font-bold text-brand [font-variant-numeric:tabular-nums]">{yearlySummary.totalOrders.toLocaleString()}</div>
+            <div className="text-sm text-muted mt-1">{t('production.itemUnit')}</div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl border border-line p-6 hover:shadow-md transition-shadow">
             <div className="text-sm text-gray-600 mb-2">{t('production.totalCapacity')}</div>
-            <div className="text-3xl font-bold text-green-600">{yearlySummary.totalCapacity.toLocaleString()}</div>
-            <div className="text-sm text-gray-500 mt-1">{t('production.itemUnit')}</div>
+            <div className="text-3xl font-bold text-green-600 [font-variant-numeric:tabular-nums]">{yearlySummary.totalCapacity.toLocaleString()}</div>
+            <div className="text-sm text-muted mt-1">{t('production.itemUnit')}</div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl border border-line p-6 hover:shadow-md transition-shadow">
             <div className="text-sm text-gray-600 mb-2">{t('production.avgUtilization')}</div>
             <div className={`text-3xl font-bold ${getUtilizationColor(yearlySummary.avgUtilization)}`}>
               {yearlySummary.avgUtilization.toFixed(1)}%
             </div>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="text-sm text-muted mt-1">
               {yearlySummary.avgUtilization >= 90 ? t('production.veryHigh') : yearlySummary.avgUtilization >= 70 ? t('production.high') : t('production.normal')}
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl border border-line p-6 hover:shadow-md transition-shadow">
             <div className="text-sm text-gray-600 mb-2">{t('production.peakMonth')}</div>
-            <div className="text-3xl font-bold text-purple-600">{t('production.monthLabel', { month: yearlySummary.peakMonth })}</div>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="text-3xl font-bold text-brand [font-variant-numeric:tabular-nums]">{t('production.monthLabel', { month: yearlySummary.peakMonth })}</div>
+            <div className="text-sm text-muted mt-1">
               {t('production.ordersUnit', { count: yearlySummary.peakOrders.toLocaleString() })}
             </div>
           </div>
         </div>
 
         {/* 차트/표 뷰 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-line p-6">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-2">{t('production.monthlyStatus', { year: selectedYear })}</h2>
             <p className="text-gray-600">{t('production.monthlyStatusDesc')}</p>
@@ -253,7 +253,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
                     </div>
                   </div>
 
-                  <div className="relative bg-gray-200 rounded-full h-8 overflow-hidden">
+                  <div className="relative bg-surface-strong rounded-full h-8 overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${getUtilizationBarColor(stat.utilizationRate)}`}
                       style={{ width: `${Math.min(stat.utilizationRate, 100)}%` }}
@@ -274,7 +274,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
+                  <tr className="border-b border-line">
                     <th className="text-left p-4 font-semibold text-gray-900">{t('production.monthHeader')}</th>
                     <th className="text-right p-4 font-semibold text-gray-900">{t('production.ordersHeader')}</th>
                     <th className="text-right p-4 font-semibold text-gray-900">{t('production.capacityHeader')}</th>
@@ -285,8 +285,8 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
                   {monthlyStats.map((stat, index) => (
                     <tr
                       key={stat.month}
-                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      className={`border-b border-gray-100 hover:bg-surface transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-surface'
                       }`}
                     >
                       <td className="p-4 font-medium text-gray-900">{t('production.monthLabel', { month: stat.month })}</td>
@@ -307,7 +307,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
 
         {/* 데이터 없음 상태 */}
         {historyData.length === 0 && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
+          <div className="bg-surface border border-line rounded-xl p-12 text-center">
             <div className="text-6xl mb-4">📊</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('production.noData')}</h3>
             <p className="text-gray-600 mb-6">
@@ -315,7 +315,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
             </p>
             <button
               onClick={() => onGo('/seller/production')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="bg-brand text-white px-6 py-3 rounded-full hover:bg-brand-600 transition-colors font-medium"
             >
               {t('production.configureProduction')}
             </button>
@@ -323,7 +323,7 @@ export function ProductionStatus({ onGo }: ProductionStatusProps) {
         )}
 
         {/* 가동률 범례 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-line p-6">
           <h3 className="font-semibold text-gray-900 mb-4">{t('production.utilizationLegend')}</h3>
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-3">

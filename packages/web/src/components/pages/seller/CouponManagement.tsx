@@ -241,7 +241,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
     const endDate = new Date(coupon.validity.endDate);
 
     if (endDate < now) {
-      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">{t('coupons.statusExpired')}</span>;
+      return <span className="px-2 py-1 text-xs rounded-full bg-surface-strong text-gray-600">{t('coupons.statusExpired')}</span>;
     }
     if (!coupon.isActive) {
       return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">{t('coupons.statusInactive')}</span>;
@@ -260,7 +260,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
           </div>
           <button
             onClick={handleCreate}
-            className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+            className="bg-brand text-white px-4 py-2.5 rounded-full hover:bg-brand-600 transition-colors font-medium flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -270,7 +270,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
         </div>
 
         {/* 필터 탭 */}
-        <div className="flex gap-2 border-b border-gray-200">
+        <div className="flex gap-2 border-b border-line">
           {[
             { key: 'all', label: t('coupons.all') },
             { key: 'active', label: t('coupons.active') },
@@ -282,7 +282,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
               onClick={() => setStatusFilter(tab.key as StatusFilter)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 statusFilter === tab.key
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-brand text-brand'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -302,15 +302,15 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
               <p className="text-gray-600">{t('coupons.loadingCoupons')}</p>
             </div>
           </div>
         ) : coupons.length === 0 ? (
           /* 빈 상태 */
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-xl shadow-sm border border-line p-12 text-center">
+            <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
             </div>
@@ -318,17 +318,17 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
             <p className="text-gray-600 mb-6">{t('coupons.noCouponsDesc')}</p>
             <button
               onClick={handleCreate}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="bg-brand text-white px-6 py-2.5 rounded-full hover:bg-brand-600 transition-colors font-medium"
             >
               {t('coupons.createFirst')}
             </button>
           </div>
         ) : (
           /* 쿠폰 테이블 */
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-line overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-surface border-b border-line">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.couponNameCode')}</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{t('coupons.discount')}</th>
@@ -338,37 +338,37 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">{t('coupons.actions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-line">
                   {coupons.map((coupon) => (
-                    <tr key={coupon.couponUuid} className="hover:bg-gray-50 transition-colors">
+                    <tr key={coupon.couponUuid} className="hover:bg-surface transition-colors">
                       <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-gray-900">{coupon.name}</div>
-                          <div className="text-sm text-gray-500 font-mono">{coupon.code}</div>
+                          <div className="text-sm text-muted font-mono">{coupon.code}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-blue-600">{formatDiscount(coupon)}</div>
+                        <div className="font-semibold text-brand">{formatDiscount(coupon)}</div>
                         {coupon.maxDiscountAmount && (
-                          <div className="text-xs text-gray-500">{t('coupons.maxDiscount', { amount: coupon.maxDiscountAmount.toLocaleString() })}</div>
+                          <div className="text-xs text-muted">{t('coupons.maxDiscount', { amount: coupon.maxDiscountAmount.toLocaleString() })}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
                           {new Date(coupon.validity.startDate).toLocaleDateString()}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted">
                           ~ {new Date(coupon.validity.endDate).toLocaleDateString()}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <span className="font-medium text-gray-900">{coupon.stats?.usedCount || 0}</span>
-                          <span className="text-gray-500"> / {coupon.limits.totalCount}</span>
+                          <span className="text-muted"> / {coupon.limits.totalCount}</span>
                         </div>
-                        <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-1">
+                        <div className="w-24 h-1.5 bg-surface-strong rounded-full mt-1">
                           <div
-                            className="h-full bg-blue-500 rounded-full"
+                            className="h-full bg-brand rounded-full"
                             style={{
                               width: `${Math.min(((coupon.stats?.usedCount || 0) / coupon.limits.totalCount) * 100, 100)}%`,
                             }}
@@ -380,7 +380,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleToggleStatus(coupon)}
-                            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-2 text-muted hover:text-gray-700 hover:bg-surface rounded-lg transition-colors"
                             title={coupon.isActive ? t('coupons.deactivate') : t('coupons.activate')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,7 +394,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           </button>
                           <button
                             onClick={() => handleEdit(coupon)}
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-muted hover:text-brand hover:bg-brand-50 rounded-lg transition-colors"
                             title={t('common:edit')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -403,7 +403,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           </button>
                           <button
                             onClick={() => handleDelete(coupon)}
-                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-muted hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title={t('common:delete')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,13 +426,13 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowModal(false)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-line px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
                 {editingCoupon ? t('coupons.editCoupon') : t('coupons.createCoupon')}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-surface rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -452,7 +452,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     placeholder={t('coupons.couponNamePlaceholder')}
                   />
                 </div>
@@ -465,26 +465,26 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       type="text"
                       value={formData.code || ''}
                       onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono uppercase"
+                      className="flex-1 border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand font-mono uppercase"
                       placeholder="SUMMER2024"
                       maxLength={20}
                     />
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
-                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                      className="px-4 py-2.5 border border-line rounded-lg text-ink hover:bg-surface transition-colors whitespace-nowrap"
                     >
                       {t('coupons.autoGenerate')}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{t('coupons.couponCodeDesc')}</p>
+                  <p className="text-xs text-muted mt-1">{t('coupons.couponCodeDesc')}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('coupons.descriptionLabel')}</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20 resize-none"
+                    className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand h-20 resize-none"
                     placeholder={t('coupons.descriptionPlaceholder')}
                   />
                 </div>
@@ -501,7 +501,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, discountType: e.target.value as DiscountType })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     >
                       <option value="percentage">{t('coupons.percentageDiscount')}</option>
                       <option value="fixed_amount">{t('coupons.fixedDiscount')}</option>
@@ -517,7 +517,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                         type="number"
                         value={formData.discountValue}
                         onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                         min={0}
                         max={formData.discountType === 'percentage' ? 100 : undefined}
                       />
@@ -534,7 +534,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                         onChange={(e) =>
                           setFormData({ ...formData, maxDiscountAmount: e.target.value ? Number(e.target.value) : undefined })
                         }
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                         placeholder={t('coupons.noLimit')}
                       />
                     </div>
@@ -547,7 +547,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, minimumOrderAmount: e.target.value ? Number(e.target.value) : undefined })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                       placeholder={t('coupons.noLimit')}
                     />
                   </div>
@@ -570,7 +570,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                         value={option.value}
                         checked={formData.appliesTo === option.value}
                         onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value as 'product' | 'quote' | 'both' })}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 text-brand focus:ring-brand"
                       />
                       <span className="text-sm text-gray-700">{option.label}</span>
                     </label>
@@ -590,7 +590,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, validity: { ...formData.validity, startDate: e.target.value } })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
                   <div>
@@ -601,7 +601,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, validity: { ...formData.validity, endDate: e.target.value } })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
                 </div>
@@ -622,7 +622,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           limits: { ...formData.limits!, totalCount: Number(e.target.value) },
                         })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                       min={1}
                     />
                   </div>
@@ -637,7 +637,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                           limits: { ...formData.limits!, perUserLimit: Number(e.target.value) },
                         })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                       min={1}
                     />
                   </div>
@@ -645,7 +645,7 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
               </div>
 
               {/* 공개 설정 */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
                 <div>
                   <h3 className="font-medium text-gray-900">{t('coupons.publicCoupon')}</h3>
                   <p className="text-sm text-gray-600">{t('coupons.publicCouponDesc')}</p>
@@ -657,22 +657,22 @@ export function CouponManagement({ onGo }: CouponManagementProps) {
                     onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
                 </label>
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+            <div className="sticky bottom-0 bg-white border-t border-line px-6 py-4 flex justify-end gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                className="px-4 py-2.5 border border-line rounded-lg text-ink hover:bg-surface transition-colors font-medium"
               >
                 {t('common:cancel')}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2.5 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {saving ? (
                   <>

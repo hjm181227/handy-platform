@@ -24,9 +24,9 @@ interface OrderFilter {
 const ORDER_STATUS_COLORS = {
   pending: { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
   confirmed: { color: 'bg-blue-100 text-blue-800', icon: '✓' },
-  processing: { color: 'bg-purple-100 text-purple-800', icon: '🔄' },
+  processing: { color: 'bg-brand-100 text-brand-700', icon: '🔄' },
   shipped: { color: 'bg-green-100 text-green-800', icon: '🚛' },
-  delivered: { color: 'bg-gray-100 text-gray-800', icon: '📦' },
+  delivered: { color: 'bg-surface-strong text-gray-800', icon: '📦' },
   cancelled: { color: 'bg-red-100 text-red-800', icon: '❌' },
 } as const;
 
@@ -242,13 +242,13 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
       {loading ? (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-600">{t('orders.loadingOrders')}</p>
           </div>
         </div>
       ) : error ? (
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center max-w-md w-full">
+          <div className="bg-white rounded-xl shadow-sm border border-line p-8 text-center max-w-md w-full">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -267,7 +267,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
       ) : (
         <div className="space-y-6">
           {/* 상단 필터 및 검색 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-line p-6">
             {/* 주문 상태 필터 (최상단) */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-3">{t('orders.orderStatus')}</label>
@@ -277,8 +277,8 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                   onClick={handleAllStatus}
                   className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 ${
                     (!tempFilter.status || tempFilter.status.length === 0)
-                      ? 'bg-gray-100 text-gray-800 border-2 border-gray-300'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                      ? 'bg-surface-strong text-gray-800 border-2 border-line-strong'
+                      : 'bg-white text-gray-600 border border-line hover:bg-surface'
                   }`}
                 >
                   {t('orders.all')}
@@ -295,7 +295,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                       className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 flex items-center gap-1 sm:gap-1.5 ${
                         isSelected
                           ? `${config.color} border-2 border-current`
-                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                          : 'bg-white text-gray-600 border border-line hover:bg-surface'
                       }`}
                     >
                       <span className="text-xs">{config.icon}</span>
@@ -317,7 +317,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                       searchType: e.target.value as 'orderNumber' | 'productName',
                       searchQuery: '' // 검색 방법이 바뀌면 검색어 초기화
                     })}
-                    className="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200 min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm"
+                    className="px-2 py-1.5 sm:px-3 sm:py-2 border border-line rounded-lg focus:border-brand focus:ring-0 transition-colors duration-200 min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm"
                   >
                     <option value="orderNumber">{t('orders.orderNumber')}</option>
                     <option value="productName">{t('orders.productName')}</option>
@@ -329,9 +329,9 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                       placeholder={tempFilter.searchType === 'orderNumber' ? t('orders.orderNumberPlaceholder') : t('orders.productNamePlaceholder')}
                       value={tempFilter.searchQuery}
                       onChange={(e) => handleTempFilterChange({ searchQuery: e.target.value })}
-                      className="w-full pl-8 pr-3 py-1.5 sm:pl-9 sm:pr-4 sm:py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200 text-xs sm:text-sm"
+                      className="w-full pl-8 pr-3 py-1.5 sm:pl-9 sm:pr-4 sm:py-2 border border-line rounded-lg focus:border-brand focus:ring-0 transition-colors duration-200 text-xs sm:text-sm"
                     />
-                    <svg className="absolute left-2 top-2 sm:left-2.5 sm:top-2.5 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-2 top-2 sm:left-2.5 sm:top-2.5 w-3 h-3 sm:w-4 sm:h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -342,7 +342,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                   <select
                     value={tempFilter.sortBy || 'create-desc'}
                     onChange={(e) => handleTempFilterChange({ sortBy: e.target.value as any })}
-                    className="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200 text-xs sm:text-sm"
+                    className="px-2 py-1.5 sm:px-3 sm:py-2 border border-line rounded-lg focus:border-brand focus:ring-0 transition-colors duration-200 text-xs sm:text-sm"
                   >
                     <option value="create-desc">{t('orders.sortNewest')}</option>
                     <option value="create-asc">{t('orders.sortOldest')}</option>
@@ -354,7 +354,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                   <button
                     onClick={applyFilters}
                     disabled={searchLoading}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-1.5 xl:w-auto w-full justify-center"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-1.5 xl:w-auto w-full justify-center"
                   >
                     {searchLoading ? (
                       <>
@@ -379,19 +379,19 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
           {/* 주문 목록 */}
           <div className="space-y-4">
             {searchLoading ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="bg-white rounded-xl shadow-sm border border-line p-12 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
                 <p className="text-gray-600">{t('orders.searching')}</p>
               </div>
             ) : orders.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white rounded-xl shadow-sm border border-line p-12 text-center">
+                <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">{t('orders.noOrders')}</h3>
-                <p className="text-gray-500">
+                <p className="text-muted">
                   {appliedFilter.status?.length || appliedFilter.searchQuery.trim()
                     ? t('orders.noFilteredOrders')
                     : t('orders.noOrdersYet')}
@@ -400,20 +400,20 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
             ) : (
               <>
                 {/* 전체 선택 체크박스 및 일괄 처리 버튼 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="bg-white rounded-xl border border-line p-4">
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedOrders.size === orders.length && orders.length > 0}
                         onChange={toggleAllSelection}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-brand border-line-strong rounded focus:ring-brand"
                       />
                       <span className="text-sm font-medium text-gray-700">
                         {t('orders.selectAll', { count: orders.length })}
                       </span>
                       {selectedOrders.size > 0 && (
-                        <span className="text-sm text-blue-600 font-medium">
+                        <span className="text-sm text-brand font-medium">
                           • {t('orders.selectedCount', { count: selectedOrders.size })}
                         </span>
                       )}
@@ -446,7 +446,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                 <button
                   onClick={() => handlePageChange(Math.max(1, appliedFilter.page - 1))}
                   disabled={appliedFilter.page === 1 || searchLoading}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="px-4 py-2 border border-line rounded-lg text-gray-700 hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   {t('common:prev')}
                 </button>
@@ -460,8 +460,8 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                       disabled={searchLoading}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                         pageNum === appliedFilter.page
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                          ? 'bg-brand text-white'
+                          : 'border border-line text-gray-700 hover:bg-surface'
                       }`}
                     >
                       {pageNum}
@@ -472,7 +472,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
                 <button
                   onClick={() => handlePageChange(Math.min(totalPages, appliedFilter.page + 1))}
                   disabled={appliedFilter.page === totalPages || searchLoading}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="px-4 py-2 border border-line rounded-lg text-gray-700 hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   {t('common:next')}
                 </button>

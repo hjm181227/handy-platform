@@ -83,7 +83,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
   const currentPath = window.location.pathname;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-surface flex">
       {/* 사이드바 오버레이 (모바일) */}
       {sidebarOpen && (
         <div
@@ -94,12 +94,12 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
 
       {/* 사이드바 */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:transform-none
+        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-line transform transition-transform duration-300 ease-in-out lg:transform-none
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
           {/* 로고 및 헤더 */}
-          <div className="flex items-center justify-between h-16 px-5 border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-5 border-b border-line">
             <div className="flex items-center gap-3">
               <a
                 href="/"
@@ -119,7 +119,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
 
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,15 +141,15 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
                   className={`
                     w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-left transition-all duration-200
                     ${currentPath === item.path
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-brand-50 text-brand border border-brand-200'
+                      : 'text-gray-700 hover:bg-surface hover:text-gray-900'
                     }
                   `}
                 >
                   <IconComponent className="text-lg flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold">{item.label}</div>
-                    <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">{item.description}</div>
+                    <div className="text-[11px] text-muted mt-0.5 line-clamp-1">{item.description}</div>
                   </div>
                 </button>
               );
@@ -157,10 +157,10 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
           </nav>
 
           {/* 하단 액션 */}
-          <div className="px-3 py-3 border-t border-gray-200 space-y-1.5">
+          <div className="px-3 py-3 border-t border-line space-y-1.5">
             <button
               onClick={() => onGo("/")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-surface transition-colors text-sm"
             >
               <FaHome className="text-lg" />
               <span className="font-medium">메인 사이트로</span>
@@ -188,12 +188,12 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
       {/* 메인 컨텐츠 영역 */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 상단 툴바 */}
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
+        <header className="bg-white border-b border-line h-16 flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
             {/* 모바일 메뉴 버튼 */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -222,7 +222,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
 
           {/* 우측 액션 */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center" title={currentUser?.name || '판매자'}>
+            <div className="w-8 h-8 bg-brand rounded-full flex items-center justify-center" title={currentUser?.name || '판매자'}>
               <span className="text-white font-medium text-sm">
                 {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'S'}
               </span>

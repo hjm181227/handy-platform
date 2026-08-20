@@ -1255,7 +1255,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
               <button
                 onClick={handlePayment}
                 disabled={processing || !agreedToTerms || !validateCheckout()}
-                className="w-full mt-4 bg-[#FF073A] text-white font-semibold py-3 rounded-lg hover:bg-[#E0062F] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-4 bg-brand text-white font-semibold py-3 rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed [font-variant-numeric:tabular-nums]"
               >
                 {processing ? t('order:checkout.processingPayment') : `${money(order?.finalPrice || 0)} ${t('order:checkout.placeOrder')}`}
               </button>

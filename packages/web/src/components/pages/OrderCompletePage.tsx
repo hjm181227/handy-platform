@@ -58,7 +58,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{t('common:confirmingOrder')}</p>
@@ -69,14 +69,14 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg border p-8 max-w-md mx-4 text-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="bg-white rounded-xl border p-8 max-w-md mx-4 text-center">
           <div className="text-red-500 text-4xl mb-4">❌</div>
-          <h2 className="text-xl font-bold mb-2">{t('common:orderNotFound')}</h2>
+          <h2 className="text-xl font-bold text-ink mb-2">{t('common:orderNotFound')}</h2>
           <p className="text-gray-600 mb-6">{error || t('common:orderLoadFailedDesc')}</p>
           <button
             onClick={() => onGo('/')}
-            className="w-full bg-brand text-white py-2 px-4 rounded-lg hover:bg-brand-600"
+            className="w-full bg-brand text-white py-2 px-4 rounded-full hover:bg-brand-600"
           >
             {t('common:goHome')}
           </button>
@@ -86,22 +86,22 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* 성공 헤더 */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-green-500 text-3xl">✓</span>
           </div>
-          <h1 className="text-2xl font-bold mb-2">{t('order:complete.message')}</h1>
+          <h1 className="text-2xl font-bold text-ink mb-2">{t('order:complete.message')}</h1>
           <p className="text-gray-600">
-            {t('common:orderNumberLabel')}: <span className="font-semibold text-black">{order.orderNumber}</span>
+            {t('common:orderNumberLabel')}: <span className="font-semibold text-ink">{order.orderNumber}</span>
           </p>
         </div>
 
         {/* 주문 요약 */}
-        <div className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{t('order:checkout.orderSummary')}</h2>
+        <div className="bg-white rounded-xl border p-6 mb-6">
+          <h2 className="text-lg font-semibold text-ink mb-4">{t('order:checkout.orderSummary')}</h2>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-2 border-b">
@@ -138,12 +138,12 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
         </div>
 
         {/* 주문 상품 */}
-        <div className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{t('order:payment.orderItems')}</h2>
+        <div className="bg-white rounded-xl border p-6 mb-6">
+          <h2 className="text-lg font-semibold text-ink mb-4">{t('order:payment.orderItems')}</h2>
           <div className="space-y-4">
             {order.items.map((item, index) => (
               <div key={index} className="flex gap-4 py-4 border-b last:border-b-0">
-                <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0">
+                <div className="w-16 h-16 bg-surface rounded-lg flex-shrink-0">
                   {item.productImage ? (
                     <img
                       src={item.productImage}
@@ -151,7 +151,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                    <div className="w-full h-full flex items-center justify-center text-muted text-xs">
                       No Image
                     </div>
                   )}
@@ -177,8 +177,8 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
 
         {/* 배송지 정보 */}
         {order.shippingAddress && (
-          <div className="bg-white rounded-lg border p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">{t('order:payment.shippingInfo')}</h2>
+          <div className="bg-white rounded-xl border p-6 mb-6">
+            <h2 className="text-lg font-semibold text-ink mb-4">{t('order:payment.shippingInfo')}</h2>
             <div className="space-y-2 text-sm">
               <div><strong>{t('order:shipping.recipient')}:</strong> {order.shippingAddress.recipientName}</div>
               <div><strong>{t('order:shipping.phone')}:</strong> {order.shippingAddress.recipientPhone}</div>
@@ -194,7 +194,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
         )}
 
         {/* 안내 메시지 */}
-        <div className="bg-brand-50 rounded-lg border border-brand/20 p-4 mb-6">
+        <div className="bg-brand-50 rounded-xl border border-brand/20 p-4 mb-6">
           <h3 className="font-semibold text-brand-600 mb-2">📦 배송 안내</h3>
           <ul className="text-sm text-brand space-y-1">
             <li>• 네일팁은 주문 후 평균 3-5일 내에 제작됩니다.</li>
@@ -208,20 +208,20 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => onGo('/my/orders')}
-            className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="flex-1 bg-white border border-line text-ink py-3 px-6 rounded-full hover:bg-surface transition-colors font-medium"
           >
             {t('order:complete.goToOrders')}
           </button>
           <button
             onClick={() => onGo('/')}
-            className="flex-1 bg-brand text-white py-3 px-6 rounded-lg hover:bg-brand-600 transition-colors font-medium"
+            className="flex-1 bg-brand text-white py-3 px-6 rounded-full hover:bg-brand-600 transition-colors font-medium"
           >
             {t('order:complete.continueShopping')}
           </button>
         </div>
 
         {/* 고객센터 안내 */}
-        <div className="text-center mt-8 text-sm text-gray-500">
+        <div className="text-center mt-8 text-sm text-muted">
           <p>주문 관련 문의사항이 있으시면</p>
           <p>
             고객센터 

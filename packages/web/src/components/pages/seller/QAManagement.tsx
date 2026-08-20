@@ -174,7 +174,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
           <button
             onClick={() => handleStatusFilterChange('all')}
             className={`p-4 rounded-lg border text-center transition-colors ${
-              statusFilter === 'all' ? 'border-black bg-gray-50' : 'border-gray-200 hover:bg-gray-50'
+              statusFilter === 'all' ? 'border-ink bg-surface' : 'border-line hover:bg-surface'
             }`}
           >
             <p className="text-2xl font-bold">{stats.total}</p>
@@ -183,7 +183,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
           <button
             onClick={() => handleStatusFilterChange('pending')}
             className={`p-4 rounded-lg border text-center transition-colors ${
-              statusFilter === 'pending' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:bg-gray-50'
+              statusFilter === 'pending' ? 'border-orange-500 bg-orange-50' : 'border-line hover:bg-surface'
             }`}
           >
             <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
@@ -192,7 +192,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
           <button
             onClick={() => handleStatusFilterChange('answered')}
             className={`p-4 rounded-lg border text-center transition-colors ${
-              statusFilter === 'answered' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'
+              statusFilter === 'answered' ? 'border-green-500 bg-green-50' : 'border-line hover:bg-surface'
             }`}
           >
             <p className="text-2xl font-bold text-green-600">{stats.answered}</p>
@@ -214,7 +214,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
         {/* 로딩 상태 */}
         {loading && (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
           </div>
         )}
 
@@ -232,7 +232,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
         {!loading && !error && (
           <>
             {questions.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-muted">
                 <MdQuestionAnswer className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>
                   {statusFilter === 'all'
@@ -249,23 +249,23 @@ export function QAManagement({ onGo }: QAManagementProps) {
                     {/* 질문 헤더 */}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded ${STATUS_MAP[qa.status as keyof typeof STATUS_MAP]?.color || 'bg-gray-100'}`}>
+                        <span className={`text-xs px-2 py-1 rounded ${STATUS_MAP[qa.status as keyof typeof STATUS_MAP]?.color || 'bg-surface-strong'}`}>
                           {STATUS_MAP[qa.status as keyof typeof STATUS_MAP]?.label || qa.status}
                         </span>
                         {qa.isSecret && (
-                          <span className="text-xs text-gray-500">🔒 비밀글</span>
+                          <span className="text-xs text-muted">🔒 비밀글</span>
                         )}
                         {qa.productName && (
-                          <span className="text-xs text-gray-500">{qa.productName}</span>
+                          <span className="text-xs text-muted">{qa.productName}</span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-400">{formatDate(qa.createdAt)}</span>
+                      <span className="text-xs text-muted">{formatDate(qa.createdAt)}</span>
                     </div>
 
                     {/* 질문 내용 */}
                     <div className="mb-3">
                       <div className="flex items-start gap-2">
-                        <span className="inline-block bg-black text-white text-xs font-bold px-2 py-1 rounded flex-shrink-0">
+                        <span className="inline-block bg-ink text-white text-xs font-bold px-2 py-1 rounded flex-shrink-0">
                           Q
                         </span>
                         <div className="flex-1">
@@ -277,7 +277,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
 
                     {/* 답변 내용 */}
                     {qa.status === 'answered' && qa.answer?.content && (
-                      <div className="ml-6 mt-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="ml-6 mt-3 p-3 bg-surface rounded-lg">
                         <div className="flex items-start gap-2">
                           <span className="inline-block bg-white text-black border text-xs font-bold px-2 py-1 rounded flex-shrink-0">
                             A
@@ -285,7 +285,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-medium text-gray-600">판매자</span>
-                              <span className="text-xs text-gray-500">{formatDate(qa.answer.answeredAt)}</span>
+                              <span className="text-xs text-muted">{formatDate(qa.answer.answeredAt)}</span>
                             </div>
                             <p className="text-sm text-gray-700 whitespace-pre-wrap">{qa.answer.content}</p>
                           </div>
@@ -298,7 +298,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
                       {qa.status === 'pending' ? (
                         <button
                           onClick={() => openAnswerModal(qa, 'create')}
-                          className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800"
+                          className="px-4 py-2 bg-brand text-white text-sm rounded-full hover:bg-brand-600"
                         >
                           답변하기
                         </button>
@@ -330,7 +330,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface"
                 >
                   이전
                 </button>
@@ -340,7 +340,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface"
                 >
                   다음
                 </button>
@@ -362,10 +362,10 @@ export function QAManagement({ onGo }: QAManagementProps) {
 
             <div className="p-4 space-y-4">
               {/* 원본 질문 */}
-              <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="p-3 bg-surface rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-medium">{answerModal.question.userName}</span>
-                  <span className="text-xs text-gray-500">{formatDate(answerModal.question.createdAt)}</span>
+                  <span className="text-xs text-muted">{formatDate(answerModal.question.createdAt)}</span>
                 </div>
                 <p className="text-sm text-gray-700">{answerModal.question.content}</p>
               </div>
@@ -379,9 +379,9 @@ export function QAManagement({ onGo }: QAManagementProps) {
                   placeholder="답변을 입력해주세요. (최대 2000자)"
                   maxLength={2000}
                   rows={6}
-                  className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand"
                 />
-                <p className="text-xs text-gray-500 text-right mt-1">{answerContent.length}/2000</p>
+                <p className="text-xs text-muted text-right mt-1">{answerContent.length}/2000</p>
               </div>
             </div>
 
@@ -395,7 +395,7 @@ export function QAManagement({ onGo }: QAManagementProps) {
               <button
                 onClick={handleSubmitAnswer}
                 disabled={submitting || !answerContent.trim()}
-                className="px-4 py-2 bg-black text-white text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-brand text-white text-sm rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? '처리 중...' : answerModal.mode === 'create' ? '등록' : '수정'}
               </button>

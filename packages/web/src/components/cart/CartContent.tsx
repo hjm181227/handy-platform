@@ -598,7 +598,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       <div className="text-gray-500 mb-4">장바구니를 불러올 수 없습니다</div>
       <div className="text-sm text-red-500 mb-4">{error}</div>
       <div className="space-x-3">
-        <button onClick={loadCart} className="px-4 py-2 bg-black text-white rounded">다시 시도</button>
+        <button onClick={loadCart} className="px-5 py-2.5 bg-ink text-white rounded-full text-sm font-semibold">다시 시도</button>
         {mode === 'page' && onBack && (
           <button onClick={onBack} className="px-4 py-2 border rounded">← 뒤로가기</button>
         )}
@@ -680,7 +680,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
       </div>
       <div className="text-gray-500 mb-6">마음에 드는 상품을 장바구니에 담아보세요!</div>
       {mode === 'page' && onBack && (
-        <button onClick={onBack} className="px-6 py-3 bg-black text-white rounded-lg">쇼핑 계속하기</button>
+        <button onClick={onBack} className="px-6 py-3 bg-brand text-white rounded-full font-semibold hover:bg-brand-600 transition-colors">쇼핑 계속하기</button>
       )}
     </div>
   );
@@ -967,7 +967,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
             if (mode === 'drawer' && onClose) onClose();
           }}
           disabled={selectedItems.length === 0}
-          className="w-full rounded-lg bg-black text-white font-semibold py-3 sm:py-4 hover:bg-gray-800 transition-colors touch-manipulation text-base sm:text-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
+          className="w-full rounded-full bg-brand text-white font-semibold py-3 sm:py-4 hover:bg-brand-600 transition-colors touch-manipulation text-base sm:text-lg disabled:bg-line-strong disabled:cursor-not-allowed disabled:hover:bg-line-strong"
         >
           {allSelected ? '주문하기' : `선택한 ${selectedItems.length}개 상품 주문하기`}
         </button>

@@ -25,15 +25,15 @@ const getStatusBadge = (status: string) => {
     case 'approved': return { label: '승인', className: 'bg-blue-100 text-blue-700' };
     case 'rejected': return { label: '반려', className: 'bg-red-100 text-red-700' };
     case 'completed': return { label: '완료', className: 'bg-green-100 text-green-700' };
-    case 'withdrawn': return { label: '철회', className: 'bg-gray-100 text-gray-500' };
-    default: return { label: status, className: 'bg-gray-100 text-gray-700' };
+    case 'withdrawn': return { label: '철회', className: 'bg-surface-strong text-muted' };
+    default: return { label: status, className: 'bg-surface-strong text-gray-700' };
   }
 };
 
 const getTypeBadge = (type: string) =>
   type === 'return'
     ? { label: '반품', className: 'bg-brand-50 text-brand' }
-    : { label: '교환', className: 'bg-purple-100 text-purple-700' };
+    : { label: '교환', className: 'bg-brand-100 text-brand-700' };
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return '';
@@ -173,7 +173,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
         </div>
 
         {/* 상태 필터 탭 */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-line">
           <div className="flex gap-1 overflow-x-auto">
             {STATUS_TABS.map(tab => (
               <button
@@ -182,7 +182,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                   statusFilter === tab.key
                     ? 'border-brand text-brand'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-muted hover:text-gray-700'
                 }`}
               >
                 {tab.label}
@@ -197,22 +197,22 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
           </div>
         ) : error ? (
-          <div className="bg-white rounded-lg border p-8 text-center space-y-4">
+          <div className="bg-white rounded-xl border p-8 text-center space-y-4">
             <p className="text-sm text-red-600">{error}</p>
             <button
               onClick={() => loadRequests(currentPage)}
-              className="px-4 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
+              className="px-4 py-2 text-sm bg-brand text-white rounded-full hover:bg-brand-600 transition-colors"
             >
               다시 시도
             </button>
           </div>
         ) : requests.length === 0 ? (
-          <div className="bg-white rounded-lg border py-16 text-center">
+          <div className="bg-white rounded-xl border py-16 text-center">
             <div className="text-4xl mb-4">📦</div>
             <h3 className="text-base font-medium text-gray-600 mb-1">
               {statusFilter === 'requested' ? '접수된 신청이 없습니다' : '반품·교환 신청이 없습니다'}
             </h3>
-            <p className="text-sm text-gray-400">고객이 반품·교환을 신청하면 이곳에 표시됩니다.</p>
+            <p className="text-sm text-muted">고객이 반품·교환을 신청하면 이곳에 표시됩니다.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -221,7 +221,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
               const typeBadge = getTypeBadge(request.type);
               const isProcessing = processingUuid === request.returnRequestUuid;
               return (
-                <div key={request.returnRequestUuid} className="bg-white rounded-lg border p-5">
+                <div key={request.returnRequestUuid} className="bg-white rounded-xl border p-5">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -231,7 +231,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusBadge.className}`}>
                           {statusBadge.label}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-muted">
                           신청일 {formatDate(request.requestedAt || request.createdAt)}
                         </span>
                       </div>
@@ -240,7 +240,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                       </div>
                       <div className="text-sm text-gray-700">사유: {request.reason}</div>
                       {request.detail && (
-                        <div className="text-xs text-gray-500 whitespace-pre-line">{request.detail}</div>
+                        <div className="text-xs text-muted whitespace-pre-line">{request.detail}</div>
                       )}
                       {request.imageUrls && request.imageUrls.length > 0 && (
                         <div className="flex gap-2 flex-wrap">
@@ -277,7 +277,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                           <button
                             onClick={() => handleApprove(request)}
                             disabled={isProcessing}
-                            className="px-4 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50 whitespace-nowrap"
+                            className="px-4 py-2 text-sm bg-brand text-white rounded-full hover:bg-brand-600 transition-colors disabled:opacity-50 whitespace-nowrap"
                           >
                             {isProcessing ? '처리 중...' : '승인'}
                           </button>
@@ -313,7 +313,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
             <button
               onClick={() => loadRequests(currentPage - 1)}
               disabled={currentPage <= 1}
-              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
             >
               이전
             </button>
@@ -323,7 +323,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
             <button
               onClick={() => loadRequests(currentPage + 1)}
               disabled={currentPage >= pagination.totalPages}
-              className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm border rounded-lg hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
             >
               다음
             </button>
@@ -334,7 +334,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
       {/* 반려 사유 입력 모달 */}
       {rejectingRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h3 className="text-lg font-bold mb-2">신청 반려</h3>
             <p className="text-sm text-gray-600 mb-4">
               주문번호 {rejectingRequest.orderNumber}의 {rejectingRequest.type === 'return' ? '반품' : '교환'} 신청을 반려합니다.
@@ -346,9 +346,9 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
               maxLength={1000}
               rows={4}
               placeholder="반려 사유를 5자 이상 입력해주세요"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent resize-none mb-1"
+              className="w-full px-3 py-2.5 border border-line-strong rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent resize-none mb-1"
             />
-            <p className="text-xs text-gray-400 mb-4">{rejectReason.trim().length}자 / 최소 5자</p>
+            <p className="text-xs text-muted mb-4">{rejectReason.trim().length}자 / 최소 5자</p>
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -356,7 +356,7 @@ export function ReturnRequestManagement({ onGo }: ReturnRequestManagementProps) 
                   setRejectReason('');
                 }}
                 disabled={rejecting}
-                className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 py-2 px-4 border border-line text-ink rounded-lg hover:bg-surface transition-colors disabled:opacity-50"
               >
                 취소
               </button>
