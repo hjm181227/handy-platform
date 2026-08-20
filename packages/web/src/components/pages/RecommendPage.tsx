@@ -33,7 +33,7 @@ const RecommendationSection = ({
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-base font-bold">{title}</h2>
-          <span className="text-xs font-medium text-[#E85A6B] cursor-pointer">{t('seeMore')} &gt;</span>
+          <span className="text-xs font-medium text-brand cursor-pointer">{t('seeMore')} &gt;</span>
         </div>
         {reason && (
           <p className="text-xs text-gray-500">{reason}</p>
@@ -178,8 +178,8 @@ export function RecommendPage({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#E85A6B] rounded-full"></div>
-                <span className="text-[#E85A6B]">{t('product:recommend.categoryBased')}</span>
+                <div className="w-2 h-2 bg-brand rounded-full"></div>
+                <span className="text-brand">{t('product:recommend.categoryBased')}</span>
               </div>
             )}
           </div>
@@ -188,14 +188,14 @@ export function RecommendPage({
 
       {/* 로그인 안내 (비로그인 사용자용) */}
       {!isLoggedIn && (
-        <div className="mx-auto max-w-7xl px-4 py-3 bg-[#FFF1F2] border-b">
+        <div className="mx-auto max-w-7xl px-4 py-3 bg-brand-50 border-b">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs md:text-sm text-[#D14A5B] font-medium truncate">
+            <span className="text-xs md:text-sm text-brand-600 font-medium truncate">
               {t('product:recommend.loginForRecommend')}
             </span>
             <button
               onClick={() => onGo('/login')}
-              className="px-3.5 py-1.5 bg-[#E85A6B] text-white text-xs font-semibold rounded-xl whitespace-nowrap flex-shrink-0 hover:bg-[#D14A5B]"
+              className="px-3.5 py-1.5 bg-brand text-white text-xs font-semibold rounded-xl whitespace-nowrap flex-shrink-0 hover:bg-brand-600"
             >
               {t('common:login')}
             </button>
@@ -260,7 +260,7 @@ export function RecommendPage({
                 {!isLoggedIn && (
                   <button
                     onClick={() => onGo('/login')}
-                    className="px-3.5 py-2 bg-[#E85A6B] text-white rounded-xl text-xs font-medium hover:bg-[#D14A5B]"
+                    className="px-3.5 py-2 bg-brand text-white rounded-xl text-xs font-medium hover:bg-brand-600"
                   >
                     {t('common:login')}
                   </button>

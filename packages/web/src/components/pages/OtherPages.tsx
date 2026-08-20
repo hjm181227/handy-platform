@@ -86,7 +86,7 @@ export function LikesPage({
       <p className="text-red-600 mb-4">{error}</p>
       <button
         onClick={() => loadLikes(selectedTab)}
-        className="px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B]"
+        className="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-600"
       >
         다시 시도
       </button>
@@ -285,7 +285,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   // 로딩 스켈레톤
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F4F5]">
+      <div className="min-h-screen bg-surface">
         <div className="max-w-lg mx-auto px-5 py-4">
           <div className="rounded-2xl bg-white p-5 animate-pulse">
             <div className="flex items-center gap-4">
@@ -350,7 +350,7 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
     }
   };
 
-  const ChevronIcon = ({ className = "text-[#D0C9C3]" }: { className?: string }) => (
+  const ChevronIcon = ({ className = "text-line-strong" }: { className?: string }) => (
     <ChevronRight className={`h-[18px] w-[18px] ${className}`} />
   );
 
@@ -361,9 +361,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
       className="flex items-center justify-between py-3 px-1 hover:bg-gray-50 transition-colors"
     >
       <div className="flex items-center gap-2">
-        <span className="text-sm text-[#131211]">{title}</span>
+        <span className="text-sm text-ink">{title}</span>
         {badge && (
-          <span className="rounded-[10px] border border-[#E5E0DC] px-2 py-0.5 text-xs text-[#71717A]">
+          <span className="rounded-[10px] border border-line px-2 py-0.5 text-xs text-muted">
             {badge}
           </span>
         )}
@@ -373,9 +373,9 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   );
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="rounded-2xl bg-white overflow-hidden border border-[#E5E0DC]">
+    <div className="rounded-2xl bg-white overflow-hidden border border-line">
       <div className="px-4 pt-4 pb-2">
-        <span className="text-[15px] font-bold text-[#131211]">{title}</span>
+        <span className="text-[15px] font-bold text-ink">{title}</span>
       </div>
       <div className="px-4 pb-4">
         {children}
@@ -384,21 +384,21 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
   );
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5]">
+    <div className="min-h-screen bg-surface">
       <div className="max-w-lg mx-auto">
         {/* Content */}
         <div className="flex flex-col gap-3 px-5 py-4">
 
           {/* Profile Card */}
-          <div className="rounded-2xl bg-white p-5 flex flex-col gap-4 border border-[#E5E0DC]">
+          <div className="rounded-2xl bg-white p-5 flex flex-col gap-4 border border-line">
             {/* Avatar + Info */}
             <div className="flex items-start gap-4">
               {/* Avatar */}
               <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)}>
                 {user?.avatar ? (
-                  <img src={user.avatar} className="w-14 h-14 rounded-full border border-[#E5E0DC] object-cover" alt="" />
+                  <img src={user.avatar} className="w-14 h-14 rounded-full border border-line object-cover" alt="" />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-[#F4F4F5] flex items-center justify-center text-lg font-bold text-[#71717A]">
+                  <div className="w-14 h-14 rounded-full bg-surface flex items-center justify-center text-lg font-bold text-muted">
                     {(user?.nickname || user?.name || '?').charAt(0)}
                   </div>
                 )}
@@ -407,13 +407,13 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
               {/* Name + Stats */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131211] truncate">
+                  <span className="text-xl font-bold text-ink truncate">
                     {user?.nickname || user?.name || t('mypage:defaultUser')}
                   </span>
                   {getRoleLabel(user?.role || 'user') && (
                     <>
-                      <span className="text-xl text-[#D0C9C3]">/</span>
-                      <span className="text-xl font-bold text-[#FF4D6D]">
+                      <span className="text-xl text-line-strong">/</span>
+                      <span className="text-xl font-bold text-brand">
                         {getRoleLabel(user?.role || 'user')}
                       </span>
                     </>
@@ -421,14 +421,14 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                 </div>
                 {/* Follower / Following / Snap Counts */}
                 <div className="flex gap-4 mt-1.5">
-                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)} className="text-sm text-[#71717A]">
-                    <span className="font-bold text-[#131211]">{snapCount}</span> {t('mypage:stats.snaps')}
+                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)} className="text-sm text-muted">
+                    <span className="font-bold text-ink">{snapCount}</span> {t('mypage:stats.snaps')}
                   </button>
-                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=followers`)} className="text-sm text-[#71717A]">
-                    <span className="font-bold text-[#131211]">{followerCount}</span> {t('mypage:stats.followers')}
+                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=followers`)} className="text-sm text-muted">
+                    <span className="font-bold text-ink">{followerCount}</span> {t('mypage:stats.followers')}
                   </button>
-                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=following`)} className="text-sm text-[#71717A]">
-                    <span className="font-bold text-[#131211]">{followingCount}</span> {t('mypage:stats.following')}
+                  <button onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}?tab=following`)} className="text-sm text-muted">
+                    <span className="font-bold text-ink">{followingCount}</span> {t('mypage:stats.following')}
                   </button>
                 </div>
               </div>
@@ -438,19 +438,19 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             <div className="flex gap-2">
               <button
                 onClick={() => user?.userUuid && onGo(`/user/${user.userUuid}`)}
-                className="flex-1 rounded-lg border border-[#E5E0DC] py-2 text-sm font-medium text-[#131211] hover:bg-gray-50 transition-colors"
+                className="flex-1 rounded-lg border border-line py-2 text-sm font-medium text-ink hover:bg-gray-50 transition-colors"
               >
                 {t('mypage:actions.viewProfile')}
               </button>
               <button
                 onClick={() => onGo('/my/settings')}
-                className="rounded-lg border border-[#E5E0DC] px-3 py-2 text-sm font-medium text-[#131211] hover:bg-gray-50 transition-colors"
+                className="rounded-lg border border-line px-3 py-2 text-sm font-medium text-ink hover:bg-gray-50 transition-colors"
               >
                 {t('mypage:profile.edit')}
               </button>
               <button
                 onClick={handleLogout}
-                className="rounded-md border border-[#E5E0DC] p-2 text-[#71717A] hover:bg-gray-50 transition-colors"
+                className="rounded-md border border-line p-2 text-muted hover:bg-gray-50 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -459,13 +459,13 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
             {/* Size Status */}
             <button
               onClick={goToNailSizes}
-              className="flex items-center gap-3 rounded-xl bg-[#FFE5EA] px-4 py-3 w-full text-left hover:bg-[#FFD6DD] transition-colors"
+              className="flex items-center gap-3 rounded-xl bg-brand-100 px-4 py-3 w-full text-left hover:bg-brand-200 transition-colors"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#FF4D6D]">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand">
                 <Ruler className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
-                <div className="text-xs font-semibold text-[#991B1B]">{t('mypage:nailSize.myNailSize')}</div>
+                <div className="text-xs font-semibold text-red-800">{t('mypage:nailSize.myNailSize')}</div>
                 {nailSizeData ? (() => {
                   const allFingers = [
                     ...Object.values(nailSizeData.leftHand),
@@ -474,15 +474,15 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                   const measuredCount = allFingers.filter(v => v > 0).length;
                   const isComplete = measuredCount === 10;
                   return isComplete ? (
-                    <div className="text-sm font-medium text-[#131211]">{t('mypage:nailSize.measurementComplete')}</div>
+                    <div className="text-sm font-medium text-ink">{t('mypage:nailSize.measurementComplete')}</div>
                   ) : (
-                    <div className="text-sm font-medium text-[#FF4D6D]">{t('mypage:nailSize.measurementIncomplete', { count: measuredCount })}</div>
+                    <div className="text-sm font-medium text-brand">{t('mypage:nailSize.measurementIncomplete', { count: measuredCount })}</div>
                   );
                 })() : (
-                  <div className="text-sm font-medium text-[#71717A]">{t('mypage:nailSize.noMeasurement')}</div>
+                  <div className="text-sm font-medium text-muted">{t('mypage:nailSize.noMeasurement')}</div>
                 )}
               </div>
-              <ChevronIcon className="text-[#FF4D6D]" />
+              <ChevronIcon className="text-brand" />
             </button>
           </div>
 
@@ -497,10 +497,10 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                 key={stat.to}
                 href={stat.to}
                 onClick={(e) => { e.preventDefault(); onGo(stat.to); }}
-                className="flex-1 rounded-xl border border-[#E5E0DC] bg-white px-3 py-4 hover:bg-gray-50 transition-colors"
+                className="flex-1 rounded-xl border border-line bg-white px-3 py-4 hover:bg-gray-50 transition-colors"
               >
-                <div className="text-xs font-medium text-[#71717A]">{stat.label}</div>
-                <div className="mt-2 text-lg font-bold text-[#131211]">{stat.value}</div>
+                <div className="text-xs font-medium text-muted">{stat.label}</div>
+                <div className="mt-2 text-lg font-bold text-ink">{stat.value}</div>
               </a>
             ))}
           </div>
@@ -516,10 +516,10 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
                   className="flex items-center justify-between py-3 px-1 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-[#FF4D6D]">{t('mypage:actions.realtimeCustomerOrders')}</span>
-                    <span className="rounded-full bg-[#FF4D6D] text-white text-[10px] px-1.5 py-0.5 font-bold">NEW</span>
+                    <span className="text-sm font-semibold text-brand">{t('mypage:actions.realtimeCustomerOrders')}</span>
+                    <span className="rounded-full bg-brand text-white text-[10px] px-1.5 py-0.5 font-bold">NEW</span>
                   </div>
-                  <ChevronIcon className="text-[#FF4D6D]" />
+                  <ChevronIcon className="text-brand" />
                 </a>
               </>
             ) : (
@@ -717,7 +717,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
         <div className="hidden md:flex justify-end mb-6">
           <button
             onClick={() => setShowUploadModal(true)}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#E85A6B] text-white text-sm font-medium rounded-full hover:bg-[#D14A5B] transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand text-white text-sm font-medium rounded-full hover:bg-brand-600 transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -763,7 +763,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
                   onClick={() => setOpenDropdown(openDropdown === filter.key ? null : filter.key)}
                   className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-full border transition-all whitespace-nowrap ${
                     filter.value
-                      ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B] font-medium'
+                      ? 'border-brand bg-brand-50 text-brand font-medium'
                       : 'border-gray-200 text-gray-500 hover:border-gray-300'
                   }`}
                 >
@@ -783,7 +783,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
                     <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 min-w-[120px] py-1 max-h-60 overflow-y-auto">
                       <button
                         onClick={() => { filter.setter(''); setOpenDropdown(null); }}
-                        className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${!filter.value ? 'text-[#E85A6B] font-medium' : 'text-gray-600'}`}
+                        className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${!filter.value ? 'text-brand font-medium' : 'text-gray-600'}`}
                       >
                         전체
                       </button>
@@ -791,7 +791,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
                         <button
                           key={opt.value}
                           onClick={() => { filter.setter(opt.value); setOpenDropdown(null); }}
-                          className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${filter.value === opt.value ? 'text-[#E85A6B] font-medium' : 'text-gray-600'}`}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${filter.value === opt.value ? 'text-brand font-medium' : 'text-gray-600'}`}
                         >
                           {t(opt.labelKey)}
                         </button>
@@ -809,7 +809,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveTag(null)}
-                className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${!activeTag ? 'bg-[#E85A6B] text-white shadow-sm' : 'border border-[#E85A6B] text-[#E85A6B] bg-white hover:bg-[#FFF1F2]'}`}
+                className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${!activeTag ? 'bg-brand text-white shadow-sm' : 'border border-brand text-brand bg-white hover:bg-brand-50'}`}
               >
                 전체
               </button>
@@ -817,7 +817,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
                 <button
                   key={t.tag}
                   onClick={() => setActiveTag(t.tag)}
-                  className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${activeTag === t.tag ? 'bg-[#E85A6B] text-white shadow-sm' : 'border border-[#E85A6B] text-[#E85A6B] bg-white hover:bg-[#FFF1F2]'}`}
+                  className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${activeTag === t.tag ? 'bg-brand text-white shadow-sm' : 'border border-brand text-brand bg-white hover:bg-brand-50'}`}
                 >
                   #{t.tag}
                 </button>
@@ -939,7 +939,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
         {/* 로딩 more */}
         {loading && snaps.length > 0 && (
           <div className="text-center mt-8 mb-4">
-            <div className="inline-block w-6 h-6 border-2 border-gray-200 border-t-[#E85A6B] rounded-full animate-spin" />
+            <div className="inline-block w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
           </div>
         )}
       </div>
@@ -949,6 +949,7 @@ export function SnapPage({ onGo, onOpen, initialUpload = false }: { onGo: (to: s
         <SnapDetailModal
           snap={selectedSnap}
           onClose={handleCloseModal}
+          onCreatorClick={(uuid) => onGo(`/user/${uuid}`)}
           onProductClick={(id) => { onOpen(id); handleCloseModal(); }}
           onTagClick={(tag) => { setActiveTag(tag); handleCloseModal(); }}
           onDelete={(uuid) => { setSnaps(prev => prev.filter(s => (s.id || s.snapUuid) !== uuid)); handleCloseModal(); }}

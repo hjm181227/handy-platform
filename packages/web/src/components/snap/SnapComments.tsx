@@ -140,7 +140,7 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
       {/* 댓글 입력 */}
       <form onSubmit={handleSubmit} className="mt-3">
         {replyTo && (
-          <div className="flex items-center gap-2 mb-1.5 text-xs text-[#E85A6B]">
+          <div className="flex items-center gap-2 mb-1.5 text-xs text-brand">
             <span>{t('common:snap.replyTo', { nickname: replyTo.nickname })}</span>
             <button type="button" onClick={() => setReplyTo(null)} className="text-gray-400 hover:text-gray-600">
               ✕
@@ -158,7 +158,7 @@ export default function SnapComments({ snapUuid }: SnapCommentsProps) {
           <button
             type="submit"
             disabled={!newComment.trim() || submitting}
-            className="px-4 py-2 bg-[#E85A6B] text-white text-sm rounded-full hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-brand text-white text-sm rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? '...' : t('common:snap.post')}
           </button>

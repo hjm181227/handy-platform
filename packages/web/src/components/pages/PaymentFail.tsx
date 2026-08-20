@@ -112,7 +112,7 @@ export function PaymentFail({ onGo }: PaymentFailProps) {
               if (mode && allowed.includes(mode) && mode !== 'cart') url = `/checkout?mode=${mode}`;
               onGo(url);
             }}
-            className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
+            className="w-full bg-brand text-white py-2 px-4 rounded-lg hover:bg-brand-600"
           >
             {t('common:retryCheckout')}
           </button>

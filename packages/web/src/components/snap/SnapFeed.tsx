@@ -126,7 +126,7 @@ export default function SnapFeed({ onCreatorClick, onProductClick }: SnapFeedPro
 
       {/* 팔로잉 탭에서 trending 폴백 안내 */}
       {activeTab === 'following' && feedType === 'trending' && !loading && snaps.length > 0 && (
-        <div className="mb-4 px-4 py-3 bg-[#FFF1F2] text-[#E85A6B] text-sm rounded-lg">
+        <div className="mb-4 px-4 py-3 bg-brand-50 text-brand text-sm rounded-lg">
           아직 팔로우한 유저가 없어요. 인기 스냅을 보여드릴게요!
         </div>
       )}
@@ -168,7 +168,7 @@ export default function SnapFeed({ onCreatorClick, onProductClick }: SnapFeedPro
           {activeTab === 'following' && (
             <button
               onClick={() => setActiveTab('explore')}
-              className="mt-3 px-4 py-2 bg-[#E85A6B] text-white text-sm rounded-full hover:bg-[#D14A5B] transition-colors"
+              className="mt-3 px-4 py-2 bg-brand text-white text-sm rounded-full hover:bg-brand-600 transition-colors"
             >
               탐색에서 크리에이터 찾기
             </button>

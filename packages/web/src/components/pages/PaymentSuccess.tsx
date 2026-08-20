@@ -132,7 +132,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">{t('common:loadingOrder')}</p>
           <p className="text-gray-500 text-sm mt-2">{t('common:pleaseWait')}</p>
         </div>
@@ -150,7 +150,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           <div className="space-y-3">
             <button
               onClick={() => onGo('/cart')}
-              className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
+              className="w-full bg-brand text-white py-2 px-4 rounded-lg hover:bg-brand-600"
             >
               {t('common:goToCart')}
             </button>
@@ -175,7 +175,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           <p className="text-gray-600 mb-6">{t('common:orderNotFoundDesc')}</p>
           <button
             onClick={() => onGo('/')}
-            className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B]"
+            className="w-full bg-brand text-white py-2 px-4 rounded-lg hover:bg-brand-600"
           >
             {t('common:goHome')}
           </button>
@@ -227,7 +227,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('order:payment.paymentAmount')}</span>
-                  <span className="font-bold text-[#E85A6B]">
+                  <span className="font-bold text-brand">
                     {money(order.totalAmount || 0)}
                   </span>
                 </div>
@@ -274,7 +274,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
                         <p className="text-sm text-gray-600">{t('order:payment.quantityUnit', { count: item.quantity })}</p>
                         <p className="text-sm font-medium">{money(item.price || 0)}</p>
                         {item.subtotal && item.subtotal !== item.price && (
-                          <p className="text-sm font-semibold text-[#E85A6B]">{t('order:payment.subtotal')}: {money(item.subtotal)}</p>
+                          <p className="text-sm font-semibold text-brand">{t('order:payment.subtotal')}: {money(item.subtotal)}</p>
                         )}
                       </div>
                     </div>
@@ -304,7 +304,7 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             onClick={() => onGo(`/orders/${order.id}`)}
-            className="bg-[#E85A6B] text-white py-3 px-6 rounded-lg hover:bg-[#D14A5B] font-medium"
+            className="bg-brand text-white py-3 px-6 rounded-lg hover:bg-brand-600 font-medium"
           >
             {t('common:goToOrders')}
           </button>

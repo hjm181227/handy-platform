@@ -920,7 +920,9 @@ export type WebViewMessageType =
   | 'NAVIGATE_TO_MEASUREMENT'   // 손톱 사이즈 측정 화면으로 이동
   | 'NAVIGATE_TO_SIZES'         // 손톱 사이즈 목록 화면으로 이동
   | 'NAVIGATE_BACK'             // 뒤로가기
-  | 'CHAT_ROOM_STATE';          // 웹이 열고 있는 채팅방 ID (푸시 알림 억제용)
+  | 'CHAT_ROOM_STATE'           // 웹이 열고 있는 채팅방 ID (푸시 알림 억제용)
+  | 'LANGUAGE_CHANGED'          // 웹 언어 변경 알림 (네이티브 동기화는 추후, 현재는 무시)
+  | 'open-chat';                // 채팅 열기 (CHAT과 동일 처리)
 
 export interface WebViewMessage {
   type: WebViewMessageType;

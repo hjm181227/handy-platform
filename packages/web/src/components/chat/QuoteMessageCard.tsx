@@ -11,7 +11,7 @@ interface QuoteMessageCardProps {
 
 // 상태 설정
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-  pending:  { label: '대기중', bgColor: 'bg-[#FEF3C7]', textColor: 'text-[#D97706]' },
+  pending:  { label: '대기중', bgColor: 'bg-amber-100', textColor: 'text-amber-600' },
   accepted: { label: '수락됨', bgColor: 'bg-green-100', textColor: 'text-green-700' },
   rejected: { label: '거절됨', bgColor: 'bg-red-100',   textColor: 'text-red-700' },
   expired:  { label: '만료됨', bgColor: 'bg-gray-100',  textColor: 'text-gray-500' }
@@ -60,14 +60,14 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       });
   }, [quoteId]);
 
-  const cardClass = `w-[280px] max-w-full overflow-hidden bg-white border border-[#E5E0DC] ${
+  const cardClass = `w-[280px] max-w-full overflow-hidden bg-white border border-line ${
     isMine ? 'rounded-[16px_4px_16px_16px]' : 'rounded-[4px_16px_16px_16px]'
   }`;
 
   const cardHeader = (
     <div className="flex items-center gap-2 px-3.5 py-3">
       <Receipt className="w-[18px] h-[18px] text-green-500" />
-      <span className="font-bold text-[#131211] text-sm">견적서</span>
+      <span className="font-bold text-ink text-sm">견적서</span>
     </div>
   );
 
@@ -77,8 +77,8 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       <div className={cardClass}>
         {cardHeader}
         <div className="p-4 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
-          <span className="ml-2 text-sm text-[#A39E99]">로딩 중...</span>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
+          <span className="ml-2 text-sm text-muted">로딩 중...</span>
         </div>
       </div>
     );
@@ -90,9 +90,9 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       <div className={`${cardClass} cursor-pointer`} onClick={onClick}>
         {cardHeader}
         <div className="p-4 text-center">
-          <p className="text-sm text-[#A39E99]">견적서를 불러올 수 없습니다</p>
+          <p className="text-sm text-muted">견적서를 불러올 수 없습니다</p>
           <button
-            className="mt-2 text-sm text-[#E85A6B] hover:text-[#D44D5E] font-medium"
+            className="mt-2 text-sm text-brand hover:text-brand-600 font-medium"
             onClick={(e) => {
               e.stopPropagation();
               onClick();
@@ -122,7 +122,7 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
       {/* 헤더 */}
       <div className="flex items-center gap-2 px-3.5 py-3">
         <Receipt className="w-[18px] h-[18px] text-green-500" />
-        <span className="font-bold text-[#131211] text-sm">견적서</span>
+        <span className="font-bold text-ink text-sm">견적서</span>
         <span className={`ml-auto px-2 py-[3px] rounded-lg text-[11px] font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
           {statusConfig.label}
         </span>
@@ -133,13 +133,13 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
         {/* 가격 박스 */}
         <div className="bg-[#F0FDF4] rounded-[10px] px-3.5 py-3 space-y-1">
           <p className="text-[11px] font-medium text-[#16A34A]">견적 금액</p>
-          <p className="text-[22px] font-bold text-[#131211] leading-tight">
+          <p className="text-[22px] font-bold text-ink leading-tight">
             {formatPrice(data.price)}원
           </p>
         </div>
 
         {/* 예상 제작일 */}
-        <div className="flex items-center gap-1.5 text-xs text-[#A39E99]">
+        <div className="flex items-center gap-1.5 text-xs text-muted">
           <Timer className="w-3.5 h-3.5" />
           <span className="font-medium">예상 제작일: {data.processingDays}일</span>
         </div>
@@ -147,31 +147,31 @@ export function QuoteMessageCard({ quoteId, isMine, onClick }: QuoteMessageCardP
         {/* 판매자 정보 */}
         {data.sellerName && (
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
-              <Store className="w-3 h-3 text-[#A39E99]" />
+            <div className="w-6 h-6 rounded-full bg-surface-strong flex items-center justify-center flex-shrink-0">
+              <Store className="w-3 h-3 text-muted" />
             </div>
-            <span className="text-xs font-medium text-[#131211]">{data.sellerName}</span>
+            <span className="text-xs font-medium text-ink">{data.sellerName}</span>
           </div>
         )}
 
         {/* 메모 미리보기 */}
         {memoPreview && (
-          <div className="bg-[#FEF9E7] rounded-lg px-2.5 py-2 flex gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5 text-[#D97706] flex-shrink-0 mt-0.5" />
-            <p className="text-[11px] text-[#92400E] line-clamp-2">{memoPreview}</p>
+          <div className="bg-amber-50 rounded-lg px-2.5 py-2 flex gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-amber-800 line-clamp-2">{memoPreview}</p>
           </div>
         )}
       </div>
 
       {/* 푸터 - 견적서 보기 */}
       <div
-        className="h-10 flex items-center justify-center gap-1 border-t border-[#E5E0DC] bg-[#F7F5F3] cursor-pointer"
+        className="h-10 flex items-center justify-center gap-1 border-t border-line bg-surface cursor-pointer"
         onClick={(e) => {
           e.stopPropagation();
           onClick();
         }}
       >
-        <span className="text-[13px] font-semibold text-[#131211]">견적서 보기</span>
+        <span className="text-[13px] font-semibold text-ink">견적서 보기</span>
       </div>
     </div>
   );

@@ -365,7 +365,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
 
                     {/* First image badge */}
                     {idx === 0 && (
-                      <div className="absolute top-1.5 right-1.5 bg-[#E85A6B] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      <div className="absolute top-1.5 right-1.5 bg-brand text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                         {t('common:snap.representative')}
                       </div>
                     )}
@@ -412,7 +412,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                 {images.length < 10 && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-[3/4] rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-[#E85A6B] hover:text-[#E85A6B] transition-colors"
+                    className="aspect-[3/4] rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-brand hover:text-brand transition-colors"
                   >
                     <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
@@ -434,7 +434,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
               <button
                 onClick={handleNextStep}
                 disabled={images.length === 0 || images.some(i => i.uploading)}
-                className="w-full py-3 bg-[#E85A6B] text-white font-medium rounded-xl hover:bg-[#D14A5B] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 bg-brand text-white font-medium rounded-xl hover:bg-brand-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {images.some(i => i.uploading) ? t('common:snap.uploading') : t('common:next')}
               </button>
@@ -462,7 +462,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                   onChange={e => setTitle(e.target.value)}
                   maxLength={100}
                   placeholder={t('common:snap.titlePlaceholder')}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand focus:border-brand"
                 />
               </div>
 
@@ -475,7 +475,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                   maxLength={500}
                   rows={3}
                   placeholder={t('common:snap.descriptionPlaceholder')}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] resize-none"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand focus:border-brand resize-none"
                 />
                 <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/500</p>
               </div>
@@ -490,7 +490,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
                     placeholder={t('common:snap.tagPlaceholder')}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B]"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand"
                   />
                   <button
                     onClick={addTag}
@@ -503,7 +503,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {tags.map((tag, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full">
+                      <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 text-brand text-xs rounded-full">
                         #{tag}
                         <button onClick={() => removeTag(idx)} className="hover:text-blue-900">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -570,8 +570,8 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                         onClick={() => setSelectedNation(selectedNation === value ? '' : value)}
                         className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                           selectedNation === value
-                            ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
+                            ? 'bg-brand text-white border-brand'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-brand'
                         }`}
                       >
                         {label}
@@ -590,8 +590,8 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                         onClick={() => setSelectedShape(selectedShape === opt.value ? '' : opt.value)}
                         className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                           selectedShape === opt.value
-                            ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
+                            ? 'bg-brand text-white border-brand'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-brand'
                         }`}
                       >
                         {t(opt.labelKey)}
@@ -610,8 +610,8 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
                         onClick={() => setSelectedLength(selectedLength === opt.value ? '' : opt.value)}
                         className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                           selectedLength === opt.value
-                            ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
+                            ? 'bg-brand text-white border-brand'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-brand'
                         }`}
                       >
                         {t(opt.labelKey)}
@@ -625,7 +625,7 @@ const SnapUploadModal: React.FC<SnapUploadModalProps> = ({ isOpen, onClose, onSu
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full py-3 bg-[#E85A6B] text-white font-medium rounded-xl hover:bg-[#D14A5B] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 bg-brand text-white font-medium rounded-xl hover:bg-brand-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -666,8 +666,8 @@ const CategoryChipGroup: React.FC<CategoryChipGroupProps> = ({ label, options, s
           onClick={() => onToggle(opt.value)}
           className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
             selected.includes(opt.value)
-              ? 'bg-[#E85A6B] text-white border-[#E85A6B]'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-[#E85A6B]'
+              ? 'bg-brand text-white border-brand'
+              : 'bg-white text-gray-600 border-gray-200 hover:border-brand'
           }`}
         >
           {opt.label}

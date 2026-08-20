@@ -85,7 +85,11 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           await handleOAuth(message.data);
           break;
         case 'CHAT':
+        case 'open-chat':
           await handleChat(message.data);
+          break;
+        case 'LANGUAGE_CHANGED':
+          // 웹 내부 i18n으로 충분하므로 무시. 네이티브 언어 동기화는 추후 구현.
           break;
         case 'SAVE_IMAGE':
           await handleSaveImage(message.data);

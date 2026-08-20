@@ -16,9 +16,9 @@ interface SellerOrderCardProps {
 const ORDER_STATUS_MAP = {
   pending: { label: '대기중', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
   confirmed: { label: '확인됨', color: 'bg-blue-100 text-blue-800', icon: '✓' },
-  processing: { label: '처리중', color: 'bg-purple-100 text-purple-800', icon: '🔄' },
+  processing: { label: '처리중', color: 'bg-brand-100 text-brand-700', icon: '🔄' },
   shipped: { label: '배송중', color: 'bg-green-100 text-green-800', icon: '🚛' },
-  delivered: { label: '완료', color: 'bg-gray-100 text-gray-800', icon: '📦' },
+  delivered: { label: '완료', color: 'bg-surface-strong text-gray-800', icon: '📦' },
   cancelled: { label: '취소됨', color: 'bg-red-100 text-red-800', icon: '❌' },
 } as const;
 
@@ -194,7 +194,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
   const canCancel = ['pending', 'confirmed', 'processing'].includes(order.status);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-line overflow-hidden">
       <div className="p-4 sm:p-6">
         {/* 컴팩트한 헤더: 체크박스 + 주문번호 + 상태 */}
         <div className="flex items-center justify-between mb-4">
@@ -204,12 +204,12 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                 type="checkbox"
                 checked={isSelected}
                 onChange={onToggleSelection}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-brand border-line-strong rounded focus:ring-brand"
               />
             </label>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">주문번호:</span>
+              <span className="text-sm text-muted">주문번호:</span>
               <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${orderStatusConfig.color}`}>
                 {orderStatusConfig.icon} {orderStatusConfig.label}
@@ -218,7 +218,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
               <button
                 onClick={handleViewOrderDetail}
                 disabled={orderDetailLoading}
-                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 py-1 bg-surface text-gray-700 rounded text-xs font-medium hover:bg-surface-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {orderDetailLoading ? '로딩...' : '상세보기'}
               </button>
@@ -226,7 +226,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
               {order.customRequestUuid && (
                 <button
                   onClick={handleViewCustomOrder}
-                  className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-200 transition-colors flex items-center gap-1"
+                  className="px-2 py-1 bg-brand-50 text-brand rounded-full text-xs font-medium hover:bg-brand-100 transition-colors flex items-center gap-1"
                 >
                   <span>📋</span>
                   <span>주문서</span>
@@ -237,7 +237,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
 
           {/* 주문 메타 정보 - 모바일에서는 숨김 */}
           <div className="hidden sm:flex items-center gap-4 text-sm">
-            <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString('ko-KR', { 
+            <span className="text-xs text-muted">{new Date(order.createdAt).toLocaleString('ko-KR', { 
               year: 'numeric', 
               month: '2-digit', 
               day: '2-digit', 
@@ -245,7 +245,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
               minute: '2-digit' 
             })}</span>
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500">상품 총액:</span>
+              <span className="text-xs text-muted">상품 총액:</span>
               <span className="text-base font-semibold text-gray-900">{(order.totalAmount || 0).toLocaleString()}원</span>
             </div>
           </div>
@@ -253,7 +253,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
 
         {/* 모바일용 주문 메타 정보 */}
         <div className="sm:hidden flex flex-col gap-2 text-xs mb-4 pl-7">
-          <span className="text-gray-500">{new Date(order.createdAt).toLocaleString('ko-KR', { 
+          <span className="text-muted">{new Date(order.createdAt).toLocaleString('ko-KR', { 
             year: 'numeric', 
             month: '2-digit', 
             day: '2-digit', 
@@ -262,17 +262,17 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
           })}</span>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <span className="text-gray-500">상품 총액:</span>
+              <span className="text-muted">상품 총액:</span>
               <span className="text-sm font-semibold text-gray-900">{(order.totalAmount || 0).toLocaleString()}원</span>
             </div>
-            <span className="text-gray-500">상품 {(order.items || []).length}개</span>
+            <span className="text-muted">상품 {(order.items || []).length}개</span>
           </div>
         </div>
 
         {/* 처리할 상품 목록 - 메인 콘텐츠 */}
         <div className="space-y-3 mb-4">
           <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
             처리할 상품 {(order.items || []).length}개
@@ -288,9 +288,9 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
               const productName = item.productName || '상품명 없음';
 
               return (
-                <div key={index} className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                <div key={index} className="flex items-start gap-3 p-4 bg-brand-50 border border-brand-100 rounded-lg hover:bg-brand-100 transition-colors duration-200">
                   {/* 상품 이미지 - 더 크게 */}
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-surface rounded-lg flex items-center justify-center flex-shrink-0">
                     {(item as any).productImage ? (
                       <img
                         src={(item as any).productImage}
@@ -298,7 +298,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                         className="w-full h-full object-cover rounded-lg"
                       />
                     ) : (
-                      <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
                     )}
@@ -333,7 +333,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">수량:</span>
-                        <span className="text-sm font-medium text-blue-600">{quantity}개</span>
+                        <span className="text-sm font-medium text-brand">{quantity}개</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">가격:</span>
@@ -383,7 +383,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                     }
                   }
                 }}
-                className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                className="flex-1 sm:flex-none px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors duration-200 text-sm font-medium"
               >
                 <span className="sm:hidden">제작</span>
                 <span className="hidden sm:inline">제작 시작</span>
@@ -452,10 +452,10 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
 
         {/* 배송 정보 입력 폼 */}
         {showShippingForm && (
-          <div className="mt-4 p-6 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="mt-4 p-6 bg-brand-50 rounded-xl border border-brand-200">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
                 배송 정보 입력
@@ -466,7 +466,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                   setTrackingError('');
                   setTrackingNumber('');
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                className="text-muted hover:text-gray-600 transition-colors duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
@@ -488,7 +488,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                       handleTrackingNumberChange(trackingNumber);
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-0 transition-colors duration-200"
+                  className="w-full px-3 py-2 border border-line rounded-lg focus:border-brand focus:ring-0 transition-colors duration-200"
                 >
                   {SHIPPING_CARRIERS.map(carrier => (
                     <option key={carrier.code} value={carrier.code}>
@@ -511,7 +511,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                       ? 'border-red-300 focus:border-red-500' 
                       : trackingNumber && !trackingError
                         ? 'border-green-300 focus:border-green-500'
-                        : 'border-gray-200 focus:border-blue-500'
+                        : 'border-line focus:border-brand'
                   }`}
                 />
                 {trackingError && (
@@ -552,14 +552,14 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                   setTrackingError('');
                   setTrackingNumber('');
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                className="px-4 py-2 border border-line text-ink rounded-lg hover:bg-surface transition-all duration-200"
               >
                 취소
               </button>
               <button
                 onClick={handleShippingSubmit}
                 disabled={updating || !trackingNumber.trim() || !!trackingError}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+                className="px-6 py-2 bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
               >
                 {updating ? (
                   <>

@@ -148,14 +148,14 @@ export function QuoteFormModal({
           {/* 헤더 */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-[#E85A6B]" />
+              <Receipt className="w-5 h-5 text-brand" />
               <h2 className="text-lg font-bold text-gray-900">견적서 작성</h2>
             </div>
             <button
               onClick={handleClose}
               className="w-6 h-6 flex items-center justify-center flex-shrink-0"
             >
-              <X className="w-6 h-6 text-[#A39E99]" />
+              <X className="w-6 h-6 text-muted" />
             </button>
           </div>
 

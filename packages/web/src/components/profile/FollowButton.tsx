@@ -68,7 +68,7 @@ export default function FollowButton({
     <button
       onClick={handleClick}
       disabled={loading}
-      className={`${sizeClasses} rounded-full bg-[#E85A6B] text-white font-medium hover:bg-[#D14A5B] transition-colors disabled:opacity-50 ${className}`}
+      className={`${sizeClasses} rounded-full bg-brand text-white font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 ${className}`}
     >
       {t('profile.follow')}
     </button>

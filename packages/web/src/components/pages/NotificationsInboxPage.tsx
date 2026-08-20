@@ -61,7 +61,7 @@ export function NotificationsInboxPage({ onGo }: Props) {
   const hasUnread = notifications.some(notification => !notification.isRead);
 
   return (
-    <main className="min-h-screen bg-[#FAF8F7]">
+    <main className="min-h-screen bg-surface">
       <PageHeader onBack={() => onGo('/my')} title="알림" />
       <div className="mx-auto max-w-2xl px-4 py-6">
         <div className="mb-4 flex items-center justify-between">
@@ -69,7 +69,7 @@ export function NotificationsInboxPage({ onGo }: Props) {
             <h1 className="text-2xl font-bold text-gray-950">새 소식</h1>
             <p className="mt-1 text-sm text-gray-500">주문과 입점 신청의 중요한 변경 사항을 확인하세요.</p>
           </div>
-          {hasUnread && <button onClick={markAllAsRead} className="text-sm font-semibold text-[#D14A5B]">모두 읽음</button>}
+          {hasUnread && <button onClick={markAllAsRead} className="text-sm font-semibold text-brand-600">모두 읽음</button>}
         </div>
 
         {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
@@ -89,9 +89,9 @@ export function NotificationsInboxPage({ onGo }: Props) {
                 <button
                   key={notification._id}
                   onClick={() => openNotification(notification)}
-                  className={`group flex w-full gap-4 p-5 text-left transition hover:bg-gray-50 ${notification.isRead ? 'bg-white' : 'bg-[#FFF8F8]'}`}
+                  className={`group flex w-full gap-4 p-5 text-left transition hover:bg-gray-50 ${notification.isRead ? 'bg-white' : 'bg-brand-50'}`}
                 >
-                  <div className={`mt-1 h-2.5 w-2.5 flex-none rounded-full ${notification.isRead ? 'bg-gray-200' : 'bg-[#E85A6B]'}`} />
+                  <div className={`mt-1 h-2.5 w-2.5 flex-none rounded-full ${notification.isRead ? 'bg-gray-200' : 'bg-brand'}`} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <p className={`text-sm ${notification.isRead ? 'font-medium text-gray-800' : 'font-bold text-gray-950'}`}>{notification.title}</p>
@@ -99,7 +99,7 @@ export function NotificationsInboxPage({ onGo }: Props) {
                     </div>
                     <p className="mt-1.5 text-sm leading-6 text-gray-600">{notification.message}</p>
                     <div className="mt-2 flex items-center justify-between">
-                      {notification.data?.route ? <span className="text-xs font-semibold text-[#D14A5B]">자세히 보기 →</span> : <span />}
+                      {notification.data?.route ? <span className="text-xs font-semibold text-brand-600">자세히 보기 →</span> : <span />}
                       <span onClick={(event) => remove(event, notification._id)} className="text-xs text-gray-400 opacity-0 transition hover:text-red-600 group-hover:opacity-100">삭제</span>
                     </div>
                   </div>

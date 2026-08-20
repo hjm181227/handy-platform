@@ -676,7 +676,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
         sessionStorage.removeItem('checkout_mode');
         sessionStorage.removeItem('checkoutData');
         // 주문 완료 페이지로 이동
-        onGo(`/order-complete?orderId=${orderId}`);
+        onGo(`/orders/${orderId}`);
       } else {
         throw new Error(skipResponse.error || t('order:checkout.skipPaymentFailed'));
       }
@@ -782,7 +782,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">{t('order:checkout.preparing')}</p>
           <p className="text-sm text-gray-500 mt-2">{t('order:checkout.loadingCart')}</p>
         </div>
@@ -902,16 +902,16 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
             {/* 제작 및 배송 안내 */}
             {cart?.productionInfo && (
-              <div className="bg-[#FFF1F2] rounded-lg border border-[#E85A6B]/20 p-6">
+              <div className="bg-brand-50 rounded-lg border border-brand/20 p-6">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="text-[#E85A6B]">⏱️</span>
+                  <span className="text-brand">⏱️</span>
                   {t('order:checkout.productionInfo')}
                 </h2>
 
                 {/* 제작 소요 기간 */}
                 <div className="mb-4">
                   <div className="text-sm font-medium text-gray-700 mb-2">
-                    {t('order:checkout.totalProductionTime')}: <span className="text-[#E85A6B] font-bold">{cart.productionInfo.estimatedProductionTime}{t('order:checkout.daysUnit')}</span>
+                    {t('order:checkout.totalProductionTime')}: <span className="text-brand font-bold">{cart.productionInfo.estimatedProductionTime}{t('order:checkout.daysUnit')}</span>
                   </div>
                   <div className="text-sm text-gray-600">
                     {t('order:checkout.estimatedDelivery')}: {new Date(cart.productionInfo.earliestDeliveryDate).toLocaleDateString('ko-KR', {
@@ -935,7 +935,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                             <span className="font-medium">{schedule.sellerName || `${t('order:checkout.sellerLabel')} ${index + 1}`}</span>
                             <span className="text-gray-500 ml-2">({t('order:checkout.itemCount', { count: schedule.itemCount })})</span>
                           </div>
-                          <span className="text-[#E85A6B] font-medium">{t('order:checkout.daysRequired', { days: schedule.processingDays })}</span>
+                          <span className="text-brand font-medium">{t('order:checkout.daysRequired', { days: schedule.processingDays })}</span>
                         </div>
                         <div className="text-gray-600 mt-1">
                           {t('order:checkout.estimatedCompletion')}: {new Date(schedule.estimatedCompletionDate).toLocaleDateString('ko-KR', {
@@ -950,10 +950,10 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
 
                 {/* 배송비 추정 정보 */}
                 {cart.shippingEstimate && (
-                  <div className="mt-4 pt-4 border-t border-[#E85A6B]/20">
+                  <div className="mt-4 pt-4 border-t border-brand/20">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-700">{t('order:checkout.estimatedShipping')}</span>
-                      <span className="font-semibold text-[#E85A6B]">
+                      <span className="font-semibold text-brand">
                         {cart.shippingEstimate.estimatedCost === 0
                           ? t('order:checkout.freeShipping')
                           : `${money(cart.shippingEstimate.estimatedCost)}`}
@@ -976,7 +976,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                 {!showAddressForm && (
                   <button
                     onClick={handleAddNewAddress}
-                    className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium"
+                    className="text-sm text-brand hover:text-brand font-medium"
                   >
                     {t('order:shipping.addNewShort')}
                   </button>
@@ -991,7 +991,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   <p className="text-gray-500 mb-4">{t('order:checkout.addAddressPrompt')}</p>
                   <button
                     onClick={() => onGo('/my/shipping-address')}
-                    className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
+                    className="text-brand hover:text-brand text-sm font-medium"
                   >
                     {t('order:checkout.goToAddressPage')}
                   </button>
@@ -1008,7 +1008,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                         key={address.id}
                         className={`border rounded-lg cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-[#E85A6B] bg-[#FFF1F2]'
+                            ? 'border-brand bg-brand-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                         onClick={() => handleAddressSelect(address)}
@@ -1029,7 +1029,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                               {address.roadAddress}
                             </span>
                             {address.isDefault && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full font-medium flex-shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-50 text-brand text-xs rounded-full font-medium flex-shrink-0">
                                 <Star className="w-3 h-3 fill-current" />
                                 {t('order:checkout.defaultLabel')}
                               </span>
@@ -1048,7 +1048,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                                     {address.addressName || t('order:checkout.addressLabel')}
                                   </span>
                                   {address.isDefault && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFF1F2] text-[#E85A6B] text-xs rounded-full font-medium">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-50 text-brand text-xs rounded-full font-medium">
                                       <Star className="w-3 h-3 fill-current" />
                                       {t('order:checkout.defaultAddress')}
                                     </span>
@@ -1059,7 +1059,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                                     e.stopPropagation();
                                     handleEditAddress(address);
                                   }}
-                                  className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-[#E85A6B] hover:bg-[#FFF1F2] rounded-md transition-colors"
+                                  className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-brand hover:bg-brand-50 rounded-md transition-colors"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                   {t('order:checkout.editLabel')}
@@ -1209,7 +1209,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                     <span>{order.shippingCost > 0 ? money(order.shippingCost) : t('common:free')}</span>
                   </div>
                   {appliedCoupon && (
-                    <div className="flex justify-between text-[#E85A6B]">
+                    <div className="flex justify-between text-brand">
                       <span className="flex items-center gap-1.5">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -1228,7 +1228,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>{t('order:checkout.finalAmount')}</span>
-                    <span className="text-[#E85A6B]">{money(order.finalPrice)}</span>
+                    <span className="text-brand">{money(order.finalPrice)}</span>
                   </div>
                 </div>
               )}
@@ -1245,17 +1245,17 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded accent-[#E85A6B]"
+                  className="mt-0.5 w-4 h-4 rounded accent-brand"
                 />
                 <span className="text-sm text-gray-700">
-                  주문 내용을 확인했으며, <button type="button" onClick={() => window.open('/policy/terms', '_blank')} className="underline text-gray-900">이용약관</button> 및 <button type="button" onClick={() => window.open('/policy/privacy', '_blank')} className="underline text-gray-900">개인정보 처리방침</button>에 동의합니다. <span className="text-[#E85A6B]">(필수)</span>
+                  주문 내용을 확인했으며, <button type="button" onClick={() => window.open('/policy/terms', '_blank')} className="underline text-gray-900">이용약관</button> 및 <button type="button" onClick={() => window.open('/policy/privacy', '_blank')} className="underline text-gray-900">개인정보 처리방침</button>에 동의합니다. <span className="text-brand">(필수)</span>
                 </span>
               </label>
 
               <button
                 onClick={handlePayment}
                 disabled={processing || !agreedToTerms || !validateCheckout()}
-                className="w-full mt-4 bg-[#FF073A] text-white font-semibold py-3 rounded-lg hover:bg-[#E0062F] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-4 bg-brand text-white font-semibold py-3 rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed [font-variant-numeric:tabular-nums]"
               >
                 {processing ? t('order:checkout.processingPayment') : `${money(order?.finalPrice || 0)} ${t('order:checkout.placeOrder')}`}
               </button>

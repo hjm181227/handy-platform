@@ -47,7 +47,7 @@ export function TrackShipmentPage({ orderId, onGo }: { orderId: string; onGo: (t
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : error ? (
         <div className="text-center py-16 px-6">
@@ -83,7 +83,7 @@ export function TrackShipmentPage({ orderId, onGo }: { orderId: string; onGo: (t
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg text-sm font-medium hover:bg-[#D14A5B]"
+                        className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-600"
                       >
                         배송 추적
                       </a>

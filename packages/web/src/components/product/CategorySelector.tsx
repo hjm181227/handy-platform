@@ -111,7 +111,7 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
                 className={`
                   flex flex-col items-center gap-1 p-2 rounded-lg border transition-all duration-200
                   ${isSelected
-                    ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B]'
+                    ? 'border-brand bg-brand-50 text-brand'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }
                 `}

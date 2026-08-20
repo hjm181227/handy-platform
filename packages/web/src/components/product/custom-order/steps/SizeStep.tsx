@@ -130,25 +130,25 @@ export function SizeStep({
   // 체크 서클 컴포넌트
   const CheckCircle = ({ checked }: { checked: boolean }) =>
     checked ? (
-      <div className="w-7 h-7 bg-[#131211] rounded-full flex items-center justify-center flex-shrink-0">
+      <div className="w-7 h-7 bg-ink rounded-full flex items-center justify-center flex-shrink-0">
         <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
       </div>
     ) : (
-      <div className="w-7 h-7 border-2 border-[#E5E0DC] rounded-full flex-shrink-0" />
+      <div className="w-7 h-7 border-2 border-line rounded-full flex-shrink-0" />
     );
 
   // Empty State (NO DATA) 렌더링
   const renderEmptyState = () => (
     <div className="flex flex-col items-center py-6">
-      <div className="w-14 h-14 bg-[#F5F5F5] rounded-2xl flex items-center justify-center mb-3">
-        <Ruler className="w-7 h-7 text-[#D0C9C3]" />
+      <div className="w-14 h-14 bg-surface rounded-2xl flex items-center justify-center mb-3">
+        <Ruler className="w-7 h-7 text-line-strong" />
       </div>
-      <p className="text-[15px] font-semibold text-[#131211] mb-1">{t('product:customOrder.noSavedSize')}</p>
-      <p className="text-[13px] text-[#A39E99] mb-4">{t('product:customOrder.noSavedSizeDesc')}</p>
+      <p className="text-[15px] font-semibold text-ink mb-1">{t('product:customOrder.noSavedSize')}</p>
+      <p className="text-[13px] text-muted mb-4">{t('product:customOrder.noSavedSizeDesc')}</p>
       <button
         type="button"
         onClick={handleMeasure}
-        className="flex items-center gap-2 px-5 h-10 border border-[#131211] rounded-xl text-[14px] font-semibold text-[#131211] hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2 px-5 h-10 border border-ink rounded-xl text-[14px] font-semibold text-ink hover:bg-gray-50 transition-colors"
       >
         <ScanLine className="w-4 h-4" />
         {t('product:customOrder.measureSize')}
@@ -163,7 +163,7 @@ export function SizeStep({
     status: { measured: { finger: keyof FingerSizes; value: number }[]; missing: (keyof FingerSizes)[] },
   ) => (
     <div>
-      <p className="text-[15px] font-bold text-[#131211] mb-2">{label}</p>
+      <p className="text-[15px] font-bold text-ink mb-2">{label}</p>
 
       {/* 측정된 손가락 칩 */}
       {status.measured.length > 0 && (
@@ -171,7 +171,7 @@ export function SizeStep({
           {status.measured.map(({ finger, value }) => (
             <span
               key={finger}
-              className="text-xs font-medium text-[#131211] bg-[#F5F5F5] px-3 py-1.5 rounded-xl"
+              className="text-xs font-medium text-ink bg-surface px-3 py-1.5 rounded-xl"
             >
               {t(`nail:finger.${finger}`)}: {value}mm
             </span>
@@ -181,10 +181,10 @@ export function SizeStep({
 
       {/* 미측정 손가락 경고 블록 */}
       {status.missing.length > 0 && (
-        <div className="bg-[#FFF8F5] rounded-xl p-3 mt-1">
+        <div className="bg-surface rounded-xl p-3 mt-1">
           <div className="flex items-center gap-1.5 mb-2">
-            <CircleAlert className="w-4 h-4 text-[#E85A6B]" />
-            <span className="text-[13px] font-semibold text-[#E85A6B]">
+            <CircleAlert className="w-4 h-4 text-brand" />
+            <span className="text-[13px] font-semibold text-brand">
               {t('product:customOrder.remainingFingers', { count: status.missing.length })}
             </span>
           </div>
@@ -192,7 +192,7 @@ export function SizeStep({
             {status.missing.map(finger => (
               <span
                 key={finger}
-                className="text-xs font-medium text-[#A39E99] border border-[#D0C9C3] px-3 py-1.5 rounded-xl"
+                className="text-xs font-medium text-muted border border-line-strong px-3 py-1.5 rounded-xl"
               >
                 {t(`nail:finger.${finger}`)}: --
               </span>
@@ -201,7 +201,7 @@ export function SizeStep({
           <button
             type="button"
             onClick={handleMeasure}
-            className="flex items-center justify-center gap-2 w-full h-10 border-[1.5px] border-[#E85A6B] rounded-xl text-[13px] font-semibold text-[#E85A6B] hover:bg-red-50 transition-colors"
+            className="flex items-center justify-center gap-2 w-full h-10 border-[1.5px] border-brand rounded-xl text-[13px] font-semibold text-brand hover:bg-red-50 transition-colors"
           >
             <ScanLine className="w-4 h-4" />
             {t('product:customOrder.measureRemaining')}
@@ -222,7 +222,7 @@ export function SizeStep({
     return (
       <div className="space-y-3">
         {renderHandSection('leftHand', t('product:customOrder.leftHand'), leftStatus)}
-        <div className="border-t border-[#F5F5F5]" />
+        <div className="border-t border-surface" />
         {renderHandSection('rightHand', t('product:customOrder.rightHand'), rightStatus)}
       </div>
     );
@@ -246,19 +246,19 @@ export function SizeStep({
           className={`
             w-full text-left rounded-2xl p-5 transition-all cursor-pointer
             ${mode === 'saved'
-              ? 'border-2 border-[#131211] bg-white'
-              : 'border border-[#E5E0DC] bg-white'
+              ? 'border-2 border-ink bg-white'
+              : 'border border-line bg-white'
             }
           `}
         >
           {/* Header row */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center flex-shrink-0">
-              <Save className="w-5 h-5 text-[#A39E99]" />
+            <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center flex-shrink-0">
+              <Save className="w-5 h-5 text-muted" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-[#131211]">{t('product:customOrder.useSavedSize')}</p>
-              <p className="text-sm text-[#A39E99] mt-0.5">
+              <p className="font-bold text-ink">{t('product:customOrder.useSavedSize')}</p>
+              <p className="text-sm text-muted mt-0.5">
                 {t('product:customOrder.useSavedSizeDesc')}
               </p>
             </div>
@@ -267,7 +267,7 @@ export function SizeStep({
 
           {/* 선택 시 내용 표시 */}
           {mode === 'saved' && (
-            <div className="mt-4 pt-4 border-t border-[#F5F5F5]">
+            <div className="mt-4 pt-4 border-t border-surface">
               {renderSavedContent()}
             </div>
           )}
@@ -284,19 +284,19 @@ export function SizeStep({
           className={`
             w-full text-left rounded-2xl p-5 transition-all cursor-pointer
             ${mode === 'manual'
-              ? 'border-2 border-[#131211] bg-white'
-              : 'border border-[#E5E0DC] bg-white'
+              ? 'border-2 border-ink bg-white'
+              : 'border border-line bg-white'
             }
           `}
         >
           {/* Header row */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center flex-shrink-0">
-              <Pencil className="w-5 h-5 text-[#A39E99]" />
+            <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center flex-shrink-0">
+              <Pencil className="w-5 h-5 text-muted" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-[#131211]">{t('product:customOrder.manualInput')}</p>
-              <p className="text-sm text-[#A39E99] mt-0.5">
+              <p className="font-bold text-ink">{t('product:customOrder.manualInput')}</p>
+              <p className="text-sm text-muted mt-0.5">
                 {t('product:customOrder.manualInputDesc')}
               </p>
             </div>
@@ -309,15 +309,15 @@ export function SizeStep({
       {mode === 'manual' && (
         <>
           {/* 왼손/오른손 탭 */}
-          <div className="bg-[#F5F5F5] rounded-xl p-1 flex mb-5">
+          <div className="bg-surface rounded-xl p-1 flex mb-5">
             <button
               type="button"
               onClick={() => setActiveHand('left')}
               className={`
                 flex-1 py-2.5 text-sm font-semibold rounded-lg text-center transition-all
                 ${activeHand === 'left'
-                  ? 'bg-white text-[#131211] shadow-sm'
-                  : 'text-[#A39E99]'
+                  ? 'bg-white text-ink shadow-sm'
+                  : 'text-muted'
                 }
               `}
             >
@@ -329,8 +329,8 @@ export function SizeStep({
               className={`
                 flex-1 py-2.5 text-sm font-semibold rounded-lg text-center transition-all
                 ${activeHand === 'right'
-                  ? 'bg-white text-[#131211] shadow-sm'
-                  : 'text-[#A39E99]'
+                  ? 'bg-white text-ink shadow-sm'
+                  : 'text-muted'
                 }
               `}
             >
@@ -339,29 +339,29 @@ export function SizeStep({
           </div>
 
           {/* 입력 폼 */}
-          <div className="border border-[#E5E0DC] rounded-2xl p-4 space-y-4 mb-4">
+          <div className="border border-line rounded-2xl p-4 space-y-4 mb-4">
             {FINGER_ORDER.map((finger) => (
               <div key={finger} className="flex items-center gap-3">
-                <span className="w-10 text-[15px] font-semibold text-[#131211]">
+                <span className="w-10 text-[15px] font-semibold text-ink">
                   {t(`nail:finger.${finger}`)}
                 </span>
-                <div className="flex-1 flex items-center bg-[#F5F5F5] rounded-xl h-12 px-4">
+                <div className="flex-1 flex items-center bg-surface rounded-xl h-12 px-4">
                   <input
                     type="text"
                     inputMode="numeric"
                     value={sizes[activeHand][finger]}
                     onChange={(e) => onUpdateSize(activeHand, finger, e.target.value)}
                     placeholder="0"
-                    className="flex-1 bg-transparent text-base font-medium text-[#131211] outline-none placeholder-[#D5D0CC]"
+                    className="flex-1 bg-transparent text-base font-medium text-ink outline-none placeholder-[#D5D0CC]"
                   />
-                  <span className="text-sm font-medium text-[#A39E99] ml-2">mm</span>
+                  <span className="text-sm font-medium text-muted ml-2">mm</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* 안내 문구 */}
-          <p className="text-[13px] text-[#A39E99] text-center mb-4">
+          <p className="text-[13px] text-muted text-center mb-4">
             {t('product:customOrder.sizeInputHint')}
           </p>
         </>

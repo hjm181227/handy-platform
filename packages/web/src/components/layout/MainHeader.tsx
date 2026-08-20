@@ -229,7 +229,7 @@ export function MainHeader({
                   onFocus={handleSearchInputFocus}
                   onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                   placeholder={t('common:searchPlaceholder')}
-                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
+                  className="w-full pl-4 pr-20 py-2 bg-surface rounded-full focus:ring-2 focus:ring-brand-100 outline-none text-sm text-ink placeholder:text-muted"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                   {q && (
@@ -317,7 +317,7 @@ export function MainHeader({
                   <div className="border-t border-gray-100 p-3">
                     <button
                       onClick={() => submitSearch()}
-                      className="w-full text-left py-2 px-3 text-sm bg-[#FFF1F2] text-[#E85A6B] rounded hover:bg-[#E85A6B]/10 flex items-center gap-2 font-medium"
+                      className="w-full text-left py-2 px-3 text-sm bg-brand-50 text-brand rounded hover:bg-brand/10 flex items-center gap-2 font-medium"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -334,7 +334,7 @@ export function MainHeader({
             {authLoading ? (
               // 로딩 상태
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
+                <div className="w-6 h-6 border-2 border-brand-200 border-t-brand rounded-full animate-spin"></div>
                 <span className="text-sm text-gray-900">{t('common:verifying')}</span>
               </div>
             ) : user ? (
@@ -409,7 +409,7 @@ export function MainHeader({
                             console.log('Admin Center button clicked');
                             handleAdminCenter();
                           }}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-[#E85A6B]"
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-brand"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -574,7 +574,7 @@ export function MainHeader({
                   onFocus={handleSearchInputFocus}
                   onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                   placeholder={t('common:searchPlaceholder')}
-                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
+                  className="w-full pl-4 pr-20 py-2 bg-surface rounded-full focus:ring-2 focus:ring-brand-100 outline-none text-sm text-ink placeholder:text-muted"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                   {q && (
@@ -660,7 +660,7 @@ export function MainHeader({
                 <div className="border-t border-gray-100 p-3">
                   <button
                     onClick={() => submitSearch()}
-                    className="w-full text-left py-3 px-3 text-sm bg-[#FFF1F2] text-[#E85A6B] rounded hover:bg-[#E85A6B]/10 flex items-center gap-2 font-medium"
+                    className="w-full text-left py-3 px-3 text-sm bg-brand-50 text-brand rounded hover:bg-brand/10 flex items-center gap-2 font-medium"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

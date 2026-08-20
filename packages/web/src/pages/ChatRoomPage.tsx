@@ -87,10 +87,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 토큰 없으면 로딩 화면 표시 (리다이렉트 중)
   if (!token) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#F7F5F3]">
+      <div className="h-screen flex items-center justify-center bg-surface">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-          <p className="text-[#A39E99]">로그인 페이지로 이동 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+          <p className="text-muted">로그인 페이지로 이동 중...</p>
         </div>
       </div>
     );
@@ -374,10 +374,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 로딩 상태
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#F7F5F3]">
+      <div className="h-screen flex items-center justify-center bg-surface">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B] mx-auto mb-4"></div>
-          <p className="text-[#A39E99]">채팅방 로딩 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+          <p className="text-muted">채팅방 로딩 중...</p>
         </div>
       </div>
     );
@@ -427,7 +427,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#F7F5F3]">
+    <div className="h-screen flex flex-col bg-surface">
       {/* Header */}
       <div className="bg-white flex-shrink-0">
         <div className="h-16 flex items-center gap-3 px-4">
@@ -436,24 +436,24 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             className="flex-shrink-0"
             aria-label="뒤로가기"
           >
-            <ChevronLeft className="w-6 h-6 text-[#131211]" />
+            <ChevronLeft className="w-6 h-6 text-ink" />
           </button>
 
           {/* Avatar */}
           {partnerAvatar ? (
             <img src={partnerAvatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-[#F2EAE3] flex items-center justify-center flex-shrink-0">
-              <Store className="w-5 h-5 text-[#A39E99]" />
+            <div className="w-10 h-10 rounded-full bg-surface-strong flex items-center justify-center flex-shrink-0">
+              <Store className="w-5 h-5 text-muted" />
             </div>
           )}
 
           {/* Name + Connection */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold text-[#131211] truncate">{roomName}</h1>
+            <h1 className="text-base font-bold text-ink truncate">{roomName}</h1>
             <div className="flex items-center gap-1">
               <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-[#22C55E]' : 'bg-gray-400'}`}></span>
-              <span className={`text-[11px] font-medium ${isConnected ? 'text-[#22C55E]' : 'text-[#A39E99]'}`}>
+              <span className={`text-[11px] font-medium ${isConnected ? 'text-[#22C55E]' : 'text-muted'}`}>
                 {isConnected ? '연결됨' : '오프라인'}
               </span>
             </div>
@@ -467,7 +467,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
               aria-haspopup="menu"
               aria-expanded={showRoomMenu}
             >
-              <EllipsisVertical className="w-6 h-6 text-[#131211]" />
+              <EllipsisVertical className="w-6 h-6 text-ink" />
             </button>
 
             {showRoomMenu && (
@@ -479,7 +479,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                 />
                 <div
                   role="menu"
-                  className="absolute right-0 top-8 z-20 w-40 bg-white rounded-xl shadow-lg border border-[#E5E0DC] overflow-hidden"
+                  className="absolute right-0 top-8 z-20 w-40 bg-white rounded-xl shadow-lg border border-line overflow-hidden"
                 >
                   <button
                     role="menuitem"
@@ -487,7 +487,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       setShowRoomMenu(false);
                       setPendingAction('leave');
                     }}
-                    className="w-full px-4 py-3 text-left text-sm text-[#131211] hover:bg-[#F7F5F3]"
+                    className="w-full px-4 py-3 text-left text-sm text-ink hover:bg-surface"
                   >
                     채팅방 나가기
                   </button>
@@ -497,7 +497,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       setShowRoomMenu(false);
                       setPendingAction('block');
                     }}
-                    className="w-full px-4 py-3 text-left text-sm text-[#131211] hover:bg-[#F7F5F3] border-t border-[#F5F3F1]"
+                    className="w-full px-4 py-3 text-left text-sm text-ink hover:bg-surface border-t border-surface"
                   >
                     차단하기
                   </button>
@@ -507,7 +507,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       setShowRoomMenu(false);
                       setShowReportDialog(true);
                     }}
-                    className="w-full px-4 py-3 text-left text-sm text-[#E85A6B] hover:bg-[#FFF8F5] border-t border-[#F5F3F1]"
+                    className="w-full px-4 py-3 text-left text-sm text-brand hover:bg-surface border-t border-surface"
                   >
                     신고하기
                   </button>
@@ -516,7 +516,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             )}
           </div>
         </div>
-        <div className="h-px bg-[#E5E0DC]" />
+        <div className="h-px bg-line" />
       </div>
 
       {/* 연결 끊김 배너 — 이 상태에서는 전송이 불가능하므로 재시도를 제공한다 */}
@@ -568,13 +568,13 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
           {/* 이전 메시지 로딩 스피너 */}
           {isLoadingMore && (
             <div className="flex justify-center py-3">
-              <div className="w-5 h-5 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-brand border-t-transparent rounded-full animate-spin" />
             </div>
           )}
           {messages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#A39E99]">아직 메시지가 없습니다.</p>
-              <p className="text-[#A39E99] text-sm mt-2">첫 메시지를 보내보세요!</p>
+              <p className="text-muted">아직 메시지가 없습니다.</p>
+              <p className="text-muted text-sm mt-2">첫 메시지를 보내보세요!</p>
             </div>
           ) : (
             messages.map((message, index) => {
@@ -594,7 +594,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                   {/* 날짜 구분선 */}
                   {showDateSeparator && (
                     <div className="flex justify-center my-4">
-                      <span className="px-3 py-1 bg-white rounded-xl text-xs font-medium text-[#A39E99]">
+                      <span className="px-3 py-1 bg-white rounded-xl text-xs font-medium text-muted">
                         {formatDateSeparator(message.createdAt)}
                       </span>
                     </div>
@@ -613,8 +613,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                         partnerAvatar ? (
                           <img src={partnerAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#F2EAE3] flex items-center justify-center">
-                            <Store className="w-4 h-4 text-[#A39E99]" />
+                          <div className="w-8 h-8 rounded-full bg-surface-strong flex items-center justify-center">
+                            <Store className="w-4 h-4 text-muted" />
                           </div>
                         )
                       ) : (
@@ -627,7 +627,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                   <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%] min-w-0`}>
                     {/* 발신자 이름 (상대방 메시지, 그룹 시작시에만) */}
                     {!isMe && isGroupStart && (
-                      <span className="text-xs font-medium text-[#A39E99] mb-1">{roomName}</span>
+                      <span className="text-xs font-medium text-muted mb-1">{roomName}</span>
                     )}
 
                     {/* 메시지 버블 + 타임스탬프 */}
@@ -636,7 +636,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       {isMe && message.failed && message.clientMessageId && (
                         <button
                           onClick={() => retryMessage(message.clientMessageId!)}
-                          className="text-[11px] text-[#E85A6B] font-semibold self-end"
+                          className="text-[11px] text-brand font-semibold self-end"
                         >
                           재전송
                         </button>
@@ -646,7 +646,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       {isMe && selectedMessageId === message.id && !message.deleted && (
                         <button
                           onClick={() => handleDeleteMessage(message.id)}
-                          className="text-[11px] text-[#E85A6B] font-semibold self-end"
+                          className="text-[11px] text-brand font-semibold self-end"
                         >
                           삭제
                         </button>
@@ -656,9 +656,9 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       {isMe && isGroupEnd && (
                         <div className="flex flex-col items-end gap-1 text-[11px]">
                           {!message.read && !message.failed && (
-                            <span className="text-[#E85A6B] font-semibold">1</span>
+                            <span className="text-brand font-semibold">1</span>
                           )}
-                          <span className={`${message.failed ? 'text-[#E85A6B]' : 'text-[#A39E99]'}`}>{message.timestamp}</span>
+                          <span className={`${message.failed ? 'text-brand' : 'text-muted'}`}>{message.timestamp}</span>
                         </div>
                       )}
 
@@ -666,10 +666,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                       {message.deleted ? (
                         <div
                           className={`px-3.5 py-2.5 max-w-[280px] rounded-[16px] border border-dashed ${
-                            isMe ? 'border-[#E5D5D8]' : 'border-[#E5E0DC]'
+                            isMe ? 'border-[#E5D5D8]' : 'border-line'
                           }`}
                         >
-                          <p className="text-sm text-[#A39E99] italic">
+                          <p className="text-sm text-muted italic">
                             삭제된 메시지입니다
                           </p>
                         </div>
@@ -719,8 +719,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                           className={`
                             px-3.5 py-2.5 transition-all max-w-[280px]
                             ${isMe
-                              ? 'bg-[#FFE5EA] text-[#131211] rounded-[16px_4px_16px_16px] cursor-pointer'
-                              : 'bg-white text-[#131211] rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'
+                              ? 'bg-brand-100 text-ink rounded-[16px_4px_16px_16px] cursor-pointer'
+                              : 'bg-white text-ink rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)]'
                             }
                           `}
                         >
@@ -732,7 +732,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
                       {/* 상대방 메시지: 타임스탬프 (오른쪽) */}
                       {!isMe && isGroupEnd && (
-                        <span className="text-xs text-[#A39E99] self-end mb-0.5">
+                        <span className="text-xs text-muted self-end mb-0.5">
                           {message.timestamp}
                         </span>
                       )}
@@ -750,9 +750,9 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             <div className="flex items-center gap-2 mt-4 ml-10">
               <div className="bg-white rounded-[4px_16px_16px_16px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-3.5 py-2.5">
                 <div className="flex gap-1 items-center">
-                  <span className="w-1.5 h-1.5 bg-[#A39E99] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></span>
-                  <span className="w-1.5 h-1.5 bg-[#A39E99] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                  <span className="w-1.5 h-1.5 bg-[#A39E99] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                  <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: '0s' }}></span>
+                  <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                  <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
                 </div>
               </div>
             </div>
@@ -769,8 +769,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
           <button
             onClick={() => scrollToBottom()}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5
-                       px-4 py-2 bg-[#E85A6B] text-white text-xs font-semibold rounded-full
-                       shadow-lg hover:bg-[#D44D5E] transition-colors"
+                       px-4 py-2 bg-brand text-white text-xs font-semibold rounded-full
+                       shadow-lg hover:bg-brand-600 transition-colors"
           >
             <ArrowDown className="w-3.5 h-3.5" />
             새 메시지
@@ -800,29 +800,29 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
 
           {/* ✨ 다듬기 미리보기 — 적용해도 사용자가 수정 후 직접 전송한다 */}
           {assistPreview && (
-            <div className="mb-3 p-3 rounded-xl border border-[#E85A6B]/30 bg-[#FDF4F5]">
+            <div className="mb-3 p-3 rounded-xl border border-brand/30 bg-[#FDF4F5]">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#E85A6B]" />
-                <span className="text-xs font-semibold text-[#E85A6B]">다듬은 문장</span>
+                <Sparkles className="w-3.5 h-3.5 text-brand" />
+                <span className="text-xs font-semibold text-brand">다듬은 문장</span>
               </div>
-              <p className="text-sm text-[#131211] whitespace-pre-wrap break-words mb-2.5">{assistPreview}</p>
+              <p className="text-sm text-ink whitespace-pre-wrap break-words mb-2.5">{assistPreview}</p>
               <div className="flex gap-2">
                 <button
                   onClick={handleAssistApply}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#E85A6B] text-white hover:bg-[#D44D5E] transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand-600 transition-colors"
                 >
                   적용
                 </button>
                 <button
                   onClick={handleRefine}
                   disabled={isRefining}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-[#E5E0DC] text-[#131211] hover:bg-[#F7F5F3] transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-line text-ink hover:bg-surface transition-colors disabled:opacity-50"
                 >
                   {isRefining ? '다듬는 중...' : '다시 다듬기'}
                 </button>
                 <button
                   onClick={() => setAssistPreview(null)}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg text-[#A39E99] hover:bg-[#F7F5F3] transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg text-muted hover:bg-surface transition-colors"
                 >
                   닫기
                 </button>
@@ -842,10 +842,10 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="w-9 h-9 flex items-center justify-center bg-[#F7F5F3] hover:bg-[#EDE9E5] rounded-full transition-colors disabled:opacity-50 flex-shrink-0"
+              className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-[#EDE9E5] rounded-full transition-colors disabled:opacity-50 flex-shrink-0"
               aria-label="이미지 첨부"
             >
-              <Plus className="w-5 h-5 text-[#A39E99]" />
+              <Plus className="w-5 h-5 text-muted" />
             </button>
 
             <textarea
@@ -860,7 +860,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                     ? '이미지를 전송합니다...'
                     : '메시지 입력...'
               }
-              className="flex-1 h-10 px-4 py-2.5 bg-[#F7F5F3] rounded-[20px] resize-none focus:outline-none text-sm text-[#131211] placeholder:text-[#A39E99] disabled:opacity-60"
+              className="flex-1 h-10 px-4 py-2.5 bg-surface rounded-[20px] resize-none focus:outline-none text-sm text-ink placeholder:text-muted disabled:opacity-60"
               rows={1}
               disabled={!!selectedImage || isDegraded}
             />
@@ -872,15 +872,15 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                 className={`
                   w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0
                   ${inputText.trim() && !isRefining && !isDegraded && !selectedImage && actualRoomId
-                    ? 'bg-[#FDF4F5] text-[#E85A6B] hover:bg-[#FBE9EC]'
-                    : 'bg-[#F7F5F3] text-[#A39E99] cursor-not-allowed'
+                    ? 'bg-[#FDF4F5] text-brand hover:bg-[#FBE9EC]'
+                    : 'bg-surface text-muted cursor-not-allowed'
                   }
                 `}
                 aria-label="문장 다듬기"
                 title="문장 다듬기"
               >
                 {isRefining ? (
-                  <div className="w-4 h-4 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <Sparkles className="w-[18px] h-[18px]" />
                 )}
@@ -892,8 +892,8 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
               className={`
                 w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0
                 ${(inputText.trim() || selectedImage) && !isUploading && !isDegraded
-                  ? 'bg-[#E85A6B] text-white hover:bg-[#D44D5E]'
-                  : 'bg-[#F7F5F3] text-[#A39E99] cursor-not-allowed'
+                  ? 'bg-brand text-white hover:bg-brand-600'
+                  : 'bg-surface text-muted cursor-not-allowed'
                 }
               `}
             >
@@ -943,7 +943,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
               role="alertdialog"
               aria-modal="true"
             >
-              <h2 className="text-lg font-bold text-[#131211] mb-2">
+              <h2 className="text-lg font-bold text-ink mb-2">
                 {pendingAction === 'leave' ? '채팅방을 나갈까요?' : `${roomName}님을 차단할까요?`}
               </h2>
               <p className="text-sm text-[#6B6560] mb-6">
@@ -955,14 +955,14 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                 <button
                   onClick={() => setPendingAction(null)}
                   disabled={menuBusy}
-                  className="flex-1 py-3 bg-[#F7F5F3] text-[#131211] rounded-xl font-semibold hover:bg-[#EDE9E5] transition-colors disabled:opacity-50"
+                  className="flex-1 py-3 bg-surface text-ink rounded-xl font-semibold hover:bg-[#EDE9E5] transition-colors disabled:opacity-50"
                 >
                   취소
                 </button>
                 <button
                   onClick={confirmPendingAction}
                   disabled={menuBusy}
-                  className="flex-1 py-3 bg-[#E85A6B] text-white rounded-xl font-semibold hover:bg-[#D44D5E] transition-colors disabled:opacity-50"
+                  className="flex-1 py-3 bg-brand text-white rounded-xl font-semibold hover:bg-brand-600 transition-colors disabled:opacity-50"
                 >
                   {menuBusy ? '처리 중...' : pendingAction === 'leave' ? '나가기' : '차단하기'}
                 </button>

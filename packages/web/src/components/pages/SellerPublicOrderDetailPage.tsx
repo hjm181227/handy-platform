@@ -79,7 +79,7 @@ function Spinner({ className = '' }: { className?: string }) {
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#E85A6B] flex-shrink-0" />
+      <span className="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0" />
       {children}
     </h2>
   );
@@ -245,7 +245,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
             {/* Price */}
             <div>
               <label htmlFor="quote-price" className="block text-sm font-medium text-gray-700 mb-1.5">
-                견적 가격 <span className="text-[#E85A6B]">*</span>
+                견적 가격 <span className="text-brand">*</span>
               </label>
               <div className="relative">
                 <input
@@ -257,7 +257,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
                   onChange={e => setPrice(e.target.value)}
                   placeholder="예: 50000"
                   required
-                  className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                  className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">원</span>
               </div>
@@ -269,7 +269,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
             {/* Processing days */}
             <div>
               <label htmlFor="quote-days" className="block text-sm font-medium text-gray-700 mb-1.5">
-                제작 기간 <span className="text-[#E85A6B]">*</span>
+                제작 기간 <span className="text-brand">*</span>
               </label>
               <div className="relative">
                 <input
@@ -281,7 +281,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
                   onChange={e => setProcessingDays(e.target.value)}
                   placeholder="예: 7"
                   required
-                  className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                  className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">일</span>
               </div>
@@ -298,7 +298,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
                 value={sellerNotes}
                 onChange={e => setSellerNotes(e.target.value)}
                 placeholder="고객에게 전달할 메모를 입력해주세요"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
               />
             </div>
 
@@ -326,7 +326,7 @@ function QuoteFormModal({ onClose, onSubmit, submitting, submitError }: QuoteFor
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 py-3 bg-[#E85A6B] text-white text-sm font-semibold rounded-xl hover:bg-[#d44d5e] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-brand text-white text-sm font-semibold rounded-xl hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -516,7 +516,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
   const images = specs?.referenceImages ?? [];
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5]">
+    <div className="min-h-screen bg-surface">
       {/* ── Header ── */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="flex items-center gap-3 px-4 h-14">
@@ -536,7 +536,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
       {/* ── Loading ── */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-24 gap-3" aria-label="불러오는 중">
-          <Spinner className="w-8 h-8 text-[#E85A6B]" />
+          <Spinner className="w-8 h-8 text-brand" />
           <span className="text-sm text-gray-500">주문서 불러오는 중...</span>
         </div>
       )}
@@ -552,7 +552,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
           <p className="text-sm text-gray-600 text-center">{fetchError}</p>
           <button
             onClick={() => history.back()}
-            className="px-5 py-2.5 bg-[#E85A6B] text-white text-sm font-medium rounded-xl hover:bg-[#d44d5e] transition-colors"
+            className="px-5 py-2.5 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors"
           >
             돌아가기
           </button>
@@ -633,7 +633,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                           </td>
                           {FINGERS.map(finger => (
                             <td key={finger} className="py-2.5 px-1">
-                              <span className="inline-flex items-center justify-center w-8 h-8 bg-[#FCE8EB] text-[#E85A6B] text-xs font-bold rounded-full">
+                              <span className="inline-flex items-center justify-center w-8 h-8 bg-brand-50 text-brand text-xs font-bold rounded-full">
                                 {handSizes[finger] ?? '-'}
                               </span>
                             </td>
@@ -687,7 +687,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                   <button
                     key={idx}
                     onClick={() => setLightboxIndex(idx)}
-                    className="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-[#E85A6B] focus:ring-offset-1"
+                    className="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-1"
                     aria-label={`참고 이미지 ${idx + 1} 크게 보기`}
                   >
                     <img
@@ -704,14 +704,14 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
 
           {/* ── Already quoted card ── */}
           {alreadyQuoted && myQuote && (
-            <section className="bg-white rounded-2xl shadow-sm p-5 border border-[#E85A6B] border-opacity-30">
+            <section className="bg-white rounded-2xl shadow-sm p-5 border border-brand border-opacity-30">
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-5 h-5 rounded-full bg-[#E85A6B] flex items-center justify-center flex-shrink-0">
+                <span className="w-5 h-5 rounded-full bg-brand flex items-center justify-center flex-shrink-0">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </span>
-                <p className="text-sm font-semibold text-[#E85A6B]">견적을 이미 보냈습니다</p>
+                <p className="text-sm font-semibold text-brand">견적을 이미 보냈습니다</p>
               </div>
 
               <div className="space-y-3">
@@ -751,7 +751,7 @@ export function SellerPublicOrderDetailPage({ uuid, onGo }: { uuid: string; onGo
                 setSubmitError(null);
                 setShowQuoteModal(true);
               }}
-              className="w-full py-3.5 bg-[#E85A6B] text-white text-sm font-semibold rounded-xl hover:bg-[#d44d5e] active:bg-[#c44158] transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-brand text-white text-sm font-semibold rounded-xl hover:bg-brand-600 active:bg-[#c44158] transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

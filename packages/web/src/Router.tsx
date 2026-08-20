@@ -202,6 +202,8 @@ export function Router() {
   // Home page products state
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [loadingNewProducts, setLoadingNewProducts] = useState(false);
+  // 홈 랭킹 레일 (주간 판매량 상위 — /api/ranking 재사용)
+  const [homeRankings, setHomeRankings] = useState<HomeRankingItem[]>([]);
 
   // Brands state
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -235,6 +237,15 @@ export function Router() {
       setNewProducts([]);
     } finally {
       setLoadingNewProducts(false);
+    }
+    // 랭킹 레일은 부가 요소 — 실패해도 홈 렌더에 영향 없게 조용히 비운다
+    try {
+      const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || '';
+      const res = await fetch(`${baseUrl}/api/ranking?period=weekly&limit=10`);
+      const data = await res.json();
+      setHomeRankings(data?.success && Array.isArray(data?.data?.rankings) ? data.data.rankings : []);
+    } catch {
+      setHomeRankings([]);
     }
   };
 
@@ -398,6 +409,7 @@ export function Router() {
         likedProducts={likedProducts}
         newProducts={newProducts}
         loadingNewProducts={loadingNewProducts}
+        homeRankings={homeRankings}
         brands={brands}
         loadingBrands={loadingBrands}
       />
@@ -1042,7 +1054,7 @@ export function Router() {
             <p className="text-gray-600 mb-4">요청하신 관리자 페이지를 찾을 수 없습니다.</p>
             <button
               onClick={() => nav('/admin')}
-              className="px-4 py-2 bg-[#E85A6B] text-white rounded-md hover:bg-[#D14A5B]"
+              className="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-600"
             >
               관리자 대시보드로 돌아가기
             </button>
@@ -1099,6 +1111,7 @@ export function Router() {
         likedProducts={likedProducts}
         newProducts={newProducts}
         loadingNewProducts={loadingNewProducts}
+        homeRankings={homeRankings}
         brands={brands}
         loadingBrands={loadingBrands}
       />
@@ -1110,7 +1123,7 @@ export function Router() {
     screen = (
       <div className="min-h-[60vh] flex items-center justify-center px-6">
         <div className="text-center">
-          <p className="text-6xl font-bold text-[#E85A6B] mb-4">404</p>
+          <p className="text-6xl font-bold text-brand mb-4">404</p>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">페이지를 찾을 수 없습니다</h1>
           <p className="text-sm text-gray-500 mb-8">주소가 잘못되었거나, 삭제되었거나, 이동된 페이지입니다.</p>
           <div className="flex items-center justify-center gap-3">
@@ -1122,7 +1135,7 @@ export function Router() {
             </button>
             <button
               onClick={() => nav('/')}
-              className="px-5 py-2.5 bg-[#E85A6B] text-white rounded-lg text-sm font-medium hover:bg-[#D14A5B]"
+              className="px-5 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-600"
             >
               홈으로 가기
             </button>
@@ -1174,6 +1187,13 @@ export function Router() {
 /**
  * 홈 화면 컨텐츠 컴포넌트
  */
+/** /api/ranking 응답의 랭킹 항목 (홈 레일에 필요한 필드만) */
+interface HomeRankingItem {
+  rank: number;
+  product: { productUuid: string; name: string; image: string; price: number };
+  seller: { sellerUuid: string; name: string };
+}
+
 interface HomeContentProps {
   nav: (to: string) => void;
   openProduct: (id: string) => void;
@@ -1184,7 +1204,19 @@ interface HomeContentProps {
   loadingNewProducts: boolean;
   brands: Brand[];
   loadingBrands: boolean;
+  homeRankings: HomeRankingItem[];
 }
+
+/** 홈 쉐입 필터 칩 정의 — 서버 nailShape enum과 1:1 */
+const HOME_SHAPE_CHIPS: { label: string; value: string | null }[] = [
+  { label: '전체', value: null },
+  { label: '스틸레토', value: 'STILETTO' },
+  { label: '아몬드', value: 'ALMOND' },
+  { label: '코핀', value: 'COFFIN' },
+  { label: '스퀘어', value: 'SQUARE' },
+  { label: '라운드', value: 'ROUND' },
+  { label: '오발', value: 'OVAL' },
+];
 
 function HomeContent({
   nav,
@@ -1196,20 +1228,22 @@ function HomeContent({
   loadingNewProducts,
   brands,
   loadingBrands,
+  homeRankings,
 }: HomeContentProps) {
   const { t } = useTranslation('common');
+  const [shapeFilter, setShapeFilter] = useState<string | null>(null);
+  const filteredNewProducts = shapeFilter
+    ? newProducts.filter((p) => (p as any).nailShape === shapeFilter)
+    : newProducts;
   return (
     <>
       <EventBanners onGo={nav} />
 
-      {/* Custom Order CTA */}
+      {/* Custom Order CTA — 디자인 시스템 brand 토큰 (Screens/Home A안) */}
       <div className="mx-auto max-w-7xl px-4 mt-4">
         <button
           onClick={() => nav('/custom-order/new')}
-          className="w-full rounded-2xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #FF6B8A 0%, #FF8E9E 50%, #FFB5C0 100%)',
-          }}
+          className="w-full rounded-2xl overflow-hidden bg-brand hover:bg-brand-600 transition-colors"
         >
           <div className="flex items-center justify-between px-5 py-4">
             <div className="flex flex-col items-start gap-1">
@@ -1225,9 +1259,33 @@ function HomeContent({
         </button>
       </div>
 
+      {/* 쉐입 필터 칩 — 선택 시 ink 반전 (A안) */}
+      <div className="mx-auto max-w-7xl px-4 mt-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {HOME_SHAPE_CHIPS.map((chip) => {
+            const active = shapeFilter === chip.value;
+            return (
+              <button
+                key={chip.label}
+                onClick={() => setShapeFilter(chip.value)}
+                className={`flex-none h-[34px] px-3.5 rounded-full text-[13px] font-semibold border transition-colors ${
+                  active
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-white text-ink border-line hover:bg-surface'
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <SectionRow
         title={t('home.newProducts')}
-        items={newProducts}
+        sub="이번 주 새로 올라온 네일팁"
+        moreTo="/new"
+        items={filteredNewProducts}
         loading={loadingNewProducts}
         onOpen={openProduct}
         onAdd={addProduct}
@@ -1235,26 +1293,76 @@ function HomeContent({
         onGo={nav}
         likedProducts={likedProducts}
       />
+      {!loadingNewProducts && shapeFilter && filteredNewProducts.length === 0 && (
+        <div className="mx-auto max-w-7xl px-4 -mt-2">
+          <div className="border border-dashed border-line-strong rounded-2xl py-8 text-center">
+            <p className="text-sm font-semibold text-ink">이 쉐입의 신상품이 아직 없어요</p>
+            <p className="text-[12.5px] text-muted mt-1">전체 상품에서 {HOME_SHAPE_CHIPS.find(c=>c.value===shapeFilter)?.label} 쉐입을 찾아보세요</p>
+            <button
+              onClick={() => nav('/shop')}
+              className="mt-3.5 h-9 px-5 rounded-full bg-brand text-white text-[13px] font-semibold hover:bg-brand-600"
+            >
+              전체 상품 보기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 이번 주 랭킹 레일 (A안) */}
+      {homeRankings.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 mt-7">
+          <div className="mb-3 flex items-baseline justify-between">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-ink">이번 주 랭킹</h2>
+              <p className="text-[12.5px] text-muted mt-0.5">판매량 기준</p>
+            </div>
+            <button onClick={() => nav('/ranking')} className="text-[12.5px] font-semibold text-muted hover:text-ink">
+              전체
+            </button>
+          </div>
+          <div className="flex gap-3.5 overflow-x-auto pb-2 snap-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {homeRankings.map((r) => (
+              <button
+                key={r.product.productUuid}
+                onClick={() => openProduct(r.product.productUuid)}
+                className="w-[132px] flex-none snap-start text-left"
+              >
+                <div className="relative w-[132px] h-[132px] rounded-xl overflow-hidden bg-surface">
+                  <img src={r.product.image} alt={r.product.name} className="w-full h-full object-cover" />
+                  <span className="absolute bottom-2 left-2 w-6 h-6 rounded-full bg-ink text-white text-xs font-extrabold flex items-center justify-center [font-variant-numeric:tabular-nums]">
+                    {r.rank}
+                  </span>
+                </div>
+                <div className="text-[11.5px] font-semibold text-muted tracking-wide mt-2">{r.seller.name}</div>
+                <div className="text-sm font-semibold text-ink truncate mt-0.5">{r.product.name}</div>
+                <div className="text-[15px] font-extrabold text-ink mt-1 [font-variant-numeric:tabular-nums]">
+                  {r.product.price.toLocaleString('ko-KR')}<span className="text-xs font-semibold">원</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 브랜드별 상품 섹션 */}
       {loadingBrands ? (
         <div className="mx-auto max-w-7xl px-4 py-6">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="w-12 h-12 border-4 border-brand-200 border-t-brand rounded-full animate-spin mx-auto"></div>
           </div>
         </div>
       ) : (
         <div>
           {brands.filter(brand => brand.stats.totalProducts > 0).map((brand, brandIdx) => (
-            <section key={brand.sellerUuid || `brand-section-${brandIdx}`} className="mx-auto max-w-7xl px-4 mt-6">
+            <section key={brand.sellerUuid || `brand-section-${brandIdx}`} className="mx-auto max-w-7xl px-4 mt-7">
               <div className="mb-3 flex items-baseline justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base md:text-lg font-semibold">{brand.brandName}</h2>
-                  <span className="text-xs text-gray-500">{t('home.productCount', { count: brand.stats.totalProducts })}</span>
+                <div className="flex items-baseline gap-2">
+                  <h2 className="text-xl font-bold tracking-tight text-ink">{brand.brandName}</h2>
+                  <span className="text-[12.5px] text-muted">{t('home.productCount', { count: brand.stats.totalProducts })}</span>
                 </div>
                 <button
                   onClick={() => nav(`/brand/${encodeURIComponent(brand.sellerUuid)}`)}
-                  className="text-xs text-gray-500 hover:text-blue-600"
+                  className="text-[12.5px] font-semibold text-muted hover:text-ink"
                 >
                   {t('home.seeMore')}
                 </button>

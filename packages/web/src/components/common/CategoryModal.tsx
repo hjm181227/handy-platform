@@ -186,7 +186,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setShowSearchSuggestions(true)}
                     placeholder={t('common:searchPlaceholder')}
-                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm text-gray-700"
+                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none text-sm text-gray-700"
                   />
                   <button
                     type="submit"
@@ -250,7 +250,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-red-50 text-[#E85A5A]'
+                    ? 'bg-red-50 text-brand'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
@@ -264,14 +264,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
         <div className="flex flex-1 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12 w-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A5A]"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12 w-full">
               <p className="text-red-600 mb-4">{error}</p>
               <button
                 onClick={loadCategories}
-                className="px-4 py-2 bg-[#E85A5A] text-white rounded-lg hover:bg-[#d64a4a] transition-colors"
+                className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
               >
                 {t('common:retry')}
               </button>
@@ -292,7 +292,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                           onClick={() => setSelectedType(type)}
                           className={`w-full h-9 flex items-center justify-center text-[13px] transition-colors ${
                             selectedType === type
-                              ? 'text-[#E85A5A] font-semibold'
+                              ? 'text-brand font-semibold'
                               : 'text-[#666666]'
                           }`}
                         >
@@ -319,8 +319,8 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       <div className="flex flex-col gap-4">
                         {/* 섹션 헤더 (gap:6) */}
                         <div className="flex items-center gap-1.5">
-                          <span className="w-[3px] h-[18px] bg-[#E85A5A] rounded-sm"></span>
-                          <h3 className="text-base font-bold text-[#333333]">
+                          <span className="w-[3px] h-[18px] bg-brand rounded-sm"></span>
+                          <h3 className="text-base font-bold text-ink">
                             {t(`product:categoryType.${selectedType}`, { defaultValue: selectedType })}
                           </h3>
                         </div>
@@ -337,14 +337,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                                 <img
                                   src={category.iconUrl}
                                   alt={category.name}
-                                  className="w-[80px] h-[80px] rounded-full object-cover border border-[#E0E0E0]"
+                                  className="w-[80px] h-[80px] rounded-full object-cover border border-line"
                                 />
                               ) : (
-                                <div className="w-[80px] h-[80px] rounded-full bg-gray-100 border border-[#E0E0E0] flex items-center justify-center">
+                                <div className="w-[80px] h-[80px] rounded-full bg-gray-100 border border-line flex items-center justify-center">
                                   <span className="text-2xl text-gray-400">#</span>
                                 </div>
                               )}
-                              <span className="text-xs font-medium text-[#333333] text-center">
+                              <span className="text-xs font-medium text-ink text-center">
                                 {category.name}
                               </span>
                             </button>
@@ -373,7 +373,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       onChange={(e) => setBrandSearchQuery(e.target.value)}
                       onFocus={() => setBrandSearchFocused(true)}
                       placeholder={t('common:brandSearch')}
-                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm"
+                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none text-sm"
                     />
                     <button
                       type="submit"
@@ -386,7 +386,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       type="button"
                       onClick={handleBrandSearchCancel}
-                      className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium whitespace-nowrap"
+                      className="text-sm text-brand hover:text-brand font-medium whitespace-nowrap"
                     >
                       {t('common:cancel')}
                     </button>
@@ -396,14 +396,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
 
               {brandsLoading ? (
                 <div className="flex items-center justify-center py-12 w-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B]"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
                 </div>
               ) : brandsError ? (
                 <div className="text-center py-12 w-full">
                   <p className="text-red-600 mb-4">{brandsError}</p>
                   <button
                     onClick={() => loadBrands()}
-                    className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
+                    className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
                   >
                     {t('common:retry')}
                   </button>
@@ -418,7 +418,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       key={brand.sellerUuid}
                       onClick={() => handleBrandClick(brand.sellerUuid)}
-                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-[#E85A6B] hover:shadow-md transition-all group bg-white"
+                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-brand hover:shadow-md transition-all group bg-white"
                     >
                       {brand.brandProfile ? (
                         <img
@@ -433,7 +433,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                           </span>
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-[#E85A6B] text-center line-clamp-1">
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-brand text-center line-clamp-1">
                         {brand.brandName}
                       </span>
                     </button>
@@ -489,7 +489,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-red-50 text-[#E85A5A]'
+                  ? 'bg-red-50 text-brand'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
@@ -502,14 +502,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
         <div className="flex overflow-hidden md:max-h-[calc(80vh-180px)] md:min-h-[420px] max-md:flex-1">
           {loading ? (
             <div className="flex items-center justify-center py-12 w-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A5A]"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12 w-full">
               <p className="text-red-600 mb-4">{error}</p>
               <button
                 onClick={loadCategories}
-                className="px-4 py-2 bg-[#E85A5A] text-white rounded-lg hover:bg-[#d64a4a] transition-colors"
+                className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
               >
                 {t('common:retry')}
               </button>
@@ -530,7 +530,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                           onClick={() => setSelectedType(type)}
                           className={`w-full h-9 flex items-center justify-center text-[13px] transition-colors ${
                             selectedType === type
-                              ? 'text-[#E85A5A] font-semibold'
+                              ? 'text-brand font-semibold'
                               : 'text-[#666666]'
                           }`}
                         >
@@ -557,8 +557,8 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       <div className="flex flex-col gap-4">
                         {/* 섹션 헤더 (gap:6) */}
                         <div className="flex items-center gap-1.5">
-                          <span className="w-[3px] h-[18px] bg-[#E85A5A] rounded-sm"></span>
-                          <h3 className="text-base font-bold text-[#333333]">
+                          <span className="w-[3px] h-[18px] bg-brand rounded-sm"></span>
+                          <h3 className="text-base font-bold text-ink">
                             {t(`product:categoryType.${selectedType}`, { defaultValue: selectedType })}
                           </h3>
                         </div>
@@ -575,14 +575,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                                 <img
                                   src={category.iconUrl}
                                   alt={category.name}
-                                  className="w-[80px] h-[80px] rounded-full object-cover border border-[#E0E0E0]"
+                                  className="w-[80px] h-[80px] rounded-full object-cover border border-line"
                                 />
                               ) : (
-                                <div className="w-[80px] h-[80px] rounded-full bg-gray-100 border border-[#E0E0E0] flex items-center justify-center">
+                                <div className="w-[80px] h-[80px] rounded-full bg-gray-100 border border-line flex items-center justify-center">
                                   <span className="text-2xl text-gray-400">#</span>
                                 </div>
                               )}
-                              <span className="text-xs font-medium text-[#333333] text-center">
+                              <span className="text-xs font-medium text-ink text-center">
                                 {category.name}
                               </span>
                             </button>
@@ -611,7 +611,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                       onChange={(e) => setBrandSearchQuery(e.target.value)}
                       onFocus={() => setBrandSearchFocused(true)}
                       placeholder={t('common:brandSearch')}
-                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none text-sm"
+                      className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none text-sm"
                     />
                     <button
                       type="submit"
@@ -624,7 +624,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       type="button"
                       onClick={handleBrandSearchCancel}
-                      className="text-sm text-[#E85A6B] hover:text-[#E85A6B] font-medium whitespace-nowrap"
+                      className="text-sm text-brand hover:text-brand font-medium whitespace-nowrap"
                     >
                       {t('common:cancel')}
                     </button>
@@ -634,14 +634,14 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
 
               {brandsLoading ? (
                 <div className="flex items-center justify-center py-12 w-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E85A6B]"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
                 </div>
               ) : brandsError ? (
                 <div className="text-center py-12 w-full">
                   <p className="text-red-600 mb-4">{brandsError}</p>
                   <button
                     onClick={() => loadBrands()}
-                    className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
+                    className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
                   >
                     {t('common:retry')}
                   </button>
@@ -656,7 +656,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                     <button
                       key={brand.sellerUuid}
                       onClick={() => handleBrandClick(brand.sellerUuid)}
-                      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-lg border border-gray-200 hover:border-[#E85A6B] hover:shadow-md transition-all group bg-white"
+                      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-lg border border-gray-200 hover:border-brand hover:shadow-md transition-all group bg-white"
                     >
                       {brand.brandProfile ? (
                         <img
@@ -671,7 +671,7 @@ export function CategoryModal({ isOpen, onClose, onNavigate, isPage = false, car
                           </span>
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-[#E85A6B] text-center line-clamp-1">
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-brand text-center line-clamp-1">
                         {brand.brandName}
                       </span>
                     </button>

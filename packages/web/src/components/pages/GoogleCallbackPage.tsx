@@ -166,7 +166,7 @@ export function GoogleCallbackPage({ onGo }: GoogleCallbackPageProps) {
                 window.location.href = '/login';
               }
             }}
-            className="px-6 py-3 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors font-medium"
+            className="px-6 py-3 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
           >
             다시 로그인하기
           </button>
@@ -180,8 +180,8 @@ export function GoogleCallbackPage({ onGo }: GoogleCallbackPageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 bg-[#FFF1F2] rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -196,7 +196,7 @@ export function GoogleCallbackPage({ onGo }: GoogleCallbackPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-[#E85A6B]/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+        <div className="w-12 h-12 border-4 border-brand/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-gray-600">Google 로그인 처리 중...</p>
       </div>
     </div>

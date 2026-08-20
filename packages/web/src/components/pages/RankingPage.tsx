@@ -147,7 +147,7 @@ export function RankingPage({
             onClick={() => setActivePeriod('weekly')}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
               activePeriod === 'weekly'
-                ? 'bg-[#E85A6B] text-white'
+                ? 'bg-brand text-white'
                 : 'bg-white border hover:bg-gray-50'
             }`}
           >
@@ -157,7 +157,7 @@ export function RankingPage({
             onClick={() => setActivePeriod('monthly')}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
               activePeriod === 'monthly'
-                ? 'bg-[#E85A6B] text-white'
+                ? 'bg-brand text-white'
                 : 'bg-white border hover:bg-gray-50'
             }`}
           >
@@ -195,7 +195,7 @@ export function RankingPage({
             <h3 className="text-lg font-medium text-gray-600 mb-2">{error}</h3>
             <button
               onClick={() => fetchRankings(activePeriod)}
-              className="mt-4 px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] transition-colors"
+              className="mt-4 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-600 transition-colors"
             >
               {t('common:retry')}
             </button>

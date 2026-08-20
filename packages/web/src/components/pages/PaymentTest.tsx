@@ -222,7 +222,7 @@ export function PaymentTest({ onGo }: PaymentTestProps) {
               <button
                 onClick={checkAuth}
                 disabled={isLoading}
-                className="w-full bg-[#E85A6B] text-white py-2 px-4 rounded-lg hover:bg-[#D14A5B] disabled:opacity-50"
+                className="w-full bg-brand text-white py-2 px-4 rounded-lg hover:bg-brand-600 disabled:opacity-50"
               >
                 1. 인증 상태 확인
               </button>

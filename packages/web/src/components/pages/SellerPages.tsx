@@ -127,7 +127,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div
-                className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">{t('dashboard.loadingData')}</p>
             </div>
           </div>
@@ -165,17 +165,17 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
       <div className="space-y-6">
         {/* 상단 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+          <div className="bg-white rounded-xl p-6 border shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">{t('dashboard.todaySales')}</p>
               <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.today)}</p>
             </div>
-            <div className="w-12 h-12 bg-[#FFF1F2] rounded-full flex items-center justify-center flex-shrink-0">
-              <FaDollarSign className="w-6 h-6 text-[#E85A6B]" />
+            <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaDollarSign className="w-6 h-6 text-brand" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+          <div className="bg-white rounded-xl p-6 border shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">{t('dashboard.monthSales')}</p>
               <p className="text-2xl font-bold text-gray-900">{money(dashboardData.sales.month)}</p>
@@ -188,7 +188,7 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+          <div className="bg-white rounded-xl p-6 border shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">{t('dashboard.pendingOrders')}</p>
               <p className="text-2xl font-bold text-gray-900">{dashboardData.orders.pending}{t('dashboard.countUnit')}</p>
@@ -198,63 +198,63 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm flex justify-between items-start">
+          <div className="bg-white rounded-xl p-6 border shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">{t('dashboard.registeredProducts')}</p>
               <p className="text-2xl font-bold text-gray-900">{dashboardData.products.total}{t('dashboard.itemUnit')}</p>
               <p className="text-sm text-gray-600">{t('dashboard.activeCount', { count: dashboardData.products.active })}</p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <FaBox className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <FaBox className="w-6 h-6 text-brand" />
             </div>
           </div>
         </div>
 
         {/* 빠른 액션 버튼 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">{t('dashboard.quickActions')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => onGo('/seller/products/new')}
-              className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#E85A6B] hover:bg-[#FFF1F2] transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-dashed border-line-strong rounded-lg hover:border-brand hover:bg-brand-50 transition-colors"
             >
-              <FaPlus className="w-8 h-8 text-gray-400 mb-2" />
+              <FaPlus className="w-8 h-8 text-muted mb-2" />
               <span className="text-sm font-medium">{t('dashboard.registerProduct')}</span>
             </button>
 
             <button
               onClick={() => onGo('/seller/orders')}
-              className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-dashed border-line-strong rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
             >
-              <FaClipboardList className="w-8 h-8 text-gray-400 mb-2" />
+              <FaClipboardList className="w-8 h-8 text-muted mb-2" />
               <span className="text-sm font-medium">{t('dashboard.orderManagement')}</span>
             </button>
 
             <button
               onClick={() => onGo('/seller/analytics')}
-              className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-dashed border-line-strong rounded-lg hover:border-brand hover:bg-brand-50 transition-colors"
             >
-              <MdDashboard className="w-8 h-8 text-gray-400 mb-2" />
+              <MdDashboard className="w-8 h-8 text-muted mb-2" />
               <span className="text-sm font-medium">{t('dashboard.salesAnalytics')}</span>
             </button>
 
             <button
               onClick={() => onGo('/seller/settlement')}
-              className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-dashed border-line-strong rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
             >
-              <FaWallet className="w-8 h-8 text-gray-400 mb-2" />
+              <FaWallet className="w-8 h-8 text-muted mb-2" />
               <span className="text-sm font-medium">{t('dashboard.settlementManagement')}</span>
             </button>
           </div>
         </div>
 
         {/* 최근 주문 현황 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">{t('dashboard.recentOrders')}</h3>
             <button
               onClick={() => onGo('/seller/orders')}
-              className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
+              className="text-brand hover:text-brand text-sm font-medium"
             >
               {t('dashboard.viewAll')}
             </button>
@@ -264,15 +264,15 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
               <p className="text-2xl font-bold text-yellow-600">{dashboardData.orders.pending}</p>
               <p className="text-sm text-gray-600">{t('dashboard.pendingLabel')}</p>
             </div>
-            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
-              <p className="text-2xl font-bold text-[#E85A6B]">{dashboardData.orders.processing}</p>
+            <div className="text-center p-4 bg-brand-50 rounded-lg">
+              <p className="text-2xl font-bold text-brand">{dashboardData.orders.processing}</p>
               <p className="text-sm text-gray-600">{t('dashboard.processingLabel')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{dashboardData.orders.shipped}</p>
               <p className="text-sm text-gray-600">{t('dashboard.shippingLabel')}</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-surface rounded-lg">
               <p className="text-2xl font-bold text-gray-600">{dashboardData.orders.delivered}</p>
               <p className="text-sm text-gray-600">{t('dashboard.deliveredLabel')}</p>
             </div>
@@ -280,26 +280,26 @@ export function SellerDashboard({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 상품 현황 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">{t('dashboard.productStatus')}</h3>
             <button
               onClick={() => onGo('/seller/products')}
-              className="text-[#E85A6B] hover:text-[#E85A6B] text-sm font-medium"
+              className="text-brand hover:text-brand text-sm font-medium"
             >
               {t('dashboard.viewAll')}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
-              <p className="text-2xl font-bold text-[#E85A6B]">{dashboardData.products.total}</p>
+            <div className="text-center p-4 bg-brand-50 rounded-lg">
+              <p className="text-2xl font-bold text-brand">{dashboardData.products.total}</p>
               <p className="text-sm text-gray-600">{t('dashboard.totalProducts')}</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{dashboardData.products.active}</p>
               <p className="text-sm text-gray-600">{t('dashboard.onSale')}</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-surface rounded-lg">
               <p className="text-2xl font-bold text-gray-600">{dashboardData.products.inactive}</p>
               <p className="text-sm text-gray-600">{t('dashboard.inactive')}</p>
             </div>
@@ -414,9 +414,9 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
       case 'active':
         return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{t('products.onSale')}</span>;
       case 'inactive':
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">{t('products.inactive')}</span>;
+        return <span className="px-2 py-1 text-xs bg-surface-strong text-gray-800 rounded-full">{t('products.inactive')}</span>;
       default:
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">{t('products.unknown')}</span>;
+        return <span className="px-2 py-1 text-xs bg-surface-strong text-gray-800 rounded-full">{t('products.unknown')}</span>;
     }
   };
 
@@ -525,9 +525,9 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                 placeholder={t('products.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               />
-              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
+              <svg className="absolute left-3 top-2.5 h-5 w-5 text-muted" fill="none" stroke="currentColor"
                    viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -537,7 +537,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+              className="px-4 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
             >
               <option value="all">{t('products.allProducts')}</option>
               <option value="active">{t('products.onSale')}</option>
@@ -560,7 +560,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <button
               onClick={() => window.location.reload()}
               disabled={isLoading}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 flex items-center gap-2"
+              className="px-3 py-2 bg-surface text-gray-700 rounded-lg hover:bg-surface-strong disabled:opacity-50 flex items-center gap-2"
               title={t('products.refresh')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -572,7 +572,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
             <button
               onClick={() => onGo('/seller/products/bulk-upload')}
-              className="px-4 py-2 border border-[#E85A6B] text-[#E85A6B] rounded-lg hover:bg-[#FFF1F2] flex items-center gap-2"
+              className="px-4 py-2 border border-brand text-brand rounded-lg hover:bg-brand-50 flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -582,7 +582,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
 
             <button
               onClick={() => onGo('/seller/products/new')}
-              className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] flex items-center gap-2"
+              className="px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -593,12 +593,12 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 상품 목록 */}
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           {/* 로딩 상태 */}
           {isLoading && (
             <div className="flex justify-center items-center py-12">
               <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
                 <span className="text-gray-600">{t('products.loadingProducts')}</span>
               </div>
             </div>
@@ -617,7 +617,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               </div>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B]"
+                className="px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600"
               >
                 {t('common:retry')}
               </button>
@@ -629,45 +629,45 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-surface">
                   <tr>
                     <th className="px-3 py-3 w-10">
                       <input
                         type="checkbox"
                         checked={filteredProducts.length > 0 && selectedProductUuids.size === filteredProducts.length}
                         onChange={toggleSelectAll}
-                        className="h-4 w-4 text-[#E85A6B] rounded border-gray-300 focus:ring-[#E85A6B]"
+                        className="h-4 w-4 text-brand rounded border-line-strong focus:ring-brand"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.productHeader')}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">{t('products.productHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.priceHeader')}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">{t('products.priceHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.statusHeader')}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">{t('products.statusHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.salesHeader')}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">{t('products.salesHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.viewsHeader')}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">{t('products.viewsHeader')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('products.actionsHeader')}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">{t('products.actionsHeader')}
                     </th>
                   </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-line">
                   {filteredProducts.map((product) => (
-                    <tr key={product.productUuid} className={`hover:bg-gray-50 ${selectedProductUuids.has(product.productUuid) ? 'bg-pink-50' : ''}`}>
+                    <tr key={product.productUuid} className={`hover:bg-surface ${selectedProductUuids.has(product.productUuid) ? 'bg-brand-50' : ''}`}>
                       <td className="px-3 py-4 w-10">
                         <input
                           type="checkbox"
                           checked={selectedProductUuids.has(product.productUuid)}
                           onChange={() => toggleSelectProduct(product.productUuid)}
-                          className="h-4 w-4 text-[#E85A6B] rounded border-gray-300 focus:ring-[#E85A6B]"
+                          className="h-4 w-4 text-brand rounded border-line-strong focus:ring-brand"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
-                            className="h-12 w-12 rounded-lg object-cover bg-gray-100"
+                            className="h-12 w-12 rounded-lg object-cover bg-surface"
                             src={product.mainImageUrl || ''}
                             alt={product.name}
                             onError={(e) => {
@@ -677,7 +677,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                           />
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                            <div className="text-sm text-gray-500">업데이트: {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : product.createdAt}</div>
+                            <div className="text-sm text-muted">업데이트: {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : product.createdAt}</div>
                           </div>
                         </div>
                       </td>
@@ -687,25 +687,19 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(product.status || (product.isActive ? 'active' : 'inactive'))}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                         {(product.stats?.ordersCount || 0)}개
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                         {(product.stats?.viewsCount || 0).toLocaleString()}회
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
                             onClick={() => onGo(`/seller/products/${product.productUuid}/edit`)}
-                            className="text-[#E85A6B] hover:text-blue-900"
+                            className="text-brand hover:text-brand-700"
                           >
                             {t('products.edit')}
-                          </button>
-                          <button
-                            onClick={() => onGo(`/seller/products/${product.productUuid}/analytics`)}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            {t('products.analytics')}
                           </button>
                           <button
                             onClick={() => handleDeleteClick(product)}
@@ -724,17 +718,17 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               {/* 빈 상태 표시 */}
               {filteredProducts.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-lg border">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                  <svg className="mx-auto h-12 w-12 text-muted" fill="none" stroke="currentColor"
                        viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                           d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                   </svg>
                   <h3 className="mt-2 text-sm font-medium text-gray-900">{t('products.noProducts')}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{t('products.noProductsDesc')}</p>
+                  <p className="mt-1 text-sm text-muted">{t('products.noProductsDesc')}</p>
                   <div className="mt-6">
                     <button
                       onClick={() => onGo('/seller/products/new')}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#E85A6B] hover:bg-[#D14A5B]"
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-brand hover:bg-brand-600"
                     >
                       <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -767,13 +761,13 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             </div>
 
             <div className="mb-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 {t('products.deleteConfirm')}
               </p>
               <p className="text-sm font-medium text-gray-900 mt-2">
                 "{productToDelete.name}"
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {t('products.deleteIrreversible')}
               </p>
             </div>
@@ -782,7 +776,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               <button
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 border border-line rounded-lg text-gray-700 hover:bg-surface disabled:opacity-50"
               >
                 {t('common:cancel')}
               </button>
@@ -822,10 +816,10 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
             </div>
 
             <div className="mb-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 선택한 <span className="font-bold text-red-600">{selectedProductUuids.size}개</span>의 상품을 삭제하시겠습니까?
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {t('products.deleteIrreversible')}
               </p>
             </div>
@@ -834,7 +828,7 @@ export function SellerProducts({ onGo }: { onGo: (to: string) => void }) {
               <button
                 onClick={() => setShowBulkDeleteModal(false)}
                 disabled={isDeleting}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 border border-line rounded-lg text-gray-700 hover:bg-surface disabled:opacity-50"
               >
                 {t('common:cancel')}
               </button>
@@ -1705,7 +1699,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
       {isLoading && (
         <div className="flex justify-center items-center py-12">
           <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E85A6B]"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
             <span className="text-gray-600">{t('productForm.loadingProduct')}</span>
           </div>
         </div>
@@ -1729,7 +1723,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           </div>
         )}
         {/* 기본 정보 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
 
           {/* 상품 유형 선택 */}
@@ -1743,8 +1737,8 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 onClick={() => setFormData({ ...formData, productType: 'original' })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
                   formData.productType === 'original'
-                    ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B]'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    ? 'border-brand bg-brand-50 text-brand'
+                    : 'border-line bg-white text-gray-600 hover:border-line-strong'
                 }`}
               >
                 오리지널
@@ -1754,14 +1748,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 onClick={() => setFormData({ ...formData, productType: 'custom' })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
                   formData.productType === 'custom'
-                    ? 'border-[#E85A6B] bg-[#FFF1F2] text-[#E85A6B]'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    ? 'border-brand bg-brand-50 text-brand'
+                    : 'border-line bg-white text-gray-600 hover:border-line-strong'
                 }`}
               >
                 커스텀
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted mt-2">
               오리지널: 기성품 / 커스텀: 주문제작 상품
             </p>
           </div>
@@ -1773,7 +1767,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 type="button"
                 onClick={handleLoadOrderRequest}
                 disabled={loadingOrders}
-                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-surface hover:bg-surface-strong text-gray-700 font-medium rounded-lg border border-line transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingOrders ? (
                   <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
@@ -1808,7 +1802,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="네일 팁 상품명을 입력하세요"
               />
             </div>
@@ -1823,7 +1817,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 min="0"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="가격을 입력하세요"
               />
             </div>
@@ -1835,7 +1829,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               >
                 <option value="active">판매중</option>
                 <option value="inactive">판매중지</option>
@@ -1850,7 +1844,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="네일 팁에 대한 상세한 설명을 입력하세요"
               />
             </div>
@@ -1858,7 +1852,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         </div>
 
         {/* 판매 방식 선택 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">판매 방식을 선택해주세요 *</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
@@ -1866,36 +1860,36 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               onClick={() => setFormData({ ...formData, fulfillmentMode: 'stocked' })}
               className={`text-left py-4 px-4 rounded-lg border-2 transition-all ${
                 formData.fulfillmentMode === 'stocked'
-                  ? 'border-[#E85A6B] bg-[#FFF1F2]'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-brand bg-brand-50'
+                  : 'border-line bg-white hover:border-line-strong'
               }`}
             >
-              <div className={`font-semibold ${formData.fulfillmentMode === 'stocked' ? 'text-[#E85A6B]' : 'text-gray-800'}`}>
+              <div className={`font-semibold ${formData.fulfillmentMode === 'stocked' ? 'text-brand' : 'text-gray-800'}`}>
                 📦 기성 재고 판매
               </div>
-              <p className="text-xs text-gray-500 mt-1">만들어 둔 상품을 바로 발송</p>
-              <p className="text-xs text-gray-500">옵션(쉐입·길이)별 재고 관리</p>
+              <p className="text-xs text-muted mt-1">만들어 둔 상품을 바로 발송</p>
+              <p className="text-xs text-muted">옵션(쉐입·길이)별 재고 관리</p>
             </button>
             <button
               type="button"
               onClick={() => setFormData({ ...formData, fulfillmentMode: 'made_to_order' })}
               className={`text-left py-4 px-4 rounded-lg border-2 transition-all ${
                 formData.fulfillmentMode === 'made_to_order'
-                  ? 'border-[#E85A6B] bg-[#FFF1F2]'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-brand bg-brand-50'
+                  : 'border-line bg-white hover:border-line-strong'
               }`}
             >
-              <div className={`font-semibold ${formData.fulfillmentMode === 'made_to_order' ? 'text-[#E85A6B]' : 'text-gray-800'}`}>
+              <div className={`font-semibold ${formData.fulfillmentMode === 'made_to_order' ? 'text-brand' : 'text-gray-800'}`}>
                 🛠 주문 제작
               </div>
-              <p className="text-xs text-gray-500 mt-1">주문 받은 후 제작해 발송</p>
-              <p className="text-xs text-gray-500">쉐입·길이 커스텀 선택 가능</p>
+              <p className="text-xs text-muted mt-1">주문 받은 후 제작해 발송</p>
+              <p className="text-xs text-muted">쉐입·길이 커스텀 선택 가능</p>
             </button>
           </div>
         </div>
 
         {/* 네일 전용 설정 - 서버 API 스펙에 맞게 완전 재구성 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">네일 전용 설정</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1909,7 +1903,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                     required
                     value={formData.nailLength}
                     onChange={(e) => setFormData({ ...formData, nailLength: e.target.value as NailLength })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   >
                     <option value="SHORT">숏 (Short)</option>
                     <option value="MEDIUM">미디움 (Medium)</option>
@@ -1925,7 +1919,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                     required
                     value={formData.nailShape}
                     onChange={(e) => setFormData({ ...formData, nailShape: e.target.value as NailShape })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   >
                     <option value="ROUND">라운드 (Round)</option>
                     <option value="ALMOND">아몬드 (Almond)</option>
@@ -1961,10 +1955,10 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                     e.preventDefault();
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="제작에 필요한 일수를 입력하세요"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted mt-1">
                 주문 후 제작 완료까지 소요되는 일수입니다. (1~30일)
               </p>
             </div>
@@ -1980,7 +1974,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       type="checkbox"
                       checked={formData.lengthCustomizable}
                       onChange={(e) => setFormData({ ...formData, lengthCustomizable: e.target.checked })}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">길이 변경 가능</span>
                   </label>
@@ -1990,7 +1984,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       type="checkbox"
                       checked={formData.shapeCustomizable}
                       onChange={(e) => setFormData({ ...formData, shapeCustomizable: e.target.checked })}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">쉐잎 변경 가능</span>
                   </label>
@@ -2000,7 +1994,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       type="checkbox"
                       checked={formData.designCustomizable}
                       onChange={(e) => setFormData({ ...formData, designCustomizable: e.target.checked })}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">디자인 커스텀 가능</span>
                   </label>
@@ -2023,7 +2017,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         type="checkbox"
                         checked={selectedShapes.includes(shape)}
                         onChange={() => toggleShape(shape)}
-                        className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                        className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                       />
                       <span className="ml-1.5 text-sm text-gray-700">{NAIL_SHAPE_NAME[shape] || shape}</span>
                     </label>
@@ -2042,7 +2036,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         type="checkbox"
                         checked={selectedLengths.includes(length)}
                         onChange={() => toggleLength(length)}
-                        className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                        className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                       />
                       <span className="ml-1.5 text-sm text-gray-700">{NAIL_LENGTH_NAME[length] || length}</span>
                     </label>
@@ -2051,14 +2045,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               </div>
 
               {variantCombos.length === 0 ? (
-                <p className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-muted bg-surface border border-line rounded-lg p-4">
                   제공할 쉐입과 길이를 각각 1개 이상 선택하면 옵션 조합 표가 생성됩니다.
                 </p>
               ) : (
                 <>
-                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <div className="overflow-x-auto border border-line rounded-lg">
                     <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-surface">
                         <tr>
                           <th className="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">
                             조합 ({variantCombos.length}개 생성)
@@ -2073,8 +2067,8 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           const input = getVariantInput(key);
                           const stockNum = Math.max(0, parseInt(input.stock, 10) || 0);
                           return (
-                            <tr key={key} className={input.isActive ? '' : 'bg-gray-50'}>
-                              <td className={`px-3 py-2 whitespace-nowrap ${input.isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+                            <tr key={key} className={input.isActive ? '' : 'bg-surface'}>
+                              <td className={`px-3 py-2 whitespace-nowrap ${input.isActive ? 'text-gray-800' : 'text-muted'}`}>
                                 {NAIL_SHAPE_NAME[shape] || shape} · {NAIL_LENGTH_NAME[length] || length}
                                 {input.isActive && stockNum === 0 && (
                                   <span className="ml-2 text-xs font-medium text-orange-500">품절</span>
@@ -2088,7 +2082,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                                   value={input.stock}
                                   onChange={(e) => updateVariantInput(key, { stock: e.target.value.replace(/[^0-9]/g, '') })}
                                   disabled={!input.isActive}
-                                  className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                                  className="w-24 px-2 py-1.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent disabled:bg-surface disabled:text-muted"
                                   placeholder="0"
                                 />
                               </td>
@@ -2099,7 +2093,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                                   value={input.priceModifier}
                                   onChange={(e) => updateVariantInput(key, { priceModifier: e.target.value.replace(/[^0-9-]/g, '') })}
                                   disabled={!input.isActive}
-                                  className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                                  className="w-28 px-2 py-1.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent disabled:bg-surface disabled:text-muted"
                                   placeholder="0"
                                 />
                               </td>
@@ -2108,7 +2102,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                                   type="checkbox"
                                   checked={input.isActive}
                                   onChange={(e) => updateVariantInput(key, { isActive: e.target.checked })}
-                                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                                  className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                                 />
                               </td>
                             </tr>
@@ -2126,14 +2120,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         step="1"
                         value={bulkStock}
                         onChange={(e) => setBulkStock(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                        className="w-24 px-2 py-1.5 border border-line rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
                         placeholder="재고"
                       />
                       <button
                         type="button"
                         onClick={applyBulkStock}
                         disabled={bulkStock === ''}
-                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 text-sm font-medium border border-line rounded-lg text-gray-700 hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         재고 일괄 적용
                       </button>
@@ -2144,28 +2138,28 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         step="1"
                         value={bulkModifier}
                         onChange={(e) => setBulkModifier(e.target.value.replace(/[^0-9-]/g, ''))}
-                        className="w-28 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                        className="w-28 px-2 py-1.5 border border-line rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
                         placeholder="추가금"
                       />
                       <button
                         type="button"
                         onClick={applyBulkModifier}
                         disabled={bulkModifier === ''}
-                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 text-sm font-medium border border-line rounded-lg text-gray-700 hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         추가금 일괄 적용
                       </button>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+                  <div className="bg-surface border border-line rounded-lg px-4 py-3">
                     <p className="text-sm font-medium text-gray-800">
                       총 재고 {variantSummary.totalStock}개
-                      <span className="ml-1 font-normal text-gray-500">
+                      <span className="ml-1 font-normal text-muted">
                         (조합 {variantSummary.comboCount}개 중 판매 {variantSummary.activeCount}개)
                       </span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted mt-1">
                       대표 쉐입·길이는 첫 번째 판매 조합으로 자동 설정됩니다.
                     </p>
                   </div>
@@ -2176,14 +2170,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         </div>
 
         {/* 네일 카테고리 - 서버 API 스펙에 맞게 재구성 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">네일 카테고리</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 스타일 카테고리 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                스타일 <span className="text-xs text-gray-500">(최대 3개)</span>
+                스타일 <span className="text-xs text-muted">(최대 3개)</span>
               </label>
               <div className="space-y-2">
                 {categoryOptions.style.map(style => (
@@ -2205,7 +2199,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.style.includes(style.value) && formData.nailCategories.style.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{style.name}</span>
                   </label>
@@ -2216,7 +2210,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             {/* 색상 카테고리 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                색상 <span className="text-xs text-gray-500">(최대 3개)</span>
+                색상 <span className="text-xs text-muted">(최대 3개)</span>
               </label>
               <div className="space-y-2">
                 {categoryOptions.color.map(color => (
@@ -2238,7 +2232,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.color.includes(color.value) && formData.nailCategories.color.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{color.name}</span>
                   </label>
@@ -2249,7 +2243,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             {/* 텍스처 카테고리 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                텍스처 <span className="text-xs text-gray-500">(최대 3개)</span>
+                텍스처 <span className="text-xs text-muted">(최대 3개)</span>
               </label>
               <div className="space-y-2">
                 {categoryOptions.texture.map(texture => (
@@ -2271,7 +2265,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.texture.includes(texture.value) && formData.nailCategories.texture.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{texture.name}</span>
                   </label>
@@ -2282,7 +2276,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             {/* TPO 카테고리 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                TPO (착용 상황) <span className="text-xs text-gray-500">(최대 3개)</span>
+                TPO (착용 상황) <span className="text-xs text-muted">(최대 3개)</span>
               </label>
               <div className="space-y-2">
                 {categoryOptions.tpo.map(tpo => (
@@ -2304,7 +2298,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         });
                       }}
                       disabled={!formData.nailCategories.tpo.includes(tpo.value) && formData.nailCategories.tpo.length >= 3}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">{tpo.name}</span>
                   </label>
@@ -2315,7 +2309,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             {/* 국가별 스타일 */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                국가별 스타일 <span className="text-xs text-gray-500">(1개만 선택)</span>
+                국가별 스타일 <span className="text-xs text-muted">(1개만 선택)</span>
               </label>
               <div className="flex space-x-4">
                 {categoryOptions.nation.map(nation => (
@@ -2335,7 +2329,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           });
                         }
                       }}
-                      className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300"
+                      className="h-4 w-4 text-brand focus:ring-brand border-line-strong"
                     />
                     <span className="ml-2 text-sm text-gray-700">{nation.name}</span>
                   </label>
@@ -2346,7 +2340,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         </div>
 
         {/* 대표 이미지 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">대표 이미지</h3>
 
           <div className="flex flex-col items-center">
@@ -2368,7 +2362,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             ) : (
               <label
                 className={`w-48 h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center transition-colors cursor-pointer ${
-                  mainImageUploading ? 'border-[#E85A6B] bg-[#FFF1F2]' : 'border-gray-300 hover:border-[#E85A6B] hover:bg-[#FFF1F2]'
+                  mainImageUploading ? 'border-brand bg-brand-50' : 'border-line-strong hover:border-brand hover:bg-brand-50'
                 }`}>
                 <input
                   type="file"
@@ -2380,29 +2374,29 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 {mainImageUploading ? (
                   <>
                     <div
-                      className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <span className="text-sm text-[#E85A6B]">업로드 중...</span>
+                      className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <span className="text-sm text-brand">업로드 중...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 h-12 text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
-                    <span className="text-sm text-gray-500">대표 이미지 업로드</span>
+                    <span className="text-sm text-muted">대표 이미지 업로드</span>
                   </>
                 )}
               </label>
             )}
           </div>
 
-          <p className="text-sm text-gray-500 mt-4 text-center">
+          <p className="text-sm text-muted mt-4 text-center">
             상품 목록에 표시될 대표 이미지입니다. (필수)
           </p>
         </div>
 
         {/* 상세 이미지 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">상세 이미지</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2423,18 +2417,18 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   draggedIndex === index
                     ? 'opacity-50 scale-95 rotate-2'
                     : dragOverIndex === index
-                      ? 'border-[#E85A6B] bg-[#FFF1F2] scale-105'
-                      : 'hover:border-gray-400 hover:shadow-md'
+                      ? 'border-brand bg-brand-50 scale-105'
+                      : 'hover:border-line-strong hover:shadow-md'
                 }`}
               >
                 {/* 순서 번호와 드래그 핸들 */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-6 h-6 bg-[#E85A6B] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      className="w-6 h-6 bg-brand text-white rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
-                    <span className="text-sm text-gray-500">번째 이미지</span>
+                    <span className="text-sm text-muted">번째 이미지</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {/* 업로드 실패 표시 */}
@@ -2453,14 +2447,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         type="button"
                         onClick={() => retryImageUpload(index)}
                         disabled={detailImageUploading}
-                        className="px-2 py-1 text-xs bg-[#E85A6B] text-white rounded hover:bg-[#E85A6B] disabled:opacity-50"
+                        className="px-2 py-1 text-xs bg-brand text-white rounded hover:bg-brand-600 disabled:opacity-50"
                       >
                         재시도
                       </button>
                     )}
 
                     {/* 드래그 핸들 */}
-                    <div className="cursor-move text-gray-400 hover:text-gray-600">
+                    <div className="cursor-move text-muted hover:text-gray-600">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/>
                       </svg>
@@ -2496,7 +2490,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   placeholder="이미지 설명을 입력하세요"
                   value={image.description}
                   onChange={(e) => updateDetailImageDescription(index, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded text-sm resize-none focus:ring-2 focus:ring-brand focus:border-transparent"
                   rows={3}
                 />
               </div>
@@ -2506,7 +2500,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             {formData.detailImages.length < 10 && (
               <div
                 className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center transition-colors ${
-                  detailImageUploading ? 'border-[#E85A6B] bg-[#FFF1F2]' : 'border-gray-300 hover:border-[#E85A6B] hover:bg-[#FFF1F2]'
+                  detailImageUploading ? 'border-brand bg-brand-50' : 'border-line-strong hover:border-brand hover:bg-brand-50'
                 }`}>
                 <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
                   <input
@@ -2519,19 +2513,19 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                   {detailImageUploading ? (
                     <>
                       <div
-                        className="w-8 h-8 border-2 border-[#E85A6B] border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <span className="text-sm text-[#E85A6B]">업로드 중...</span>
+                        className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mb-2"></div>
+                      <span className="text-sm text-brand">업로드 중...</span>
                     </>
                   ) : (
                     <>
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                        <span className="text-sm font-bold text-gray-500">{formData.detailImages.length + 1}</span>
+                      <div className="w-8 h-8 bg-surface rounded-full flex items-center justify-center mb-2">
+                        <span className="text-sm font-bold text-muted">{formData.detailImages.length + 1}</span>
                       </div>
-                      <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-8 h-8 text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                       </svg>
-                      <span className="text-sm text-gray-500 text-center">
+                      <span className="text-sm text-muted text-center">
                         {formData.detailImages.length + 1}번째<br/>상세 이미지 추가
                       </span>
                     </>
@@ -2541,17 +2535,17 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             )}
           </div>
 
-          <div className="mt-6 p-4 bg-[#FFF1F2] rounded-lg">
+          <div className="mt-6 p-4 bg-brand-50 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 text-[#E85A6B] mt-0.5">
+              <div className="w-5 h-5 text-brand mt-0.5">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <div className="text-sm text-[#E85A6B]">
+              <div className="text-sm text-brand">
                 <p className="font-medium mb-1">상세 이미지 관리 팁</p>
-                <ul className="space-y-1 text-[#E85A6B]">
+                <ul className="space-y-1 text-brand">
                   <li>• 드래그하여 이미지 순서를 변경할 수 있습니다</li>
                   <li>• 각 이미지에 설명을 추가하면 고객이 더 잘 이해할 수 있어요</li>
                   <li>• 최대 10장까지 업로드 가능합니다</li>
@@ -2562,17 +2556,17 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
         </div>
 
         {/* 상품 태그 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">상품 태그</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                태그 추가 <span className="text-xs text-gray-500">(최대 20개, 엔터 또는 쉽표로 구분)</span>
+                태그 추가 <span className="text-xs text-muted">(최대 20개, 엔터 또는 쉽표로 구분)</span>
               </label>
               <input
                 type="text"
                 placeholder="태그를 입력하고 엔터를 누르세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ',') {
                     e.preventDefault();
@@ -2595,7 +2589,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                 {formData.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#FFF1F2] text-[#D14A5B]"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-brand-50 text-brand-600"
                   >
                     {tag}
                     <button
@@ -2604,7 +2598,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         const newTags = formData.tags.filter((_, i) => i !== index);
                         setFormData({ ...formData, tags: newTags });
                       }}
-                      className="ml-2 text-[#E85A6B] hover:text-[#D14A5B]"
+                      className="ml-2 text-brand hover:text-brand-600"
                     >
                       ×
                     </button>
@@ -2613,42 +2607,42 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               </div>
             )}
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted">
               상품의 특징, 색상, 스타일 등을 태그로 추가하면 검색에서 찾기 쉬워집니다.
             </p>
           </div>
         </div>
 
         {/* 상품 옵션 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">상품 옵션</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <label className="flex items-center p-4 border border-line rounded-lg hover:bg-surface">
                 <input
                   type="checkbox"
                   checked={formData.isFeatured}
                   onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                  className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                 />
                 <div className="ml-3">
                   <span className="text-sm font-medium text-gray-900">추천 상품 설정</span>
-                  <p className="text-xs text-gray-500">메인 페이지 추천 영역에 노출</p>
+                  <p className="text-xs text-muted">메인 페이지 추천 영역에 노출</p>
                 </div>
               </label>
             </div>
 
             <div className="space-y-4">
-              <label className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <label className="flex items-center p-4 border border-line rounded-lg hover:bg-surface">
                 <input
                   type="checkbox"
                   checked={formData.isNewProduct}
                   onChange={(e) => setFormData({ ...formData, isNewProduct: e.target.checked })}
-                  className="h-4 w-4 text-[#E85A6B] focus:ring-[#E85A6B] border-gray-300 rounded"
+                  className="h-4 w-4 text-brand focus:ring-brand border-line-strong rounded"
                 />
                 <div className="ml-3">
                   <span className="text-sm font-medium text-gray-900">신상품 설정</span>
-                  <p className="text-xs text-gray-500">상품에 'NEW' 배지 표시</p>
+                  <p className="text-xs text-muted">상품에 'NEW' 배지 표시</p>
                 </div>
               </label>
             </div>
@@ -2660,14 +2654,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
           <button
             type="button"
             onClick={() => onGo('/seller/products')}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-line rounded-lg text-gray-700 hover:bg-surface"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 bg-[#E85A6B] text-white rounded-lg hover:bg-[#D14A5B] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? t('productForm.saving') : isEdit ? t('productForm.editComplete') : t('productForm.registerComplete')}
           </button>
@@ -2683,7 +2677,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               <h3 className="text-lg font-semibold">주문서 선택</h3>
               <button
                 onClick={() => setShowOrderModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted hover:text-gray-600"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2694,14 +2688,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             <div className="flex-1 overflow-y-auto">
               {loadingOrders ? (
                 <div className="flex items-center justify-center py-8">
-                  <svg className="animate-spin w-8 h-8 text-[#E85A6B]" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin w-8 h-8 text-brand" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 </div>
               ) : customOrders.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center py-8 text-muted">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-line-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <p>등록 가능한 주문서가 없습니다.</p>
@@ -2714,7 +2708,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                       key={order.id}
                       onClick={() => handleSelectOrder(order.id)}
                       disabled={loadingOrders}
-                      className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left transition-colors disabled:opacity-50"
+                      className="w-full p-4 border rounded-lg hover:bg-surface text-left transition-colors disabled:opacity-50"
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -2722,7 +2716,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                           {order.requestedDesign && (
                             <div className="text-sm text-gray-600 mt-1 line-clamp-2">{order.requestedDesign}</div>
                           )}
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="text-xs text-muted mt-1">
                             {new Date(order.createdAt).toLocaleDateString('ko-KR', {
                               year: 'numeric',
                               month: 'long',
@@ -2732,12 +2726,12 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {order.nailShape && (
-                            <span className="text-xs bg-[#FFF1F2] text-[#E85A6B] px-2 py-0.5 rounded">
+                            <span className="text-xs bg-brand-50 text-brand px-2 py-0.5 rounded">
                               {order.nailShape}
                             </span>
                           )}
                           {order.nailLength && (
-                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                            <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded">
                               {order.nailLength}
                             </span>
                           )}
@@ -2752,7 +2746,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             <div className="mt-4 pt-4 border-t">
               <button
                 onClick={() => setShowOrderModal(false)}
-                className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-full py-2 bg-surface text-gray-700 rounded-lg hover:bg-surface-strong transition-colors"
               >
                 닫기
               </button>
@@ -2863,7 +2857,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
       <SellerLayout title="매출 분석" onGo={onGo}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">분석 데이터를 불러오는 중...</p>
           </div>
         </div>
@@ -2896,7 +2890,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as '6m' | '1y')}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-transparent"
+            className="px-4 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="6m">최근 6개월</option>
             <option value="1y">최근 1년</option>
@@ -2905,7 +2899,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
 
         {/* 매출 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
+          <div className="bg-white rounded-xl p-6 border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">이번 달 매출</p>
@@ -2915,7 +2909,7 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
                     {analyticsData.revenue.growth >= 0 ? '+' : ''}{analyticsData.revenue.growth}% vs 지난 달
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-400 mt-1">전월 데이터 없음</p>
+                  <p className="text-sm text-muted mt-1">전월 데이터 없음</p>
                 )}
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -2927,15 +2921,15 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
+          <div className="bg-white rounded-xl p-6 border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">이번 달 주문</p>
                 <p className="text-3xl font-bold text-gray-900">{analyticsData.orders.monthly}건</p>
                 <p className="text-sm text-gray-600 mt-1">누적 주문: {analyticsData.orders.total}건</p>
               </div>
-              <div className="w-12 h-12 bg-[#FFF1F2] rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#E85A6B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
@@ -2943,14 +2937,14 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border shadow-sm">
+          <div className="bg-white rounded-xl p-6 border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">평균 주문 금액 (이번 달)</p>
                 <p className="text-3xl font-bold text-gray-900">{money(analyticsData.orders.avgOrderValue)}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                 </svg>
@@ -2960,10 +2954,10 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 월별 매출 차트 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">월별 매출 추이</h3>
           {analyticsData.revenue.chart.length === 0 ? (
-            <div className="h-40 flex items-center justify-center text-gray-400">
+            <div className="h-40 flex items-center justify-center text-muted">
               아직 매출 데이터가 없습니다
             </div>
           ) : (
@@ -2975,11 +2969,11 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center">
                     <div
-                      className="w-full bg-[#E85A6B] rounded-t transition-all duration-300 hover:opacity-80"
+                      className="w-full bg-brand rounded-t transition-all duration-300 hover:opacity-80"
                       style={{ height: `${Math.max(height, 1)}%` }}
                       title={`${item.label}: ${money(item.amount)} (주문 ${item.orders}건)`}
                     />
-                    <div className="text-xs text-gray-500 mt-2">{item.label}</div>
+                    <div className="text-xs text-muted mt-2">{item.label}</div>
                   </div>
                 );
               })}
@@ -2988,10 +2982,10 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 상품 현황 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">상품 현황</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-surface rounded-lg">
               <p className="text-2xl font-bold text-gray-900">{analyticsData.products.total}</p>
               <p className="text-sm text-gray-600">전체 상품</p>
             </div>
@@ -3003,8 +2997,8 @@ export function SellerAnalytics({ onGo }: { onGo: (to: string) => void }) {
               <p className="text-2xl font-bold text-yellow-600">{analyticsData.products.lowStock}</p>
               <p className="text-sm text-gray-600">재고 부족</p>
             </div>
-            <div className="text-center p-4 bg-[#FFF1F2] rounded-lg">
-              <p className="text-2xl font-bold text-[#E85A6B]">
+            <div className="text-center p-4 bg-brand-50 rounded-lg">
+              <p className="text-2xl font-bold text-brand">
                 {analyticsData.products.averageRating ? analyticsData.products.averageRating.toFixed(1) : '-'}
               </p>
               <p className="text-sm text-gray-600">평균 평점 ({analyticsData.products.totalReviews}개 리뷰)</p>
@@ -3108,7 +3102,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
       case 'pending':
         return <span className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-medium">정산 대기</span>;
       case 'processing':
-        return <span className="px-3 py-1 text-xs bg-[#FFF1F2] text-[#D14A5B] rounded-full font-medium">정산 중</span>;
+        return <span className="px-3 py-1 text-xs bg-brand-50 text-brand-600 rounded-full font-medium">정산 중</span>;
       case 'completed':
         return <span className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">정산 완료</span>;
       default:
@@ -3121,7 +3115,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
       <SellerLayout title="정산 관리" onGo={onGo}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">정산 데이터를 불러오는 중...</p>
           </div>
         </div>
@@ -3149,19 +3143,19 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
     <SellerLayout title="정산 관리" onGo={onGo}>
       <div className="space-y-6">
         {/* 정산 요약 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold">정산 요약</h3>
             {settlementData.commissionPercentage !== null && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted">
                 판매 수수료율: <span className="font-semibold text-gray-700">{settlementData.commissionPercentage}%</span>
               </span>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center p-6 bg-[#FFF1F2] rounded-lg">
-              <p className="text-3xl font-bold text-[#E85A6B]">{money(settlementData.summary.currentMonthSales)}</p>
+            <div className="text-center p-6 bg-brand-50 rounded-lg">
+              <p className="text-3xl font-bold text-brand">{money(settlementData.summary.currentMonthSales)}</p>
               <p className="text-sm text-gray-600">이번 달 매출 (배송완료 기준)</p>
             </div>
             <div className="text-center p-6 bg-green-50 rounded-lg">
@@ -3172,8 +3166,8 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
               <p className="text-3xl font-bold text-yellow-600">{money(settlementData.summary.totalPendingAmount)}</p>
               <p className="text-sm text-gray-600">정산 대기 금액</p>
             </div>
-            <div className="text-center p-6 bg-purple-50 rounded-lg">
-              <p className="text-3xl font-bold text-purple-600">
+            <div className="text-center p-6 bg-brand-50 rounded-lg">
+              <p className="text-3xl font-bold text-brand">
                 {growth !== null ? `${growth >= 0 ? '+' : ''}${growth}%` : '-'}
               </p>
               <p className="text-sm text-gray-600">전월 대비 매출</p>
@@ -3188,7 +3182,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 정산 내역 */}
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="p-6 border-b">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">정산 내역</h3>
@@ -3197,39 +3191,39 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">정산 ID
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">정산 ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">기간</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">총 매출</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수수료</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">실 정산액
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">기간</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">총 매출</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">수수료</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">실 정산액
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">지급일</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">상태</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">지급일</th>
               </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-line">
               {settlementData.history.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-400">
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-muted">
                     아직 정산 내역이 없습니다
                   </td>
                 </tr>
               )}
               {settlementData.history.map((settlement) => (
-                <tr key={settlement.id} className="hover:bg-gray-50">
+                <tr key={settlement.id} className="hover:bg-surface">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {settlement.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                     {settlement.period}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                     {money(settlement.totalSales)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                     {money(settlement.commission)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
@@ -3238,7 +3232,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(settlement.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                     {settlement.paidDate || '-'}
                   </td>
                 </tr>
@@ -3249,7 +3243,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 계좌 정보 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">정산 계좌 정보</h3>
           {settlementData.bankAccount ? (
             <>
@@ -3260,7 +3254,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                     type="text"
                     value={settlementData.bankAccount.bankName}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-3 py-2 border border-line rounded-lg bg-surface"
                   />
                 </div>
                 <div>
@@ -3269,7 +3263,7 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                     type="text"
                     value={maskAccountNumber(settlementData.bankAccount.accountNumber)}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-3 py-2 border border-line rounded-lg bg-surface"
                   />
                 </div>
                 <div>
@@ -3278,16 +3272,16 @@ export function SellerSettlement({ onGo }: { onGo: (to: string) => void }) {
                     type="text"
                     value={settlementData.bankAccount.accountHolder}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-3 py-2 border border-line rounded-lg bg-surface"
                   />
                 </div>
               </div>
-              <p className="mt-4 text-sm text-gray-500">
+              <p className="mt-4 text-sm text-muted">
                 계좌 정보 변경이 필요하면 고객센터로 문의해주세요.
               </p>
             </>
           ) : (
-            <p className="text-sm text-gray-500">등록된 정산 계좌가 없습니다. 입점 정보에서 계좌를 등록해주세요.</p>
+            <p className="text-sm text-muted">등록된 정산 계좌가 없습니다. 입점 정보에서 계좌를 등록해주세요.</p>
           )}
         </div>
       </div>
@@ -3405,23 +3399,23 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
       <div className="space-y-6">
         {/* 상단 통계 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white rounded-lg p-4 border shadow-sm">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="text-sm text-gray-600">전체 리뷰</div>
             <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
           </div>
-          <div className="bg-white rounded-lg p-4 border shadow-sm">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="text-sm text-gray-600">읽지 않음</div>
             <div className="text-2xl font-bold text-orange-600">{stats.unread}</div>
           </div>
-          <div className="bg-white rounded-lg p-4 border shadow-sm">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="text-sm text-gray-600">답글 완료</div>
             <div className="text-2xl font-bold text-green-600">{stats.replied}</div>
           </div>
-          <div className="bg-white rounded-lg p-4 border shadow-sm">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="text-sm text-gray-600">답글 대기</div>
             <div className="text-2xl font-bold text-red-600">{stats.pending}</div>
           </div>
-          <div className="bg-white rounded-lg p-4 border shadow-sm">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="text-sm text-gray-600">평균 평점</div>
             <div className="flex items-center gap-2 text-2xl font-bold text-yellow-600">
               <IoMdStar className="w-6 h-6 text-yellow-400" />
@@ -3431,15 +3425,15 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 필터 */}
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === 'all'
-                    ? 'bg-[#FFF1F2] text-[#E85A6B] border border-[#E85A6B]/20'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-brand-50 text-brand border border-brand/20'
+                    : 'bg-surface text-gray-700 hover:bg-surface-strong'
                 }`}
               >
                 전체
@@ -3449,7 +3443,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === 'unread'
                     ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-surface text-gray-700 hover:bg-surface-strong'
                 }`}
               >
                 읽지 않음 ({stats.unread})
@@ -3459,7 +3453,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === 'replied'
                     ? 'bg-green-100 text-green-700 border border-green-200'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-surface text-gray-700 hover:bg-surface-strong'
                 }`}
               >
                 답글 완료
@@ -3469,7 +3463,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === 'pending'
                     ? 'bg-red-100 text-red-700 border border-red-200'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-surface text-gray-700 hover:bg-surface-strong'
                 }`}
               >
                 답글 대기
@@ -3486,7 +3480,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                     className={`px-2 py-1 rounded text-sm flex items-center gap-1 ${
                       selectedRating === rating
                         ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-surface text-gray-600 hover:bg-surface-strong'
                     }`}
                   >
                     {rating}<IoMdStar className="w-3.5 h-3.5 text-yellow-400" />
@@ -3495,7 +3489,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                 {selectedRating && (
                   <button
                     onClick={() => setSelectedRating(null)}
-                    className="px-2 py-1 rounded text-sm bg-gray-200 text-gray-600 hover:bg-gray-300"
+                    className="px-2 py-1 rounded text-sm bg-surface-strong text-gray-600 hover:bg-line"
                   >
                     ✕
                   </button>
@@ -3506,7 +3500,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
         </div>
 
         {/* 리뷰 목록 */}
-        <div className="bg-white rounded-lg border shadow-sm">
+        <div className="bg-white rounded-xl border shadow-sm">
           <div className="p-6 border-b">
             <h3 className="text-lg font-semibold">
               리뷰 목록 ({filteredReviews.length})
@@ -3515,19 +3509,19 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
 
           <div className="divide-y">
             {filteredReviews.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-muted">
                 해당하는 리뷰가 없습니다.
               </div>
             ) : (
               filteredReviews.map((review) => (
-                <div key={review.id} className={`p-6 ${!review.isRead ? 'bg-[#FFF1F2]' : ''}`}>
+                <div key={review.id} className={`p-6 ${!review.isRead ? 'bg-brand-50' : ''}`}>
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="flex-1">
                       {/* 리뷰 헤더 */}
                       <div className="flex items-center gap-3 mb-3">
                         <Stars v={review.rating} />
                         <span className="text-sm font-medium text-gray-900">{review.customerName}</span>
-                        <span className="text-sm text-gray-500">{review.date}</span>
+                        <span className="text-sm text-muted">{review.date}</span>
                         {!review.isRead && (
                           <span className="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-full">
                             읽지 않음
@@ -3544,7 +3538,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       <div className="text-sm text-gray-600 mb-2">
                         <button
                           onClick={() => onGo(`/seller/products/${review.productUuid}/edit`)}
-                          className="hover:text-[#E85A6B] hover:underline"
+                          className="hover:text-brand hover:underline"
                         >
                           {review.productName}
                         </button>
@@ -3571,10 +3565,10 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
 
                       {/* 답글 */}
                       {review.hasReply && review.reply && (
-                        <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-[#E85A6B]">
+                        <div className="bg-surface rounded-lg p-4 border-l-4 border-brand">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-medium text-[#E85A6B]">판매자 답글</span>
-                            <span className="text-xs text-gray-500">{review.replyDate}</span>
+                            <span className="text-sm font-medium text-brand">판매자 답글</span>
+                            <span className="text-xs text-muted">{review.replyDate}</span>
                           </div>
                           <div className="text-sm text-gray-700">{review.reply}</div>
                         </div>
@@ -3594,7 +3588,7 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       {!review.hasReply && (
                         <button
                           onClick={() => writeReply(review.id)}
-                          className="px-3 py-2 text-sm bg-[#FFF1F2] text-[#E85A6B] rounded-lg hover:bg-blue-200 transition-colors"
+                          className="px-3 py-2 text-sm bg-brand-50 text-brand rounded-lg hover:bg-brand-100 transition-colors"
                         >
                           답글 작성
                         </button>
@@ -3602,17 +3596,11 @@ export function SellerReviews({ onGo }: { onGo: (to: string) => void }) {
                       {review.hasReply && (
                         <button
                           onClick={() => writeReply(review.id)}
-                          className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                          className="px-3 py-2 text-sm bg-surface text-gray-700 rounded-lg hover:bg-surface-strong transition-colors"
                         >
                           답글 수정
                         </button>
                       )}
-                      <button
-                        onClick={() => alert('신고 처리 기능은 추후 구현됩니다.')}
-                        className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                      >
-                        신고 처리
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -3870,7 +3858,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
 
       setBannerPreview(null);
       showSuccess('배너 이미지가 변경되었습니다!');
-    } catch (err: any) {1
+    } catch (err: any) {
       console.error('배너 업로드 실패:', err);
       setError(err.message || '배너 업로드에 실패했습니다.');
       setBannerPreview(null);
@@ -3924,7 +3912,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       <SellerLayout title="브랜드 관리" onGo={onGo}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#E85A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">브랜드 정보를 불러오는 중...</p>
           </div>
         </div>
@@ -3961,13 +3949,13 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
         {/* 브랜드 정보 카드 */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           {/* 헤더 */}
-          <div className="border-b border-gray-200 px-6 py-4">
+          <div className="border-b border-line px-6 py-4">
             <h2 className="text-lg font-semibold text-gray-900">브랜드 정보</h2>
-            <p className="text-sm text-gray-500 mt-1">브랜드 상세페이지에 표시되는 정보입니다.</p>
+            <p className="text-sm text-muted mt-1">브랜드 상세페이지에 표시되는 정보입니다.</p>
           </div>
 
           {/* 로고 섹션 */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-line">
             <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 로고</label>
             <div className="flex items-center gap-6">
               {/* 현재 로고 또는 기본 아이콘 */}
@@ -3976,11 +3964,11 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   <img
                     src={logoPreview || brandInfo?.brandProfile || ''}
                     alt="브랜드 로고"
-                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-line"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
-                    <span className="text-3xl font-bold text-gray-400">
+                  <div className="w-24 h-24 rounded-full bg-surface flex items-center justify-center border-2 border-line">
+                    <span className="text-3xl font-bold text-muted">
                       {brandInfo?.brandName?.charAt(0) || 'B'}
                     </span>
                   </div>
@@ -4007,23 +3995,23 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   htmlFor="logo-upload"
                   className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
                     uploadingLogo
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                      ? 'bg-surface-strong text-muted cursor-not-allowed'
+                      : 'bg-brand text-white hover:bg-brand-600'
                   }`}
                 >
                   {uploadingLogo ? '업로드 중...' : '이미지 변경'}
                 </label>
-                <p className="text-xs text-gray-500">JPG, PNG 형식 / 최대 5MB</p>
+                <p className="text-xs text-muted">JPG, PNG 형식 / 최대 5MB</p>
               </div>
             </div>
           </div>
 
           {/* 배너 섹션 */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-line">
             <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 배너</label>
             <div className="space-y-4">
               {/* 현재 배너 또는 기본 이미지 */}
-              <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-line">
                 {(bannerPreview || brandInfo?.brandBanner) ? (
                   <img
                     src={bannerPreview || brandInfo?.brandBanner || ''}
@@ -4031,12 +4019,12 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-r from-brand-50 to-brand-100 flex items-center justify-center">
                     <div className="text-center">
-                      <svg className="w-16 h-16 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-16 h-16 text-line-strong mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <p className="text-sm text-gray-500">배너 이미지가 없습니다</p>
+                      <p className="text-sm text-muted">배너 이미지가 없습니다</p>
                     </div>
                   </div>
                 )}
@@ -4065,8 +4053,8 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   htmlFor="banner-upload"
                   className={`px-4 py-2 text-sm font-medium rounded-lg cursor-pointer transition-colors ${
                     uploadingBanner
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                      ? 'bg-surface-strong text-muted cursor-not-allowed'
+                      : 'bg-brand text-white hover:bg-brand-600'
                   }`}
                 >
                   {uploadingBanner ? '업로드 중...' : '배너 변경'}
@@ -4075,7 +4063,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   <p className="text-xs text-gray-600">
                     <span className="font-medium">권장 사이즈:</span> 1920x600px
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     JPG, PNG, WebP 형식 / 최대 10MB
                   </p>
                 </div>
@@ -4093,7 +4081,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   type="text"
                   value={newBrandName}
                   onChange={(e) => setNewBrandName(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E85A6B] focus:border-[#E85A6B] outline-none"
+                  className="flex-1 px-4 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none"
                   placeholder="브랜드명을 입력하세요"
                   maxLength={200}
                 />
@@ -4102,8 +4090,8 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                   disabled={savingName || !newBrandName.trim()}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                     savingName || !newBrandName.trim()
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#E85A6B] text-white hover:bg-[#D14A5B]'
+                      ? 'bg-surface-strong text-muted cursor-not-allowed'
+                      : 'bg-brand text-white hover:bg-brand-600'
                   }`}
                 >
                   {savingName ? '저장 중...' : '저장'}
@@ -4111,7 +4099,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 <button
                   onClick={cancelNameEdit}
                   disabled={savingName}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-surface rounded-lg hover:bg-surface-strong transition-colors"
                 >
                   취소
                 </button>
@@ -4121,7 +4109,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 <span className="text-lg font-medium text-gray-900">{brandInfo?.brandName || '(설정되지 않음)'}</span>
                 <button
                   onClick={() => setIsEditingName(true)}
-                  className="px-4 py-2 text-sm font-medium text-[#E85A6B] bg-[#FFF1F2] rounded-lg hover:bg-[#E85A6B]/10 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-brand bg-brand-50 rounded-lg hover:bg-brand/10 transition-colors"
                 >
                   수정
                 </button>
@@ -4132,25 +4120,25 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
 
         {/* 커스텀 주문 설정 카드 */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="border-b border-gray-200 px-6 py-4">
+          <div className="border-b border-line px-6 py-4">
             <h2 className="text-lg font-semibold text-gray-900">커스텀 주문 설정</h2>
-            <p className="text-sm text-gray-500 mt-1">고객이 맞춤 주문서를 제출할 수 있도록 설정합니다.</p>
+            <p className="text-sm text-muted mt-1">고객이 맞춤 주문서를 제출할 수 있도록 설정합니다.</p>
           </div>
 
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700">커스텀 주문 받기</label>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-muted mt-1">
                   활성화하면 고객이 브랜드 페이지에서 맞춤 주문서를 제출할 수 있습니다.
                 </p>
               </div>
               <button
                 onClick={handleToggleCustomOrder}
                 disabled={savingCustomOrder}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#E85A6B] focus:ring-offset-2 ${
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
                   savingCustomOrder ? 'opacity-50 cursor-not-allowed' : ''
-                } ${brandInfo?.acceptsCustomOrders ? 'bg-[#E85A6B]' : 'bg-gray-200'}`}
+                } ${brandInfo?.acceptsCustomOrders ? 'bg-brand' : 'bg-gray-200'}`}
                 role="switch"
                 aria-checked={brandInfo?.acceptsCustomOrders}
               >
@@ -4182,16 +4170,16 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
         {/* 브랜드 페이지 미리보기 카드 */}
         {brandInfo && (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="border-b border-gray-200 px-6 py-4">
+            <div className="border-b border-line px-6 py-4">
               <h3 className="text-lg font-semibold text-gray-900">브랜드 페이지 미리보기</h3>
-              <p className="text-sm text-gray-500 mt-1">고객에게 보여질 브랜드 페이지 모습입니다</p>
+              <p className="text-sm text-muted mt-1">고객에게 보여질 브랜드 페이지 모습입니다</p>
             </div>
 
             <div className="p-6">
               {/* 미니 프리뷰 */}
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-line rounded-lg overflow-hidden">
                 {/* 배너 미리보기 */}
-                <div className="relative h-32 bg-gradient-to-r from-blue-100 to-purple-100">
+                <div className="relative h-32 bg-gradient-to-r from-brand-100 to-brand-200">
                   {brandInfo.brandBanner ? (
                     <img
                       src={brandInfo.brandBanner}
@@ -4200,7 +4188,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-sm text-gray-400">배너 이미지가 없습니다</p>
+                      <p className="text-sm text-muted">배너 이미지가 없습니다</p>
                     </div>
                   )}
                 </div>
@@ -4209,7 +4197,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 <div className="px-6 py-4 bg-white">
                   <div className="flex items-center gap-4">
                     {/* 프로필 이미지 */}
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex-shrink-0 overflow-hidden border-2 border-white shadow-lg -mt-10 relative z-10">
+                    <div className="w-16 h-16 rounded-2xl bg-surface flex-shrink-0 overflow-hidden border-2 border-white shadow-lg -mt-10 relative z-10">
                       {brandInfo.brandProfile ? (
                         <img
                           src={brandInfo.brandProfile}
@@ -4218,7 +4206,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-2xl font-bold text-gray-400">
+                          <span className="text-2xl font-bold text-muted">
                             {brandInfo.brandName?.charAt(0) || 'B'}
                           </span>
                         </div>
@@ -4230,7 +4218,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                       <h4 className="text-lg font-bold text-gray-900">
                         {brandInfo.brandName || '브랜드명 없음'}
                       </h4>
-                      <p className="text-sm text-gray-500">브랜드 페이지</p>
+                      <p className="text-sm text-muted">브랜드 페이지</p>
                     </div>
                   </div>
                 </div>
@@ -4240,8 +4228,8 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
               {brandInfo.sellerUuid && (
                 <div className="mt-4 flex justify-end">
                   <button
-                    onClick={() => onGo(`/brands/${brandInfo.sellerUuid}`)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#E85A6B] rounded-lg hover:bg-[#D14A5B] transition-colors flex items-center gap-2"
+                    onClick={() => onGo(`/brand/${brandInfo.sellerUuid}`)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -4255,14 +4243,14 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
         )}
 
         {/* 안내 메시지 */}
-        <div className="bg-[#FFF1F2] border border-[#E85A6B]/20 rounded-lg p-4">
+        <div className="bg-brand-50 border border-brand/20 rounded-lg p-4">
           <div className="flex gap-3">
-            <svg className="w-5 h-5 text-[#E85A6B] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 text-brand flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <div className="text-sm text-[#D14A5B]">
+            <div className="text-sm text-brand-600">
               <p className="font-medium mb-1">브랜드 정보 안내</p>
-              <ul className="list-disc list-inside space-y-1 text-[#E85A6B]">
+              <ul className="list-disc list-inside space-y-1 text-brand">
                 <li>브랜드 로고는 정사각형 이미지(512x512px)를 권장합니다.</li>
                 <li>브랜드 배너는 가로형 이미지(1920x600px)를 권장합니다.</li>
                 <li>브랜드명은 고객에게 노출되는 중요한 정보입니다.</li>

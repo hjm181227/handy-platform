@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useRef, useState, useCallback } from 'react';
 import { IoMdStar, IoMdStarOutline, IoMdStarHalf } from 'react-icons/io';
 
 export function Badge({ children, tone="black" }: { children: ReactNode; tone?: "black"|"red"|"blue" }) {
-  const m = { black: "bg-black text-white", red: "bg-red-500 text-white", blue: "bg-[#E85A6B] text-white" } as const;
+  const m = { black: "bg-black text-white", red: "bg-red-500 text-white", blue: "bg-brand text-white" } as const;
   return <span className={`text-[10px] px-1.5 py-0.5 rounded ${m[tone]} leading-none`}>{children}</span>;
 }
 

@@ -42,7 +42,6 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
   // 폼 상태
   const [shape, setShape] = useState<string>('ROUND');
   const [length, setLength] = useState<string>('MEDIUM');
-  const [sizeInputMode, setSizeInputMode] = useState<'manual' | 'load'>('manual');
   const [activeHand, setActiveHand] = useState<'left' | 'right'>('left');
   const [sizes, setSizes] = useState<HandSizes>({
     left: { thumb: '', index: '', middle: '', ring: '', pinky: '' },
@@ -222,7 +221,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
         <p className="text-gray-600">{error || '상품을 찾을 수 없습니다.'}</p>
-        <button onClick={onBack} className="text-[#E85A6B] hover:underline">
+        <button onClick={onBack} className="text-brand hover:underline">
           돌아가기
         </button>
       </div>
@@ -304,34 +303,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
             사이즈 <span className="text-red-500">*</span>
           </label>
 
-          {/* 탭 */}
-          <div className="flex border-b mb-4">
-            <button
-              type="button"
-              onClick={() => setSizeInputMode('manual')}
-              className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-                sizeInputMode === 'manual'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              직접 입력
-            </button>
-            <button
-              type="button"
-              onClick={() => setSizeInputMode('load')}
-              className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-                sizeInputMode === 'load'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              사이즈 불러오기
-            </button>
-          </div>
-
-          {sizeInputMode === 'manual' ? (
-            <div className="space-y-4">
+          <div className="space-y-4">
               {/* 왼손/오른손 탭 */}
               <div className="flex rounded-lg bg-gray-100 p-1">
                 <button
@@ -376,21 +348,7 @@ export function CustomOrderForm({ productId, onBack, onGo }: CustomOrderFormProp
               <p className="text-xs text-gray-500">
                 * 양손 모든 손가락의 네일 사이즈를 입력해주세요
               </p>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <button
-                type="button"
-                onClick={() => alert('사이즈 불러오기 기능은 추후 구현됩니다.')}
-                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-              >
-                저장된 사이즈 불러오기
-              </button>
-              <p className="text-xs text-gray-500 mt-3">
-                이전에 저장한 사이즈 정보를 불러옵니다
-              </p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* 원하는 컬러 */}

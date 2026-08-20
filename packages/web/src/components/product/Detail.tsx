@@ -64,6 +64,7 @@ export function Detail({
   const [length, setLength] = useState<string>("SHORT");
   const [qty, setQty] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<string>("info");
+  const [heroIdx, setHeroIdx] = useState(0);
 
   // 찜: 로컬 state가 아닌 전역 LikesContext 사용 (서버 연동 + 낙관적 업데이트)
   const { handleLike, isProductLiked } = useLikes();
@@ -348,12 +349,12 @@ export function Detail({
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="animate-pulse">
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="bg-gray-200 aspect-[3/4] rounded-lg"></div>
+            <div className="bg-surface aspect-[3/4] rounded-2xl -mx-4 -mt-6 md:mx-0 md:mt-0 max-md:rounded-none"></div>
             <div className="space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-surface rounded w-1/4"></div>
+              <div className="h-8 bg-surface rounded w-3/4"></div>
+              <div className="h-6 bg-surface rounded w-1/2"></div>
+              <div className="h-20 bg-surface rounded-xl"></div>
             </div>
           </div>
         </div>
@@ -368,7 +369,7 @@ export function Detail({
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">{t('common:productNotFound')}</div>
           <div className="text-sm text-red-500 mb-4">{error}</div>
-          <button onClick={onBack} className="px-4 py-2 bg-black text-white rounded">{t('product:detailPage.backButton')}</button>
+          <button onClick={onBack} className="px-5 py-2.5 bg-ink text-white rounded-full text-sm font-semibold">{t('product:detailPage.backButton')}</button>
         </div>
       </div>
     );
@@ -376,6 +377,13 @@ export function Detail({
 
   const p = product;
   const salePrice = p.salePrice || p.price;
+  const hasDiscount = !!p.salePrice && p.salePrice < p.price;
+  const discountRate = hasDiscount ? Math.round((1 - salePrice / p.price) * 100) : 0;
+
+  // B안 갤러리: 메인 + 상세 이미지를 썸네일 스트립으로 전환
+  const galleryImages = [p.mainImageUrl, ...(p.detailImages?.map((d) => d.url) || [])].filter(Boolean);
+  const activeHeroIdx = Math.min(heroIdx, galleryImages.length - 1);
+  const heroImage = galleryImages[activeHeroIdx] || p.mainImageUrl;
 
   // ── 판매 방식(fulfillmentMode) 분기 ──────────────────────────────
   // stocked: variant(조합별 재고) 기반 선택 / made_to_order: 기존 customizable 흐름
@@ -554,7 +562,7 @@ export function Detail({
                     key={rating}
                     onClick={() => setRatingFilter(ratingFilter === rating ? null : rating)}
                     className={`flex items-center gap-2 w-full p-1 rounded transition-colors ${
-                      ratingFilter === rating ? 'bg-purple-50' : 'hover:bg-gray-50'
+                      ratingFilter === rating ? 'bg-brand-50' : 'hover:bg-surface'
                     }`}
                   >
                     <span className="w-12 text-sm text-gray-600">{rating}{t('product:detailPage.review.ratingUnit')}</span>
@@ -575,7 +583,7 @@ export function Detail({
               <button
                 onClick={() => setReviewSort('newest')}
                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                  reviewSort === 'newest' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
+                  reviewSort === 'newest' ? 'bg-ink text-white border-ink' : 'bg-white border-line hover:border-line-strong'
                 }`}
               >
                 {t('product:list.sortLatest')}
@@ -583,7 +591,7 @@ export function Detail({
               <button
                 onClick={() => setReviewSort('rating')}
                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                  reviewSort === 'rating' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
+                  reviewSort === 'rating' ? 'bg-ink text-white border-ink' : 'bg-white border-line hover:border-line-strong'
                 }`}
               >
                 {t('product:detailPage.review.sortRating')}
@@ -591,7 +599,7 @@ export function Detail({
               <button
                 onClick={() => setReviewSort('photo')}
                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                  reviewSort === 'photo' ? 'bg-black text-white border-black' : 'bg-white border-gray-300 hover:border-gray-400'
+                  reviewSort === 'photo' ? 'bg-ink text-white border-ink' : 'bg-white border-line hover:border-line-strong'
                 }`}
               >
                 {t('product:review.photoReview')}
@@ -599,7 +607,7 @@ export function Detail({
               {ratingFilter && (
                 <button
                   onClick={() => setRatingFilter(null)}
-                  className="px-3 py-1.5 text-sm text-purple-600 hover:underline"
+                  className="px-3 py-1.5 text-sm text-brand hover:underline"
                 >
                   {t('product:detailPage.review.clearFilter')}
                 </button>
@@ -609,7 +617,7 @@ export function Detail({
             {/* 리뷰 목록 */}
             {reviewsLoading ? (
               <div className="py-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-2" />
                 <p className="text-gray-500">{t('product:detailPage.review.loading')}</p>
               </div>
             ) : reviews.length === 0 ? (
@@ -666,7 +674,7 @@ export function Detail({
                             console.error('Failed to vote helpful:', err);
                           }
                         }}
-                        className="flex items-center gap-1 hover:text-[#E85A6B]"
+                        className="flex items-center gap-1 hover:text-brand"
                       >
                         <span>👍</span>
                         <span>{t('product:detailPage.review.helpful')} ({review.helpful?.upVotes || 0})</span>
@@ -677,7 +685,7 @@ export function Detail({
                     {review.reply && (
                       <div className="mt-3 bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-medium text-purple-700">{t('product:detailPage.review.sellerReply')}</span>
+                          <span className="text-xs font-medium text-brand-700">{t('product:detailPage.review.sellerReply')}</span>
                           <span className="text-xs text-gray-400">
                             {new Date(review.reply.createdAt).toLocaleDateString('ko-KR')}
                           </span>
@@ -780,7 +788,16 @@ export function Detail({
               </ul>
             </div>
             <div className="text-center">
-              <button className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm">{t('product:detailPage.contactCustomerService')}</button>
+              <button
+                onClick={() => {
+                  if (onGo) {
+                    onGo('/support/contact');
+                  } else {
+                    window.location.href = '/support/contact';
+                  }
+                }}
+                className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm"
+              >{t('product:detailPage.contactCustomerService')}</button>
             </div>
           </div>
         );
@@ -791,58 +808,84 @@ export function Detail({
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="mx-auto max-w-6xl px-4 pt-6 pb-28 md:pb-6">
 
-      {/* 상단 그리드: 이미지 / 정보 */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* 메인 이미지 */}
+      {/* 상단 그리드: 이미지 / 정보 (B안 — 이미지 몰입형) */}
+      <div className="grid md:gap-6 md:grid-cols-2">
+        {/* 히어로: 모바일 풀블리드 3:4 + 하단 페이드 + 타이틀 오버레이 */}
         <div>
-          <div className="overflow-hidden rounded-lg bg-gray-100">
+          <div className="relative -mx-4 -mt-6 overflow-hidden bg-surface md:mx-0 md:mt-0 md:rounded-2xl">
             <img
-              src={p.mainImageUrl}
+              src={heroImage}
               alt={p.name}
               className="w-full aspect-[3/4] object-cover"
             />
+            {p.isNewProduct && (
+              <span className="absolute left-4 top-4 z-[2] bg-brand text-white text-[11px] font-bold px-2.5 py-1 rounded-full">NEW</span>
+            )}
+            {galleryImages.length > 1 && (
+              <span className="absolute right-4 bottom-10 z-[2] rounded-full bg-ink/40 px-2.5 py-0.5 text-[11px] font-semibold text-white [font-variant-numeric:tabular-nums] md:bottom-4 md:bg-ink/10 md:text-ink">
+                {activeHeroIdx + 1} / {galleryImages.length}
+              </span>
+            )}
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-ink/50 to-transparent md:hidden" />
+            <div className="absolute left-4 right-4 bottom-9 z-[1] text-white md:hidden">
+              <div className="text-[11.5px] font-semibold tracking-wide opacity-90">{p.brand}</div>
+              <h1 className="text-2xl font-extrabold tracking-tight mt-0.5">{p.name}</h1>
+            </div>
           </div>
         </div>
 
-        {/* 정보 */}
-        <div className="space-y-3">
+        {/* 정보 시트: 모바일에서 히어로 위로 라운드 카드처럼 겹침 */}
+        <div className="space-y-3 max-md:relative max-md:z-[2] max-md:-mx-4 max-md:-mt-5 max-md:rounded-t-2xl max-md:bg-white max-md:px-4 max-md:pt-6">
           <button
-            className="text-xs text-gray-500 hover:text-gray-700 hover:underline text-left"
+            className="text-[11.5px] font-semibold tracking-wide text-muted hover:text-brand text-left max-md:hidden"
             onClick={() => goTo("/brands")}
           >
             {p.brand}
           </button>
-          <h1 className="text-xl font-semibold">{p.name}</h1>
+          <h1 className="text-xl font-bold tracking-tight text-ink max-md:hidden">{p.name}</h1>
 
-          <div className="flex items-end gap-2">
-            <div className="text-2xl font-bold">{money(salePrice)}</div>
-            {p.salePrice && p.salePrice < p.price ? (
-              <>
-                <div className="text-sm text-gray-400 line-through">{money(p.price)}</div>
-                <span className="rounded bg-red-500 px-2 py-0.5 text-xs text-white">{t('common:discount')}</span>
-              </>
-            ) : null}
-          </div>
-
-          {/* 간단 메타 */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <IoMdStar className="w-4 h-4 text-yellow-400" />
-              <span>{p.rating.average.toFixed(1)}</span>
-            </div>
-            <span className="text-gray-400">|</span>
+          {/* 평점 메타 */}
+          <div className="text-[12.5px] text-muted">
+            <IoMdStar className="inline w-4 h-4 text-amber-400 align-[-3px]" />{' '}
+            <b className="font-bold text-ink [font-variant-numeric:tabular-nums]">{p.rating.average.toFixed(1)}</b>
+            {' · '}
             <span>{t('product:detail.reviewCount', { count: p.rating.count.toLocaleString() })}</span>
-            <span className="text-gray-400">|</span>
+            {' · '}
             <span>{t('product:detail.freeDelivery')}</span>
           </div>
+
+          {/* 가격 */}
+          <div className="flex items-baseline gap-1.5 [font-variant-numeric:tabular-nums]">
+            {hasDiscount && <span className="text-2xl font-extrabold text-brand">{discountRate}%</span>}
+            <div className="text-2xl font-extrabold tracking-tight text-ink">{money(salePrice)}</div>
+            {hasDiscount && <div className="text-sm text-muted line-through">{money(p.price)}</div>}
+          </div>
+
+          {/* 썸네일 스트립 (B안: 시트 상단, 가격 아래) */}
+          {galleryImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {galleryImages.map((url, i) => (
+                <button
+                  key={i}
+                  onClick={() => setHeroIdx(i)}
+                  aria-label={`${i + 1}번째 이미지 보기`}
+                  className={`w-[52px] h-[52px] rounded-xl overflow-hidden bg-surface flex-shrink-0 ${
+                    i === activeHeroIdx ? 'ring-2 ring-brand' : ''
+                  }`}
+                >
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* 옵션 */}
           <div className="pt-2 space-y-2">
             {/* 쉐입 옵션 */}
             <div>
-              <div className="mb-1 text-sm text-gray-600">{t('product:detailPage.option.shape')}</div>
+              <div className="mb-2 text-xs font-semibold tracking-wider text-muted">{t('product:detailPage.option.shape')}</div>
               {isStocked ? (
                 // 기성 재고: variants에 존재하는 쉐입만 표시, 전 조합 품절 쉐입은 취소선+비활성
                 <div className="flex flex-wrap gap-2">
@@ -856,17 +899,17 @@ export function Detail({
                         key={s}
                         onClick={() => handleShapeSelect(s)}
                         disabled={soldOut}
-                        className={`rounded border px-3 py-1 text-sm ${
+                        className={`inline-flex items-center h-[34px] px-3.5 rounded-full border text-[13px] font-semibold transition-colors ${
                           soldOut
-                            ? "bg-gray-100 text-gray-400 line-through cursor-not-allowed"
+                            ? "bg-surface border-surface text-muted line-through cursor-not-allowed"
                             : shape === s
-                              ? "bg-black text-white border-black"
-                              : "bg-white hover:bg-gray-50"
+                              ? "bg-ink text-white border-ink"
+                              : "bg-white border-line text-ink hover:border-line-strong"
                         }`}
                       >
                         {koreanName}
                         {!soldOut && modifierLabel && (
-                          <span className={`ml-1 text-xs ${shape === s ? 'text-gray-300' : 'text-[#E85A6B]'}`}>
+                          <span className={`ml-1 text-xs ${shape === s ? 'text-white/70' : 'text-brand'}`}>
                             {modifierLabel}
                           </span>
                         )}
@@ -884,10 +927,10 @@ export function Detail({
                       <button
                         key={s}
                         onClick={() => setShape(s)}
-                        className={`rounded border px-3 py-1 text-sm ${
+                        className={`inline-flex items-center h-[34px] px-3.5 rounded-full border text-[13px] font-semibold transition-colors ${
                           shape === s
-                            ? "bg-black text-white border-black"
-                            : "bg-white hover:bg-gray-50"
+                            ? "bg-ink text-white border-ink"
+                            : "bg-white border-line text-ink hover:border-line-strong"
                         }`}
                       >
                         {koreanName}
@@ -897,14 +940,14 @@ export function Detail({
                 </div>
               ) : (
                 // 커스터마이징 불가능: 고정값만 텍스트로 표시
-                <div className="text-sm">
-                  {NAIL_SHAPE_NAME[p.nailShape] || p.nailShape} <span className="text-gray-400">{t('product:detailPage.option.notEditable')}</span>
+                <div className="text-sm text-ink">
+                  {NAIL_SHAPE_NAME[p.nailShape] || p.nailShape} <span className="text-muted">{t('product:detailPage.option.notEditable')}</span>
                 </div>
               )}
             </div>
             {/* 길이 옵션 */}
             <div>
-              <div className="mb-1 text-sm text-gray-600">{t('product:detailPage.option.length')}</div>
+              <div className="mb-2 text-xs font-semibold tracking-wider text-muted">{t('product:detailPage.option.length')}</div>
               {isStocked ? (
                 // 기성 재고: 선택된 쉐입 기준 존재하는 길이만 표시, 품절 조합은 취소선+비활성+품절 라벨
                 <div className="flex flex-wrap gap-2">
@@ -919,12 +962,12 @@ export function Detail({
                         key={l}
                         onClick={() => setLength(l)}
                         disabled={soldOut}
-                        className={`rounded border px-3 py-1 text-sm ${
+                        className={`inline-flex items-center h-[34px] px-3.5 rounded-full border text-[13px] font-semibold transition-colors ${
                           soldOut
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            ? "bg-surface border-surface text-muted cursor-not-allowed"
                             : length === l
-                              ? "bg-black text-white border-black"
-                              : "bg-white hover:bg-gray-50"
+                              ? "bg-ink text-white border-ink"
+                              : "bg-white border-line text-ink hover:border-line-strong"
                         }`}
                       >
                         <span className={soldOut ? "line-through" : ""}>{koreanName}</span>
@@ -932,7 +975,7 @@ export function Detail({
                           <span className="ml-1 text-xs">품절</span>
                         ) : (
                           modifierLabel && (
-                            <span className={`ml-1 text-xs ${length === l ? 'text-gray-300' : 'text-[#E85A6B]'}`}>
+                            <span className={`ml-1 text-xs ${length === l ? 'text-white/70' : 'text-brand'}`}>
                               {modifierLabel}
                             </span>
                           )
@@ -951,10 +994,10 @@ export function Detail({
                       <button
                         key={s}
                         onClick={() => setLength(s)}
-                        className={`rounded border px-3 py-1 text-sm ${
+                        className={`inline-flex items-center h-[34px] px-3.5 rounded-full border text-[13px] font-semibold transition-colors ${
                           length === s
-                            ? "bg-black text-white border-black"
-                            : "bg-white hover:bg-gray-50"
+                            ? "bg-ink text-white border-ink"
+                            : "bg-white border-line text-ink hover:border-line-strong"
                         }`}
                       >
                         {koreanName}
@@ -964,8 +1007,8 @@ export function Detail({
                 </div>
               ) : (
                 // 커스터마이징 불가능: 고정값만 텍스트로 표시
-                <div className="text-sm">
-                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength} <span className="text-gray-400">{t('product:detailPage.option.notEditable')}</span>
+                <div className="text-sm text-ink">
+                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength} <span className="text-muted">{t('product:detailPage.option.notEditable')}</span>
                 </div>
               )}
             </div>
@@ -973,41 +1016,41 @@ export function Detail({
 
           {/* 기성 재고: 선택 요약 바 (조합·최종가·재고·발송 안내 실시간 갱신) */}
           {isStocked && (
-            <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm">
+            <div className="rounded-xl bg-surface px-4 py-3 text-[13px]">
               {allSoldOut ? (
-                <span className="font-medium text-red-500">품절 — 모든 옵션이 품절되었습니다</span>
+                <span className="font-semibold text-red-500">품절 — 모든 옵션이 품절되었습니다</span>
               ) : selectedVariant ? (
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span>
-                    선택: {NAIL_SHAPE_NAME[shape] || shape} · {NAIL_LENGTH_NAME[length] || length}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 [font-variant-numeric:tabular-nums]">
+                  <span className="text-muted">
+                    선택: <b className="font-semibold text-ink">{NAIL_SHAPE_NAME[shape] || shape} · {NAIL_LENGTH_NAME[length] || length}</b>
                   </span>
-                  <span className="text-gray-300">|</span>
-                  <span className="font-semibold text-[#E85A6B]">{money(selectedVariant.finalPrice)}</span>
-                  <span className="text-gray-300">|</span>
-                  <span className={selectedVariant.isAvailable ? "text-gray-600" : "font-medium text-red-500"}>
+                  <span className="text-line-strong">|</span>
+                  <span className="font-bold text-brand">{money(selectedVariant.finalPrice)}</span>
+                  <span className="text-line-strong">|</span>
+                  <span className={selectedVariant.isAvailable ? "text-muted" : "font-semibold text-red-500"}>
                     {stockStatusText}
                   </span>
                 </div>
               ) : (
-                <span className="text-gray-500">옵션을 선택해주세요</span>
+                <span className="text-muted">옵션을 선택해주세요</span>
               )}
             </div>
           )}
 
           {/* 주문 제작: 제작 소요일 안내 */}
           {!isStocked && (
-            <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600">
-              🛠 주문 후 제작 — 약 {p.processingDays}일 소요
+            <div className="rounded-xl bg-surface px-4 py-3 text-[13px] text-muted">
+              주문 후 제작 — <b className="font-semibold text-ink">약 {p.processingDays}일 소요</b>
             </div>
           )}
 
           {/* 수량 */}
           <div className="flex items-center gap-3 pt-2">
-            <div className="text-sm text-gray-600">{t('common:quantity')}</div>
-            <div className="inline-flex items-center rounded border">
-              <button className="px-3 py-1" onClick={() => setQty((q) => Math.max(1, q - 1))}>-</button>
-              <div className="w-10 text-center">{qty}</div>
-              <button className="px-3 py-1" onClick={() => setQty((q) => q + 1)}>+</button>
+            <div className="text-xs font-semibold tracking-wider text-muted">{t('common:quantity')}</div>
+            <div className="inline-flex items-center rounded-full border border-line [font-variant-numeric:tabular-nums]">
+              <button className="px-3.5 py-1.5 text-muted hover:text-ink" onClick={() => setQty((q) => Math.max(1, q - 1))}>-</button>
+              <div className="w-10 text-center text-sm font-semibold">{qty}</div>
+              <button className="px-3.5 py-1.5 text-muted hover:text-ink" onClick={() => setQty((q) => q + 1)}>+</button>
             </div>
           </div>
 
@@ -1030,34 +1073,32 @@ export function Detail({
                   if (!currentUser) { openLogin(); return; }
                   onGo?.(`/product/${p.productUuid}/custom-order`);
                 }}
-                className="w-full rounded-lg py-3 text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
+                className="w-full rounded-full py-3 text-white font-semibold bg-brand hover:bg-brand-600 transition-colors"
               >
                 {t('product:detailPage.customOrderButton')}
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
               <button
                 onClick={addToCart}
                 disabled={addingToCart || !canPurchase}
-                className={`rounded-lg border py-2 flex items-center justify-center gap-2 ${
-                  addingToCart
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : !canPurchase
-                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                      : 'hover:bg-gray-50'
+                className={`rounded-full py-3 font-semibold flex items-center justify-center gap-2 transition-colors ${
+                  addingToCart || !canPurchase
+                    ? 'bg-surface text-muted cursor-not-allowed'
+                    : 'bg-brand-50 text-brand hover:bg-brand-100'
                 }`}
               >
-                {addingToCart && <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
+                {addingToCart && <div className="w-4 h-4 border-2 border-muted border-t-transparent rounded-full animate-spin"></div>}
                 {!canPurchase ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('product:detail.addToCart')}
               </button>
               <button
                 onClick={buyNow}
                 disabled={addingToCart || !canPurchase}
-                className={`rounded-lg py-2 text-white flex items-center justify-center ${
+                className={`rounded-full py-3 text-white font-semibold flex items-center justify-center transition-colors ${
                   addingToCart || !canPurchase
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-black hover:bg-gray-800'
+                    ? 'bg-line-strong cursor-not-allowed'
+                    : 'bg-brand hover:bg-brand-600'
                 }`}
               >
                 {!canPurchase ? t('product:detail.outOfStock') : t('product:detail.buyNow')}
@@ -1071,8 +1112,8 @@ export function Detail({
               <button
                 onClick={contactSeller}
                 disabled={startingInquiry}
-                className="w-full rounded-lg border border-gray-300 py-2.5 text-sm font-medium
-                           flex items-center justify-center gap-2 hover:bg-gray-50
+                className="w-full rounded-full border border-line py-2.5 text-sm font-semibold text-ink
+                           flex items-center justify-center gap-2 hover:bg-surface
                            transition-colors disabled:opacity-50"
               >
                 <FaRegComments className="w-4 h-4" />
@@ -1128,10 +1169,10 @@ export function Detail({
                 <button
                   key={tabKey}
                   onClick={() => setActiveTab(tabKey)}
-                  className={`relative px-4 py-3 text-sm font-medium transition-colors duration-200 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black after:transform after:transition-transform after:duration-200 ${
+                  className={`relative px-4 py-3 text-sm font-semibold transition-colors duration-200 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-ink after:transform after:transition-transform after:duration-200 ${
                     isActive
-                      ? 'text-black after:scale-x-100'
-                      : 'text-gray-600 hover:text-black after:scale-x-0 hover:after:scale-x-100'
+                      ? 'text-ink after:scale-x-100'
+                      : 'text-muted hover:text-ink after:scale-x-0 hover:after:scale-x-100'
                   }`}
                 >
                   {tabLabels[tabKey]}
@@ -1146,47 +1187,37 @@ export function Detail({
         </div>
       </div>
 
-      {/* 모바일 하단 고정 구매바 - productType에 따라 분기 */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white p-3 md:hidden">
-        <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
-          {/* 판매자 문의 — 좁은 화면에서는 아이콘 버튼으로 자리를 아낀다 */}
-          {(p as any)?.sellerUuid && (
-            <button
-              onClick={contactSeller}
-              disabled={startingInquiry}
-              aria-label="판매자에게 문의"
-              className="flex-shrink-0 w-10 h-10 rounded-lg border border-gray-300
-                         flex items-center justify-center hover:bg-gray-50
-                         transition-colors disabled:opacity-50"
-            >
-              <FaRegComments className="w-4 h-4" />
-            </button>
-          )}
-          <div className="text-base font-semibold">
-            {isStocked ? money(unitPrice * qty) : money(salePrice)}
-            {isStocked && qty > 1 && (
-              <span className="ml-1 text-xs font-normal text-gray-500">({qty}개)</span>
-            )}
-          </div>
+      {/* 모바일 하단 고정 구매바 — B안: 하트 서클 + 라운드풀 버튼 2개 */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 pt-3 pb-4 md:hidden">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => handleLike(id)}
+            aria-label={liked ? '찜 해제' : '찜'}
+            className="flex-shrink-0 w-12 h-12 rounded-full border border-line
+                       flex items-center justify-center text-lg text-brand
+                       hover:bg-surface transition-colors"
+          >
+            {liked ? <FaHeart /> : <FaRegHeart />}
+          </button>
           {p.productType === 'custom' ? (
             <button
               onClick={() => {
                 if (!currentUser) { openLogin(); return; }
                 onGo?.(`/product/${p.productUuid}/custom-order`);
               }}
-              className="rounded-lg px-6 py-2 text-sm text-white font-medium bg-rose-500 hover:bg-rose-600 transition-colors"
+              className="flex-1 h-12 rounded-full text-[15px] text-white font-semibold bg-brand hover:bg-brand-600 transition-colors"
             >
               {t('product:detailPage.customOrderButton')}
             </button>
           ) : (
-            <div className="flex gap-2">
+            <>
               <button
                 onClick={addToCart}
                 disabled={addingToCart || !canPurchase}
-                className={`rounded-lg border px-4 py-2 text-sm ${
+                className={`flex-1 h-12 rounded-full text-[15px] font-semibold transition-colors ${
                   addingToCart || !canPurchase
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : 'hover:bg-gray-50'
+                    ? 'bg-surface text-muted cursor-not-allowed'
+                    : 'bg-brand-50 text-brand hover:bg-brand-100'
                 }`}
               >
                 {!canPurchase ? t('product:detail.outOfStock') : addingToCart ? t('product:detailPage.addingToCart') : t('common:cart')}
@@ -1194,15 +1225,17 @@ export function Detail({
               <button
                 onClick={buyNow}
                 disabled={addingToCart || !canPurchase}
-                className={`rounded-lg px-4 py-2 text-sm text-white ${
+                className={`flex-1 h-12 rounded-full text-[15px] text-white font-semibold transition-colors [font-variant-numeric:tabular-nums] ${
                   addingToCart || !canPurchase
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-black hover:bg-gray-800'
+                    ? 'bg-line-strong cursor-not-allowed'
+                    : 'bg-brand hover:bg-brand-600'
                 }`}
               >
-                {!canPurchase ? t('product:detail.outOfStock') : t('product:detailPage.buyNowMobile')}
+                {!canPurchase
+                  ? t('product:detail.outOfStock')
+                  : `${money(isStocked ? unitPrice * qty : salePrice)} 구매`}
               </button>
-            </div>
+            </>
           )}
         </div>
       </div>

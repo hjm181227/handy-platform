@@ -12,7 +12,7 @@ export function CompleteStep({ onComplete, userName }: CompleteStepProps) {
     <div className="h-full min-h-screen bg-white flex flex-col items-center justify-center px-5 py-10 mx-auto max-w-md overflow-y-auto">
       {/* 축하 아이콘 */}
       <div className="mb-8">
-        <div className="w-24 h-24 rounded-full bg-[#FFF1F2] flex items-center justify-center">
+        <div className="w-24 h-24 rounded-full bg-brand-50 flex items-center justify-center">
           <span className="text-5xl">🎉</span>
         </div>
       </div>
@@ -29,8 +29,8 @@ export function CompleteStep({ onComplete, userName }: CompleteStepProps) {
       )}
 
       {/* 포인트 적립 안내 */}
-      <div className="mt-4 mb-8 px-6 py-4 bg-[#FFF1F2] rounded-xl">
-        <p className="text-[#D14A5B] text-center">
+      <div className="mt-4 mb-8 px-6 py-4 bg-brand-50 rounded-xl">
+        <p className="text-brand-600 text-center">
           <span className="font-bold text-lg">1,000P</span>
           <span className="text-sm ml-1">{t('auth:signup.pointsEarned')}</span>
         </p>

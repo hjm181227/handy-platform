@@ -146,7 +146,7 @@ function ChevronRightIcon() {
 function Spinner() {
   return (
     <div className="flex flex-col items-center justify-center py-24" role="status" aria-label="로딩 중">
-      <div className="w-10 h-10 border-4 border-gray-200 border-t-[#E85A6B] rounded-full animate-spin" />
+      <div className="w-10 h-10 border-4 border-gray-200 border-t-brand rounded-full animate-spin" />
       <p className="mt-3 text-sm text-gray-500">불러오는 중...</p>
     </div>
   );
@@ -173,7 +173,7 @@ interface QuotesBadgeProps {
 function QuotesBadge({ count }: QuotesBadgeProps) {
   if (count <= 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 bg-[#FFF1F2] text-[#E85A6B] text-xs font-semibold px-2 py-0.5 rounded-full">
+    <span className="inline-flex items-center gap-1 bg-brand-50 text-brand text-xs font-semibold px-2 py-0.5 rounded-full">
       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
         <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2H7l-4 4V5z" />
       </svg>
@@ -196,7 +196,7 @@ function OrderCard({ order, onClick }: OrderCardProps) {
     <button
       type="button"
       onClick={() => onClick(order.requestUuid || order.id)}
-      className="w-full text-left bg-white rounded-xl shadow-sm border border-gray-100 p-4 active:bg-gray-50 transition-colors hover:border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E85A6B] focus-visible:ring-offset-2"
+      className="w-full text-left bg-white rounded-xl shadow-sm border border-gray-100 p-4 active:bg-gray-50 transition-colors hover:border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       aria-label={`${order.title} 상세 보기`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -244,7 +244,7 @@ function EmptyState({ onNavigateToNew }: EmptyStateProps) {
       <button
         type="button"
         onClick={onNavigateToNew}
-        className="px-6 py-2.5 bg-[#E85A6B] text-white text-sm font-semibold rounded-lg hover:bg-[#D14A5B] active:bg-[#C03A5A] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E85A6B] focus-visible:ring-offset-2"
+        className="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-brand-600 active:bg-[#C03A5A] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         주문서 작성하기
       </button>
@@ -355,7 +355,7 @@ export function CustomOrderManagementPage({ onGo }: { onGo: (to: string) => void
   const hasMore = currentPage < totalPages;
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5]">
+    <div className="min-h-screen bg-surface">
       {/* ---- Sticky Header ---- */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
@@ -418,7 +418,7 @@ export function CustomOrderManagementPage({ onGo }: { onGo: (to: string) => void
             <button
               type="button"
               onClick={() => fetchOrders(1, activeTab, false)}
-              className="mt-2 text-[#E85A6B] font-medium underline underline-offset-2 hover:no-underline"
+              className="mt-2 text-brand font-medium underline underline-offset-2 hover:no-underline"
             >
               다시 시도
             </button>
