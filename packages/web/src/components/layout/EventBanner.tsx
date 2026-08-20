@@ -186,7 +186,7 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
           <div className="flex gap-0">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex-shrink-0 w-full sm:w-1/2 lg:w-1/3">
-                <div className="relative overflow-hidden bg-gray-200 animate-pulse">
+                <div className="relative overflow-hidden rounded-2xl sm:rounded-none bg-surface animate-pulse">
                   <div className="aspect-[4/3] w-full" />
                 </div>
               </div>
@@ -256,7 +256,7 @@ export function EventBanners({ onGo }:{ onGo:(to:string)=>void }) {
                       e.preventDefault();
                       handleBannerClick(banner, onGo);
                     }}
-                    className="relative block overflow-hidden bg-gray-100 transition-shadow duration-300"
+                    className="relative block overflow-hidden rounded-2xl sm:rounded-none bg-surface transition-shadow duration-300"
                     style={{
                       boxShadow: '0 2px 8px 0 rgba(20, 20, 20, 0.04), 0 1px 3px 0 rgba(20, 20, 20, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02)'
                     }}

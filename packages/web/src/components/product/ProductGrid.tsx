@@ -2,8 +2,8 @@ import { Product } from '@handy-platform/shared';
 import { useTranslation } from 'react-i18next';
 import { ProductCard } from './ProductCard';
 
-export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLike, onGo, likedProducts = [] }:{
-  title:string; items:Product[]; loading?: boolean; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; onGo?:(path:string)=>void; likedProducts?: string[];
+export function SectionRow({ title, sub, moreTo, items, loading = false, onOpen, onAdd, onLike, onGo, likedProducts = [] }:{
+  title:string; sub?:string; moreTo?:string; items:Product[]; loading?: boolean; onOpen:(id:string)=>void; onAdd:(id:string)=>void; onLike?:(id:string)=>void; onGo?:(path:string)=>void; likedProducts?: string[];
 }) {
   const { t } = useTranslation('common');
   // 로딩 스켈레톤 카드 렌더링
@@ -12,10 +12,10 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
       {Array.from({ length: 5 }).map((_, index) => (
         <div key={`skeleton-${index}`} className="md:snap-start md:flex-shrink-0">
           <div className="w-full md:w-40 animate-pulse">
-            <div className="aspect-square bg-gray-200 rounded-lg mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded mb-1"></div>
-            <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="aspect-square bg-surface rounded-xl mb-2"></div>
+            <div className="h-3 bg-surface rounded w-16 mb-1.5"></div>
+            <div className="h-4 bg-surface rounded w-5/6 mb-1.5"></div>
+            <div className="h-4 bg-surface rounded w-1/2"></div>
           </div>
         </div>
       ))}
@@ -23,10 +23,17 @@ export function SectionRow({ title, items, loading = false, onOpen, onAdd, onLik
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-4 mt-6">
+    <section className="mx-auto max-w-7xl px-4 mt-7">
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-base md:text-lg font-semibold">{title}</h2>
-        <a href="#" onClick={(e)=>e.preventDefault()} className="text-xs text-gray-500">{t('seeMore')}</a>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-ink">{title}</h2>
+          {sub && <p className="text-[12.5px] text-muted mt-0.5">{sub}</p>}
+        </div>
+        {moreTo && onGo && (
+          <button onClick={() => onGo(moreTo)} className="text-[12.5px] font-semibold text-muted hover:text-ink">
+            {t('seeMore')}
+          </button>
+        )}
       </div>
       {loading ? renderLoadingSkeleton() : (
         <div className="grid grid-cols-2 gap-4 md:flex md:gap-4 md:overflow-x-auto md:snap-x pb-2">

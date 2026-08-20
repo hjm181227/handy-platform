@@ -1,14 +1,27 @@
 import { Product } from '@handy-platform/shared';
 import { useTranslation } from 'react-i18next';
-import { Badge, Stars } from '../ui';
 import { money } from '../../utils';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
-import { IoMdStar } from 'react-icons/io';
 
+/** 서버 nailShape enum → 표시용 한글 */
+export const NAIL_SHAPE_LABELS: Record<string, string> = {
+  ROUND: '라운드',
+  ALMOND: '아몬드',
+  OVAL: '오발',
+  STILETTO: '스틸레토',
+  SQUARE: '스퀘어',
+  COFFIN: '코핀',
+};
+
+/**
+ * 상품 카드 — 디자인 시스템 규격 (Handy Commerce DS · Screens/Home A안)
+ * 썸네일 1:1·12px 라운드, 좌상단 배지 1개, 우상단 하트 오버레이,
+ * 브랜드(11.5 muted) → 상품명(14/600 한 줄) → 메타(쉐입·제작일) → 가격(tabular).
+ */
 export function ProductCard({
   p,
   onOpen,
-  onAdd,
+  onAdd: _onAdd,
   onLike,
   onGo,
   isLiked = false,
@@ -23,48 +36,37 @@ export function ProductCard({
   isLoading?: boolean;
 }) {
   const { t } = useTranslation('common');
-  // 로딩 스켈레톤 렌더링
   if (isLoading) {
     return (
-      <div className="w-full md:w-[200px] shrink-0">
-        <div className="relative rounded-lg overflow-hidden bg-gray-100 animate-pulse">
-          <div className="aspect-[3/4] w-full bg-gray-200"></div>
-        </div>
-        <div className="mt-1 space-y-0.5 animate-pulse">
-          <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
-          <div className="h-4 bg-gray-200 rounded mb-1"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6 mb-1"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-1"></div>
-          <div className="flex items-center justify-between mt-2">
-            <div className="h-4 bg-gray-200 rounded w-20"></div>
-            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-          </div>
-        </div>
+      <div className="w-full md:w-[200px] shrink-0 animate-pulse">
+        <div className="aspect-square w-full bg-surface rounded-xl"></div>
+        <div className="h-3 bg-surface rounded w-16 mt-2.5"></div>
+        <div className="h-4 bg-surface rounded w-5/6 mt-1.5"></div>
+        <div className="h-4 bg-surface rounded w-1/2 mt-1.5"></div>
       </div>
     );
   }
 
-  // 실제 데이터가 없으면 렌더링하지 않음
   if (!p || !onOpen) {
     return null;
   }
 
-  // 좋아요 API는 UUID를 요구하므로 productUuid 사용
-  // 일부 엔드포인트(/api/brands withItems)는 productUuid 대신 id 필드로 반환하므로 폴백 처리
   const productId = p.productUuid || (p as any).id || (p as any).productId;
-  // 가격 fallback: discountedPrice > salePrice > price
   const salePrice = p.discountedPrice ?? p.salePrice ?? p.price ?? 0;
-  // rating null 체크
-  const ratingAvg = p.rating?.average ?? 0;
-  const ratingCount = p.rating?.count ?? 0;
+  const hasDiscount = salePrice < p.price;
+  const discountRate = hasDiscount ? Math.round((1 - salePrice / p.price) * 100) : 0;
+  const shapeLabel = p.nailShape ? NAIL_SHAPE_LABELS[p.nailShape] : null;
+  const processingDays = (p as any).processingDays as number | undefined;
+  const isCustomDesign = Array.isArray((p as any).tags) && (p as any).tags.includes('커스텀 디자인');
+
   return (
     <div className="w-full md:w-[200px] shrink-0">
-      <div className="relative rounded-lg overflow-hidden bg-gray-100">
+      <div className="relative rounded-xl overflow-hidden bg-surface">
         <button onClick={()=>onOpen(productId)} className="block w-full text-left">
           <img
             src={p.mainImageUrl}
             alt={p.name}
-            className="aspect-[3/4] w-full object-cover hover:scale-[1.02] transition-transform"
+            className="aspect-square w-full object-cover hover:scale-[1.02] transition-transform"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               if (target.src !== '/placeholder-image.jpg') {
@@ -73,13 +75,28 @@ export function ProductCard({
             }}
           />
         </button>
-        <div className="absolute left-2 top-2 flex gap-1">
-          {p.isNewProduct && <Badge tone="blue">NEW</Badge>}
-          {p.isFeatured && <Badge tone="red">HOT</Badge>}
-          {p.discountRate && p.discountRate > 0 && <Badge tone="red">{t('discount')}</Badge>}
-        </div>
+        {/* 배지는 좌상단 1개만 (우선순위: NEW > 커스텀 > HOT) */}
+        {p.isNewProduct ? (
+          <span className="absolute left-2 top-2 bg-brand text-white text-[11px] font-bold px-2 py-0.5 rounded-full">NEW</span>
+        ) : isCustomDesign ? (
+          <span className="absolute left-2 top-2 bg-ink text-white text-[11px] font-bold px-2 py-0.5 rounded-full">커스텀</span>
+        ) : p.isFeatured ? (
+          <span className="absolute left-2 top-2 bg-ink text-white text-[11px] font-bold px-2 py-0.5 rounded-full">HOT</span>
+        ) : null}
+        {onLike && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onLike(productId);
+            }}
+            aria-label={isLiked ? t('unlike', '찜 해제') : t('like', '찜')}
+            className="absolute right-2 top-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-[13px] text-brand hover:scale-110 transition-transform"
+          >
+            {isLiked ? <FaHeart /> : <FaRegHeart />}
+          </button>
+        )}
       </div>
-      <div className="mt-1 space-y-0.5">
+      <div className="mt-2">
         {p.brand && onGo ? (
           <button
             onClick={(e) => {
@@ -91,35 +108,25 @@ export function ProductCard({
                 onGo(`/brands?search=${encodeURIComponent(p.brand!)}`);
               }
             }}
-            className="text-[11px] text-gray-500 hover:text-brand hover:underline text-left"
+            className="text-[11.5px] font-semibold text-muted tracking-wide hover:text-brand text-left"
           >
             {p.brand}
           </button>
         ) : (
-          <div className="text-[11px] text-gray-500">{p.brand || ''}</div>
+          <div className="text-[11.5px] font-semibold text-muted tracking-wide">{p.brand || ''}</div>
         )}
-        <div className="text-[13px] leading-snug max-h-[34px] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">{p.name}</div>
-        <div className="flex items-baseline gap-2">
-          <div className="text-[15px] font-bold">{money(salePrice)}</div>
-          {salePrice < p.price ? <div className="text-[12px] text-gray-400 line-through">{money(p.price)}</div> : null}
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <IoMdStar className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm">{ratingAvg.toFixed(1)}</span>
-            <span className="text-[11px] text-gray-500">({ratingCount})</span>
+        <button onClick={()=>onOpen(productId)} className="block w-full text-left">
+          <div className="text-sm font-semibold text-ink truncate mt-0.5">{p.name}</div>
+        </button>
+        {(shapeLabel || processingDays) && (
+          <div className="text-[11.5px] text-muted mt-0.5">
+            {[shapeLabel, processingDays ? `제작 ${processingDays}일` : null].filter(Boolean).join(' · ')}
           </div>
-          {onLike && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onLike(productId);
-              }}
-              className="text-lg hover:scale-110 transition-transform"
-            >
-              {isLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-600" />}
-            </button>
-          )}
+        )}
+        <div className="flex items-baseline gap-1.5 mt-1 [font-variant-numeric:tabular-nums]">
+          {hasDiscount && <span className="text-[15px] font-extrabold text-brand">{discountRate}%</span>}
+          <span className="text-[15px] font-extrabold text-ink">{money(salePrice)}</span>
+          {hasDiscount && <span className="text-xs text-muted line-through">{money(p.price)}</span>}
         </div>
       </div>
     </div>

@@ -229,7 +229,7 @@ export function MainHeader({
                   onFocus={handleSearchInputFocus}
                   onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                   placeholder={t('common:searchPlaceholder')}
-                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none text-sm text-gray-700"
+                  className="w-full pl-4 pr-20 py-2 bg-surface rounded-full focus:ring-2 focus:ring-brand-100 outline-none text-sm text-ink placeholder:text-muted"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                   {q && (
@@ -574,7 +574,7 @@ export function MainHeader({
                   onFocus={handleSearchInputFocus}
                   onKeyDown={(e)=>{ if(e.key==="Enter") submitSearch(); }}
                   placeholder={t('common:searchPlaceholder')}
-                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none text-sm text-gray-700"
+                  className="w-full pl-4 pr-20 py-2 bg-surface rounded-full focus:ring-2 focus:ring-brand-100 outline-none text-sm text-ink placeholder:text-muted"
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                   {q && (
