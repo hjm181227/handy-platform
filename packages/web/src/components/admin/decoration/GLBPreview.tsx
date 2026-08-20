@@ -206,7 +206,7 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
     <div>
       <div
         ref={containerRef}
-        className="w-full border border-gray-300 rounded-lg overflow-hidden"
+        className="w-full border border-line rounded-lg overflow-hidden"
         style={{
           height: 300,
           backgroundImage: 'repeating-conic-gradient(#e0e0e0 0% 25%, #ffffff 0% 50%)',
@@ -215,7 +215,7 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
       />
       <div className="mt-2 flex items-center gap-2">
         {isAutoCapturing && (
-          <span className="inline-flex items-center text-sm text-indigo-600">
+          <span className="inline-flex items-center text-sm text-brand-600">
             <FiRefreshCw className="mr-1 animate-spin" />
             자동 캡처 중...
           </span>
@@ -224,7 +224,7 @@ export function GLBPreview({ modelUrl, color, onCapture }: {
           type="button"
           onClick={handleCapture}
           disabled={isAutoCapturing}
-          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FiEye className="mr-1" />
           다시 캡처

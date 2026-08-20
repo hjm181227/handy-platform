@@ -34,7 +34,7 @@ const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor:
   pending:  { label: '대기중', bgColor: 'bg-amber-100', textColor: 'text-amber-600' },
   accepted: { label: '수락됨', bgColor: 'bg-green-100', textColor: 'text-green-700' },
   rejected: { label: '거절됨', bgColor: 'bg-red-100',   textColor: 'text-red-700' },
-  expired:  { label: '만료됨', bgColor: 'bg-gray-100',  textColor: 'text-gray-500' }
+  expired:  { label: '만료됨', bgColor: 'bg-surface',  textColor: 'text-muted' }
 };
 
 // 쉐입 한글 변환

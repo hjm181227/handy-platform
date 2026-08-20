@@ -74,27 +74,27 @@ export function DetailsStep({
                 aria-label="수량 줄이기"
                 onClick={() => onUpdateQuantity(Math.max(1, quantity - 1))}
                 disabled={quantity <= 1}
-                className="w-12 h-12 rounded-xl border-2 border-gray-200 text-xl font-bold
-                         disabled:opacity-40 active:bg-gray-100 transition-colors"
+                className="w-12 h-12 rounded-xl border-2 border-line text-xl font-bold
+                         disabled:opacity-40 active:bg-surface transition-colors"
               >
                 −
               </button>
               <div className="flex-1 text-center">
                 <span className="text-2xl font-bold">{quantity}</span>
-                <span className="ml-1 text-sm text-gray-500">세트</span>
+                <span className="ml-1 text-sm text-muted">세트</span>
               </div>
               <button
                 type="button"
                 aria-label="수량 늘리기"
                 onClick={() => onUpdateQuantity(Math.min(MAX_QUANTITY, quantity + 1))}
                 disabled={quantity >= MAX_QUANTITY}
-                className="w-12 h-12 rounded-xl border-2 border-gray-200 text-xl font-bold
-                         disabled:opacity-40 active:bg-gray-100 transition-colors"
+                className="w-12 h-12 rounded-xl border-2 border-line text-xl font-bold
+                         disabled:opacity-40 active:bg-surface transition-colors"
               >
                 +
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted mt-2">
               같은 디자인·같은 사이즈 기준입니다. 판매자는 수량을 반영한 총액으로 견적을 보냅니다.
             </p>
           </div>
@@ -110,11 +110,11 @@ export function DetailsStep({
             value={desiredColor}
             onChange={(e) => onUpdateColor(e.target.value)}
             placeholder={t('product:customOrder.colorPlaceholder')}
-            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base
-                     focus:ring-2 focus:ring-black focus:border-transparent
-                     transition-all placeholder:text-gray-400"
+            className="w-full px-4 py-4 border-2 border-line-strong rounded-xl text-base
+                     focus:ring-2 focus:ring-brand focus:border-transparent
+                     transition-all placeholder:text-muted"
           />
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted mt-2">
             {t('product:customOrder.colorHint')}
           </p>
         </div>
@@ -129,9 +129,9 @@ export function DetailsStep({
             onChange={(e) => onUpdateRequest(e.target.value)}
             placeholder={t('product:customOrder.requestDetailPlaceholder')}
             rows={4}
-            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base resize-none
-                     focus:ring-2 focus:ring-black focus:border-transparent
-                     transition-all placeholder:text-gray-400"
+            className="w-full px-4 py-4 border-2 border-line-strong rounded-xl text-base resize-none
+                     focus:ring-2 focus:ring-brand focus:border-transparent
+                     transition-all placeholder:text-muted"
           />
         </div>
 
@@ -139,7 +139,7 @@ export function DetailsStep({
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             {t('product:customOrder.refImageLabel')}
-            <span className="text-gray-400 font-normal ml-1">({t('product:customOrder.refImageOptional')})</span>
+            <span className="text-muted font-normal ml-1">({t('product:customOrder.refImageOptional')})</span>
           </label>
 
           {/* 첨부된 파일 목록 */}
@@ -148,7 +148,7 @@ export function DetailsStep({
               {attachments.map((file, index) => (
                 <div
                   key={index}
-                  className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden"
+                  className="relative aspect-square bg-surface rounded-xl overflow-hidden"
                 >
                   {file.type.startsWith('image/') ? (
                     <img
@@ -158,7 +158,7 @@ export function DetailsStep({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-xs text-gray-500 truncate px-2">{file.name}</span>
+                      <span className="text-xs text-muted truncate px-2">{file.name}</span>
                     </div>
                   )}
                   <button
@@ -178,9 +178,9 @@ export function DetailsStep({
           <button
             type="button"
             onClick={handleAttachClick}
-            className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl
-                     flex items-center justify-center gap-2 text-gray-600
-                     hover:border-gray-400 hover:bg-gray-50 transition-colors"
+            className="w-full py-4 border-2 border-dashed border-line rounded-xl
+                     flex items-center justify-center gap-2 text-muted
+                     hover:border-line-strong hover:bg-surface transition-colors"
           >
             <FaImage className="w-5 h-5" />
             <span>{t('product:customOrder.addRefImage')}</span>
@@ -193,7 +193,7 @@ export function DetailsStep({
             onChange={handleFileSelect}
             className="hidden"
           />
-          <p className="text-xs text-gray-500 mt-2 text-center">
+          <p className="text-xs text-muted mt-2 text-center">
             {t('product:customOrder.refImageHint')}
           </p>
         </div>

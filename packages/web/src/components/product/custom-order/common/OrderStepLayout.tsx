@@ -34,7 +34,7 @@ export function OrderStepLayout({
             {showBackButton && onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-surface transition-colors"
                 aria-label="뒤로가기"
               >
                 <FaArrowLeft className="w-5 h-5 text-gray-800" />
@@ -50,7 +50,7 @@ export function OrderStepLayout({
                 <div
                   key={index}
                   className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                    index < currentStep ? 'bg-black' : 'bg-gray-200'
+                    index < currentStep ? 'bg-brand' : 'bg-surface-strong'
                   }`}
                 />
               ))}
@@ -68,7 +68,7 @@ export function OrderStepLayout({
               <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
             )}
             {subtitle && (
-              <p className="text-gray-500">{subtitle}</p>
+              <p className="text-muted">{subtitle}</p>
             )}
           </div>
         )}

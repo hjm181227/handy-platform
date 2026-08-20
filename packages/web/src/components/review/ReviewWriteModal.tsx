@@ -266,7 +266,7 @@ export function ReviewWriteModal({
       {/* 모달 컨텐츠 */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden">
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-purple-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-brand-50">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <span className="text-xl">✍️</span>
             {mode === 'create' ? t('product:review.writeTitle') : t('product:review.editTitle')}
@@ -274,9 +274,9 @@ export function ReviewWriteModal({
           <button
             onClick={onClose}
             disabled={submitting}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-purple-100 transition-colors disabled:opacity-50"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand-100 transition-colors disabled:opacity-50"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -286,7 +286,7 @@ export function ReviewWriteModal({
         <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-6">
           {/* 상품 정보 */}
           {orderItem && (
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl mb-6">
+            <div className="flex items-center gap-4 p-4 bg-surface rounded-xl mb-6">
               <img
                 src={orderItem.productImage || '/placeholder-product.png'}
                 alt={orderItem.productName}
@@ -295,7 +295,7 @@ export function ReviewWriteModal({
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate">{orderItem.productName}</p>
                 {orderItem.options && Object.keys(orderItem.options).length > 0 && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted mt-1">
                     {Object.entries(orderItem.options).map(([key, value]) => (
                       <span key={key} className="mr-2">
                         {key}: {value}
@@ -314,7 +314,7 @@ export function ReviewWriteModal({
             </label>
             <div className="flex flex-col items-center gap-2">
               {renderStars()}
-              <p className={`text-sm ${rating > 0 ? 'text-gray-700' : 'text-gray-400'}`}>
+              <p className={`text-sm ${rating > 0 ? 'text-gray-700' : 'text-muted'}`}>
                 {getRatingText(hoverRating || rating)}
               </p>
             </div>
@@ -329,15 +329,15 @@ export function ReviewWriteModal({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t('product:review.contentPlaceholder')}
-              className="w-full h-32 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+              className="w-full h-32 p-4 border border-line-strong rounded-xl resize-none focus:ring-2 focus:ring-brand focus:border-transparent transition-shadow"
               disabled={submitting}
               maxLength={MAX_CONTENT_LENGTH}
             />
             <div className="flex justify-between mt-2">
-              <p className={`text-xs ${content.length < MIN_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-400'}`}>
+              <p className={`text-xs ${content.length < MIN_CONTENT_LENGTH ? 'text-red-500' : 'text-muted'}`}>
                 {content.length < MIN_CONTENT_LENGTH && t('product:review.minLengthWarning', { min: MIN_CONTENT_LENGTH })}
               </p>
-              <p className={`text-xs ${content.length > MAX_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-400'}`}>
+              <p className={`text-xs ${content.length > MAX_CONTENT_LENGTH ? 'text-red-500' : 'text-muted'}`}>
                 {content.length} / {MAX_CONTENT_LENGTH}
               </p>
             </div>
@@ -346,7 +346,7 @@ export function ReviewWriteModal({
           {/* 이미지 업로드 */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('product:review.attachPhoto')} <span className="text-gray-400 font-normal">({t('product:review.attachPhotoOptional', { max: MAX_IMAGES })})</span>
+              {t('product:review.attachPhoto')} <span className="text-muted font-normal">({t('product:review.attachPhotoOptional', { max: MAX_IMAGES })})</span>
             </label>
 
             <div className="flex gap-3 flex-wrap">
@@ -383,7 +383,7 @@ export function ReviewWriteModal({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={submitting}
-                  className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-colors disabled:opacity-50"
+                  className="w-20 h-20 border-2 border-dashed border-line rounded-lg flex flex-col items-center justify-center text-muted hover:border-brand hover:text-brand transition-colors disabled:opacity-50"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -402,7 +402,7 @@ export function ReviewWriteModal({
               className="hidden"
             />
 
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-muted mt-2">
               {t('product:review.imageFormatHint')}
             </p>
           </div>
@@ -416,18 +416,18 @@ export function ReviewWriteModal({
         </div>
 
         {/* 푸터 */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+        <div className="px-6 py-4 border-t border-line bg-surface flex gap-3">
           <button
             onClick={onClose}
             disabled={submitting}
-            className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium disabled:opacity-50"
+            className="flex-1 py-3 bg-white border border-line text-ink rounded-full hover:bg-surface transition-colors font-medium disabled:opacity-50"
           >
             {t('common:cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!isValid || submitting}
-            className="flex-1 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>

@@ -8,7 +8,7 @@ import {
 type ApplicationStatus = '' | 'draft' | 'pending' | 'approved' | 'rejected';
 
 const statusStyle: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
+  draft: 'bg-surface text-gray-700',
   pending: 'bg-amber-100 text-amber-800',
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
@@ -53,7 +53,7 @@ function StatusBadge({ status }: { status: string }) {
 function Info({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-gray-500">{label}</dt>
+      <dt className="text-xs font-medium text-muted">{label}</dt>
       <dd className="mt-1 break-words text-sm text-gray-900">{value || '-'}</dd>
     </div>
   );
@@ -187,8 +187,8 @@ const SellerApplicationManagement: React.FC = () => {
           <h1 className="mt-1 text-3xl font-bold text-gray-950">입점 신청 심사</h1>
           <p className="mt-2 text-sm text-gray-600">브랜드 정보와 증빙서류를 확인하고 수수료 조건을 확정합니다.</p>
         </div>
-        <div className="rounded-2xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
-          <p className="text-xs text-gray-500">현재 조건의 신청</p>
+        <div className="rounded-2xl border border-line bg-white px-5 py-3 shadow-sm">
+          <p className="text-xs text-muted">현재 조건의 신청</p>
           <p className="mt-1 text-2xl font-bold text-gray-950">{pagination.totalItems}건</p>
         </div>
       </header>
@@ -197,7 +197,7 @@ const SellerApplicationManagement: React.FC = () => {
         <div className="rounded-2xl bg-gray-950 p-5 text-white lg:col-span-2">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold tracking-wider text-gray-400">현재 기본 판매 수수료</p>
+              <p className="text-xs font-semibold tracking-wider text-muted">현재 기본 판매 수수료</p>
               <p className="mt-1 text-3xl font-bold">10%</p>
             </div>
             <div className="max-w-md text-sm leading-6 text-gray-300">
@@ -222,12 +222,12 @@ const SellerApplicationManagement: React.FC = () => {
         </div>
       )}
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-line bg-white p-4 shadow-sm">
         <div className="grid gap-3 md:grid-cols-[180px_1fr_auto]">
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as ApplicationStatus)}
-            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-brand"
+            className="rounded-xl border border-line px-3 py-2.5 text-sm outline-none focus:border-brand"
           >
             <option value="pending">심사 대기</option>
             <option value="approved">승인 완료</option>
@@ -239,24 +239,24 @@ const SellerApplicationManagement: React.FC = () => {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="브랜드명, 대표자명 또는 이메일 검색"
-            className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
+            className="rounded-xl border border-line px-4 py-2.5 text-sm outline-none focus:border-brand"
           />
-          <button onClick={() => loadApplications(1)} disabled={loading} className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold disabled:opacity-50">
+          <button onClick={() => loadApplications(1)} disabled={loading} className="rounded-xl border border-line px-5 py-2.5 text-sm font-semibold disabled:opacity-50">
             새로고침
           </button>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="hidden grid-cols-[1.4fr_1fr_1fr_100px_120px] gap-4 border-b bg-gray-50 px-6 py-3 text-xs font-semibold text-gray-500 md:grid">
+      <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+        <div className="hidden grid-cols-[1.4fr_1fr_1fr_100px_120px] gap-4 border-b bg-surface px-6 py-3 text-xs font-semibold text-muted md:grid">
           <span>브랜드</span><span>담당자</span><span>신청 완성도</span><span>상태</span><span>접수일</span>
         </div>
         {loading ? (
-          <div className="space-y-3 p-6">{[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-gray-100" />)}</div>
+          <div className="space-y-3 p-6">{[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-surface" />)}</div>
         ) : applications.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <p className="text-lg font-semibold text-gray-900">해당하는 신청이 없습니다</p>
-            <p className="mt-1 text-sm text-gray-500">검색어나 상태 조건을 변경해 보세요.</p>
+            <p className="mt-1 text-sm text-muted">검색어나 상태 조건을 변경해 보세요.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -268,23 +268,23 @@ const SellerApplicationManagement: React.FC = () => {
               >
                 <div>
                   <p className="font-semibold text-gray-950">{application.brandName}</p>
-                  <p className="mt-1 text-xs text-gray-500">{application.businessNumber || '사업자번호 미입력'}</p>
+                  <p className="mt-1 text-xs text-muted">{application.businessNumber || '사업자번호 미입력'}</p>
                 </div>
                 <div className="text-sm text-gray-700">
                   <p>{application.representativeName || '-'}</p>
-                  <p className="mt-1 truncate text-xs text-gray-500">{application.contactEmail}</p>
+                  <p className="mt-1 truncate text-xs text-muted">{application.contactEmail}</p>
                 </div>
                 <div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center justify-between text-xs text-muted">
                     <span>{application.applicationProgress ?? 0}%</span>
                     <span>서류 {application.documentsCount || 0}개</span>
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface">
                     <div className="h-full rounded-full bg-brand" style={{ width: `${application.applicationProgress ?? 0}%` }} />
                   </div>
                 </div>
                 <div><StatusBadge status={application.status} /></div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-muted">
                   {new Date(application.submittedAt || application.createdAt).toLocaleDateString('ko-KR')}
                 </div>
               </button>
@@ -311,21 +311,21 @@ const SellerApplicationManagement: React.FC = () => {
             <header className="sticky top-0 z-10 flex items-start justify-between border-b bg-white px-6 py-5 md:px-8">
               <div>
                 <div className="flex items-center gap-3"><h2 className="text-2xl font-bold text-gray-950">{selected.brandName}</h2><StatusBadge status={selected.status} /></div>
-                <p className="mt-1 text-sm text-gray-500">신청번호 {selected.sellerInfoId}</p>
+                <p className="mt-1 text-sm text-muted">신청번호 {selected.sellerInfoId}</p>
               </div>
-              <button onClick={closeDetail} className="rounded-full p-2 text-2xl text-gray-400 hover:bg-gray-100">×</button>
+              <button onClick={closeDetail} className="rounded-full p-2 text-2xl text-muted hover:bg-surface-strong">×</button>
             </header>
 
             <div className="space-y-7 p-6 md:p-8">
               <section>
                 <div className="flex items-center justify-between"><h3 className="font-bold text-gray-950">신청 완성도</h3><span className="text-sm font-semibold text-brand-600">{selected.applicationProgress ?? 0}%</span></div>
-                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-gray-100"><div className="h-full bg-brand" style={{ width: `${selected.applicationProgress ?? 0}%` }} /></div>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-surface"><div className="h-full bg-brand" style={{ width: `${selected.applicationProgress ?? 0}%` }} /></div>
                 {!!selected.missingFields?.length && (
                   <div className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800">누락 항목: {selected.missingFields.map((field) => fieldLabel[field] || field).join(', ')}</div>
                 )}
               </section>
 
-              <section className="rounded-2xl border border-gray-200 p-5">
+              <section className="rounded-2xl border border-line p-5">
                 <h3 className="font-bold text-gray-950">사업자 및 담당자 정보</h3>
                 <dl className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   <Info label="대표자명" value={selected.representativeName} />
@@ -338,24 +338,24 @@ const SellerApplicationManagement: React.FC = () => {
               </section>
 
               <section className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-2xl border border-gray-200 p-5">
+                <div className="rounded-2xl border border-line p-5">
                   <h3 className="font-bold text-gray-950">사업장 주소</h3>
                   <p className="mt-3 text-sm leading-6 text-gray-700">
                     {[selected.businessAddress?.state, selected.businessAddress?.city, selected.businessAddress?.street, selected.businessAddress?.zipCode].filter(Boolean).join(' ') || '-'}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-gray-200 p-5">
+                <div className="rounded-2xl border border-line p-5">
                   <h3 className="font-bold text-gray-950">정산 계좌</h3>
                   <dl className="mt-3 grid grid-cols-2 gap-4"><Info label="은행" value={selected.bankAccount?.bankName} /><Info label="예금주" value={selected.bankAccount?.accountHolder} /><div className="col-span-2"><Info label="계좌번호" value={selected.bankAccount?.accountNumber} /></div></dl>
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-gray-200 p-5">
+              <section className="rounded-2xl border border-line p-5">
                 <h3 className="font-bold text-gray-950">제출 서류</h3>
                 {selected.verificationDocuments?.length ? (
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {selected.verificationDocuments.map((document, index) => (
-                      <button type="button" key={`${document.url}-${index}`} onClick={() => openVerificationDocument(document.url)} className="rounded-xl border border-gray-200 p-4 text-left text-sm font-medium text-brand-600 hover:bg-brand-50">
+                      <button type="button" key={`${document.url}-${index}`} onClick={() => openVerificationDocument(document.url)} className="rounded-xl border border-line p-4 text-left text-sm font-medium text-brand-600 hover:bg-brand-50">
                         {document.type === 'business_registration' ? '사업자등록증' : document.type} {index + 1} · 새 창에서 보기
                       </button>
                     ))}
@@ -367,15 +367,15 @@ const SellerApplicationManagement: React.FC = () => {
                 <section className="rounded-2xl border border-red-200 bg-red-50 p-5"><h3 className="font-bold text-red-900">최근 보완 요청</h3><p className="mt-2 text-sm leading-6 text-red-800">{selected.rejectionReason}</p></section>
               )}
 
-              <section className="rounded-2xl border border-gray-200 p-5">
+              <section className="rounded-2xl border border-line p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-gray-950">심사 변경 이력</h3>
-                  <span className="text-xs text-gray-500">최근 100건</span>
+                  <span className="text-xs text-muted">최근 100건</span>
                 </div>
                 {selected.auditLogs?.length ? (
                   <ol className="mt-4 space-y-4">
                     {selected.auditLogs.map((log) => (
-                      <li key={log.auditUuid} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                      <li key={log.auditUuid} className="rounded-xl border border-gray-100 bg-surface p-4">
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-2">
                             <StatusBadge status={log.nextStatus} />
@@ -383,7 +383,7 @@ const SellerApplicationManagement: React.FC = () => {
                               {log.action === 'approved' ? '입점 승인' : '보완 요청'}
                             </span>
                           </div>
-                          <time className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleString('ko-KR')}</time>
+                          <time className="text-xs text-muted">{new Date(log.createdAt).toLocaleString('ko-KR')}</time>
                         </div>
                         <p className="mt-2 text-sm text-gray-700">
                           담당자: {log.actor.name || log.actor.email || log.actor.userId}
@@ -398,7 +398,7 @@ const SellerApplicationManagement: React.FC = () => {
                     ))}
                   </ol>
                 ) : (
-                  <p className="mt-3 text-sm text-gray-500">아직 기록된 심사 이력이 없습니다. 기존 처리 건은 이 기능 적용 이후부터 기록됩니다.</p>
+                  <p className="mt-3 text-sm text-muted">아직 기록된 심사 이력이 없습니다. 기존 처리 건은 이 기능 적용 이후부터 기록됩니다.</p>
                 )}
               </section>
 

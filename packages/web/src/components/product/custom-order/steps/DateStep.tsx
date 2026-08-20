@@ -84,13 +84,13 @@ export function DateStep({
                 className={`
                   py-3 px-2 rounded-xl border-2 text-center transition-all
                   ${desiredDate === option.date
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? 'border-ink bg-ink text-white'
+                    : 'border-line bg-white text-ink hover:border-line-strong'
                   }
                 `}
               >
                 <p className="font-medium text-sm">{option.label}</p>
-                <p className={`text-xs mt-0.5 ${desiredDate === option.date ? 'text-gray-300' : 'text-gray-400'}`}>
+                <p className={`text-xs mt-0.5 ${desiredDate === option.date ? 'text-gray-300' : 'text-muted'}`}>
                   {option.formatted}
                 </p>
               </button>
@@ -113,7 +113,7 @@ export function DateStep({
                   : '캘린더에서 선택'
                 }
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted mt-1">
                 원하는 날짜를 직접 선택해주세요
               </p>
             </div>
@@ -129,8 +129,8 @@ export function DateStep({
                   setShowCalendar(false);
                 }}
                 min={getMinDate()}
-                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base
-                         focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full px-4 py-4 border-2 border-line-strong rounded-xl text-base
+                         focus:ring-2 focus:ring-brand focus:border-transparent"
               />
             </div>
           )}
@@ -144,8 +144,8 @@ export function DateStep({
             className={`
               w-full py-3 rounded-xl border-2 text-sm transition-all
               ${desiredDate === ''
-                ? 'border-black bg-gray-50 text-gray-900'
-                : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                ? 'border-ink bg-surface text-ink'
+                : 'border-line text-muted hover:border-line-strong'
               }
             `}
           >

@@ -209,11 +209,11 @@ export function CouponSelector({
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-white rounded-xl border overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface transition-colors"
       >
         <div className="flex items-center gap-3">
           <svg className="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ export function CouponSelector({
             </span>
           )}
           <svg
-            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-5 h-5 text-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -288,7 +288,7 @@ export function CouponSelector({
                 <button
                   onClick={handleRemoveCoupon}
                   disabled={applying}
-                  className="px-3 py-1.5 bg-white border border-blue-300 text-brand text-sm rounded-lg hover:bg-brand-50 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 bg-white border border-brand-200 text-brand text-sm rounded-lg hover:bg-brand-50 disabled:opacity-50 transition-colors"
                 >
                   {applying ? t('checkout.processing') : t('checkout.removeCoupon')}
                 </button>
@@ -305,15 +305,15 @@ export function CouponSelector({
                 {loading ? (
                   <div className="flex items-center justify-center py-6">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
-                    <span className="ml-2 text-sm text-gray-500">{t('checkout.loadingCoupons')}</span>
+                    <span className="ml-2 text-sm text-muted">{t('checkout.loadingCoupons')}</span>
                   </div>
                 ) : availableCoupons.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-6 text-muted">
                     <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                     </svg>
                     <p className="text-sm">{t('checkout.noCouponsAvailable')}</p>
-                    <p className="text-xs text-gray-400 mt-1">{t('checkout.enterCodeBelow')}</p>
+                    <p className="text-xs text-muted mt-1">{t('checkout.enterCodeBelow')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -322,7 +322,7 @@ export function CouponSelector({
                         key={couponItem.userCouponUuid}
                         onClick={() => handleApplyCoupon(couponItem.userCouponUuid)}
                         disabled={applying}
-                        className="w-full text-left border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-brand-50 transition-colors disabled:opacity-50 group"
+                        className="w-full text-left border border-line rounded-lg p-3 hover:border-brand-200 hover:bg-brand-50 transition-colors disabled:opacity-50 group"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
@@ -331,17 +331,17 @@ export function CouponSelector({
                                 {couponItem.name}
                               </span>
                               {couponItem.scope.type === 'seller' && (
-                                <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                                <span className="text-xs bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">
                                   {t('checkout.sellerScope')}
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-muted">
                                 {formatExpiry(couponItem.expiresAt)}
                               </span>
                               {couponItem.minimumOrderAmount && couponItem.minimumOrderAmount > 0 && (
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-muted">
                                   {t('checkout.minimumOrderAmount', { amount: couponItem.minimumOrderAmount.toLocaleString() })}
                                 </span>
                               )}
@@ -351,7 +351,7 @@ export function CouponSelector({
                             <div className="text-lg font-bold text-brand">
                               -{money(couponItem.potentialDiscount)}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted">
                               {formatDiscount(couponItem)}
                             </div>
                           </div>
@@ -363,7 +363,7 @@ export function CouponSelector({
               </div>
 
               {/* Coupon Code Input */}
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-line">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">{t('checkout.couponCodeInput')}</h3>
                 <div className="flex gap-2">
                   <input
@@ -374,7 +374,7 @@ export function CouponSelector({
                       setCodeError('');
                     }}
                     placeholder={t('checkout.couponCodePlaceholder')}
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-brand focus:ring-1 focus:ring-brand text-sm uppercase"
+                    className="flex-1 px-4 py-2.5 border border-line-strong rounded-lg focus:border-brand focus:ring-1 focus:ring-brand text-sm uppercase"
                     disabled={applying}
                   />
                   <button

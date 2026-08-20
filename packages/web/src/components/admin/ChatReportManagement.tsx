@@ -163,14 +163,14 @@ const ChatReportManagement: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">채팅 신고 관리</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted mt-1">
             미처리 {openCount}건
             {hasMore && <span className="ml-2">· 최근 {PAGE_SIZE}건만 표시됩니다</span>}
           </p>
         </div>
         <button
           onClick={() => void fetchReports()}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+          className="px-4 py-2 text-sm border border-line rounded-lg hover:bg-surface"
         >
           새로고침
         </button>
@@ -185,7 +185,7 @@ const ChatReportManagement: React.FC = () => {
             className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
               statusFilter === value
                 ? 'bg-gray-900 text-white border-gray-900'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                : 'bg-white text-ink border-line hover:bg-surface'
             }`}
           >
             {value === 'all' ? '전체' : STATUS_LABELS[value]}
@@ -200,16 +200,16 @@ const ChatReportManagement: React.FC = () => {
       )}
 
       {loading ? (
-        <div className="py-16 text-center text-gray-500">불러오는 중...</div>
+        <div className="py-16 text-center text-muted">불러오는 중...</div>
       ) : reports.length === 0 ? (
-        <div className="py-16 text-center text-gray-500">
+        <div className="py-16 text-center text-muted">
           {statusFilter === 'open' ? '미처리 신고가 없습니다.' : '해당하는 신고가 없습니다.'}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
+        <div className="bg-white border border-line rounded-lg overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+              <tr className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">
                 <th className="px-4 py-3 whitespace-nowrap">접수일시</th>
                 <th className="px-4 py-3 whitespace-nowrap">신고자</th>
                 <th className="px-4 py-3 whitespace-nowrap">대상</th>
@@ -245,7 +245,7 @@ const ChatReportManagement: React.FC = () => {
                   <td className="px-4 py-3 whitespace-nowrap">
                     <button
                       onClick={() => void openDetail(report.id)}
-                      className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="px-3 py-1.5 text-xs border border-line rounded-lg hover:bg-surface"
                     >
                       대화 보기
                     </button>
@@ -267,19 +267,19 @@ const ChatReportManagement: React.FC = () => {
           <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div className="w-full max-w-2xl max-h-[85vh] bg-white rounded-2xl shadow-xl flex flex-col">
               {detailLoading || !selected ? (
-                <div className="p-10 text-center text-gray-500">불러오는 중...</div>
+                <div className="p-10 text-center text-muted">불러오는 중...</div>
               ) : (
                 <>
-                  <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="px-6 py-4 border-b border-line">
                     <h2 className="text-lg font-bold text-gray-900">
                       {selected.reportedName} 신고 내역
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted mt-1">
                       {formatDateTime(selected.createdAt)} · 신고자 {selected.reporterName} ·{' '}
                       {REPORT_REASON_LABELS[selected.reason] ?? selected.reason}
                     </p>
                     {selected.detail && (
-                      <p className="mt-3 text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2">
+                      <p className="mt-3 text-sm text-gray-700 bg-surface rounded-lg px-3 py-2">
                         {selected.detail}
                       </p>
                     )}
@@ -289,14 +289,14 @@ const ChatReportManagement: React.FC = () => {
                     <h3 className="text-sm font-semibold text-gray-700 mb-3">
                       접수 시점 대화
                       {selected.snapshot?.capturedAt && (
-                        <span className="ml-2 font-normal text-gray-400">
+                        <span className="ml-2 font-normal text-muted">
                           ({formatDateTime(selected.snapshot.capturedAt)} 기준)
                         </span>
                       )}
                     </h3>
 
                     {!selected.snapshot || selected.snapshot.messages.length === 0 ? (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted">
                         보관된 대화가 없습니다. (방 정보 없이 접수된 신고)
                       </p>
                     ) : (
@@ -315,7 +315,7 @@ const ChatReportManagement: React.FC = () => {
                                 className={`rounded-lg px-3 py-2 text-sm ${
                                   isReported
                                     ? 'bg-red-50 border border-red-100'
-                                    : 'bg-gray-50 border border-gray-100'
+                                    : 'bg-surface border border-gray-100'
                                 }`}
                               >
                                 <div className="flex items-baseline justify-between gap-3 mb-0.5">
@@ -327,7 +327,7 @@ const ChatReportManagement: React.FC = () => {
                                       </span>
                                     )}
                                   </span>
-                                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                                  <span className="text-xs text-muted whitespace-nowrap">
                                     {formatDateTime(message.createdAt)}
                                   </span>
                                 </div>
@@ -343,7 +343,7 @@ const ChatReportManagement: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3">
+                  <div className="px-6 py-4 border-t border-line flex items-center justify-between gap-3">
                     <span
                       className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[selected.status]}`}
                     >
@@ -353,7 +353,7 @@ const ChatReportManagement: React.FC = () => {
                       <button
                         onClick={() => setSelected(null)}
                         disabled={actionBusy}
-                        className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        className="px-4 py-2 text-sm bg-surface text-ink rounded-lg hover:bg-surface-strong disabled:opacity-50"
                       >
                         닫기
                       </button>

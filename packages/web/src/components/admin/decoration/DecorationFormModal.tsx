@@ -308,7 +308,7 @@ export function DecorationFormModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             {mode === 'create' ? '새 에셋 추가' : '에셋 수정'}
@@ -325,7 +325,7 @@ export function DecorationFormModal({
                   type="text"
                   value={form.nameEn}
                   onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
               <div>
@@ -336,7 +336,7 @@ export function DecorationFormModal({
                   type="text"
                   value={form.nameKo}
                   onChange={(e) => setForm({ ...form, nameKo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
             </div>
@@ -349,7 +349,7 @@ export function DecorationFormModal({
                   value={form.descriptionEn}
                   onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
               <div>
@@ -358,7 +358,7 @@ export function DecorationFormModal({
                   value={form.descriptionKo}
                   onChange={(e) => setForm({ ...form, descriptionKo: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
             </div>
@@ -388,7 +388,7 @@ export function DecorationFormModal({
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 >
                   <option value="">선택</option>
                   {categories
@@ -405,7 +405,7 @@ export function DecorationFormModal({
                 <select
                   value={form.accessTier}
                   onChange={(e) => setForm({ ...form, accessTier: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 >
                   <option value="free">Free</option>
                   <option value="paid">Paid</option>
@@ -420,7 +420,7 @@ export function DecorationFormModal({
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-2">
                   허용 색상 ({form.allowedColors.length})
-                  <span className="text-xs text-gray-400 ml-2">첫번째 색상이 기본 미리보기에 적용됩니다</span>
+                  <span className="text-xs text-muted ml-2">첫번째 색상이 기본 미리보기에 적용됩니다</span>
                 </h4>
 
                 {/* Color Preset Palette */}
@@ -428,15 +428,15 @@ export function DecorationFormModal({
                   <button
                     type="button"
                     onClick={() => setShowPresets(!showPresets)}
-                    className="text-xs font-medium px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="text-xs font-medium px-2 py-1 rounded border border-line text-gray-600 hover:bg-surface transition-colors"
                   >
                     {showPresets ? '▾ 색상 프리셋 닫기' : '▸ 색상 프리셋'}
                   </button>
                   {showPresets && (
-                    <div className="mt-2 border border-gray-200 rounded-lg p-3 max-h-60 overflow-y-auto">
+                    <div className="mt-2 border border-line rounded-lg p-3 max-h-60 overflow-y-auto">
                       {Object.entries(COLOR_PRESETS).map(([groupName, colors]) => (
                         <div key={groupName} className="mb-2 last:mb-0">
-                          <p className="text-xs font-medium text-gray-500 mb-1">{groupName}</p>
+                          <p className="text-xs font-medium text-muted mb-1">{groupName}</p>
                           <div className="flex flex-wrap gap-1">
                             {colors.map((preset) => {
                               const presetRgb = hexToRgb01(preset.hex);
@@ -460,7 +460,7 @@ export function DecorationFormModal({
                                     }
                                   }}
                                   className={`w-6 h-6 rounded-full border flex-shrink-0 relative transition-opacity ${
-                                    alreadyAdded ? 'opacity-40 border-gray-400 cursor-default' : 'border-gray-300 hover:scale-110 hover:border-gray-500'
+                                    alreadyAdded ? 'opacity-40 border-gray-400 cursor-default' : 'border-line hover:scale-110 hover:border-gray-500'
                                   }`}
                                   style={{ backgroundColor: preset.hex }}
                                 >
@@ -485,7 +485,7 @@ export function DecorationFormModal({
                         type="button"
                         onClick={() => setActiveColorIndex(idx)}
                         className={`w-8 h-8 rounded-full border-2 flex-shrink-0 ${
-                          idx === activeColorIndex ? 'border-indigo-500 ring-2 ring-indigo-300' : 'border-gray-300'
+                          idx === activeColorIndex ? 'border-brand ring-2 ring-brand-200' : 'border-line'
                         }`}
                         style={{ backgroundColor: rgb01ToHex(c.color as [number, number, number]) }}
                         title="클릭하여 미리보기에 적용"
@@ -503,7 +503,7 @@ export function DecorationFormModal({
                             ),
                           }));
                         }}
-                        className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                        className="w-8 h-8 border border-line rounded cursor-pointer"
                       />
                       <input
                         type="text"
@@ -520,7 +520,7 @@ export function DecorationFormModal({
                             }));
                           }
                         }}
-                        className="w-24 px-2 py-1 text-sm border border-gray-300 rounded"
+                        className="w-24 px-2 py-1 text-sm border border-line rounded"
                       />
                       <button
                         type="button"
@@ -533,7 +533,7 @@ export function DecorationFormModal({
                             setActiveColorIndex(Math.max(0, form.allowedColors.length - 2));
                           }
                         }}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-muted hover:text-red-500"
                       >
                         <FiTrash2 size={14} />
                       </button>
@@ -548,7 +548,7 @@ export function DecorationFormModal({
                       allowedColors: [...prev.allowedColors, { color: hexToRgb01('#CC0000') }],
                     }));
                   }}
-                  className="mt-2 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700"
+                  className="mt-2 inline-flex items-center text-sm text-brand-600 hover:text-brand-700"
                 >
                   <FiPlus className="mr-1" /> 추가
                 </button>
@@ -557,7 +557,7 @@ export function DecorationFormModal({
 
             {/* === Part-specific: GLB Upload + Three.js Preview === */}
             {form.assetType === 'part' && (
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+              <div className="border border-line rounded-lg p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-gray-800">GLB 모델 업로드</h3>
                 <input
                   ref={fileInputRef}
@@ -570,18 +570,18 @@ export function DecorationFormModal({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    className="inline-flex items-center px-4 py-2 border border-line rounded-lg text-sm font-medium text-ink bg-white hover:bg-surface"
                   >
                     <FiUpload className="mr-2" />
                     GLB 파일 선택
                   </button>
-                  <p className="text-sm text-gray-500">최대 20MB</p>
+                  <p className="text-sm text-muted">최대 20MB</p>
                 </div>
                 {glbSizeError && (
                   <p className="text-xs text-red-600 mt-1">{glbSizeError}</p>
                 )}
                 {glbFile && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted">
                     선택된 파일: {glbFile.name} ({(glbFile.size / 1024 / 1024).toFixed(2)} MB)
                   </p>
                 )}
@@ -589,9 +589,9 @@ export function DecorationFormModal({
                 {/* Upload progress */}
                 {isUploading && (
                   <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-surface-strong rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-brand h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -601,7 +601,7 @@ export function DecorationFormModal({
 
                 {/* Three.js preview (lazy loaded) */}
                 {form.modelUrl && (
-                  <Suspense fallback={<div className="text-xs text-gray-400 py-2">3D 프리뷰 로딩 중...</div>}>
+                  <Suspense fallback={<div className="text-xs text-muted py-2">3D 프리뷰 로딩 중...</div>}>
                     <GLBPreview
                       modelUrl={form.modelUrl}
                       color={form.allowedColors[activeColorIndex]?.color as [number, number, number] | undefined}
@@ -611,12 +611,12 @@ export function DecorationFormModal({
                 )}
 
                 {isAutoCapturing && (
-                  <p className="text-xs text-indigo-600 mt-1">자동 캡처 및 업로드 중...</p>
+                  <p className="text-xs text-brand-600 mt-1">자동 캡처 및 업로드 중...</p>
                 )}
 
                 {form.previewUrl && (
                   <div className="mt-2">
-                    <p className="text-xs text-gray-500 mb-1">저장된 미리보기: <span className="text-gray-400">(최대 5MB)</span></p>
+                    <p className="text-xs text-muted mb-1">저장된 미리보기: <span className="text-muted">(최대 5MB)</span></p>
                     <img src={form.previewUrl} alt="preview" className="w-24 h-24 object-contain border rounded" />
                   </div>
                 )}
@@ -625,7 +625,7 @@ export function DecorationFormModal({
 
             {/* === Sticker-specific: SVG === */}
             {form.assetType === 'sticker' && (
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+              <div className="border border-line rounded-lg p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-gray-800">SVG 설정</h3>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">SVG Path</label>
@@ -634,7 +634,7 @@ export function DecorationFormModal({
                     onChange={(e) => setForm({ ...form, svgPath: e.target.value })}
                     rows={3}
                     placeholder="M10 10 L90 10 L90 90 ..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent font-mono text-xs"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -645,7 +645,7 @@ export function DecorationFormModal({
                       value={form.viewBox}
                       onChange={(e) => setForm({ ...form, viewBox: e.target.value })}
                       placeholder="0 0 100 100"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -655,13 +655,13 @@ export function DecorationFormModal({
                         type="color"
                         value={form.defaultColor}
                         onChange={(e) => setForm({ ...form, defaultColor: e.target.value })}
-                        className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
+                        className="w-10 h-10 border border-line rounded cursor-pointer"
                       />
                       <input
                         type="text"
                         value={form.defaultColor}
                         onChange={(e) => setForm({ ...form, defaultColor: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -672,7 +672,7 @@ export function DecorationFormModal({
 
             {/* === Part-specific: Allowed Materials === */}
             {form.assetType === 'part' && (
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+              <div className="border border-line rounded-lg p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-gray-800">허용 재질 ({form.allowedMaterials.length})</h3>
                 <div className="flex flex-wrap gap-2">
                   {MATERIAL_OPTIONS.map((mat) => {
@@ -692,8 +692,8 @@ export function DecorationFormModal({
                         }
                         className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
                           selected
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                            ? 'bg-ink text-white border-ink'
+                            : 'bg-white text-gray-600 border-line hover:border-gray-400'
                         }`}
                         title={`metalness: ${preset.metalness}, roughness: ${preset.roughness}, clearcoat: ${preset.clearcoat}`}
                       >
@@ -728,8 +728,8 @@ export function DecorationFormModal({
                       }
                       className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
                         selected
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                          ? 'bg-ink text-white border-ink'
+                          : 'bg-white text-gray-600 border-line hover:border-gray-400'
                       }`}
                     >
                       {theme}
@@ -744,7 +744,7 @@ export function DecorationFormModal({
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
             >
               <FiX className="inline mr-1" />
               취소
@@ -752,7 +752,7 @@ export function DecorationFormModal({
             <button
               onClick={handleSubmit}
               disabled={!form.nameEn || !form.nameKo || submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiCheck className="inline mr-1" />
               {submitting ? '저장 중...' : mode === 'create' ? '생성' : '수정'}

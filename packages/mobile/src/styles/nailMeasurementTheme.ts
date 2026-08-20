@@ -1,8 +1,8 @@
 export const NMColors = {
-  purple: '#FF4D6D',
-  purpleLight: '#FF4D6D20',
-  purpleMedium: '#FF4D6D40',
-  pink: '#991B1B',
+  purple: '#E85A6B',
+  purpleLight: '#E85A6B20',
+  purpleMedium: '#E85A6B40',
+  pink: '#B23A49',
   green: '#10B981',
   greenLight: '#10B98120',
   gold: '#F59E0B',
@@ -24,10 +24,10 @@ export const NMColors = {
   whiteTranslucent: '#FFFFFFB3',
   whiteSemiTranslucent: '#FFFFFF20',
   // Red theme CTA card colors
-  ctaBg: '#FFE5EA',
-  ctaBorder: '#FF4D6D',
+  ctaBg: '#FFF1F2',
+  ctaBorder: '#E85A6B',
   ctaText: '#131211',
-  ctaSubtext: '#991B1B',
-  // Filled button color (light red)
-  buttonBg: '#FF8FA3',
+  ctaSubtext: '#B23A49',
+  // Filled button color (brand — 위에 흰 글씨가 올라가므로 원색 유지)
+  buttonBg: '#E85A6B',
 };

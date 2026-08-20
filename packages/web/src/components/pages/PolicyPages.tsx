@@ -13,12 +13,12 @@ const PolicyLayout = ({
   children: React.ReactNode;
 }) => (
   <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
       <div className="flex items-center justify-between p-6 border-b">
         <h2 className="text-xl font-semibold">{title}</h2>
         <button
           onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -40,7 +40,7 @@ export function TermsOfService({ onClose }: { onClose: () => void }) {
   return (
     <PolicyLayout title={t('footer.termsOfService')} onClose={onClose}>
       <ServiceTermsContent />
-      <div className="mt-8 pt-8 border-t border-gray-200">
+      <div className="mt-8 pt-8 border-t border-line">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">구독 및 환불 정책</h3>
         <SubscriptionRefundPolicyContent />
       </div>

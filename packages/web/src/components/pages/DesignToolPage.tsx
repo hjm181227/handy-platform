@@ -70,7 +70,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* 헤더 */}
       <div className="flex items-center gap-3 mb-8">
-        <button onClick={() => onGo(backPath)} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => onGo(backPath)} className="p-2 hover:bg-surface rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold">{t('designTool.title')}</h1>
@@ -78,26 +78,26 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
 
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-2xl mb-4">
-          <Palette className="w-8 h-8 text-pink-500" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-100 rounded-2xl mb-4">
+          <Palette className="w-8 h-8 text-brand" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-3">HANDY Design Tool</h1>
-        <p className="text-gray-500 text-lg max-w-xl mx-auto">
+        <p className="text-muted text-lg max-w-xl mx-auto">
           {t('designTool.subtitle')}
         </p>
       </div>
 
       {/* 현재 구독 상태 배너 */}
       {isActive && (
-        <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-8 flex items-center justify-between">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Crown className="w-5 h-5 text-pink-500" />
+            <Crown className="w-5 h-5 text-brand" />
             <div>
               <p className="font-semibold text-gray-900">
                 {t('designTool.currentPlan', { plan: currentPlan === 'pro' ? 'Pro' : 'Free' })}
               </p>
               {access?.expiresAt && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   {t('designTool.expiresAt', { date: new Date(access.expiresAt).toLocaleDateString() })}
                 </p>
               )}
@@ -105,7 +105,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
           </div>
           <button
             onClick={() => onGo('/design-tool/subscription')}
-            className="text-sm text-pink-600 font-medium hover:underline"
+            className="text-sm text-brand font-medium hover:underline"
           >
             {t('designTool.subscriptionManagement')}
           </button>
@@ -122,7 +122,7 @@ export function DesignToolPage({ onGo }: DesignToolPageProps) {
       {/* 플랜 비교 카드 */}
       {loading && plans.length === 0 ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6 mb-12">
@@ -185,13 +185,13 @@ function PlanCard({
     <div
       className={`relative rounded-2xl border-2 p-6 transition-all ${
         isPopular
-          ? 'border-pink-400 shadow-lg shadow-pink-100'
-          : 'border-gray-200 hover:border-gray-300'
-      } ${isCurrent ? 'bg-pink-50/50' : 'bg-white'}`}
+          ? 'border-brand shadow-lg shadow-brand-100'
+          : 'border-line hover:border-line-strong'
+      } ${isCurrent ? 'bg-brand-50/50' : 'bg-white'}`}
     >
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+          <span className="bg-brand text-white text-xs font-bold px-3 py-1 rounded-full">
             {t('designTool.recommended')}
           </span>
         </div>
@@ -205,13 +205,13 @@ function PlanCard({
           ) : (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-lg text-gray-400 line-through">₩{(7900).toLocaleString()}</span>
-                <span className="text-xs text-gray-400">{t('designTool.perMonth')}</span>
+                <span className="text-lg text-muted line-through">₩{(7900).toLocaleString()}</span>
+                <span className="text-xs text-muted">{t('designTool.perMonth')}</span>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-pink-600">₩{plan.price.toLocaleString()}</span>
-                <span className="text-gray-500 text-sm">{t('designTool.perMonth')}</span>
-                <span className="ml-1 inline-block bg-pink-100 text-pink-600 text-xs font-semibold px-2 py-0.5 rounded-full">{t('designTool.webDiscount')}</span>
+                <span className="text-3xl font-bold text-brand">₩{plan.price.toLocaleString()}</span>
+                <span className="text-muted text-sm">{t('designTool.perMonth')}</span>
+                <span className="ml-1 inline-block bg-brand-100 text-brand text-xs font-semibold px-2 py-0.5 rounded-full">{t('designTool.webDiscount')}</span>
               </div>
             </div>
           )}
@@ -221,7 +221,7 @@ function PlanCard({
       <ul className="space-y-3 mb-6">
         {plan.features.map((feature, idx) => (
           <li key={idx} className="flex items-start gap-2">
-            <Check className="w-5 h-5 text-pink-500 shrink-0 mt-0.5" />
+            <Check className="w-5 h-5 text-brand shrink-0 mt-0.5" />
             <span className="text-sm text-gray-700">{feature}</span>
           </li>
         ))}
@@ -229,25 +229,25 @@ function PlanCard({
 
       {plan.price > 0 && (
         <>
-          <p className="text-xs text-gray-500 mb-2 leading-relaxed">
+          <p className="text-xs text-muted mb-2 leading-relaxed">
             {t('designTool.purchaseConsent', '결제 시 이용약관 및 구독·환불 정책에 동의하며, 디지털 콘텐츠 특성상 유료 기능 이용 시 청약철회가 제한됩니다.')}
           </p>
           <div className="flex items-center gap-2 mb-3">
-            <a href="https://h-andy.com/policy/terms" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 underline hover:text-gray-700">
+            <a href="https://h-andy.com/policy/terms" target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline hover:text-ink">
               {t('designTool.termsLink', '이용약관')}
             </a>
-            <span className="text-xs text-gray-400">|</span>
-            <a href="https://h-andy.com/policy/privacy" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 underline hover:text-gray-700">
+            <span className="text-xs text-muted">|</span>
+            <a href="https://h-andy.com/policy/privacy" target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline hover:text-ink">
               {t('designTool.privacyLink', '개인정보처리방침')}
             </a>
           </div>
           <button
             onClick={onSelect}
             disabled={disabled}
-            className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
+            className={`w-full py-3 rounded-full font-semibold text-sm transition-colors ${
               isCurrent
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-pink-500 text-white hover:bg-pink-600'
+                ? 'bg-surface text-muted cursor-not-allowed'
+                : 'bg-brand text-white hover:bg-brand-600'
             }`}
           >
             {isCurrent ? t('designTool.currentPlanButton') : t('designTool.subscribe')}
@@ -268,12 +268,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="bg-gray-50 rounded-xl p-6 text-center">
-      <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-sm mb-4 text-pink-500">
+    <div className="bg-surface rounded-xl p-6 text-center">
+      <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-sm mb-4 text-brand">
         {icon}
       </div>
       <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-500">{description}</p>
+      <p className="text-sm text-muted">{description}</p>
     </div>
   );
 }

@@ -359,7 +359,7 @@ const AdminCouponManagement: React.FC = () => {
       const now = new Date();
       const endDate = new Date(coupon.validity.endDate);
       if (endDate < now) {
-        return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">만료됨</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-surface text-gray-600">만료됨</span>;
       }
     }
     if (!coupon.isActive) {
@@ -372,7 +372,7 @@ const AdminCouponManagement: React.FC = () => {
     // Use createdBy first, fallback to scope.type
     const issuerType = createdBy || scope?.type;
     if (!issuerType) {
-      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">-</span>;
+      return <span className="px-2 py-1 text-xs rounded-full bg-surface text-gray-600">-</span>;
     }
     if (issuerType === 'admin' || issuerType === 'platform') {
       return <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">플랫폼</span>;
@@ -398,7 +398,7 @@ const AdminCouponManagement: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-line p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">쿠폰 관리</h1>
@@ -409,7 +409,7 @@ const AdminCouponManagement: React.FC = () => {
           </div>
           <button
             onClick={handleCreate}
-            className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+            className="bg-brand text-white px-4 py-2.5 rounded-full hover:bg-brand-600 transition-colors font-medium flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -421,12 +421,12 @@ const AdminCouponManagement: React.FC = () => {
 
       {/* Stats Overview */}
       {showStats && stats && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-line p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">통계 개요</h2>
             <button
               onClick={() => setShowStats(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-muted hover:text-gray-600"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -442,9 +442,9 @@ const AdminCouponManagement: React.FC = () => {
               <div className="text-2xl font-bold text-green-700">{stats.activeCoupons}</div>
               <div className="text-sm text-green-600">활성 쿠폰</div>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-purple-700">{stats.totalDownloads}</div>
-              <div className="text-sm text-purple-600">총 발급수</div>
+            <div className="bg-brand-50 rounded-lg p-4">
+              <div className="text-2xl font-bold text-brand-700">{stats.totalDownloads}</div>
+              <div className="text-sm text-brand-600">총 발급수</div>
             </div>
             <div className="bg-orange-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-orange-700">{stats.totalUsages}</div>
@@ -461,7 +461,7 @@ const AdminCouponManagement: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-line p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">검색 및 필터</h3>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="md:col-span-2">
@@ -472,7 +472,7 @@ const AdminCouponManagement: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && loadCoupons()}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-line-strong rounded-lg focus:border-brand focus:ring-1 focus:ring-brand"
             />
           </div>
           <div>
@@ -483,7 +483,7 @@ const AdminCouponManagement: React.FC = () => {
                 setStatusFilter(e.target.value as StatusFilter);
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+              className="w-full px-4 py-2.5 border border-line-strong rounded-lg focus:border-brand focus:ring-1 focus:ring-brand bg-white"
             >
               <option value="all">전체</option>
               <option value="active">활성</option>
@@ -498,7 +498,7 @@ const AdminCouponManagement: React.FC = () => {
                 setScopeFilter(e.target.value as ScopeFilter);
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+              className="w-full px-4 py-2.5 border border-line-strong rounded-lg focus:border-brand focus:ring-1 focus:ring-brand bg-white"
             >
               <option value="all">전체</option>
               <option value="platform">플랫폼</option>
@@ -512,7 +512,7 @@ const AdminCouponManagement: React.FC = () => {
                 loadCoupons();
               }}
               disabled={loading}
-              className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+              className="w-full px-4 py-2.5 bg-brand text-white rounded-full hover:bg-brand-600 disabled:opacity-50 transition-colors font-medium"
             >
               {loading ? '검색 중...' : '검색'}
             </button>
@@ -528,10 +528,10 @@ const AdminCouponManagement: React.FC = () => {
       )}
 
       {/* Coupons Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-line overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
           </div>
         ) : coupons.length === 0 ? (
           <div className="text-center py-20">
@@ -542,7 +542,7 @@ const AdminCouponManagement: React.FC = () => {
             <p className="text-gray-600 mb-4">새 쿠폰을 만들어 고객에게 할인 혜택을 제공하세요</p>
             <button
               onClick={handleCreate}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="bg-brand text-white px-6 py-2.5 rounded-full hover:bg-brand-600 transition-colors font-medium"
             >
               첫 쿠폰 만들기
             </button>
@@ -550,7 +550,7 @@ const AdminCouponManagement: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-surface border-b border-line">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">쿠폰명 / 코드</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">할인</th>
@@ -561,15 +561,15 @@ const AdminCouponManagement: React.FC = () => {
                   <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">액션</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-line">
                 {coupons.map((coupon) => (
-                  <tr key={coupon.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={coupon.id} className="hover:bg-surface transition-colors">
                     <td className="px-6 py-4">
                       <div>
                         <div className="font-medium text-gray-900">{coupon.name}</div>
-                        <div className="text-sm text-gray-500 font-mono">{coupon.code}</div>
+                        <div className="text-sm text-muted font-mono">{coupon.code}</div>
                         {coupon.issueMethod && (
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="text-xs text-muted mt-1">
                             {getIssueMethodLabel(coupon.issueMethod)}
                           </div>
                         )}
@@ -578,7 +578,7 @@ const AdminCouponManagement: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-blue-600">{formatDiscount(coupon)}</div>
                       {coupon.maxDiscountAmount && (
-                        <div className="text-xs text-gray-500">최대 {coupon.maxDiscountAmount.toLocaleString()}원</div>
+                        <div className="text-xs text-muted">최대 {coupon.maxDiscountAmount.toLocaleString()}원</div>
                       )}
                     </td>
                     <td className="px-6 py-4">{getCreatorBadge(coupon.createdBy, coupon.scope)}</td>
@@ -588,30 +588,30 @@ const AdminCouponManagement: React.FC = () => {
                           <div className="text-sm text-gray-900">
                             {new Date(coupon.validity.startDate).toLocaleDateString()}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted">
                             ~ {new Date(coupon.validity.endDate).toLocaleDateString()}
                           </div>
                         </>
                       ) : (
-                        <span className="text-sm text-gray-400">-</span>
+                        <span className="text-sm text-muted">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500 w-8">발급</span>
+                          <span className="text-muted w-8">발급</span>
                           <span className="font-medium text-blue-600">{coupon.limits?.issuedCount || coupon.stats?.issuedCount || 0}</span>
-                          <span className="text-gray-400">/</span>
+                          <span className="text-muted">/</span>
                           <span className="text-gray-600">{coupon.limits?.totalCount || 0}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500 w-8">사용</span>
+                          <span className="text-muted w-8">사용</span>
                           <span className="font-medium text-green-600">{coupon.stats?.usedCount || 0}</span>
                         </div>
                       </div>
-                      <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-2">
+                      <div className="w-24 h-1.5 bg-surface-strong rounded-full mt-2">
                         <div
-                          className="h-full bg-blue-500 rounded-full"
+                          className="h-full bg-brand rounded-full"
                           style={{
                             width: `${coupon.limits?.totalCount ? Math.min(((coupon.limits?.issuedCount || 0) / coupon.limits.totalCount) * 100, 100) : 0}%`,
                           }}
@@ -623,7 +623,7 @@ const AdminCouponManagement: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleToggleStatus(coupon)}
-                          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-2 text-muted hover:text-gray-700 hover:bg-surface-strong rounded-lg transition-colors"
                           title={coupon.isActive ? '비활성화' : '활성화'}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -637,7 +637,7 @@ const AdminCouponManagement: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleEdit(coupon)}
-                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-muted hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="수정"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -646,7 +646,7 @@ const AdminCouponManagement: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDelete(coupon)}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-muted hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="삭제"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -664,7 +664,7 @@ const AdminCouponManagement: React.FC = () => {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-line flex items-center justify-between">
             <div className="text-sm text-gray-600">
               총 {pagination.totalItems}개 중 {(pagination.currentPage - 1) * 20 + 1}-
               {Math.min(pagination.currentPage * 20, pagination.totalItems)}개
@@ -673,7 +673,7 @@ const AdminCouponManagement: React.FC = () => {
               <button
                 onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage - 1 })}
                 disabled={pagination.currentPage === 1}
-                className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
+                className="px-3 py-1 border border-line rounded-lg disabled:opacity-50 hover:bg-surface"
               >
                 이전
               </button>
@@ -683,7 +683,7 @@ const AdminCouponManagement: React.FC = () => {
               <button
                 onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage + 1 })}
                 disabled={pagination.currentPage === pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
+                className="px-3 py-1 border border-line rounded-lg disabled:opacity-50 hover:bg-surface"
               >
                 다음
               </button>
@@ -697,13 +697,13 @@ const AdminCouponManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowModal(false)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-line px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
                 {editingCoupon ? '쿠폰 수정' : '새 쿠폰 만들기'}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-surface-strong rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -723,7 +723,7 @@ const AdminCouponManagement: React.FC = () => {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     placeholder="예: 신규회원 10% 할인"
                   />
                 </div>
@@ -736,14 +736,14 @@ const AdminCouponManagement: React.FC = () => {
                       type="text"
                       value={formData.code}
                       onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono uppercase"
+                      className="flex-1 border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand font-mono uppercase"
                       placeholder="WELCOME10"
                       maxLength={20}
                     />
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
-                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                      className="px-4 py-2.5 border border-line rounded-lg text-gray-700 hover:bg-surface transition-colors whitespace-nowrap"
                     >
                       자동 생성
                     </button>
@@ -754,7 +754,7 @@ const AdminCouponManagement: React.FC = () => {
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20 resize-none"
+                    className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand h-20 resize-none"
                     placeholder="쿠폰에 대한 설명"
                   />
                 </div>
@@ -776,12 +776,12 @@ const AdminCouponManagement: React.FC = () => {
                       onClick={() => setFormData({ ...formData, issueMethod: method.value as any })}
                       className={`p-3 border rounded-lg text-left transition-colors ${
                         formData.issueMethod === method.value
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-brand bg-brand-50'
+                          : 'border-line hover:border-line'
                       }`}
                     >
                       <div className="font-medium text-sm">{method.label}</div>
-                      <div className="text-xs text-gray-500">{method.desc}</div>
+                      <div className="text-xs text-muted">{method.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -803,7 +803,7 @@ const AdminCouponManagement: React.FC = () => {
                             value={trigger.value}
                             checked={formData.autoTrigger === trigger.value}
                             onChange={(e) => setFormData({ ...formData, autoTrigger: e.target.value as any })}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            className="w-4 h-4 text-brand focus:ring-brand"
                           />
                           <span className="text-sm text-gray-700">{trigger.label}</span>
                         </label>
@@ -822,7 +822,7 @@ const AdminCouponManagement: React.FC = () => {
                     <select
                       value={formData.discountType}
                       onChange={(e) => setFormData({ ...formData, discountType: e.target.value as any })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     >
                       <option value="percentage">정률 할인 (%)</option>
                       <option value="fixed_amount">정액 할인 (원)</option>
@@ -838,7 +838,7 @@ const AdminCouponManagement: React.FC = () => {
                         type="number"
                         value={formData.discountValue}
                         onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                         min={0}
                         max={formData.discountType === 'percentage' ? 100 : undefined}
                       />
@@ -855,7 +855,7 @@ const AdminCouponManagement: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, maxDiscountAmount: e.target.value ? Number(e.target.value) : undefined })
                         }
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                         placeholder="제한 없음"
                       />
                     </div>
@@ -868,7 +868,7 @@ const AdminCouponManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, minimumOrderAmount: e.target.value ? Number(e.target.value) : 0 })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                       placeholder="제한 없음"
                     />
                   </div>
@@ -885,7 +885,7 @@ const AdminCouponManagement: React.FC = () => {
                       name="scopeType"
                       checked={formData.scope.type === 'platform'}
                       onChange={() => setFormData({ ...formData, scope: { type: 'platform' } })}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-brand focus:ring-brand"
                     />
                     <span className="text-sm text-gray-700">플랫폼 전체</span>
                   </label>
@@ -895,7 +895,7 @@ const AdminCouponManagement: React.FC = () => {
                       name="scopeType"
                       checked={formData.scope.type === 'seller'}
                       onChange={() => setFormData({ ...formData, scope: { type: 'seller', sellerUuid: '' } })}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-brand focus:ring-brand"
                     />
                     <span className="text-sm text-gray-700">특정 판매자</span>
                   </label>
@@ -915,7 +915,7 @@ const AdminCouponManagement: React.FC = () => {
                         value={option.value}
                         checked={formData.appliesTo === option.value}
                         onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value as any })}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 text-brand focus:ring-brand"
                       />
                       <span className="text-sm text-gray-700">{option.label}</span>
                     </label>
@@ -935,7 +935,7 @@ const AdminCouponManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, validity: { ...formData.validity, startDate: e.target.value } })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
                   <div>
@@ -946,7 +946,7 @@ const AdminCouponManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, validity: { ...formData.validity, endDate: e.target.value } })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                   </div>
                 </div>
@@ -964,7 +964,7 @@ const AdminCouponManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, limits: { ...formData.limits, totalCount: Number(e.target.value) } })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                       min={1}
                     />
                   </div>
@@ -976,7 +976,7 @@ const AdminCouponManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, limits: { ...formData.limits, perUserLimit: Number(e.target.value) } })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full border border-line-strong rounded-lg px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand"
                       min={1}
                     />
                   </div>
@@ -984,7 +984,7 @@ const AdminCouponManagement: React.FC = () => {
               </div>
 
               {/* Public Setting */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
                 <div>
                   <h3 className="font-medium text-gray-900">공개 쿠폰</h3>
                   <p className="text-sm text-gray-600">공개 시 고객이 직접 다운로드 가능</p>
@@ -996,22 +996,22 @@ const AdminCouponManagement: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-surface-strong peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-line-strong after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
                 </label>
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+            <div className="sticky bottom-0 bg-white border-t border-line px-6 py-4 flex justify-end gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                className="px-4 py-2.5 border border-line rounded-lg text-gray-700 hover:bg-surface transition-colors font-medium"
               >
                 취소
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2.5 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {saving ? (
                   <>

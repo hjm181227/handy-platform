@@ -15,7 +15,7 @@ export function AccessTierBadge({ tier }: { tier: string }) {
 export function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; text: string; label: string }> = {
     active: { bg: 'bg-green-100', text: 'text-green-800', label: '활성' },
-    inactive: { bg: 'bg-gray-100', text: 'text-gray-800', label: '비활성' },
+    inactive: { bg: 'bg-surface', text: 'text-gray-800', label: '비활성' },
     pending_review: { bg: 'bg-amber-100', text: 'text-amber-800', label: '검토중' },
     rejected: { bg: 'bg-red-100', text: 'text-red-800', label: '반려' },
   };

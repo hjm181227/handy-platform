@@ -69,7 +69,7 @@ export function CategoryFormModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             {mode === 'create' ? '새 카테고리 추가' : '카테고리 수정'}
@@ -86,7 +86,7 @@ export function CategoryFormModal({
                 onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') })}
                 placeholder="예: flower-charm"
                 disabled={mode === 'edit'}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent disabled:bg-surface"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -98,7 +98,7 @@ export function CategoryFormModal({
                   type="text"
                   value={form.nameEn}
                   onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
               <div>
@@ -109,7 +109,7 @@ export function CategoryFormModal({
                   type="text"
                   value={form.nameKo}
                   onChange={(e) => setForm({ ...form, nameKo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 />
               </div>
             </div>
@@ -119,7 +119,7 @@ export function CategoryFormModal({
                 <select
                   value={form.assetType}
                   onChange={(e) => setForm({ ...form, assetType: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                 >
                   <option value="all">All</option>
                   <option value="part">Part</option>
@@ -133,7 +133,7 @@ export function CategoryFormModal({
                 type="text"
                 value={form.icon}
                 onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -142,7 +142,7 @@ export function CategoryFormModal({
                 id="catActive"
                 checked={form.isActive}
                 onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-line"
               />
               <label htmlFor="catActive" className="text-sm text-gray-700">활성</label>
             </div>
@@ -151,7 +151,7 @@ export function CategoryFormModal({
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
             >
               <FiX className="inline mr-1" />
               취소
@@ -159,7 +159,7 @@ export function CategoryFormModal({
             <button
               onClick={handleSubmit}
               disabled={!form.slug || !form.nameEn || !form.nameKo || submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiCheck className="inline mr-1" />
               {submitting ? '저장 중...' : mode === 'create' ? '생성' : '수정'}

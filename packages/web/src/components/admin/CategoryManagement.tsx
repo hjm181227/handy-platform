@@ -333,7 +333,7 @@ export default function CategoryManagement() {
             resetForm();
             setShowCreateModal(true);
           }}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-600 transition-colors"
         >
           <FiPlus className="mr-2" />
           새 카테고리 추가
@@ -350,7 +350,7 @@ export default function CategoryManagement() {
               setTypeFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="">전체</option>
             {categoryTypes.map((type) => (
@@ -369,7 +369,7 @@ export default function CategoryManagement() {
               setIsActiveFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="">전체</option>
             <option value="true">활성</option>
@@ -380,7 +380,7 @@ export default function CategoryManagement() {
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">검색</label>
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={searchQuery}
@@ -389,59 +389,59 @@ export default function CategoryManagement() {
                 setPage(1);
               }}
               placeholder="이름 또는 값 검색..."
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
             />
           </div>
         </div>
       </div>
 
       {/* 카테고리 테이블 */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-line">
+            <thead className="bg-surface">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   타입
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   이름
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   값
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   미리보기
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   사용 중
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                   상태
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">
                   액션
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-line">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted">
                     <div className="flex justify-center">
-                      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                      <div className="w-8 h-8 border-4 border-brand-200 border-t-brand rounded-full animate-spin"></div>
                     </div>
                   </td>
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted">
                     카테고리가 없습니다.
                   </td>
                 </tr>
               ) : (
                 categories.map((category) => (
-                  <tr key={category._id} className="hover:bg-gray-50">
+                  <tr key={category._id} className="hover:bg-surface">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                         {getCategoryTypeLabel(category.type)}
@@ -450,7 +450,7 @@ export default function CategoryManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {category.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {category.value}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -462,15 +462,15 @@ export default function CategoryManagement() {
                         />
                       ) : category.hexColor ? (
                         <div
-                          className="w-8 h-8 rounded-full border-2 border-gray-300"
+                          className="w-8 h-8 rounded-full border-2 border-line"
                           style={{ backgroundColor: category.hexColor }}
                           title={category.hexColor}
                         />
                       ) : (
-                        <span className="text-gray-400 text-xs">없음</span>
+                        <span className="text-muted text-xs">없음</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                       {category.usageCount}개 상품
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -479,7 +479,7 @@ export default function CategoryManagement() {
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
                           category.isActive
                             ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            : 'bg-surface text-gray-800'
                         }`}
                       >
                         {category.isActive ? '활성' : '비활성'}
@@ -510,11 +510,11 @@ export default function CategoryManagement() {
 
         {/* 페이지네이션 */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-line flex items-center justify-between">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
             >
               이전
             </button>
@@ -524,7 +524,7 @@ export default function CategoryManagement() {
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
             >
               다음
             </button>
@@ -535,7 +535,7 @@ export default function CategoryManagement() {
       {/* 생성 모달 */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">새 카테고리 추가</h2>
 
@@ -547,7 +547,7 @@ export default function CategoryManagement() {
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as CategoryType })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   >
                     {categoryTypes.map((type) => (
                       <option key={type.value} value={type.value}>
@@ -566,7 +566,7 @@ export default function CategoryManagement() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="예: 심플"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
 
@@ -579,7 +579,7 @@ export default function CategoryManagement() {
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: e.target.value.toLowerCase() })}
                     placeholder="예: simple"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
 
@@ -594,7 +594,7 @@ export default function CategoryManagement() {
                       <img
                         src={imagePreview}
                         alt="미리보기"
-                        className="w-32 h-32 object-contain border-2 border-gray-300 rounded-lg"
+                        className="w-32 h-32 object-contain border-2 border-line rounded-lg"
                       />
                       <button
                         type="button"
@@ -619,12 +619,12 @@ export default function CategoryManagement() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-4 py-2 border border-line rounded-lg text-sm font-medium text-ink bg-white hover:bg-surface"
                       >
                         <FiUpload className="mr-2" />
                         이미지 선택
                       </button>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-muted">
                         JPG, PNG, WebP 파일 (최대 10MB)
                       </p>
                     </div>
@@ -633,9 +633,9 @@ export default function CategoryManagement() {
                   {/* 업로드 진행률 */}
                   {isUploading && (
                     <div className="mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-surface-strong rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-brand h-2 rounded-full transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
                       </div>
@@ -654,11 +654,11 @@ export default function CategoryManagement() {
                       value={formData.hexColor}
                       onChange={(e) => setFormData({ ...formData, hexColor: e.target.value })}
                       placeholder="#FF0000"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                     />
                     {formData.hexColor && (
                       <div
-                        className="mt-2 w-12 h-12 rounded border-2 border-gray-300"
+                        className="mt-2 w-12 h-12 rounded border-2 border-line"
                         style={{ backgroundColor: formData.hexColor }}
                       />
                     )}
@@ -671,7 +671,7 @@ export default function CategoryManagement() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
               </div>
@@ -682,7 +682,7 @@ export default function CategoryManagement() {
                     setShowCreateModal(false);
                     resetForm();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
                 >
                   <FiX className="inline mr-1" />
                   취소
@@ -690,7 +690,7 @@ export default function CategoryManagement() {
                 <button
                   onClick={handleCreate}
                   disabled={!formData.name || !formData.value}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiCheck className="inline mr-1" />
                   생성
@@ -704,7 +704,7 @@ export default function CategoryManagement() {
       {/* 수정 모달 */}
       {showEditModal && selectedCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">카테고리 수정</h2>
 
@@ -715,9 +715,9 @@ export default function CategoryManagement() {
                     type="text"
                     value={getCategoryTypeLabel(formData.type)}
                     disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-line rounded-lg bg-surface text-gray-600 cursor-not-allowed"
                   />
-                  <p className="text-xs text-gray-500 mt-1">타입은 변경할 수 없습니다.</p>
+                  <p className="text-xs text-muted mt-1">타입은 변경할 수 없습니다.</p>
                 </div>
 
                 <div>
@@ -728,7 +728,7 @@ export default function CategoryManagement() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
 
@@ -740,7 +740,7 @@ export default function CategoryManagement() {
                     type="text"
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: e.target.value.toLowerCase() })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
 
@@ -755,7 +755,7 @@ export default function CategoryManagement() {
                       <img
                         src={imagePreview}
                         alt="미리보기"
-                        className="w-32 h-32 object-contain border-2 border-gray-300 rounded-lg"
+                        className="w-32 h-32 object-contain border-2 border-line rounded-lg"
                       />
                       <button
                         type="button"
@@ -780,12 +780,12 @@ export default function CategoryManagement() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-4 py-2 border border-line rounded-lg text-sm font-medium text-ink bg-white hover:bg-surface"
                       >
                         <FiUpload className="mr-2" />
                         이미지 선택
                       </button>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-muted">
                         JPG, PNG, WebP 파일 (최대 10MB)
                       </p>
                     </div>
@@ -794,9 +794,9 @@ export default function CategoryManagement() {
                   {/* 업로드 진행률 */}
                   {isUploading && (
                     <div className="mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-surface-strong rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-brand h-2 rounded-full transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
                       </div>
@@ -815,11 +815,11 @@ export default function CategoryManagement() {
                       value={formData.hexColor}
                       onChange={(e) => setFormData({ ...formData, hexColor: e.target.value })}
                       placeholder="#FF0000"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                     />
                     {formData.hexColor && (
                       <div
-                        className="mt-2 w-12 h-12 rounded border-2 border-gray-300"
+                        className="mt-2 w-12 h-12 rounded border-2 border-line"
                         style={{ backgroundColor: formData.hexColor }}
                       />
                     )}
@@ -832,7 +832,7 @@ export default function CategoryManagement() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
               </div>
@@ -844,7 +844,7 @@ export default function CategoryManagement() {
                     setSelectedCategory(null);
                     resetForm();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
                 >
                   <FiX className="inline mr-1" />
                   취소
@@ -852,7 +852,7 @@ export default function CategoryManagement() {
                 <button
                   onClick={handleUpdate}
                   disabled={!formData.name || !formData.value}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-full hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiCheck className="inline mr-1" />
                   저장
@@ -866,12 +866,12 @@ export default function CategoryManagement() {
       {/* 삭제 확인 모달 */}
       {showDeleteModal && selectedCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">카테고리 삭제</h2>
             <p className="text-gray-600 mb-2">
               정말로 이 카테고리를 삭제하시겠습니까?
             </p>
-            <div className="bg-gray-50 p-3 rounded-lg mb-4">
+            <div className="bg-surface p-3 rounded-lg mb-4">
               <p className="text-sm">
                 <span className="font-medium">이름:</span> {selectedCategory.name}
               </p>
@@ -895,7 +895,7 @@ export default function CategoryManagement() {
                   setShowDeleteModal(false);
                   setSelectedCategory(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-ink bg-white border border-line rounded-lg hover:bg-surface"
               >
                 취소
               </button>

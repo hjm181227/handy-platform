@@ -59,7 +59,7 @@ export function DesignToolBillingHistoryPage({
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => onGo('/design-tool')}
-          className="p-2 hover:bg-gray-100 rounded-lg"
+          className="p-2 hover:bg-surface rounded-lg"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -68,7 +68,7 @@ export function DesignToolBillingHistoryPage({
 
       {state === 'loading' && (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
         </div>
       )}
 
@@ -79,16 +79,16 @@ export function DesignToolBillingHistoryPage({
       )}
 
       {state !== 'loading' && !error && items.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
-          <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Receipt className="w-5 h-5 text-gray-400" />
+        <div className="bg-white border border-line rounded-2xl p-10 text-center">
+          <div className="w-12 h-12 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Receipt className="w-5 h-5 text-muted" />
           </div>
-          <p className="text-sm text-gray-500">{t('designTool.billing.historyEmpty')}</p>
+          <p className="text-sm text-muted">{t('designTool.billing.historyEmpty')}</p>
         </div>
       )}
 
       {items.length > 0 && (
-        <ul className="bg-white border border-gray-200 rounded-2xl divide-y divide-gray-100">
+        <ul className="bg-white border border-line rounded-2xl divide-y divide-line">
           {items.map((record) => (
             <BillingRow key={record.id} record={record} />
           ))}
@@ -100,7 +100,7 @@ export function DesignToolBillingHistoryPage({
           <button
             onClick={handleLoadMore}
             disabled={state === 'loadingMore'}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="px-6 py-2 border border-line text-ink rounded-xl text-sm font-medium hover:bg-surface disabled:opacity-50"
           >
             {state === 'loadingMore'
               ? t('designTool.billing.loadingMore')
@@ -119,7 +119,7 @@ function BillingRow({ record }: { record: DesignToolPaymentRecord }) {
     record.status === 'completed'
       ? 'bg-green-100 text-green-700'
       : record.status === 'refunded'
-      ? 'bg-gray-100 text-gray-600'
+      ? 'bg-surface text-muted'
       : record.status === 'failed'
       ? 'bg-red-100 text-red-700'
       : 'bg-amber-100 text-amber-700';
@@ -135,11 +135,11 @@ function BillingRow({ record }: { record: DesignToolPaymentRecord }) {
             {statusLabel}
           </span>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted">
           {new Date(record.paidAt).toLocaleString('ko-KR')}
         </p>
         {record.refundedAt && (
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             {t('designTool.billing.refundedAt', {
               date: new Date(record.refundedAt).toLocaleDateString('ko-KR'),
             })}
@@ -151,7 +151,7 @@ function BillingRow({ record }: { record: DesignToolPaymentRecord }) {
           href={record.receiptUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-xs text-pink-600 font-medium hover:underline shrink-0"
+          className="flex items-center gap-1 text-xs text-brand font-medium hover:underline shrink-0"
         >
           {t('designTool.billing.viewReceipt')}
           <ExternalLink className="w-3 h-3" />

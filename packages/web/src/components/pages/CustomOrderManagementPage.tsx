@@ -35,8 +35,8 @@ const STATUS_BADGE_CLASSES: Record<CustomOrderStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
   quoted: 'bg-blue-100 text-blue-700',
   approved: 'bg-green-100 text-green-700',
-  in_production: 'bg-purple-100 text-purple-700',
-  completed: 'bg-gray-100 text-gray-600',
+  in_production: 'bg-brand-100 text-brand-700',
+  completed: 'bg-surface text-muted',
   rejected: 'bg-red-100 text-red-600',
   cancelled: 'bg-red-50 text-red-400',
 };
@@ -137,7 +137,7 @@ function BackIcon() {
 
 function ChevronRightIcon() {
   return (
-    <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
     </svg>
   );
@@ -146,8 +146,8 @@ function ChevronRightIcon() {
 function Spinner() {
   return (
     <div className="flex flex-col items-center justify-center py-24" role="status" aria-label="로딩 중">
-      <div className="w-10 h-10 border-4 border-gray-200 border-t-brand rounded-full animate-spin" />
-      <p className="mt-3 text-sm text-gray-500">불러오는 중...</p>
+      <div className="w-10 h-10 border-4 border-line border-t-brand rounded-full animate-spin" />
+      <p className="mt-3 text-sm text-muted">불러오는 중...</p>
     </div>
   );
 }
@@ -157,7 +157,7 @@ interface StatusBadgeProps {
 }
 
 function StatusBadge({ status }: StatusBadgeProps) {
-  const classes = STATUS_BADGE_CLASSES[status] ?? 'bg-gray-100 text-gray-600';
+  const classes = STATUS_BADGE_CLASSES[status] ?? 'bg-surface text-muted';
   const label = STATUS_LABELS[status] ?? status;
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${classes}`}>
@@ -196,7 +196,7 @@ function OrderCard({ order, onClick }: OrderCardProps) {
     <button
       type="button"
       onClick={() => onClick(order.requestUuid || order.id)}
-      className="w-full text-left bg-white rounded-xl shadow-sm border border-gray-100 p-4 active:bg-gray-50 transition-colors hover:border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+      className="w-full text-left bg-white rounded-xl shadow-sm border border-line p-4 active:bg-surface transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       aria-label={`${order.title} 상세 보기`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -216,10 +216,10 @@ function OrderCard({ order, onClick }: OrderCardProps) {
 
       {/* Nail specs + date */}
       <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted">
           {shapeLabel} · {lengthLabel}
         </span>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-muted">
           등록일 {formatDate(order.createdAt)}
         </span>
       </div>
@@ -234,17 +234,17 @@ interface EmptyStateProps {
 function EmptyState({ onNavigateToNew }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4" aria-hidden="true">
-        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4" aria-hidden="true">
+        <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
       <p className="text-base font-semibold text-gray-800 mb-1">아직 작성한 주문서가 없습니다</p>
-      <p className="text-sm text-gray-500 mb-6">나만의 커스텀 네일을 주문해보세요</p>
+      <p className="text-sm text-muted mb-6">나만의 커스텀 네일을 주문해보세요</p>
       <button
         type="button"
         onClick={onNavigateToNew}
-        className="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-brand-600 active:bg-[#C03A5A] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        className="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-full hover:bg-brand-600 active:bg-[#C03A5A] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         주문서 작성하기
       </button>
@@ -362,7 +362,7 @@ export function CustomOrderManagementPage({ onGo }: { onGo: (to: string) => void
           <button
             type="button"
             onClick={() => history.back()}
-            className="p-1 text-gray-700 hover:text-gray-900 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+            className="p-1 text-ink hover:text-ink rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             aria-label="뒤로 가기"
           >
             <BackIcon />
@@ -371,7 +371,7 @@ export function CustomOrderManagementPage({ onGo }: { onGo: (to: string) => void
         </div>
 
         {/* ---- Filter Tabs ---- */}
-        <div className="max-w-2xl mx-auto border-t border-gray-100">
+        <div className="max-w-2xl mx-auto border-t border-line">
           <nav
             className="flex overflow-x-auto scrollbar-hide"
             aria-label="주문 상태 필터"
@@ -390,7 +390,7 @@ export function CustomOrderManagementPage({ onGo }: { onGo: (to: string) => void
                     flex-shrink-0 px-4 py-2.5 text-sm whitespace-nowrap
                     ${isActive
                       ? 'text-gray-900 font-bold'
-                      : 'text-gray-500 font-medium'
+                      : 'text-muted font-medium'
                     }
                   `}
                 >
@@ -448,12 +448,12 @@ export function CustomOrderManagementPage({ onGo }: { onGo: (to: string) => void
                   type="button"
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="px-8 py-2.5 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+                  className="px-8 py-2.5 bg-white border border-line text-sm font-medium text-ink rounded-full hover:bg-surface active:bg-surface-strong disabled:opacity-60 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   aria-busy={loadingMore}
                 >
                   {loadingMore ? (
                     <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" aria-hidden="true" />
+                      <span className="w-4 h-4 border-2 border-line border-t-muted rounded-full animate-spin" aria-hidden="true" />
                       불러오는 중
                     </span>
                   ) : (

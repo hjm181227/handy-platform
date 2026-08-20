@@ -62,9 +62,9 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
   if (status === 'processing') {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
-        <Loader2 className="w-12 h-12 text-pink-500 animate-spin mx-auto mb-4" />
+        <Loader2 className="w-12 h-12 text-brand animate-spin mx-auto mb-4" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">{t('designTool.payment.processing')}</h2>
-        <p className="text-gray-500">{t('designTool.payment.pleaseWait')}</p>
+        <p className="text-muted">{t('designTool.payment.pleaseWait')}</p>
       </div>
     );
   }
@@ -78,14 +78,14 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
             ? t('designTool.subscription.cardChangeSuccess')
             : t('designTool.payment.subscriptionComplete')}
         </h2>
-        <p className="text-gray-500 mb-8">
+        <p className="text-muted mb-8">
           {mode === 'update'
             ? t('designTool.subscription.cardChangeSuccessDesc')
             : t('designTool.payment.subscriptionActivated')}
         </p>
         <button
           onClick={() => onGo('/design-tool')}
-          className="w-full py-3 bg-pink-500 text-white rounded-xl font-semibold hover:bg-pink-600"
+          className="w-full py-3 bg-brand text-white rounded-full font-semibold hover:bg-brand-600"
         >
           {t('designTool.payment.goToSubscription')}
         </button>
@@ -97,17 +97,17 @@ export function DesignToolPaymentResultPage({ onGo, type }: DesignToolPaymentRes
     <div className="max-w-md mx-auto px-4 py-20 text-center">
       <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
       <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('designTool.payment.paymentFailed')}</h2>
-      <p className="text-gray-500 mb-8">{errorMessage}</p>
+      <p className="text-muted mb-8">{errorMessage}</p>
       <div className="space-y-3">
         <button
           onClick={() => onGo('/design-tool')}
-          className="w-full py-3 bg-pink-500 text-white rounded-xl font-semibold hover:bg-pink-600"
+          className="w-full py-3 bg-brand text-white rounded-full font-semibold hover:bg-brand-600"
         >
           {t('designTool.payment.retry')}
         </button>
         <button
           onClick={() => onGo('/')}
-          className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200"
+          className="w-full py-3 bg-surface text-ink rounded-full font-semibold hover:bg-surface-strong"
         >
           {t('designTool.payment.goHome')}
         </button>

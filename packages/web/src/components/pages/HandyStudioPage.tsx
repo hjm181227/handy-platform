@@ -97,13 +97,13 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
         </Helmet>
 
         {/* ─── Hero Section ─── */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-pink-50 via-white to-white">
+        <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
           <div className="max-w-7xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28">
             <div className="text-center max-w-3xl mx-auto">
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 tracking-tight">
                 HandyStudio
               </h1>
-              <p className="mt-4 text-lg md:text-xl text-gray-600 leading-relaxed">
+              <p className="mt-4 text-lg md:text-xl text-muted leading-relaxed">
                 {t('handyStudio.heroSubtitle')}
               </p>
 
@@ -131,7 +131,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
 
               {/* 앱 스크린샷 영역 */}
               <div className="mt-12 relative">
-                <div className="bg-gradient-to-b from-gray-100 to-gray-50 rounded-3xl p-6 md:p-10">
+                <div className="bg-gradient-to-b from-surface-strong to-surface rounded-3xl p-6 md:p-10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
                     <img
                       src="/images/handy-studio/screenshot-1.png"
@@ -159,7 +159,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 {t('handyStudio.featuresTitle')}
               </h2>
-              <p className="mt-3 text-gray-500 text-lg max-w-2xl mx-auto">
+              <p className="mt-3 text-muted text-lg max-w-2xl mx-auto">
                 {t('handyStudio.featuresSubtitle')}
               </p>
             </div>
@@ -200,7 +200,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
         </section>
 
         {/* ─── Plans Section ─── */}
-        <section className="py-16 md:py-24 bg-gray-50">
+        <section className="py-16 md:py-24 bg-surface">
           <div className="max-w-3xl mx-auto px-4">
             {/* Step 1: 무료 체험 */}
             <div className="text-center mb-12">
@@ -210,28 +210,28 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 {t('handyStudio.planFreeHeading')}
               </h2>
-              <p className="mt-3 text-gray-500 text-lg max-w-2xl mx-auto">
+              <p className="mt-3 text-muted text-lg max-w-2xl mx-auto">
                 {t('handyStudio.planFreeDesc')}
               </p>
             </div>
 
             {/* Divider */}
             <div className="flex items-center gap-4 my-12">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-sm text-gray-400 font-medium">{t('handyStudio.planDivider')}</span>
-              <div className="flex-1 h-px bg-gray-200" />
+              <div className="flex-1 h-px bg-line" />
+              <span className="text-sm text-muted font-medium">{t('handyStudio.planDivider')}</span>
+              <div className="flex-1 h-px bg-line" />
             </div>
 
             {/* Step 2: Pro 업그레이드 */}
-            <div className="bg-white rounded-2xl p-8 md:p-10 border-2 border-pink-200">
+            <div className="bg-white rounded-2xl p-8 md:p-10 border-2 border-brand-200">
               <div className="text-center">
-                <span className="inline-block bg-pink-500 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                <span className="inline-block bg-brand text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
                   Pro
                 </span>
                 <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
                   {t('handyStudio.planProHeading')}
                 </h3>
-                <p className="mt-2 text-gray-500">
+                <p className="mt-2 text-muted">
                   {t('handyStudio.planProDesc')}
                 </p>
               </div>
@@ -239,17 +239,17 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               <ul className="mt-8 space-y-3 max-w-md mx-auto">
                 {[1, 2, 3].map((i) => (
                   <li key={i} className="flex items-start gap-3 text-gray-900">
-                    <CheckIcon className="w-5 h-5 text-pink-500 shrink-0 mt-0.5" />
+                    <CheckIcon className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                     <span className="text-sm font-medium">{t(`handyStudio.planProFeature${i}`)}</span>
                   </li>
                 ))}
               </ul>
 
               <div className="mt-8 text-center">
-                <p className="text-3xl font-bold text-pink-600">{t('handyStudio.planProPrice')}</p>
+                <p className="text-3xl font-bold text-brand">{t('handyStudio.planProPrice')}</p>
                 <button
                   onClick={() => onGo('/design-tool/subscription')}
-                  className="mt-4 inline-flex items-center gap-2 px-8 py-3.5 bg-pink-500 text-white rounded-xl font-medium hover:bg-pink-600 transition-colors"
+                  className="mt-4 inline-flex items-center gap-2 px-8 py-3.5 bg-brand text-white rounded-full font-medium hover:bg-brand-600 transition-colors"
                 >
                   {t('handyStudio.planProButton')}
                 </button>
@@ -259,12 +259,12 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
         </section>
 
         {/* ─── CTA Section ─── */}
-        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-pink-50">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-brand-50">
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
               {t('handyStudio.ctaTitle')}
             </h2>
-            <p className="mt-3 text-gray-600 text-lg">
+            <p className="mt-3 text-muted text-lg">
               {t('handyStudio.ctaSubtitle')}
             </p>
 
@@ -292,13 +292,13 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
         </section>
 
         {/* ─── Footer Links ─── */}
-        <section className="py-8 border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400">
-            <button onClick={() => onGo('/policy/terms')} className="hover:text-gray-600 transition-colors">
+        <section className="py-8 border-t border-line">
+          <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-center gap-4 text-sm text-muted">
+            <button onClick={() => onGo('/policy/terms')} className="hover:text-ink transition-colors">
               {t('handyStudio.terms')}
             </button>
-            <span className="text-gray-200">|</span>
-            <button onClick={() => onGo('/policy/privacy')} className="hover:text-gray-600 transition-colors">
+            <span className="text-line">|</span>
+            <button onClick={() => onGo('/policy/privacy')} className="hover:text-ink transition-colors">
               {t('handyStudio.privacy')}
             </button>
           </div>
@@ -311,12 +311,12 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="bg-gray-50 rounded-2xl p-6 hover:bg-gray-100 transition-colors">
-      <div className="w-12 h-12 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-4">
+    <div className="bg-surface rounded-2xl p-6 hover:bg-surface-strong transition-colors">
+      <div className="w-12 h-12 rounded-xl bg-brand-100 text-brand flex items-center justify-center mb-4">
         {icon}
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
+      <p className="text-muted text-sm leading-relaxed">{description}</p>
     </div>
   );
 }

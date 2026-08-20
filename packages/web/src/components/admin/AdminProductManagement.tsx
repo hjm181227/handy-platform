@@ -117,12 +117,12 @@ const AdminProductManagement: React.FC = () => {
     const statusConfig = {
       active: { bg: 'bg-green-100', text: 'text-green-800', label: '판매중' },
       inactive: { bg: 'bg-red-100', text: 'text-red-800', label: '판매중지' },
-      draft: { bg: 'bg-gray-100', text: 'text-gray-800', label: '임시저장' },
+      draft: { bg: 'bg-surface', text: 'text-gray-800', label: '임시저장' },
       out_of_stock: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '품절' },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig]
-      || { bg: 'bg-gray-100', text: 'text-gray-800', label: status || '알 수 없음' };
+      || { bg: 'bg-surface', text: 'text-gray-800', label: status || '알 수 없음' };
 
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
@@ -143,7 +143,7 @@ const AdminProductManagement: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* 헤더 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-line p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">상품 관리</h1>
@@ -164,17 +164,17 @@ const AdminProductManagement: React.FC = () => {
               placeholder="상품명, SKU로 검색..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-line-strong rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
             />
           </div>
         </div>
       </div>
 
       {/* 상품 목록 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-line">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-600">상품 목록을 불러오는 중...</p>
           </div>
         ) : error ? (
@@ -187,14 +187,14 @@ const AdminProductManagement: React.FC = () => {
             <p className="text-gray-600 mb-4">{error}</p>
             <button
               onClick={() => loadProducts()}
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-white bg-brand rounded-full hover:bg-brand-600 transition-colors"
             >
               다시 시도
             </button>
           </div>
         ) : products.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted mb-4">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
@@ -203,37 +203,37 @@ const AdminProductManagement: React.FC = () => {
               {searchQuery ? '검색 조건에 맞는 상품이 없습니다.' : '등록된 상품이 없습니다.'}
             </p>
             {searchQuery && (
-              <p className="text-gray-500 text-sm">다른 검색 조건을 시도해보세요.</p>
+              <p className="text-muted text-sm">다른 검색 조건을 시도해보세요.</p>
             )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-surface border-b border-line">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     상품 정보
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     판매자
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     가격/재고
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     판매 실적
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     상태
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted uppercase tracking-wider">
                     작업
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-line">
                 {products.map((product) => (
-                  <tr key={product._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={product._id} className="hover:bg-surface transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-12 w-12">
@@ -244,7 +244,7 @@ const AdminProductManagement: React.FC = () => {
                               alt={product.name}
                             />
                           ) : (
-                            <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                            <div className="h-12 w-12 rounded-lg bg-surface flex items-center justify-center text-muted text-xs">
                               없음
                             </div>
                           )}
@@ -253,20 +253,20 @@ const AdminProductManagement: React.FC = () => {
                           <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
                             {product.name}
                           </div>
-                          <div className="text-sm text-gray-500">{product.brand || '-'}</div>
-                          <div className="text-xs text-gray-400">{formatDate(product.createdAt)}</div>
+                          <div className="text-sm text-muted">{product.brand || '-'}</div>
+                          <div className="text-xs text-muted">{formatDate(product.createdAt)}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{product.sellerId || '-'}</div>
-                      <div className="text-xs text-gray-500 max-w-[10rem] truncate">UUID: {product.sellerUuid || '-'}</div>
+                      <div className="text-xs text-muted max-w-[10rem] truncate">UUID: {product.sellerUuid || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {formatCurrency(product.salePrice ?? product.price)}
                       </div>
-                      <div className="text-sm text-gray-500">재고: {product.stockQuantity ?? 0}개</div>
+                      <div className="text-sm text-muted">재고: {product.stockQuantity ?? 0}개</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>주문: {product.stats?.ordersCount ?? 0}건</div>
@@ -310,7 +310,7 @@ const AdminProductManagement: React.FC = () => {
 
         {/* 페이지네이션 */}
         {!loading && !error && pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-line">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 총 {pagination.totalProducts}개 중 {((pagination.currentPage - 1) * PAGE_SIZE) + 1}-
@@ -320,7 +320,7 @@ const AdminProductManagement: React.FC = () => {
                 <button
                   onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={pagination.currentPage === 1 || loading}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm border border-line rounded-md hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   이전
                 </button>
@@ -330,7 +330,7 @@ const AdminProductManagement: React.FC = () => {
                 <button
                   onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
                   disabled={pagination.currentPage === pagination.totalPages || loading}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm border border-line rounded-md hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   다음
                 </button>
@@ -343,13 +343,13 @@ const AdminProductManagement: React.FC = () => {
       {/* 상품 상세 정보 모달 */}
       {showDetailModal && selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-line">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">상품 상세 정보</h3>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted hover:text-gray-600"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -369,7 +369,7 @@ const AdminProductManagement: React.FC = () => {
                       className="w-full h-64 object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-full h-64 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                    <div className="w-full h-64 rounded-lg bg-surface flex items-center justify-center text-muted">
                       이미지 없음
                     </div>
                   )}
@@ -384,29 +384,29 @@ const AdminProductManagement: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500">브랜드:</span>
+                      <span className="text-muted">브랜드:</span>
                       <span className="ml-2 text-gray-900">{selectedProduct.brand || '-'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">SKU:</span>
+                      <span className="text-muted">SKU:</span>
                       <span className="ml-2 text-gray-900">{selectedProduct.sku || '-'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">가격:</span>
+                      <span className="text-muted">가격:</span>
                       <span className="ml-2 text-gray-900 font-semibold">
                         {formatCurrency(selectedProduct.salePrice ?? selectedProduct.price)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500">재고:</span>
+                      <span className="text-muted">재고:</span>
                       <span className="ml-2 text-gray-900">{selectedProduct.stockQuantity ?? 0}개</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">상태:</span>
+                      <span className="text-muted">상태:</span>
                       <span className="ml-2">{getStatusBadge(selectedProduct.status)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">등록일:</span>
+                      <span className="text-muted">등록일:</span>
                       <span className="ml-2 text-gray-900">{formatDate(selectedProduct.createdAt)}</span>
                     </div>
                   </div>
@@ -418,11 +418,11 @@ const AdminProductManagement: React.FC = () => {
                 <h4 className="text-md font-semibold text-gray-900 mb-3">판매자 정보</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-500">판매자 ID:</span>
+                    <span className="text-muted">판매자 ID:</span>
                     <span className="ml-2 text-gray-900">{selectedProduct.sellerId || '-'}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">판매자 UUID:</span>
+                    <span className="text-muted">판매자 UUID:</span>
                     <span className="ml-2 text-gray-900 break-all">{selectedProduct.sellerUuid || '-'}</span>
                   </div>
                 </div>
@@ -446,9 +446,9 @@ const AdminProductManagement: React.FC = () => {
                     <div className="text-2xl font-bold text-green-600">{selectedProduct.rating?.count ?? 0}</div>
                     <div className="text-sm text-green-800">리뷰 수</div>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-purple-600">{selectedProduct.stats?.viewsCount ?? 0}</div>
-                    <div className="text-sm text-purple-800">조회 수</div>
+                  <div className="bg-brand-50 p-4 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-brand-600">{selectedProduct.stats?.viewsCount ?? 0}</div>
+                    <div className="text-sm text-brand-700">조회 수</div>
                   </div>
                 </div>
               </div>
@@ -471,10 +471,10 @@ const AdminProductManagement: React.FC = () => {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-between">
+            <div className="p-6 border-t border-line flex justify-between">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-ink bg-surface rounded-lg hover:bg-surface-strong transition-colors"
               >
                 닫기
               </button>
@@ -484,7 +484,7 @@ const AdminProductManagement: React.FC = () => {
                 className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 text-white ${
                   selectedProduct.isFeatured
                     ? 'bg-gray-600 hover:bg-gray-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-brand hover:bg-brand-600'
                 }`}
               >
                 {actionLoading ? '처리 중...' : (selectedProduct.isFeatured ? '추천 해제' : '추천 지정')}

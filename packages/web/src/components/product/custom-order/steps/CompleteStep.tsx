@@ -29,7 +29,7 @@ export function CompleteStep({
       <h1 className="text-2xl font-bold text-gray-900 mb-3 text-center">
         주문서가 전송되었습니다!
       </h1>
-      <p className="text-gray-500 text-center mb-8 max-w-xs">
+      <p className="text-muted text-center mb-8 max-w-xs">
         판매자가 주문서를 확인하면<br />
         채팅으로 연락드릴 예정이에요.
       </p>
@@ -46,7 +46,7 @@ export function CompleteStep({
 
       {/* 주문 요약 */}
       {orderData && (
-        <div className="w-full max-w-sm bg-gray-50 rounded-2xl p-5 mb-8">
+        <div className="w-full max-w-sm bg-surface rounded-2xl p-5 mb-8">
           <p className="font-semibold text-gray-900 mb-2">{orderData.title}</p>
           <div className="flex gap-2 text-sm text-gray-600">
             <span className="bg-white px-2 py-1 rounded">
@@ -64,8 +64,8 @@ export function CompleteStep({
         {chatRoomId && (
           <button
             onClick={onGoToChat}
-            className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold
-                     flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
+            className="w-full py-4 bg-brand text-white rounded-full font-semibold
+                     flex items-center justify-center gap-2 hover:bg-brand-600 transition-colors"
           >
             <FaComments className="w-5 h-5" />
             채팅으로 이동
@@ -73,8 +73,8 @@ export function CompleteStep({
         )}
         <button
           onClick={onContinueShopping}
-          className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold
-                   flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+          className="w-full py-4 bg-surface text-ink rounded-full font-semibold
+                   flex items-center justify-center gap-2 hover:bg-surface-strong transition-colors"
         >
           <FaShoppingBag className="w-5 h-5" />
           계속 쇼핑하기
