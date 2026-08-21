@@ -1,4 +1,4 @@
-import { Product } from '@handy-platform/shared';
+import { Product, buildProductUrlSlug } from '@handy-platform/shared';
 import { useTranslation } from 'react-i18next';
 import { money } from '../../utils';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
@@ -52,6 +52,8 @@ export function ProductCard({
   }
 
   const productId = p.productUuid || (p as any).id || (p as any).productId;
+  // 링크에는 읽기 좋은 식별자를 쓴다 — 서버가 uuid와 둘 다 해석한다
+  const linkId = buildProductUrlSlug(p.name, productId) || productId;
   const salePrice = p.discountedPrice ?? p.salePrice ?? p.price ?? 0;
   const hasDiscount = salePrice < p.price;
   const discountRate = hasDiscount ? Math.round((1 - salePrice / p.price) * 100) : 0;
@@ -62,7 +64,7 @@ export function ProductCard({
   return (
     <div className="w-full md:w-[200px] shrink-0">
       <div className="relative rounded-xl overflow-hidden bg-surface">
-        <button onClick={()=>onOpen(productId)} className="block w-full text-left">
+        <button onClick={()=>onOpen(linkId)} className="block w-full text-left">
           <img
             src={p.mainImageUrl}
             alt={p.name}
@@ -115,7 +117,7 @@ export function ProductCard({
         ) : (
           <div className="text-[11.5px] font-semibold text-muted tracking-wide">{p.brand || ''}</div>
         )}
-        <button onClick={()=>onOpen(productId)} className="block w-full text-left">
+        <button onClick={()=>onOpen(linkId)} className="block w-full text-left">
           <div className="text-sm font-semibold text-ink truncate mt-0.5">{p.name}</div>
         </button>
         {(shapeLabel || processingDays) && (

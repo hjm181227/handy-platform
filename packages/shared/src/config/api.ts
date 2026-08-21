@@ -449,6 +449,8 @@ export const API_ENDPOINTS = {
     UPDATE_NAME: (sellerUuid: string) => `/api/brands/${sellerUuid}/name`,       // PUT /:sellerUuid/name - 브랜드명 변경
     UPDATE_PROFILE: (sellerUuid: string) => `/api/brands/${sellerUuid}/profile`, // PUT /:sellerUuid/profile - 브랜드 프로필 변경
     UPDATE_BANNER: (sellerUuid: string) => `/api/brands/${sellerUuid}/banner`,   // PUT /:sellerUuid/banner - 브랜드 배너 변경
+    SLUG_AVAILABLE: '/api/brands/slug-available',                                // GET /slug-available?slug= - 브랜드 주소 사용 가능 여부
+    UPDATE_SLUG: (sellerUuid: string) => `/api/brands/${sellerUuid}/slug`,       // PUT /:sellerUuid/slug - 브랜드 주소(slug) 변경
   },
 
   // 배송지 관리 (한국 주소 시스템)

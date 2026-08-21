@@ -11,6 +11,7 @@ export * from './utils/apiHelpers';
 export * from './utils/imageUpload';
 export * from './utils/oauthService';
 export * from './utils/apiTesting';
+export * from './utils/urlSlug';
 export * from './utils/errorMessages';
 export * from './utils/uuidUtils';
 export * from './utils/nailConstants';

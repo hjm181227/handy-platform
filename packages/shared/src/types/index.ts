@@ -1761,6 +1761,7 @@ export interface UpdateBrandBannerRequest {
 // 브랜드 상세 정보 (서버 API 스펙)
 export interface BrandDetail {
   sellerUuid: string;                    // 판매자 UUID
+  slug?: string | null;                  // 브랜드 페이지 주소 (/brand/mammon). 미설정 시 null
   brandName: string;                     // 브랜드명
   brandProfile: string | null;           // 브랜드 프로필 이미지 URL
   brandBanner: string | null;            // 브랜드 배너 이미지 URL
@@ -1839,6 +1840,26 @@ export interface BrandUpdateResponse {
     brandName: string;
     brandProfile: string | null;
     brandBanner?: string | null;
+  };
+}
+
+// 브랜드 주소(slug) 사용 가능 여부 응답
+export interface BrandSlugAvailabilityResponse {
+  success: boolean;
+  data: {
+    slug: string;                        // 검사한 주소
+    available: boolean;                  // 사용 가능 여부
+    reason: string | null;               // 사용 불가 사유 (사용 가능하면 null)
+  };
+}
+
+// 브랜드 주소(slug) 변경 응답
+export interface BrandSlugUpdateResponse {
+  success: boolean;
+  message: string;
+  data: {
+    sellerUuid: string;
+    slug: string;
   };
 }
 
