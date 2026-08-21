@@ -130,6 +130,21 @@ export function BrandDetailPage({
   // URL 디코딩 대신 seller UUID 사용
   const decodedSellerUuid = decodeURIComponent(sellerUuid);
 
+  /**
+   * UUID로 들어온 브랜드 링크를 브랜드 주소로 바꿔둔다.
+   * 셀러가 주소를 설정해 둔 경우에만 동작하며, 히스토리는 쌓지 않는다.
+   */
+  useEffect(() => {
+    const slug = brandInfo?.slug;
+    if (!slug) return;
+    const current = window.location.pathname;
+    if (!/^\/brand\/[^/]+$/.test(current)) return;
+    const target = `/brand/${slug}`;
+    if (current !== target) {
+      window.history.replaceState({}, '', target + window.location.search);
+    }
+  }, [brandInfo]);
+
   // 브랜드 테마 가져오기 (brandInfo의 브랜드명을 통해)
   const brandTheme = BRAND_THEMES[brandInfo?.brandName || ''] || DEFAULT_BRAND_THEME;
 

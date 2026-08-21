@@ -1,14 +1,14 @@
 /**
  * Vercel Edge Middleware — SNS 크롤러용 상품 OG 태그.
  *
- * 배경: Vite SPA라 모든 상품 페이지의 공유 미리보기가 "상품 상세" 고정
- * 제목에 썸네일 없음으로 나갔다. 카카오톡·페이스북 등의 스크래퍼는 JS를
- * 실행하지 않으므로, 크롤러 UA에 한해 엣지에서 상품 정보를 조회해
- * OG 메타태그가 포함된 HTML을 반환한다. 일반 사용자는 그대로 SPA 응답.
+ * 배경: Vite SPA라 상품·브랜드 페이지의 공유 미리보기가 사이트 공통 카드로
+ * 고정돼 나갔다. 카카오톡·페이스북 등의 스크래퍼는 JS를 실행하지 않으므로,
+ * 크롤러 UA에 한해 엣지에서 정보를 조회해 OG 메타태그가 포함된 HTML을
+ * 반환한다. 일반 사용자는 그대로 SPA 응답.
  */
 
 export const config = {
-  matcher: '/product/:path*'
+  matcher: ['/product/:path*', '/brand/:path*']
 };
 
 const BOT_UA_PATTERN = /kakaotalk-scrap|facebookexternalhit|twitterbot|slackbot|telegrambot|discordbot|whatsapp|linkedinbot|pinterest|line-poker|skypeuripreview|naver|yeti|daum|kakaostory/i;
@@ -28,30 +28,58 @@ export default async function middleware(request: Request): Promise<Response | u
   }
 
   const url = new URL(request.url);
-  const productUuid = url.pathname.split('/')[2];
-  if (!productUuid) return undefined;
+  const [, section, rawIdentifier] = url.pathname.split('/');
+  const identifier = rawIdentifier ? decodeURIComponent(rawIdentifier) : '';
+  if (!identifier) return undefined;
+  // 하위 경로(/product/x/custom-order 등)는 전용 카드를 만들지 않는다
+  if (url.pathname.split('/').length > 3) return undefined;
 
   const apiBase = url.hostname.includes('stage')
     ? 'https://api.stage-handy.com'
     : 'https://api.h-andy.com';
 
+  const isBrand = section === 'brand';
+  const endpoint = isBrand
+    ? `${apiBase}/api/brands/${encodeURIComponent(identifier)}`
+    : `${apiBase}/api/products/${encodeURIComponent(identifier)}`;
+
   try {
-    const apiResponse = await fetch(`${apiBase}/api/products/${encodeURIComponent(productUuid)}`, {
+    const apiResponse = await fetch(endpoint, {
       headers: { accept: 'application/json' }
     });
     if (!apiResponse.ok) return undefined;
 
     const json: any = await apiResponse.json();
-    const product = json?.data?.product || json?.data || json?.product;
-    if (!product?.name) return undefined;
 
-    const title = escapeHtml(String(product.name));
-    const rawDescription = product.shortDescription || product.description || '';
-    const price = typeof product.price === 'number' ? `${product.price.toLocaleString('ko-KR')}원` : '';
-    const description = escapeHtml(
-      [price, String(rawDescription).slice(0, 120)].filter(Boolean).join(' · ') || 'HANDY에서 네일 상품을 만나보세요'
-    );
-    const image = product.mainImageUrl ? escapeHtml(String(product.mainImageUrl)) : '';
+    let title = '';
+    let description = '';
+    let image = '';
+    let ogType = 'product';
+
+    if (isBrand) {
+      const brand = json?.data || json?.brand;
+      if (!brand?.brandName) return undefined;
+      ogType = 'website';
+      title = escapeHtml(String(brand.brandName));
+      const productCount = typeof brand.totalProducts === 'number' ? `상품 ${brand.totalProducts}개` : '';
+      description = escapeHtml(
+        [productCount, String(brand.description || '').slice(0, 120)].filter(Boolean).join(' · ')
+          || `HANDY에서 ${brand.brandName}의 네일 상품을 만나보세요`
+      );
+      const brandImage = brand.brandBanner || brand.brandProfile || '';
+      image = brandImage ? escapeHtml(String(brandImage)) : '';
+    } else {
+      const product = json?.data?.product || json?.data || json?.product;
+      if (!product?.name) return undefined;
+      title = escapeHtml(String(product.name));
+      const rawDescription = product.shortDescription || product.description || '';
+      const price = typeof product.price === 'number' ? `${product.price.toLocaleString('ko-KR')}원` : '';
+      description = escapeHtml(
+        [price, String(rawDescription).slice(0, 120)].filter(Boolean).join(' · ') || 'HANDY에서 네일 상품을 만나보세요'
+      );
+      image = product.mainImageUrl ? escapeHtml(String(product.mainImageUrl)) : '';
+    }
+
     const pageUrl = escapeHtml(`${url.origin}${url.pathname}`);
 
     const html = `<!doctype html>
@@ -59,7 +87,7 @@ export default async function middleware(request: Request): Promise<Response | u
 <head>
 <meta charset="utf-8">
 <title>${title} | HANDY</title>
-<meta property="og:type" content="product">
+<meta property="og:type" content="${ogType}">
 <meta property="og:site_name" content="HANDY">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">

@@ -7,7 +7,9 @@ import {
   UpdateBrandBannerRequest,
   BrandUpdateResponse,
   BrandDetailResponse,
-  BrandBusinessInfoResponse
+  BrandBusinessInfoResponse,
+  BrandSlugAvailabilityResponse,
+  BrandSlugUpdateResponse
 } from '../../types';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -117,6 +119,48 @@ export abstract class BaseBrandService extends BaseApiService {
     const response = await this.request<BrandUpdateResponse>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+
+    return response;
+  }
+
+  /**
+   * 브랜드 주소(slug) 사용 가능 여부를 확인합니다 (인증 필요)
+   *
+   * 규칙: 영문 소문자·숫자·하이픈, 2~40자, 하이픈으로 시작/끝 불가, 예약어 불가
+   *
+   * @param slug 확인할 브랜드 주소
+   * @returns 사용 가능 여부와 불가 사유
+   */
+  async checkBrandSlug(slug: string): Promise<BrandSlugAvailabilityResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('slug', slug);
+
+    const endpoint = `${API_ENDPOINTS.BRANDS.SLUG_AVAILABLE}?${queryParams.toString()}`;
+
+    const response = await this.request<BrandSlugAvailabilityResponse>(endpoint, {
+      method: 'GET',
+    });
+
+    return response;
+  }
+
+  /**
+   * 브랜드 주소(slug)를 변경합니다 (인증 + 셀러 권한 필요)
+   *
+   * 형식 오류는 400, 이미 선점된 주소는 409로 응답하며
+   * 서버가 내려주는 error 메시지를 그대로 사용자에게 보여준다.
+   *
+   * @param sellerUuid 판매자 UUID
+   * @param slug 새로운 브랜드 주소
+   * @returns 변경된 브랜드 주소 정보
+   */
+  async updateBrandSlug(sellerUuid: string, slug: string): Promise<BrandSlugUpdateResponse> {
+    const endpoint = API_ENDPOINTS.BRANDS.UPDATE_SLUG(sellerUuid);
+
+    const response = await this.request<BrandSlugUpdateResponse>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify({ slug }),
     });
 
     return response;

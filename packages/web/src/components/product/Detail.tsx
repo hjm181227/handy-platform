@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService } from '@handy-platform/shared';
+import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService, buildProductUrlSlug } from '@handy-platform/shared';
 import { productService, cartService, reviewService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
@@ -99,6 +99,26 @@ export function Detail({
       loadProduct();
     }
   }, [id]);
+
+  /**
+   * UUID로 들어온 링크를 읽기 좋은 주소로 바꿔둔다.
+   *
+   * 예전에 공유된 /product/{uuid} 링크나 아직 손대지 않은 화면에서 들어와도
+   * 주소창에는 /product/white-wedding-f2f5655c 가 남는다. 히스토리를 쌓지
+   * 않으므로 뒤로가기 동작은 그대로다.
+   */
+  useEffect(() => {
+    if (!product?.name || !product?.productUuid) return;
+    const pretty = buildProductUrlSlug(product.name, product.productUuid);
+    if (!pretty) return;
+    const current = window.location.pathname;
+    // 커스텀 주문 등 하위 경로에서는 건드리지 않는다
+    if (!/^\/product\/[^/]+$/.test(current)) return;
+    const target = `/product/${pretty}`;
+    if (current !== target) {
+      window.history.replaceState({}, '', target + window.location.search);
+    }
+  }, [product]);
 
   // 상품이 로드된 후 옵션 초기화
   useEffect(() => {

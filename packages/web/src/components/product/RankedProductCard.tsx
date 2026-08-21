@@ -1,4 +1,4 @@
-import { Product } from '@handy-platform/shared';
+import { Product, buildProductUrlSlug } from '@handy-platform/shared';
 import { Badge, Stars } from '../ui';
 import { money } from '../../utils';
 import { FaCartArrowDown } from 'react-icons/fa6';
@@ -20,11 +20,12 @@ export function RankedProductCard({
   isLiked?: boolean;
 }) {
   const productId = p.productUuid;
+  const linkId = buildProductUrlSlug(p.name, productId) || productId;
   const salePrice = p.discountedPrice;
 
   return (
     <div className="w-full md:w-[200px] shrink-0">
-      <button onClick={()=>onOpen(productId)} className="block w-full text-left">
+      <button onClick={()=>onOpen(linkId)} className="block w-full text-left">
         <div className="relative rounded-lg overflow-hidden bg-gray-100">
           <img
             src={p.mainImageUrl}

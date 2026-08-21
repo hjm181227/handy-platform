@@ -3620,6 +3620,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
     brandName: string;
     brandProfile: string | null;
     brandBanner: string | null;
+    slug: string | null;
     acceptsCustomOrders: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -3629,6 +3630,13 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
   const [savingName, setSavingName] = useState(false);
+
+  // 브랜드 주소(slug) 상태
+  const [slugInput, setSlugInput] = useState('');
+  const [slugChecking, setSlugChecking] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugReason, setSlugReason] = useState<string | null>(null);
+  const [savingSlug, setSavingSlug] = useState(false);
 
   // 로고 업로드 상태
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -3665,11 +3673,13 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       if (sellerInfo && sellerInfo.success && sellerInfo.data) {
         const seller = sellerInfo.data;
 
-        // 브랜드 상세 정보 조회 (brandBanner 포함)
+        // 브랜드 상세 정보 조회 (brandBanner, slug 포함)
         let brandBanner: string | null = null;
+        let brandSlug: string | null = null;
         try {
           const brandDetail = await brandService.getBrandDetail(seller.userUuid);
           brandBanner = brandDetail.data?.brandBanner || null;
+          brandSlug = brandDetail.data?.slug || null;
         } catch (err) {
           console.log('Brand detail fetch failed, using default banner');
         }
@@ -3679,9 +3689,11 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
           brandName: seller.brandName || '',
           brandProfile: seller.brandProfile || null,
           brandBanner,
+          slug: brandSlug,
           acceptsCustomOrders: customOrderSetting?.data?.acceptsCustomOrders ?? false
         });
         setNewBrandName(seller.brandName || '');
+        setSlugInput(brandSlug || '');
       } else {
         setError('판매자 정보를 찾을 수 없습니다.');
       }
@@ -3713,6 +3725,71 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
       setError(err.message || '브랜드명 변경에 실패했습니다.');
     } finally {
       setSavingName(false);
+    }
+  };
+
+  // 브랜드 주소(slug) 중복 확인 - 300ms 디바운스
+  useEffect(() => {
+    const trimmed = slugInput.trim();
+
+    // 비어 있거나 현재 주소와 같으면 검사하지 않는다
+    if (!trimmed || trimmed === (brandInfo?.slug || '')) {
+      setSlugChecking(false);
+      setSlugAvailable(null);
+      setSlugReason(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSlugChecking(true);
+    setSlugAvailable(null);
+    setSlugReason(null);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await brandService.checkBrandSlug(trimmed);
+        if (cancelled) return;
+
+        setSlugAvailable(response.data?.available ?? false);
+        setSlugReason(response.data?.reason ?? null);
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error('브랜드 주소 확인 실패:', err);
+        setSlugAvailable(false);
+        setSlugReason(err.message || '주소를 확인하지 못했습니다.');
+      } finally {
+        if (!cancelled) setSlugChecking(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [slugInput, brandInfo?.slug]);
+
+  // 브랜드 주소(slug) 저장
+  const handleUpdateSlug = async () => {
+    const trimmed = slugInput.trim();
+    if (!brandInfo || !trimmed || savingSlug || !slugAvailable) return;
+
+    try {
+      setSavingSlug(true);
+      setError(null);
+
+      const response = await brandService.updateBrandSlug(brandInfo.sellerUuid, trimmed);
+
+      const savedSlug = response.data?.slug || trimmed;
+      setBrandInfo(prev => prev ? { ...prev, slug: savedSlug } : null);
+      setSlugInput(savedSlug);
+      setSlugAvailable(null);
+      setSlugReason(null);
+      showSuccess('브랜드 주소가 변경되었습니다.');
+    } catch (err: any) {
+      console.error('브랜드 주소 변경 실패:', err);
+      setError(err.message || '브랜드 주소 변경에 실패했습니다.');
+    } finally {
+      setSavingSlug(false);
     }
   };
 
@@ -4072,7 +4149,7 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
           </div>
 
           {/* 브랜드명 섹션 */}
-          <div className="p-6">
+          <div className="p-6 border-b border-line">
             <label className="block text-sm font-medium text-gray-700 mb-3">브랜드명</label>
 
             {isEditingName ? (
@@ -4115,6 +4192,60 @@ export function BrandManagement({ onGo }: { onGo: (path: string) => void }) {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* 브랜드 주소 섹션 */}
+          <div className="p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">브랜드 주소</label>
+
+            <div className="flex items-center gap-3">
+              <div className="flex flex-1 items-center gap-0.5 px-4 py-2 border border-line-strong rounded-lg focus-within:ring-2 focus-within:ring-brand focus-within:border-brand">
+                <span className="text-muted whitespace-nowrap select-none">h-andy.com/brand/</span>
+                <input
+                  type="text"
+                  value={slugInput}
+                  onChange={(e) => setSlugInput(e.target.value.trim().toLowerCase())}
+                  className="flex-1 min-w-0 bg-transparent text-ink outline-none"
+                  placeholder="mammon"
+                  maxLength={40}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </div>
+              <button
+                onClick={handleUpdateSlug}
+                disabled={savingSlug || !slugAvailable}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                  savingSlug || !slugAvailable
+                    ? 'bg-surface-strong text-muted cursor-not-allowed'
+                    : 'bg-brand text-white hover:bg-brand-600'
+                }`}
+              >
+                {savingSlug ? '저장 중...' : '저장'}
+              </button>
+            </div>
+
+            {/* 사용 가능 여부 */}
+            <div className="mt-2 min-h-[1.25rem]">
+              {slugChecking && (
+                <p className="text-sm text-muted">확인 중...</p>
+              )}
+              {!slugChecking && slugAvailable === true && (
+                <p className="text-sm text-green-600">✓ 사용 가능</p>
+              )}
+              {!slugChecking && slugAvailable === false && (
+                <p className="text-sm text-red-600">{slugReason || '사용할 수 없는 주소입니다.'}</p>
+              )}
+            </div>
+
+            <p className="text-sm text-muted mt-1">
+              {brandInfo?.slug
+                ? '주소를 바꾸면 이전 주소로는 접속할 수 없습니다. 기존에 공유한 링크는 계속 열립니다.'
+                : '주소를 정하면 고객이 기억하기 쉬운 링크로 브랜드 페이지를 공유할 수 있습니다.'}
+            </p>
+            <p className="text-xs text-muted mt-1">
+              영문 소문자·숫자·하이픈만 사용할 수 있으며 2~40자여야 합니다.
+            </p>
           </div>
         </div>
 
