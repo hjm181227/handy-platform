@@ -21,6 +21,10 @@ import json
 import os
 import sys
 
+# Windows cp949 콘솔에서도 한글·대시 출력이 깨지지 않도록
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 import google.auth.transport.requests
 import requests
 from google.oauth2 import service_account
