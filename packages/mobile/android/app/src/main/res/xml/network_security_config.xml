@@ -9,7 +9,5 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">10.0.3.2</domain>
-        <domain includeSubdomains="true">15.165.5.64</domain>
-        <domain includeSubdomains="true">16.176.147.141</domain>
     </domain-config>
 </network-security-config>

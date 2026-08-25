@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Platform, PermissionsAndroid, Permission, Linking, DeviceEventEmitter } from 'react-native';
+import { Linking, DeviceEventEmitter } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NativeScreenProvider } from './src/contexts/NativeScreenProvider';
 import HomeScreen from './src/screens/HomeScreen';
@@ -55,10 +55,7 @@ const App: React.FC = () => {
 
   const initializeApp = async () => {
     try {
-      // Android 권한 요청
-      if (Platform.OS === 'android') {
-        await requestAndroidPermissions();
-      }
+      // 카메라·사진 권한은 실제 사용 시점(측정 화면, 사진 첨부)에 요청한다.
 
       // 푸시 알림 채널/핸들러 초기화 (콜드 스타트 알림 라우팅 포함)
       await notificationService.initialize();
@@ -86,20 +83,6 @@ const App: React.FC = () => {
       (initializeApp as any).__tokenRefreshSub = tokenRefreshSub;
     } catch (error) {
       console.error('App initialization error:', error);
-    }
-  };
-
-  const requestAndroidPermissions = async () => {
-    try {
-      const permissions = [
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      ].filter(Boolean) as Permission[];
-
-      await PermissionsAndroid.requestMultiple(permissions);
-    } catch (error) {
-      console.error('Permission request error:', error);
     }
   };
 

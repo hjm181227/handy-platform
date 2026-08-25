@@ -72,9 +72,6 @@ window.ReactNativeWebView.cart('add', { productId, quantity });
 window.ReactNativeWebView.camera('takePhoto', { productId });
 window.ReactNativeWebView.camera('choosePhoto', { productId });
 
-// 결제 기능
-window.ReactNativeWebView.payment('kakaopay', { amount, orderInfo });
-
 // 권한 요청
 window.ReactNativeWebView.requestPermission('camera');
 

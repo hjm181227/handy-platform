@@ -1,9 +1,7 @@
 import { Platform, PermissionsAndroid, DeviceEventEmitter } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  API_CONFIG,
-  getCurrentEnvironment,
-} from '@handy-platform/shared/src/config/api';
+import { API_CONFIG } from '@handy-platform/shared/src/config/api';
+import { getAppEnvironment } from '../config/environment';
 import { getChatServiceNative } from '@handy-platform/shared/src/services/chat/ChatService.native';
 
 // Firebase/Notifee — lazy require로 GoogleService-Info.plist 미설정 시 안전하게 스킵
@@ -370,8 +368,10 @@ class NotificationService {
   }
 
   private getChatApiUrl(): string {
-    const env = getCurrentEnvironment();
-    return API_CONFIG[env]?.chatURL || API_CONFIG.stage.chatURL;
+    // shared의 getCurrentEnvironment()는 RN에서 항상 'stage'로 폴백하므로
+    // 반드시 네이티브 BuildConfig 기반 getAppEnvironment()를 써야 한다.
+    const env = getAppEnvironment();
+    return API_CONFIG[env]?.chatURL || API_CONFIG.production.chatURL;
   }
 
   // ---- 기존 API 호환 (주문/프로모션 로컬 알림 등) ----

@@ -113,3 +113,6 @@ packages/ml/venv-cardtune/
 packages/ml/test_images/
 packages/ml/lambda/model.onnx
 packages/ml/lambda/model.onnx.data
+
+# 릴리즈 빌드 시 gradle이 생성하므로 추적하지 않음
+packages/mobile/android/app/src/main/assets/index.android.bundle

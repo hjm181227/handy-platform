@@ -905,8 +905,20 @@ export type WebViewMessageType =
   | 'CART'
   | 'NOTIFICATION'
   | 'CAMERA'
-  | 'PAYMENT'
+  | 'PAYMENT'                        // (네이티브 처리 제거됨 — 결제는 웹뷰 내 토스 SDK가 담당)
   | 'PERMISSIONS'
+  | 'STORE_AUTH_TOKEN'               // 웹 로그인 토큰을 네이티브에 저장
+  | 'STORE_AUTH_TOKEN_RESPONSE'
+  | 'AUTH_TOKEN_CLEARED'             // 웹이 토큰을 지움(로그아웃) → 네이티브 토큰·FCM 등록 정리
+  | 'REQUEST_TOKEN'                  // 웹이 네이티브 저장 토큰 요청
+  | 'TOKEN_RESPONSE'
+  | 'DELETE_ACCOUNT'
+  | 'DELETE_ACCOUNT_RESPONSE'
+  | 'CHAT'
+  | 'CHAT_RESPONSE'
+  | 'closeChat'
+  | 'SHOW_NATIVE_FEATURES'
+  | 'NAIL_SIZE_UPDATED'              // 네이티브 측정/저장 후 웹 사이즈 목록 갱신
   | 'OAUTH'                          // OAuth 시스템 브라우저 요청 (Google 등)
   | 'OAUTH_CANCELLED'                 // OAuth 취소/실패 알림 (InAppBrowser에서 취소)
   | 'API_RESPONSE'
