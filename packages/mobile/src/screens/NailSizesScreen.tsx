@@ -41,12 +41,6 @@ const NailSizesScreen: React.FC<NailSizesScreenProps> = ({
       setLoading(true);
       setError(null);
 
-      // 디버그: 토큰 상태 확인
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('@handy_platform:accessToken');
-      console.log('🔍 [NailSizes] Token check:', token ? `${token.substring(0, 20)}...` : 'NULL');
-      console.log('🔍 [NailSizes] userService:', typeof userService, !!userService);
-
       let response;
       try {
         response = await userService.getNailSize();

@@ -11,12 +11,6 @@ export interface CameraResult {
   height?: number;
 }
 
-export interface QRCodeResult {
-  data: string;
-  type: 'QR_CODE' | 'BARCODE';
-  format?: string;
-}
-
 class CameraService {
   private defaultOptions: ImagePickerOptions = {
     mediaType: 'photo' as MediaType,
@@ -149,38 +143,6 @@ class CameraService {
           height: asset.height,
         });
       });
-    });
-  }
-
-  // QR Code scanning methods
-  async scanQRCode(): Promise<QRCodeResult> {
-    // Note: This would typically integrate with react-native-camera or similar
-    // For now, we'll return a mock implementation
-    const hasPermission = await this.requestCameraPermission();
-    if (!hasPermission) {
-      throw new Error('카메라 권한이 필요합니다.');
-    }
-
-    return new Promise((resolve, reject) => {
-      Alert.alert(
-        'QR 코드 스캔',
-        'QR 코드 스캔 기능은 현재 개발 중입니다. 테스트용 QR 코드를 반환합니다.',
-        [
-          {
-            text: '취소',
-            style: 'cancel',
-            onPress: () => reject(new Error('사용자가 QR 코드 스캔을 취소했습니다.'))
-          },
-          {
-            text: '테스트 스캔',
-            onPress: () => resolve({
-              data: 'https://example.com/product/12345',
-              type: 'QR_CODE',
-              format: 'QR_CODE'
-            })
-          }
-        ]
-      );
     });
   }
 

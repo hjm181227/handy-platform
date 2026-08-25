@@ -45,6 +45,11 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'STORE_AUTH_TOKEN':
           await handleStoreAuthToken(message.data);
           break;
+        case 'AUTH_TOKEN_CLEARED':
+          // 웹이 자체 로그아웃(AuthContext.logout 등)으로 토큰을 지운 경우.
+          // 네이티브 저장 토큰과 FCM 등록을 함께 정리해야 다음 사용자가 이전 사용자의 푸시를 받지 않는다.
+          await handleAuthTokenCleared();
+          break;
         case 'CART':
           await handleCart(message.data);
           break;
@@ -53,9 +58,6 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'CAMERA':
           await handleCamera(message.data);
-          break;
-        case 'PAYMENT':
-          await handlePayment(message.data);
           break;
         case 'PERMISSIONS':
           await handlePermissions(message.data);
@@ -226,6 +228,14 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
   const handleDeleteAccount = async () => {
     try {
       console.log('🔵 [BRIDGE] 계정 삭제 처리 시작');
+      try {
+        const currentToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+        if (currentToken) {
+          await notificationService.unregisterToken(currentToken);
+        }
+      } catch (e) {
+        console.warn('[BRIDGE] FCM unregister failed:', e);
+      }
       await mobileApiService.deleteAccountAndClearToken();
 
       if (webViewRef.current) {
@@ -263,6 +273,24 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         data: { success: false, error: errorMsg },
       });
     }
+  };
+
+  const handleAuthTokenCleared = async () => {
+    try {
+      const currentToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+      if (currentToken) {
+        await notificationService.unregisterToken(currentToken);
+      }
+    } catch (e) {
+      console.warn('[BRIDGE] FCM unregister failed:', e);
+    }
+    try {
+      await AsyncStorage.multiRemove(['@handy_platform:accessToken', '@handy_platform:user']);
+    } catch (e) {
+      console.warn('[BRIDGE] native token clear failed:', e);
+    }
+    notificationService.setActiveChatRoom(null);
+    console.log('🔵 [BRIDGE] 웹 로그아웃 감지 → 네이티브 토큰·FCM 등록 정리 완료');
   };
 
   const handleStoreAuthToken = async (data: any) => {
@@ -536,22 +564,6 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
             result = await cameraService.chooseFromGallery({ includeBase64: true });
           }
           break;
-        case 'scanQR':
-          const qrResult = await cameraService.scanQRCode();
-          sendMessageToWebView({
-            type: 'CAMERA_RESPONSE',
-            data: {
-              success: true,
-              result: {
-                type: 'QR_SCAN',
-                data: qrResult.data,
-                qrType: qrResult.type,
-                format: qrResult.format
-              },
-              requestId: data.requestId
-            },
-          });
-          return;
         default:
           throw new Error(`지원하지 않는 카메라 액션: ${data.action}`);
       }
@@ -581,46 +593,6 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         data: { 
           success: false, 
           error: error instanceof Error ? error.message : 'Camera error',
-          requestId: data.requestId 
-        },
-      });
-    }
-  };
-
-  const handlePayment = async (data: any) => {
-    try {
-      let result;
-      
-      switch (data.method) {
-        case 'card':
-          // Integrate with payment gateway (e.g., Iamport, Toss Payments)
-          result = await processCardPayment(data);
-          break;
-        case 'bank_transfer':
-          result = await processBankTransfer(data);
-          break;
-        case 'mobile':
-          result = await processMobilePayment(data);
-          break;
-        case 'kakaopay':
-        case 'naverpay':
-        case 'payco':
-          result = await processThirdPartyPayment(data);
-          break;
-        default:
-          throw new Error(`지원하지 않는 결제 방법: ${data.method}`);
-      }
-
-      sendMessageToWebView({
-        type: 'PAYMENT_RESPONSE',
-        data: { success: true, result, requestId: data.requestId },
-      });
-    } catch (error) {
-      sendMessageToWebView({
-        type: 'PAYMENT_RESPONSE',
-        data: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Payment failed',
           requestId: data.requestId 
         },
       });
@@ -715,9 +687,6 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         case 'storage':
           granted = await cameraService.requestStoragePermission();
           break;
-        case 'location':
-          granted = await requestLocationPermission();
-          break;
         default:
           throw new Error(`Unknown permission type: ${data.type}`);
       }
@@ -743,114 +712,13 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     }
   };
 
-  // Permission helpers
-  const requestLocationPermission = async (): Promise<boolean> => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: '위치 권한',
-          message: '배송지 설정을 위해 위치 권한이 필요합니다.',
-          buttonNeutral: '나중에',
-          buttonNegative: '거부',
-          buttonPositive: '허용',
-        }
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true;
-  };
-
-  // Payment processing helpers
-  const processCardPayment = async (data: any) => {
-    // This would integrate with actual payment gateway
-    // For demo purposes, we'll simulate the process
-    return new Promise((resolve, reject) => {
-      Alert.alert(
-        '카드 결제',
-        `결제 금액: ${data.amount}원\n상품: ${data.orderInfo.items.length}개 상품`,
-        [
-          {
-            text: '취소',
-            style: 'cancel',
-            onPress: () => reject(new Error('사용자가 결제를 취소했습니다.'))
-          },
-          {
-            text: '결제',
-            onPress: () => {
-              // Simulate payment success
-              resolve({
-                transactionId: `txn_${Date.now()}`,
-                amount: data.amount,
-                method: 'card',
-                status: 'completed',
-                timestamp: new Date().toISOString()
-              });
-            }
-          }
-        ]
-      );
-    });
-  };
-
-  const processBankTransfer = async (data: any) => {
-    return {
-      transactionId: `bank_${Date.now()}`,
-      amount: data.amount,
-      method: 'bank_transfer',
-      status: 'pending',
-      bankInfo: {
-        bank: '국민은행',
-        account: '123-456-789012',
-        holder: 'Handy Platform'
-      },
-      timestamp: new Date().toISOString()
-    };
-  };
-
-  const processMobilePayment = async (data: any) => {
-    // Mobile payment integration would go here
-    return {
-      transactionId: `mobile_${Date.now()}`,
-      amount: data.amount,
-      method: 'mobile',
-      status: 'completed',
-      timestamp: new Date().toISOString()
-    };
-  };
-
-  const processThirdPartyPayment = async (data: any) => {
-    // Third-party payment integration (KakaoPay, NaverPay, etc.)
-    const appScheme = {
-      kakaopay: 'kakaotalk://',
-      naverpay: 'naversearchapp://',
-      payco: 'payco://'
-    }[data.method];
-
-    if (appScheme) {
-      const supported = await Linking.canOpenURL(appScheme);
-      if (!supported) {
-        throw new Error(`${data.method} 앱이 설치되어 있지 않습니다.`);
-      }
-      // In a real implementation, you would redirect to the payment app
-    }
-
-    return {
-      transactionId: `${data.method}_${Date.now()}`,
-      amount: data.amount,
-      method: data.method,
-      status: 'completed',
-      timestamp: new Date().toISOString()
-    };
-  };
-
   const handleSaveImage = async (data: any) => {
     try {
       console.log('🟢 [BRIDGE] 이미지 저장 요청:', data.filename);
       const { base64, filename, mimeType, requestId } = data;
 
-      // 저장소 권한 확인 (Android)
-      if (Platform.OS === 'android') {
+      // Android 9 이하만 구 저장소 권한이 필요하다 (10+는 MediaStore 경유라 불필요)
+      if (Platform.OS === 'android' && Number(Platform.Version) <= 28) {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           {
@@ -860,39 +728,32 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
             buttonNegative: '거부',
           },
         );
-        // Android 13+ 에서는 WRITE_EXTERNAL_STORAGE가 자동으로 granted로 처리됨
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED && granted !== PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-          // Android 10+ scoped storage에서는 권한 없이도 앱 전용 디렉토리에 저장 가능
-          console.log('🟡 [BRIDGE] 저장소 권한 거부됨, 앱 디렉토리에 저장 시도');
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          throw new Error('storage permission denied');
         }
       }
 
-      // 파일 저장 경로 설정
-      const downloadDir = Platform.OS === 'android'
-        ? ReactNativeBlobUtil.fs.dirs.DownloadDir
-        : ReactNativeBlobUtil.fs.dirs.DocumentDir;
-      const filePath = `${downloadDir}/${filename}`;
+      // 앱 전용 캐시에 먼저 기록한 뒤 플랫폼별 공개 저장소로 내보낸다.
+      const tmpPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${filename}`;
+      await ReactNativeBlobUtil.fs.writeFile(tmpPath, base64, 'base64');
 
-      // base64 데이터를 파일로 저장
-      await ReactNativeBlobUtil.fs.writeFile(filePath, base64, 'base64');
-      console.log('🟢 [BRIDGE] 이미지 저장 완료:', filePath);
-
-      // iOS: 갤러리에도 저장
-      if (Platform.OS === 'ios') {
-        try {
-          // CameraRoll API 대신 파일 시스템으로 사진 라이브러리 접근
-          // iOS에서는 DocumentDirectory에 저장된 파일을 공유 시트로 내보낼 수 있음
-          console.log('🟢 [BRIDGE] iOS 문서 디렉토리에 저장됨:', filePath);
-        } catch (galleryErr) {
-          console.log('🟡 [BRIDGE] 갤러리 저장 실패, 파일은 저장됨:', galleryErr);
-        }
+      let filePath = tmpPath;
+      if (Platform.OS === 'android') {
+        // Android 10+ scoped storage: 공개 Downloads는 MediaStore를 통해서만 쓸 수 있다.
+        filePath = await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+          { name: filename, parentFolder: 'Handy', mimeType: mimeType || 'image/png' },
+          'Download',
+          tmpPath,
+        );
+        ReactNativeBlobUtil.fs.unlink(tmpPath).catch(() => {});
+        console.log('🟢 [BRIDGE] 이미지 저장 완료:', filePath);
+        Alert.alert('저장 완료', `다운로드 폴더(Handy)에 저장되었습니다.\n${filename}`, [{ text: '확인' }]);
+      } else {
+        // iOS: 사진 라이브러리 직접 쓰기 모듈이 없으므로 미리보기(공유 시트 포함)로 열어
+        // 사용자가 "이미지 저장"을 선택하게 한다. 사진 앱 저장은 이 시트에서 이뤄진다.
+        console.log('🟢 [BRIDGE] iOS 미리보기 열기:', filePath);
+        await ReactNativeBlobUtil.ios.previewDocument(filePath);
       }
-
-      Alert.alert(
-        '저장 완료',
-        `이미지가 저장되었습니다.\n${filename}`,
-        [{ text: '확인' }],
-      );
 
       sendMessageToWebView({
         type: 'SAVE_IMAGE_RESPONSE',
@@ -1028,6 +889,26 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         }
       };
 
+      // 로그아웃(토큰 삭제) 감지 → 네이티브 토큰·FCM 등록 정리
+      const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+      const originalClear = localStorage.clear.bind(localStorage);
+      function notifyTokenCleared() {
+        try {
+          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'AUTH_TOKEN_CLEARED', data: {} }));
+          }
+        } catch (e) {}
+      }
+      localStorage.removeItem = function(key) {
+        originalRemoveItem(key);
+        if (key === 'accessToken' || key === '@handy_platform:accessToken') notifyTokenCleared();
+      };
+      localStorage.clear = function() {
+        const hadToken = !!(localStorage.getItem('accessToken') || localStorage.getItem('@handy_platform:accessToken'));
+        originalClear();
+        if (hadToken) notifyTokenCleared();
+      };
+
       console.log('🟢 [INJECT] localStorage 후킹 완료 - 토큰 자동 동기화 활성화');
 
       // 페이지 로드 시 기존 토큰 동기화
@@ -1124,14 +1005,8 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
       return requestId;
     };
 
-    window.ReactNativeWebView.payment = function(method, data = {}) {
-      const requestId = Date.now().toString();
-      nativePostMessage(JSON.stringify({
-        type: 'PAYMENT',
-        data: { method, ...data, requestId }
-      }));
-      return requestId;
-    };
+    // 웹(api.ts)이 호출하는 이름과 맞춘 별칭
+    window.ReactNativeWebView.syncToken = window.ReactNativeWebView.storeAuthToken;
 
     window.ReactNativeWebView.requestPermission = function(type) {
       const requestId = Date.now().toString();
@@ -1143,12 +1018,23 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     };
     
     // 응답 리스너 등록
-    window.addEventListener('message', function(event) {
-      if (event.data) {
-        const message = JSON.parse(event.data);
+    // react-native-webview는 네이티브 postMessage를 Android에서는 document에,
+    // iOS에서는 window에 dispatch한다. 양쪽 모두 수신하고, 토스 SDK 등 iframe이
+    // 던지는 비JSON postMessage는 조용히 무시한다.
+    (function() {
+      var seen = null;
+      function onNativeMessage(event) {
+        if (typeof event.data !== 'string' || event.data === seen) return;
+        var message;
+        try { message = JSON.parse(event.data); } catch (e) { return; }
+        if (!message || typeof message.type !== 'string') return;
+        seen = event.data;
+        setTimeout(function() { if (seen === event.data) seen = null; }, 0);
         window.dispatchEvent(new CustomEvent('nativeMessage', { detail: message }));
       }
-    });
+      window.addEventListener('message', onNativeMessage);
+      document.addEventListener('message', onNativeMessage);
+    })();
     
     ${additionalJavaScript}
 
@@ -1190,19 +1076,17 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
         const { nativeEvent } = syntheticEvent;
         console.error('❌ [WEBVIEW] Error:', nativeEvent);
         Alert.alert(
-          'WebView 로딩 에러',
-          `URL: ${nativeEvent.url}\n\nDescription: ${nativeEvent.description}\n\nCode: ${nativeEvent.code}`,
-          [{ text: '확인', style: 'default' }]
+          '연결할 수 없어요',
+          '네트워크 상태를 확인한 뒤 다시 시도해 주세요.',
+          [
+            { text: '닫기', style: 'cancel' },
+            { text: '다시 시도', onPress: () => webViewRef.current?.reload() },
+          ]
         );
       }}
       onHttpError={(syntheticEvent) => {
-        const { nativeEvent } = syntheticEvent;
-        console.error('❌ [WEBVIEW] HTTP Error:', nativeEvent);
-        Alert.alert(
-          'HTTP 에러',
-          `URL: ${nativeEvent.url}\n\nStatus Code: ${nativeEvent.statusCode}`,
-          [{ text: '확인', style: 'default' }]
-        );
+        // 4xx/5xx는 웹이 자체 에러 화면을 그리므로 사용자에게 별도 팝업을 띄우지 않는다.
+        console.error('❌ [WEBVIEW] HTTP Error:', syntheticEvent.nativeEvent);
       }}
       onLoadEnd={(syntheticEvent) => {
         const { nativeEvent } = syntheticEvent;

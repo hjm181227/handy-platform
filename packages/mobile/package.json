@@ -17,8 +17,10 @@
     "start:prod": "cross-env REACT_NATIVE_ENV=production react-native start",
     "postinstall": "node scripts/patch-react-native-fs.js",
     "clean": "react-native clean",
-    "build:android": "cross-env REACT_NATIVE_ENV=production cd android && ./gradlew assembleRelease",
-    "build:android:bundle": "cross-env REACT_NATIVE_ENV=production cd android && ./gradlew bundleRelease"
+    "build:android": "cross-env REACT_NATIVE_ENV=production npm run -s gradle:assemble",
+    "build:android:bundle": "cross-env REACT_NATIVE_ENV=production npm run -s gradle:bundle",
+    "gradle:assemble": "cd android && gradlew assembleRelease",
+    "gradle:bundle": "cd android && gradlew bundleRelease"
   },
   "dependencies": {
     "@babel/runtime": "^7.25.0",
