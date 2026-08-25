@@ -2,7 +2,7 @@
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 
-import {AppRegistry} from 'react-native';
+import {AppRegistry, DeviceEventEmitter} from 'react-native';
 import App from './App';
 
 // FCM 백그라운드/킬 상태 메시지 핸들러 (RNFB 요구사항: AppRegistry 전에 등록)
@@ -10,7 +10,7 @@ import App from './App';
 try {
   const messaging = require('@react-native-firebase/messaging').default;
   const notifee = require('@notifee/react-native').default;
-  const { AndroidImportance } = require('@notifee/react-native');
+  const { AndroidImportance, EventType } = require('@notifee/react-native');
 
   messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     try {
@@ -44,6 +44,22 @@ try {
       });
     } catch (e) {
       console.warn('[backgroundMessageHandler] error:', e);
+    }
+  });
+
+  // Notifee 알림 탭 처리 — 앱 프로세스가 백그라운드에 있을 때의 PRESS.
+  // (notifee가 표시한 알림은 FCM onNotificationOpenedApp으로 오지 않는다.
+  //  콜드스타트 탭은 notificationService.checkInitialNotification이 처리.)
+  notifee.onBackgroundEvent(async ({ type, detail }) => {
+    try {
+      if (type !== EventType.PRESS) return;
+      const data = detail?.notification?.data || {};
+      if (data.type !== 'chat_message' || !data.senderId) return;
+      const url = `/chat/${data.senderId}?name=${encodeURIComponent(String(data.senderName || ''))}`;
+      // launchActivity로 앱이 전면 전환된 뒤 WebView가 수신하도록 약간 지연
+      setTimeout(() => DeviceEventEmitter.emit('navigateToUrl', { url }), 400);
+    } catch (e) {
+      console.warn('[notifee onBackgroundEvent] error:', e);
     }
   });
 } catch (e) {
