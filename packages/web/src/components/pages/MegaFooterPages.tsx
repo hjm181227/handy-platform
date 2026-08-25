@@ -28,151 +28,99 @@ const PageLayout = ({
 );
 
 // 1:1 문의하기 페이지
+/**
+ * 1:1 문의 — 실제로 닿는 창구만 안내한다.
+ *
+ * 이전에는 입력 폼이 있었지만 제출해도 서버로 가지 않고 "접수되었습니다"
+ * 알림만 띄웠다. 손님은 답을 기다리고 운영자는 문의가 온 줄도 모르는
+ * 상태였으므로, 실제로 답할 수 있는 채널로만 안내하도록 바꿨다.
+ */
 export function ContactInquiryPageSimple({ onGo }: { onGo: (to: string) => void }) {
-  const [inquiryType, setInquiryType] = useState('product');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !subject || !content) {
-      alert('필수 입력 항목을 모두 입력해주세요.');
-      return;
-    }
-    
-    alert('문의가 접수되었습니다. 24시간 이내에 답변드리겠습니다.');
-    
-    // 폼 초기화
-    setEmail('');
-    setSubject('');
-    setContent('');
-  };
+  const KAKAO_CHANNEL_CHAT = 'http://pf.kakao.com/_xjWESX/chat';
+  const SUPPORT_EMAIL = 'hermosear98@gmail.com';
+  const SUPPORT_PHONE = '010-9611-1711';
 
   return (
-    <PageLayout title="1:1 문의하기" onBack={() => onGo("/")}>
-      <div className="bg-white rounded-lg p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-2">고객센터 문의</h2>
-          <p className="text-gray-600 text-sm">
-            궁금한 사항을 남겨주시면 빠르게 답변드리겠습니다. (평일 09:00~18:00 답변)
-          </p>
-        </div>
+    <PageLayout title="문의하기" onBack={() => onGo("/")}>
+      <div className="bg-white rounded-xl p-6">
+        <h2 className="text-xl font-bold text-ink mb-1">무엇을 도와드릴까요?</h2>
+        <p className="text-[13px] text-muted mb-6">
+          평일 09:00~18:00에 순서대로 답변드립니다. (점심 12:00~13:00 · 주말·공휴일 휴무)
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 문의 유형 */}
-          <div>
-            <label className="block text-sm font-medium mb-2">문의 유형 <span className="text-red-500">*</span></label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {[
-                { value: 'product', label: '상품 문의' },
-                { value: 'order', label: '주문/배송' },
-                { value: 'payment', label: '결제 문의' },
-                { value: 'return', label: '교환/환불' },
-                { value: 'membership', label: '회원 정보' },
-                { value: 'technical', label: '기술 지원' },
-                { value: 'partnership', label: '제휴 문의' },
-                { value: 'other', label: '기타' }
-              ].map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => setInquiryType(type.value)}
-                  className={`p-2 text-xs rounded-lg border transition-colors ${
-                    inquiryType === type.value
-                      ? 'bg-brand text-white border-brand'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* 카카오톡 채널 — 가장 빠른 창구 */}
+        <a
+          href={KAKAO_CHANNEL_CHAT}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 w-full rounded-xl px-5 py-4 font-semibold transition-opacity hover:opacity-90"
+          style={{ backgroundColor: '#FEE500', color: '#191600' }}
+        >
+          <span className="material-symbols-outlined">chat_bubble</span>
+          <span className="flex-1 text-left">
+            카카오톡으로 문의하기
+            <span className="block text-[12.5px] font-normal opacity-70">
+              가장 빠릅니다 · 채널 @handy_nail
+            </span>
+          </span>
+          <span className="material-symbols-outlined text-lg">chevron_right</span>
+        </a>
 
-          {/* 이메일 */}
-          <div>
-            <label className="block text-sm font-medium mb-2">이메일 주소 <span className="text-red-500">*</span></label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
-              placeholder="답변 받을 이메일을 입력하세요"
-              required
-            />
-          </div>
-
-          {/* 제목 */}
-          <div>
-            <label className="block text-sm font-medium mb-2">제목 <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
-              placeholder="문의 제목을 간단히 입력하세요"
-              required
-            />
-          </div>
-
-          {/* 내용 */}
-          <div>
-            <label className="block text-sm font-medium mb-2">문의 내용 <span className="text-red-500">*</span></label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent h-40 resize-none"
-              placeholder="문의 내용을 자세히 작성해주세요. 상품명, 주문번호 등을 함께 작성하시면 더 빠른 답변이 가능합니다."
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              최소 10자 이상 작성해주세요. ({content.length}/1000)
-            </div>
-          </div>
-
-          {/* 개인정보 동의 */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" required className="mt-0.5" />
-              <span>
-                <strong>개인정보 수집 및 이용 동의 (필수)</strong>
-                <div className="text-xs text-gray-600 mt-1">
-                  문의 처리를 위해 이메일 주소와 문의 내용을 수집합니다. 
-                  답변 완료 후 1년간 보관 후 삭제됩니다.
-                </div>
-              </span>
-            </label>
-          </div>
-
-          {/* 제출 버튼 */}
-          <button
-            type="submit"
-            className="w-full bg-brand text-white py-4 rounded-lg font-medium hover:bg-brand-600 transition-colors"
+        {/* 그 외 창구 */}
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="flex items-center gap-3 rounded-xl border border-line px-4 py-3.5 hover:bg-surface transition-colors"
           >
-            문의 접수하기
-          </button>
-        </form>
-
-        {/* 연락처 정보 */}
-        <div className="mt-8 p-4 bg-brand-50 rounded-lg">
-          <h3 className="font-medium mb-2">다른 연락 방법</h3>
-          <div className="text-sm text-gray-600 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-base">call</span>
-              <span>고객센터: 1588-0000 (평일 09:00~18:00)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-base">mail</span>
-              <span>이메일: hermosear98@gmail.com</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-base">chat</span>
-              <span>카카오톡: @handy_official</span>
-            </div>
-          </div>
+            <span className="material-symbols-outlined text-muted">mail</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-ink">이메일</span>
+              <span className="block text-[12.5px] text-muted truncate">{SUPPORT_EMAIL}</span>
+            </span>
+          </a>
+          <a
+            href={`tel:${SUPPORT_PHONE.replace(/-/g, '')}`}
+            className="flex items-center gap-3 rounded-xl border border-line px-4 py-3.5 hover:bg-surface transition-colors"
+          >
+            <span className="material-symbols-outlined text-muted">call</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-ink">전화</span>
+              <span className="block text-[12.5px] text-muted [font-variant-numeric:tabular-nums]">{SUPPORT_PHONE}</span>
+            </span>
+          </a>
         </div>
+
+        {/* 문의 종류별 더 빠른 길 안내 */}
+        <div className="mt-8 rounded-xl bg-surface p-5">
+          <h3 className="text-sm font-semibold text-ink mb-3">이런 문의는 여기가 더 빠릅니다</h3>
+          <ul className="space-y-2.5 text-[13px] text-muted">
+            <li>
+              <b className="font-semibold text-ink">상품·제작 문의</b> — 상품 상세 페이지의
+              &lsquo;판매자에게 문의&rsquo; 버튼을 누르면 해당 판매자와 바로 대화할 수 있습니다.
+            </li>
+            <li>
+              <b className="font-semibold text-ink">주문·배송 조회</b> —{' '}
+              <button onClick={() => onGo('/my/orders')} className="text-brand font-semibold hover:underline">
+                주문내역
+              </button>
+              에서 진행 상황을 실시간으로 확인하실 수 있습니다.
+            </li>
+            <li>
+              <b className="font-semibold text-ink">반품·교환 신청</b> —{' '}
+              <button onClick={() => onGo('/my/claims')} className="text-brand font-semibold hover:underline">
+                취소·반품 내역
+              </button>
+              에서 직접 신청하실 수 있습니다.
+            </li>
+          </ul>
+        </div>
+
+        <button
+          onClick={() => onGo('/faq')}
+          className="mt-4 w-full rounded-full border border-line py-3 text-sm font-semibold text-ink hover:bg-surface transition-colors"
+        >
+          자주 묻는 질문 먼저 보기
+        </button>
       </div>
     </PageLayout>
   );
