@@ -557,8 +557,8 @@ export function MyPage({ onGo, onOpen }: { onGo: (to: string) => void; onOpen: (
 
           {/* Menu Section 5 */}
           <Section title={t('mypage:sections.customerServiceAndSettings')}>
-            <LinkRow title={t('mypage:menu.inquiry')} to="/support/contact" />
-            <LinkRow title={t('mypage:menu.faq')} to="/support/faq" />
+            <LinkRow title={t('mypage:menu.inquiry')} to="/contact" />
+            <LinkRow title={t('mypage:menu.faq')} to="/faq" />
             <LinkRow title={t('mypage:notifications')} to="/my/notifications" />
             <LinkRow title={t('mypage:editAccountInfo')} to="/my/settings" />
           </Section>

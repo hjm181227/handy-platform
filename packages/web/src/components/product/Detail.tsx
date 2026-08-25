@@ -811,9 +811,9 @@ export function Detail({
               <button
                 onClick={() => {
                   if (onGo) {
-                    onGo('/support/contact');
+                    onGo('/contact');
                   } else {
-                    window.location.href = '/support/contact';
+                    window.location.href = '/contact';
                   }
                 }}
                 className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm"

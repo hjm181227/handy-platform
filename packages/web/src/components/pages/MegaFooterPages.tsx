@@ -380,7 +380,7 @@ export function FaqPageSimple({ onGo }: { onGo: (to: string) => void }) {
             더 자세한 도움이 필요하시면 고객센터로 문의해 주세요.
           </p>
           <button
-            onClick={() => onGo('/contact-inquiry')}
+            onClick={() => onGo('/contact')}
             className="bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors"
           >
             1:1 문의하기
