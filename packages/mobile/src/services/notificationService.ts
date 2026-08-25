@@ -235,14 +235,23 @@ class NotificationService {
 
   /**
    * FCM 토큰 갱신 시 자동 재등록 (저장된 access token 활용)
+   * - 로그인 상태(WebViewBridge가 저장해 둔 access token 존재)면 즉시 재등록.
+   *   놓치면 다음 앱 재시작 때까지 푸시가 조용히 끊기므로 여기서 직접 처리한다.
    */
   private setupTokenRefreshHandler(): void {
     if (this.tokenRefreshUnsubscribe) return;
     this.tokenRefreshUnsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
       console.log('[NotificationService] FCM token refreshed');
       await AsyncStorage.setItem(STORED_TOKEN_KEY, newToken);
-      // 재등록은 호출 측에서 access token을 가지고 다시 호출해야 하므로
-      // DeviceEventEmitter로 알림. 인증 컨텍스트가 처리.
+      try {
+        const accessToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+        if (accessToken) {
+          await this.registerToken(accessToken);
+          console.log('[NotificationService] Refreshed token re-registered');
+        }
+      } catch (e) {
+        console.warn('[NotificationService] Refresh re-register failed:', e);
+      }
       DeviceEventEmitter.emit('fcmTokenRefreshed', { token: newToken });
     });
   }
