@@ -65,13 +65,38 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
     }));
   };
 
+  // 서버 검증 규격(koreanAddressSchema)과 동일하게 맞춘다.
+  // 특히 서버는 detailAddress(상세주소)를 필수(min 1)로 요구하는데
+  // 기존 클라 검증은 이를 빠뜨려, 상세주소를 비우면 서버에서 validation error가 났다.
   const validateForm = (): boolean => {
-    return !!(
-      formData.recipientName?.trim() &&
-      formData.recipientPhone?.trim() &&
-      formData.postcode?.trim() &&
-      formData.roadAddress?.trim()
-    );
+    const name = formData.recipientName?.trim() || '';
+    const phone = formData.recipientPhone?.trim() || '';
+    const postcode = formData.postcode?.trim() || '';
+    const road = formData.roadAddress?.trim() || '';
+    const detail = formData.detailAddress?.trim() || '';
+
+    if (!name || !phone || !postcode || !road) {
+      alert(t('shipping.fillRequired'));
+      return false;
+    }
+    if (name.length < 2) {
+      alert(t('shipping.nameMinLength', { defaultValue: '받는 분 이름은 2자 이상 입력해주세요.' }));
+      return false;
+    }
+    if (!/^(010|011|016|017|018|019)-?\d{3,4}-?\d{4}$/.test(phone)) {
+      alert(t('shipping.phoneInvalid', { defaultValue: '휴대폰 번호 형식이 올바르지 않습니다. (예: 010-1234-5678)' }));
+      return false;
+    }
+    if (!/^\d{5}$/.test(postcode)) {
+      alert(t('shipping.postcodeInvalid', { defaultValue: '우편번호는 숫자 5자리여야 합니다. 주소 찾기를 이용해주세요.' }));
+      return false;
+    }
+    // 서버가 상세주소를 필수로 요구한다 — 비우면 저장이 실패한다.
+    if (!detail) {
+      alert(t('shipping.detailAddressRequired', { defaultValue: '상세주소를 입력해주세요. (동/호수 등)' }));
+      return false;
+    }
+    return true;
   };
 
   // 우편번호 찾기 (Daum Postcode API)
@@ -266,9 +291,11 @@ export const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({
           />
         </div>
 
-        {/* 상세 주소 */}
+        {/* 상세 주소 (서버 필수) */}
         <div>
-          <label className="block text-sm font-medium mb-2">{t('shipping.detailAddress')}</label>
+          <label className="block text-sm font-medium mb-2">
+            {t('shipping.detailAddress')} <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={formData.detailAddress || ''}
