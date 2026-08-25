@@ -36,6 +36,10 @@ BASE = f"https://androidpublisher.googleapis.com/androidpublisher/v3/application
 UPLOAD_BASE = f"https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/{PACKAGE_NAME}"
 
 
+def io_open_utf8(path):
+    return open(path, encoding="utf-8-sig")
+
+
 def get_session(key_path: str) -> requests.Session:
     creds = service_account.Credentials.from_service_account_file(key_path, scopes=[SCOPE])
     creds.refresh(google.auth.transport.requests.Request())
@@ -61,6 +65,10 @@ def main():
     p.add_argument("--check", action="store_true")
     p.add_argument("--status", action="store_true")
     p.add_argument("--release-name", default=None)
+    p.add_argument("--notes", default=None,
+                   help="출시 노트 텍스트 파일 경로(UTF-8). --aab와 함께 쓰면 업로드에 포함, "
+                        "단독으로 쓰면 해당 트랙의 최신 릴리즈에 노트만 갱신")
+    p.add_argument("--notes-lang", default="ko-KR")
     args = p.parse_args()
 
     if not os.path.exists(args.key):
@@ -83,8 +91,30 @@ def main():
                           f"name={r.get('name')} versionCodes=[{vcs}]")
             return
 
+        notes = None
+        if args.notes:
+            with io_open_utf8(args.notes) as f:
+                text = f.read().strip()
+            if len(text) > 500:
+                sys.exit(f"출시 노트가 500자를 초과합니다 ({len(text)}자)")
+            notes = [{"language": args.notes_lang, "text": text}]
+
+        # --notes 단독: 업로드 없이 트랙 최신 릴리즈에 노트만 갱신
+        if notes and not args.aab:
+            track = api(s, "GET", f"{BASE}/edits/{edit_id}/tracks/{args.track}")
+            releases = track.get("releases", [])
+            if not releases:
+                sys.exit(f"{args.track} 트랙에 릴리즈가 없습니다")
+            releases[0]["releaseNotes"] = notes
+            api(s, "PUT", f"{BASE}/edits/{edit_id}/tracks/{args.track}",
+                json={"track": args.track, "releases": releases})
+            api(s, "POST", f"{BASE}/edits/{edit_id}:commit")
+            print(f"출시 노트 반영 완료 — track={args.track}, "
+                  f"release={releases[0].get('name')} ({args.notes_lang})")
+            return
+
         if not args.aab:
-            sys.exit("--aab <경로> 를 지정하세요 (또는 --check / --status)")
+            sys.exit("--aab <경로> 를 지정하세요 (또는 --check / --status / --notes)")
         if not os.path.exists(args.aab):
             sys.exit(f"AAB 파일이 없습니다: {args.aab}")
 
@@ -105,6 +135,8 @@ def main():
             "status": "completed",
             "versionCodes": [str(vc)],
         }
+        if notes:
+            release["releaseNotes"] = notes
         api(s, "PUT", f"{BASE}/edits/{edit_id}/tracks/{args.track}",
             json={"track": args.track, "releases": [release]})
 
