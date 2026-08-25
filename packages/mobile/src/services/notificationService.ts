@@ -8,12 +8,14 @@ import { getChatServiceNative } from '@handy-platform/shared/src/services/chat/C
 let messaging: any = null;
 let notifee: any = null;
 let AndroidImportance: any = {};
+let NotifeeEventType: any = {};
 let firebaseAvailable = false;
 
 try {
   messaging = require('@react-native-firebase/messaging').default;
   notifee = require('@notifee/react-native').default;
   AndroidImportance = require('@notifee/react-native').AndroidImportance;
+  NotifeeEventType = require('@notifee/react-native').EventType;
   // messaging()을 한 번 호출해봐서 Firebase App이 초기화되었는지 확인
   messaging();
   firebaseAvailable = true;
@@ -235,45 +237,72 @@ class NotificationService {
 
   /**
    * FCM 토큰 갱신 시 자동 재등록 (저장된 access token 활용)
+   * - 로그인 상태(WebViewBridge가 저장해 둔 access token 존재)면 즉시 재등록.
+   *   놓치면 다음 앱 재시작 때까지 푸시가 조용히 끊기므로 여기서 직접 처리한다.
    */
   private setupTokenRefreshHandler(): void {
     if (this.tokenRefreshUnsubscribe) return;
     this.tokenRefreshUnsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
       console.log('[NotificationService] FCM token refreshed');
       await AsyncStorage.setItem(STORED_TOKEN_KEY, newToken);
-      // 재등록은 호출 측에서 access token을 가지고 다시 호출해야 하므로
-      // DeviceEventEmitter로 알림. 인증 컨텍스트가 처리.
+      try {
+        const accessToken = await AsyncStorage.getItem('@handy_platform:accessToken');
+        if (accessToken) {
+          await this.registerToken(accessToken);
+          console.log('[NotificationService] Refreshed token re-registered');
+        }
+      } catch (e) {
+        console.warn('[NotificationService] Refresh re-register failed:', e);
+      }
       DeviceEventEmitter.emit('fcmTokenRefreshed', { token: newToken });
     });
   }
 
   /**
-   * 알림 탭 처리:
-   * 1) 백그라운드 → 포그라운드 복귀: onNotificationOpenedApp
-   * 2) 콜드 스타트: getInitialNotification (initialize에서 따로 호출)
+   * 알림 탭 처리.
+   * Android는 서버가 data-only로 보내 알림 표시가 전부 Notifee 경유이므로,
+   * FCM의 onNotificationOpenedApp만으로는 탭이 감지되지 않는다.
+   * - Notifee 알림 탭(포그라운드 프로세스): notifee.onForegroundEvent PRESS
+   * - FCM notification-메시지 탭(iOS alert 등): onNotificationOpenedApp
+   * - 백그라운드 프로세스 탭은 index.js의 notifee.onBackgroundEvent가 처리
    */
   private setupNotificationOpenedHandler(): void {
     if (this.notificationOpenedUnsubscribe) return;
-    this.notificationOpenedUnsubscribe = messaging().onNotificationOpenedApp(
+    const unsubMessaging = messaging().onNotificationOpenedApp(
       (remoteMessage: any | null) => {
         const payload = this.parsePayload(remoteMessage);
         if (payload) this.routeToChat(payload);
       },
     );
+    const unsubNotifee = notifee.onForegroundEvent(
+      ({ type, detail }: { type: number; detail: any }) => {
+        if (type !== NotifeeEventType.PRESS) return;
+        const payload = this.parsePayload({ data: detail?.notification?.data });
+        if (payload) this.routeToChat(payload);
+      },
+    );
+    this.notificationOpenedUnsubscribe = () => {
+      unsubMessaging();
+      unsubNotifee();
+    };
   }
 
   /**
    * 콜드 스타트 시 알림으로 앱이 열렸는지 확인
+   * (FCM·Notifee 양쪽 — Android data-only 알림 탭은 notifee 쪽으로 온다)
    */
   private async checkInitialNotification(): Promise<void> {
     try {
       const initial = await messaging().getInitialNotification();
-      if (initial) {
-        const payload = this.parsePayload(initial);
-        if (payload) {
-          // 앱이 완전히 로드된 후 라우팅 (HomeScreen의 navigateToUrl 리스너가 준비된 뒤)
-          setTimeout(() => this.routeToChat(payload), 800);
-        }
+      let payload = this.parsePayload(initial);
+      if (!payload) {
+        const notifeeInitial = await notifee.getInitialNotification();
+        payload = this.parsePayload({ data: notifeeInitial?.notification?.data });
+      }
+      if (payload) {
+        // 앱이 완전히 로드된 후 라우팅 (HomeScreen의 navigateToUrl 리스너가 준비된 뒤)
+        const routed = payload;
+        setTimeout(() => this.routeToChat(routed), 800);
       }
     } catch (e) {
       console.warn('[NotificationService] checkInitialNotification failed:', e);
