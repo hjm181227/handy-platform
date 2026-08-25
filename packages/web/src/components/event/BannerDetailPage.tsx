@@ -21,7 +21,7 @@ function getDday(endDate: string): string {
 function resolveCtaConfig(redirectUrl: string | undefined) {
   if (!redirectUrl) return null;
 
-  if (redirectUrl === '/contact-inquiry') {
+  if (redirectUrl === '/contact') {
     return { label: '입점 문의하기', bgColor: '#ff073a', hoverBgColor: '#e00030' };
   }
   if (redirectUrl === 'app-download') {

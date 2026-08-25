@@ -26,7 +26,6 @@ import { RankingPage } from './components/pages/RankingPage';
 import { RecommendPage } from './components/pages/RecommendPage';
 import { SearchResultsPage } from './components/pages/SearchResultsPage';
 import { SocialSignupPage } from './components/pages/SocialSignupPage';
-import { HelpPage } from './components/pages/HelpPage';
 import { LikesPage, MyPage, SnapPage } from './components/pages/OtherPages';
 import { ChatPage } from './pages/ChatPage';
 import { ChatRoomPage } from './pages/ChatRoomPage';
@@ -59,8 +58,6 @@ import {
 
 // Support Components
 import {
-  ContactPage,
-  FaqPage,
   SettingsPage,
   PromoPage
 } from './components/pages/SupportPages';
@@ -104,15 +101,9 @@ import { AppleCallbackPage } from './components/pages/AppleCallbackPage';
 import { HandyStudioPage } from './components/pages/HandyStudioPage';
 
 // Portfolio (독립 공간 - 링크 진입 전용)
-import { PortfolioPage } from './components/pages/PortfolioPage';
 
 // Footer Components
 import {
-  AboutCompanyPage,
-  AboutBusinessPage,
-  AboutNewsroomPage,
-  AboutCareersPage,
-  AboutNoticePage,
   PartnerInquiryPage,
   PolicyPage,
   SnsPage
@@ -210,10 +201,28 @@ export function Router() {
   const [loadingBrands, setLoadingBrands] = useState(false);
 
   // Parse pathname and query
-  const [pathname, search] = useMemo(() => {
+  const [rawPathname, search] = useMemo(() => {
     const [pathPart, searchPart = ''] = path.split('?');
     return [pathPart, searchPart ? `?${searchPart}` : ''] as const;
   }, [path]);
+
+  // 예전 주소로 들어와도 같은 화면을 보여주고, 주소창만 정식 주소로 바꾼다.
+  // 이미 공유된 링크가 깨지지 않아야 하므로 이 표는 지우지 말 것.
+  const pathname = useMemo(() => {
+    const decoded = (() => {
+      try {
+        return decodeURIComponent(rawPathname);
+      } catch {
+        return rawPathname;
+      }
+    })();
+    return LEGACY_PATH_REDIRECTS[decoded] || LEGACY_PATH_REDIRECTS[rawPathname] || rawPathname;
+  }, [rawPathname]);
+
+  useEffect(() => {
+    if (pathname === rawPathname) return;
+    window.history.replaceState({}, '', pathname + search);
+  }, [pathname, rawPathname, search]);
 
   const q = useMemo(() => new URLSearchParams(search), [search]);
 
@@ -291,17 +300,12 @@ export function Router() {
   const isAdminPage = pathname.startsWith('/admin');
   const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
   const isCustomOrderPage = /^\/product\/.+\/custom-order$/.test(pathname) || pathname === '/custom-order/new';
-  const isPortfolioPage = pathname === '/DongHyun/portfolio';
 
   // Route matching and screen rendering
   let screen: React.ReactNode;
 
-  // ==================== Portfolio (독립 공간 - 링크 진입 전용) ====================
-  if (isPortfolioPage) {
-    screen = <PortfolioPage nav={nav} />;
-  }
   // ==================== Chat Routes ====================
-  else if (pathname.match(/^\/chat\/(.+)$/)) {
+  if (pathname.match(/^\/chat\/(.+)$/)) {
     const mChatRoom = pathname.match(/^\/chat\/(.+)$/)!;
     screen = <ChatRoomPage nav={nav} roomId={decodeURIComponent(mChatRoom[1])} />;
   }
@@ -599,9 +603,6 @@ export function Router() {
     );
   }
   // ==================== Support Routes ====================
-  else if (pathname.startsWith('/help')) {
-    screen = <HelpPage onGo={nav} />;
-  }
   else if (pathname.startsWith('/likes')) {
     screen = (
       <RequireAuth>
@@ -799,49 +800,28 @@ export function Router() {
     );
   }
   // ==================== Contact & Footer Routes ====================
-  else if (pathname === '/support/contact') {
-    screen = <ContactPage onGo={nav} />;
-  }
-  else if (pathname === '/support/faq') {
-    screen = <FaqPage onGo={nav} />;
-  }
   else if (pathname === '/promo/plus') {
     screen = <PromoPage onGo={nav} />;
   }
-  else if (pathname === '/about/회사 소개') {
-    screen = <AboutCompanyPage onGo={nav} />;
-  }
-  else if (pathname === '/about/비즈니스 소개') {
-    screen = <AboutBusinessPage onGo={nav} />;
-  }
-  else if (pathname === '/about/뉴스룸') {
-    screen = <AboutNewsroomPage onGo={nav} />;
-  }
-  else if (pathname === '/about/채용 정보') {
-    screen = <AboutCareersPage onGo={nav} />;
-  }
-  else if (pathname === '/about/공지사항') {
-    screen = <AboutNoticePage onGo={nav} />;
-  }
-  else if (pathname === '/contact-inquiry') {
+  else if (pathname === '/contact') {
     screen = <ContactInquiryPageSimple onGo={nav} />;
   }
-  else if (pathname === '/footer-faq') {
+  else if (pathname === '/faq') {
     screen = <FaqPageSimple onGo={nav} />;
   }
-  else if (pathname === '/about-company') {
+  else if (pathname === '/about') {
     screen = <AboutCompanyPageSimple onGo={nav} />;
   }
-  else if (pathname === '/about-business') {
+  else if (pathname === '/about/business') {
     screen = <AboutBusinessPageSimple onGo={nav} />;
   }
-  else if (pathname === '/about-newsroom') {
+  else if (pathname === '/about/news') {
     screen = <AboutNewsroomPageSimple onGo={nav} />;
   }
-  else if (pathname === '/about-careers') {
+  else if (pathname === '/about/careers') {
     screen = <AboutCareersPageSimple onGo={nav} />;
   }
-  else if (pathname === '/about-notice') {
+  else if (pathname === '/notice') {
     screen = <AboutNoticePageSimple onGo={nav} />;
   }
   else if (pathname.startsWith('/partner/')) {
@@ -1161,11 +1141,6 @@ export function Router() {
     return { path: pathname };
   }, [pathname]);
 
-  // Portfolio: 완전 독립 - 레이아웃/기본 SEOHead 미적용 (자체 Helmet으로 noindex 처리)
-  if (isPortfolioPage) {
-    return <>{screen}</>;
-  }
-
   // Wrap with appropriate layout
   if (isSellerPage || isAdminPage || isChatPage || isCustomOrderPage) {
     // Seller, Admin, Chat pages have their own layouts
@@ -1188,6 +1163,33 @@ export function Router() {
  * 홈 화면 컨텐츠 컴포넌트
  */
 /** /api/ranking 응답의 랭킹 항목 (홈 레일에 필요한 필드만) */
+/**
+ * 예전 주소 → 정식 주소.
+ *
+ * 같은 페이지가 한글 URL·영문 URL 두 벌로 존재했고(`/about/회사 소개` 와
+ * `/about-company`), 문의·FAQ는 경로가 세 갈래로 흩어져 있었다. 주소를
+ * 정돈하되 이미 공유된 링크는 계속 열려야 하므로 여기서 흡수한다.
+ */
+const LEGACY_PATH_REDIRECTS: Record<string, string> = {
+  // 회사 소개 계열 — 한글·공백이 들어가 공유 시 깨지던 주소
+  '/about/회사 소개': '/about',
+  '/about/비즈니스 소개': '/about/business',
+  '/about/뉴스룸': '/about/news',
+  '/about/채용 정보': '/about/careers',
+  '/about/공지사항': '/notice',
+  '/about-company': '/about',
+  '/about-business': '/about/business',
+  '/about-newsroom': '/about/news',
+  '/about-careers': '/about/careers',
+  '/about-notice': '/notice',
+  // FAQ·문의 — 흩어져 있던 세 갈래를 하나로
+  '/footer-faq': '/faq',
+  '/support/faq': '/faq',
+  '/contact-inquiry': '/contact',
+  '/support/contact': '/contact',
+  '/help': '/contact'
+};
+
 interface HomeRankingItem {
   rank: number;
   product: { productUuid: string; name: string; image: string; price: number };

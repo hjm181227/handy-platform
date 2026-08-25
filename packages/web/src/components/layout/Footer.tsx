@@ -39,17 +39,17 @@ export function FooterMega({ onGo }:{ onGo:(to:string)=>void }) {
                   let linkPath = `${c.base}/${encodeURIComponent(it)}`;
                   // 특별한 링크들을 직접 매핑
                   if (it === t('nav:footer.contactUs')) {
-                    linkPath = "/contact-inquiry";
+                    linkPath = "/contact";
                   } else if (it === t('nav:footer.faq')) {
-                    linkPath = "/footer-faq";
+                    linkPath = "/faq";
                   } else if (it === t('nav:footer.companyIntro')) {
-                    linkPath = "/about-company";
+                    linkPath = "/about";
                   } else if (it === t('nav:footer.businessIntro')) {
-                    linkPath = "/about-business";
+                    linkPath = "/about/business";
                   } else if (it === t('nav:footer.newsroom')) {
-                    linkPath = "/about-newsroom";
+                    linkPath = "/about/news";
                   } else if (it === t('nav:footer.notice')) {
-                    linkPath = "/about-notice";
+                    linkPath = "/notice";
                   }
 
                   return (

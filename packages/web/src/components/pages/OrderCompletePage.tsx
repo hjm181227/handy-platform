@@ -220,16 +220,21 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
           </button>
         </div>
 
-        {/* 고객센터 안내 */}
+        {/* 고객센터 안내 — 실제로 닿는 창구만 노출한다 */}
         <div className="text-center mt-8 text-sm text-muted">
           <p>주문 관련 문의사항이 있으시면</p>
-          <p>
-            고객센터 
+          <p className="mt-1">
             <a
-              href="tel:1588-0000"
-              className="text-brand hover:underline ml-1"
+              href="http://pf.kakao.com/_xjWESX/chat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand font-semibold hover:underline"
             >
-              1588-0000
+              카카오톡 채널
+            </a>
+            {' 또는 '}
+            <a href="tel:01096111711" className="text-brand font-semibold hover:underline [font-variant-numeric:tabular-nums]">
+              010-9611-1711
             </a>
             로 연락해주세요.
           </p>
