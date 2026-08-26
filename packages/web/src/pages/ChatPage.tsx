@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, MessageCircleMore, Store, TriangleAlert } from 'lucide-react';
 import { config } from '../config/environment';
+import { secureImageUrl } from '../utils/imageUrl';
 import { useAuthModal } from '../contexts/AuthModalContext';
 
 const CHAT_API_URL = config.chatApiUrl;
@@ -162,7 +163,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
           partner: {
             ...room.partner,
             displayName: brand?.brandName || room.partner.username,
-            avatar: brand?.brandProfile || room.partner.avatar,
+            avatar: secureImageUrl(brand?.brandProfile || room.partner.avatar),
           },
         };
       });

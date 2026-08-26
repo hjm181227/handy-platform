@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, X, Settings, Bell, ArrowLeft, Home, ShoppingBag, UserCircle, MessageCircle } from 'lucide-react';
+import { useChatUnreadCount } from '../../hooks/useChatUnreadCount';
 
 interface MobilePageHeaderProps {
   // 스타일
@@ -65,6 +66,8 @@ export function MobilePageHeader({
   onGo
 }: MobilePageHeaderProps) {
   const { t } = useTranslation(['nav', 'common', 'product']);
+  // 채팅 미확인 배지 — 메인 헤더와 동일한 카운트 소스(소켓 싱글턴) 사용
+  const { count: chatUnreadCount } = useChatUnreadCount();
   const resolvedPlaceholder = searchPlaceholder || t('common:searchPlaceholder');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
@@ -238,11 +241,18 @@ export function MobilePageHeader({
         {!isSearchActive && (
           <div className="flex items-center gap-1">
             {showChat && (
-              <IconButton
-                icon={MessageCircle}
-                onClick={onChat}
-                ariaLabel={t('nav:header.chat')}
-              />
+              <div className="relative">
+                <IconButton
+                  icon={MessageCircle}
+                  onClick={onChat}
+                  ariaLabel={t('nav:header.chat')}
+                />
+                {chatUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 pointer-events-none">
+                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                  </span>
+                )}
+              </div>
             )}
             {showNotification && (
               <div className="relative">
