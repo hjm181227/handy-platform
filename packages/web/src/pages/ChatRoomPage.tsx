@@ -12,6 +12,7 @@ import { ReportDialog } from '../components/chat/ReportDialog';
 import { blockUser, leaveChatRoom } from '../lib/chat/moderationService';
 import { fetchAssistStatus, refineDraft } from '../lib/chat/assistService';
 import { config } from '../config/environment';
+import { secureImageUrl } from '../utils/imageUrl';
 import type { Message } from '../lib/chat/types';
 
 interface ChatRoomPageProps {
@@ -60,7 +61,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
           if (brand) {
             setDisplayName(brand.brandName || roomId);
             if (brand.brandProfile) {
-              setPartnerAvatar(brand.brandProfile);
+              setPartnerAvatar(secureImageUrl(brand.brandProfile) ?? null);
             }
           }
         }
@@ -332,12 +333,26 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
   // 입력할 때마다 상대에게 "입력 중"을 알린다 (훅 내부에서 스로틀됨)
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
+    autoGrowInput(e.target);
     if (e.target.value.trim()) {
       notifyTyping();
     } else {
       stopTyping();
     }
   };
+
+  /** 입력창 자동 확장 — 긴 초안(어시스턴트 다듬기 등)도 보이도록 최대 5줄까지 늘어난다 */
+  const inputTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const INPUT_MAX_HEIGHT = 120; // px ≈ 5줄
+  const autoGrowInput = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, INPUT_MAX_HEIGHT) + 'px';
+  };
+  // 어시스턴트 미리보기 적용 등 코드로 inputText가 바뀔 때도 높이를 맞춘다
+  useEffect(() => {
+    autoGrowInput(inputTextareaRef.current);
+  }, [inputText]);
 
   // 나가기·차단은 되돌리기 번거로운 동작이라 확인을 한 번 거친다
   const confirmPendingAction = async () => {
@@ -849,6 +864,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
             </button>
 
             <textarea
+              ref={inputTextareaRef}
               value={inputText}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
@@ -860,7 +876,7 @@ export const ChatRoomPage: React.FC<ChatRoomPageProps> = ({ nav, roomId, partner
                     ? '이미지를 전송합니다...'
                     : '메시지 입력...'
               }
-              className="flex-1 h-10 px-4 py-2.5 bg-surface rounded-[20px] resize-none focus:outline-none text-sm text-ink placeholder:text-muted disabled:opacity-60"
+              className="flex-1 min-h-[40px] max-h-[120px] px-4 py-2.5 bg-surface rounded-[20px] resize-none overflow-y-auto focus:outline-none text-sm text-ink placeholder:text-muted disabled:opacity-60"
               rows={1}
               disabled={!!selectedImage || isDegraded}
             />
