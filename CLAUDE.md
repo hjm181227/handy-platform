@@ -132,7 +132,6 @@ cd ../../..
 | 명령어 | 설명 |
 |--------|------|
 | `npm run web:dev` | 웹 개발 서버 실행 (localhost:3001) |
-| `npm run web:stage` | 웹 스테이지 환경 실행 |
 | `npm run web:prod` | 웹 프로덕션 환경 실행 |
 | `npm run start:dev` | Metro 서버 시작 (개발) |
 | `npm run ios:dev` | iOS 시뮬레이터 실행 |
@@ -251,9 +250,11 @@ npx tsc --noEmit --project packages/mobile
 ## API 환경 설정
 
 ### 환경별 서버 URL
-- **개발 환경**: `http://15.165.5.64:3001` (개발 서버)
-- **스테이지 환경**: `http://15.165.5.64:3001` (개발 서버와 동일, 스테이지 DB)
-- **프로덕션 환경**: `http://15.165.5.64:3000` (프로덕션 서버)
+- **로컬**: 앱서버 `http://localhost:11000`, 채팅서버 `http://localhost:3000`
+- **프로덕션**: 앱서버 `https://api.h-andy.com` (Fly.io nrt), 채팅서버 `https://chat.h-andy.com` (EC2 t4g.micro)
+
+> 스테이징 환경은 2026-09-03~04 비용 절감으로 철거했다. `api.stage-handy.com`,
+> `chat.stage-handy.com`, 옛 EC2 IP(`15.165.5.64`)는 모두 응답하지 않는다.
 
 ### 테스트 계정
 테스트 계정은 개발·스테이징 전용이며 비밀번호는 저장소에 기록하지 않는다.
@@ -273,7 +274,6 @@ import { Product, Cart, User } from '@handy-platform/shared';
 
 ### 환경 설정 파일
 - `packages/web/.env.development` - 웹 개발환경 설정
-- `packages/web/.env.stage` - 웹 스테이지환경 설정
 - `packages/web/.env.production` - 웹 프로덕션환경 설정
 - `packages/shared/src/config/api.ts` - 공통 API 설정
 

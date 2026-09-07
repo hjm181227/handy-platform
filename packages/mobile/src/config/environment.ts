@@ -23,9 +23,11 @@ export const getAppEnvironment = (): string => {
         console.log('🟢 [ENV] iOS process.env.REACT_NATIVE_ENV:', process.env.REACT_NATIVE_ENV);
         return process.env.REACT_NATIVE_ENV;
       }
+      // 예전엔 여기서 stage를 썼다. 스테이징 스택이 철거돼(2026-09-03)
+      // 남은 백엔드는 프로덕션뿐이다.
       if (__DEV__) {
-        console.log('🟢 [ENV] iOS __DEV__ mode: stage');
-        return 'stage';
+        console.log('🟢 [ENV] iOS __DEV__ mode: production');
+        return 'production';
       }
       // iOS release 빌드는 production으로 fallback (App Store 배포용)
     }

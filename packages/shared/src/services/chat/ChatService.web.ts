@@ -6,7 +6,12 @@
 import { io, Socket } from 'socket.io-client';
 import { BaseChatService } from './BaseChatService';
 import type { Message, TypingIndicator, ChatServiceConfig } from './types';
-import { API_CONFIG, getCurrentEnvironment } from '../../config/api';
+import {
+  API_CONFIG,
+  FALLBACK_API_CONFIG,
+  getCurrentEnvironment,
+  resolveEnvironment,
+} from '../../config/api';
 
 export class ChatServiceWeb extends BaseChatService {
   private static instance: ChatServiceWeb | null = null;
@@ -40,7 +45,10 @@ export class ChatServiceWeb extends BaseChatService {
 
         // 환경 변수는 config에서 받거나 기본값 사용
         const chatEnv = getCurrentEnvironment();
-        const serverUrl = config?.serverUrl || API_CONFIG[chatEnv]?.chatURL || API_CONFIG.stage.chatURL;
+        const serverUrl =
+          config?.serverUrl ||
+          API_CONFIG[resolveEnvironment(chatEnv)]?.chatURL ||
+          FALLBACK_API_CONFIG.chatURL;
 
         const socketOptions: any = {
           reconnection: config?.reconnection !== false,

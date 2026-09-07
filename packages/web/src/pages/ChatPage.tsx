@@ -3,6 +3,12 @@ import { ChevronLeft, MessageCircleMore, Store, TriangleAlert } from 'lucide-rea
 import { config } from '../config/environment';
 import { secureImageUrl } from '../utils/imageUrl';
 import { useAuthModal } from '../contexts/AuthModalContext';
+import {
+  SESSION_EXPIRED_MESSAGE,
+  handleChatSessionExpired,
+  isSessionExpired,
+  throwIfSessionExpired,
+} from '../lib/chat/sessionExpiry';
 
 const CHAT_API_URL = config.chatApiUrl;
 
@@ -148,6 +154,8 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
       });
 
       if (!response.ok) {
+        // 401은 채팅 서버 문제가 아니라 로그인 만료다
+        throwIfSessionExpired(response);
         throw new Error('채팅방 목록을 불러오는데 실패했습니다');
       }
 
@@ -187,6 +195,11 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
       setRooms(page.rooms);
       setHasMore(page.hasMore);
     } catch (err) {
+      if (isSessionExpired(err)) {
+        setError(SESSION_EXPIRED_MESSAGE);
+        handleChatSessionExpired();
+        return;
+      }
       console.error('[ChatPage] Error fetching rooms:', err);
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
     } finally {
@@ -215,6 +228,11 @@ export const ChatPage: React.FC<ChatPageProps> = ({ nav, currentUser }) => {
       });
       setHasMore(page.hasMore);
     } catch (err) {
+      if (isSessionExpired(err)) {
+        setError(SESSION_EXPIRED_MESSAGE);
+        handleChatSessionExpired();
+        return;
+      }
       console.error('[ChatPage] Error loading more rooms:', err);
       setHasMore(false);
     } finally {

@@ -34,9 +34,9 @@ export default async function middleware(request: Request): Promise<Response | u
   // 하위 경로(/product/x/custom-order 등)는 전용 카드를 만들지 않는다
   if (url.pathname.split('/').length > 3) return undefined;
 
-  const apiBase = url.hostname.includes('stage')
-    ? 'https://api.stage-handy.com'
-    : 'https://api.h-andy.com';
+  // 스테이징 분기는 없앴다 — api.stage-handy.com 은 2026-09-04 철거돼
+  // 응답하지 않는다. 크롤러가 어느 호스트로 오든 프로덕션 API를 조회한다.
+  const apiBase = 'https://api.h-andy.com';
 
   const isBrand = section === 'brand';
   const endpoint = isBrand

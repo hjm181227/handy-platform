@@ -5,13 +5,18 @@ import {
   IntegratedApiService,
   User
 } from '@handy-platform/shared';
-import { API_CONFIG } from '@handy-platform/shared/src/config/api';
+import {
+  API_CONFIG,
+  FALLBACK_API_CONFIG,
+  resolveEnvironment,
+} from '@handy-platform/shared/src/config/api';
 import { alertService } from '@handy-platform/shared/src/services/utils/AlertService';
 import { getAppEnvironment } from '../config/environment';
 
 // 환경에 따라 API URL을 동적으로 결정
 const mobileEnv = getAppEnvironment();
-const MOBILE_API_BASE_URL = API_CONFIG[mobileEnv]?.baseURL || API_CONFIG.stage.baseURL;
+const MOBILE_API_BASE_URL =
+  API_CONFIG[resolveEnvironment(mobileEnv)]?.baseURL || FALLBACK_API_CONFIG.baseURL;
 
 // 모바일 전용 토큰 관리
 class MobileTokenManager {

@@ -32,7 +32,6 @@ npm run android:prod
 
 # 전체 시스템 동시 실행
 npm run dev:all        # 개발 환경
-npm run dev:all:stage  # 스테이지 환경
 npm run dev:all:prod   # 프로덕션 환경
 ```
 
@@ -507,7 +506,7 @@ handy-platform은 Socket.IO 기반의 실시간 채팅 기능을 지원합니다
 - **모바일 전용**: 웹 환경에서는 자동으로 비활성화
 
 ### 채팅 서버 정보
-- **서버 URL**: `http://16.176.147.141`
+- **서버 URL**: `https://chat.h-andy.com` (전용 EC2 t4g.micro)
 - **인증 방식**: Socket.IO auth 옵션 (`{ auth: { token: 'JWT_TOKEN' } }`)
 - **프로토콜**: WebSocket with fallback to polling
 
@@ -533,7 +532,7 @@ const chatService = mobileApiService.chat;
 
 // 1. 연결
 await chatService.connect({
-  serverUrl: 'http://16.176.147.141',
+  serverUrl: 'https://chat.h-andy.com',
   token: 'YOUR_JWT_TOKEN',
 });
 
@@ -709,7 +708,7 @@ const isEnabled = webApiService.chat.isChatEnabled();
 ### 문제 해결
 
 #### 연결 실패 시
-1. 서버 URL 확인: `http://16.176.147.141`
+1. 서버 URL 확인: `https://chat.h-andy.com`
 2. 네트워크 권한 확인 (Android)
 3. JWT 토큰 유효성 확인
 4. Android 에뮬레이터에서는 `localhost` 대신 `10.0.2.2` 사용

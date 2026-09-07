@@ -4,6 +4,8 @@ import {
   API_CONFIG,
   CHAT_ENDPOINTS,
   getCurrentEnvironment,
+  resolveEnvironment,
+  FALLBACK_API_CONFIG,
 } from '@handy-platform/shared/src/config/api';
 import { getChatSocket } from '../lib/chat/ChatSocketService';
 import { chatFetch, isChatMarkedDown } from '../lib/chat/chatHealth';
@@ -24,7 +26,7 @@ export function useChatUnreadCount() {
 
   const getChatApiUrl = useCallback((): string => {
     const env = getCurrentEnvironment();
-    return API_CONFIG[env]?.chatURL || API_CONFIG.stage.chatURL;
+    return API_CONFIG[resolveEnvironment(env)]?.chatURL || FALLBACK_API_CONFIG.chatURL;
   }, []);
 
   const fetchTotal = useCallback(async (): Promise<void> => {

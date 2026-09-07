@@ -7,37 +7,58 @@ export interface ApiConfig {
   retryDelay: number;
 }
 
+/**
+ * 환경을 정하지 못했을 때 쓰는 설정.
+ *
+ * `API_CONFIG[env]`는 인덱스 접근이라 타입이 `ApiConfig | undefined`다. 폴백까지
+ * 인덱스로 잡으면(예전 `API_CONFIG.stage`) 그것도 undefined일 수 있어, 폴백이
+ * 폴백 노릇을 못 한다. 이름 있는 상수로 두어 항상 값이 있게 한다.
+ */
+export const FALLBACK_API_CONFIG: ApiConfig = {
+  baseURL: 'https://api.h-andy.com',
+  chatURL: 'https://chat.h-andy.com',
+  timeout: 15000,
+  retryAttempts: 5,
+  retryDelay: 2000,
+};
+
 // 환경별 API 설정
 export const API_CONFIG: Record<string, ApiConfig> = {
+  // 로컬 채팅 서버는 앱서버와 다른 포트다 — Handy_Chat_Ricecake의
+  // docker-compose.yml이 3000:3000으로 띄운다. 앱서버 포트(11000)를 그대로
+  // 쓰고 있어서 로컬에서는 채팅이 붙은 적이 없었다.
   local: {
     baseURL: 'http://localhost:11000',
-    chatURL: 'http://localhost:11000',
+    chatURL: 'http://localhost:3000',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   development: {
     baseURL: 'http://localhost:11000',
-    chatURL: 'http://localhost:11000',
+    chatURL: 'http://localhost:3000',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
-  stage: {
-    baseURL: 'https://api.stage-handy.com',
-    chatURL: 'https://chat.stage-handy.com',
-    timeout: 10000,
-    retryAttempts: 3,
-    retryDelay: 1000,
-  },
-  production: {
-    baseURL: 'https://api.h-andy.com',
-    chatURL: 'https://chat.h-andy.com',
-    timeout: 15000,
-    retryAttempts: 5,
-    retryDelay: 2000,
-  },
+  // 'stage' 항목은 없다. 2026-09-03~04 비용 절감으로 스테이징 스택
+  // (api.stage-handy.com / chat.stage-handy.com)을 철거했고, 두 호스트 모두
+  // 응답하지 않는다. 남아 있는 'stage' 입력은 resolveEnvironment()가
+  // production으로 해석한다 — 죽은 주소로 보내지 않기 위함이다.
+  production: FALLBACK_API_CONFIG,
 };
+
+/**
+ * 철거된 스테이징을 가리키는 환경 이름을 프로덕션으로 해석한다.
+ *
+ * 'stage'는 여러 경로로 아직 들어온다 — 안드로이드 debug 빌드의 BuildConfig
+ * 기본값, REACT_NATIVE_ENV, `vite --mode stage`, stage-handy.com 호스트명.
+ * 이 값들이 죽은 호스트로 가지 않도록 한 곳에서 흡수한다.
+ */
+const DECOMMISSIONED_STAGE_ALIASES = ['stage', 'staging'];
+
+export const resolveEnvironment = (env: string): string =>
+  DECOMMISSIONED_STAGE_ALIASES.includes(env) ? 'production' : env;
 
 // 현재 환경 감지
 export const getCurrentEnvironment = (): string => {
@@ -52,9 +73,10 @@ export const getCurrentEnvironment = (): string => {
       return process.env.REACT_NATIVE_ENV;
     }
 
-    // React Native 기본값
-    console.log('🟡 [API_CONFIG] React Native detected, using stage as fallback');
-    return 'stage';
+    // React Native 기본값. 예전엔 stage였지만 스테이징이 철거돼 죽은 주소가
+    // 됐다 — 환경을 못 읽은 앱이 조용히 먹통이 되던 경로다.
+    console.log('🟡 [API_CONFIG] React Native detected, using production as fallback');
+    return 'production';
   }
 
   // 2. 웹 환경 체크 (window가 있으면 웹)
@@ -67,9 +89,11 @@ export const getCurrentEnvironment = (): string => {
     // 2b. Vercel 배포 환경 - hostname 기반 감지
     const hostname = window.location?.hostname;
     if (hostname) {
+      // 스테이징 백엔드는 철거됐다. 도메인이 아직 남아 있다면(Vercel에서
+      // 제거 전) 죽은 api.stage-handy.com 대신 프로덕션 API를 쓴다.
       if (hostname.includes('stage-handy.com')) {
-        console.log('🟢 [API_CONFIG] Detected staging from hostname:', hostname);
-        return 'stage';
+        console.log('🟢 [API_CONFIG] stage-handy.com — staging is decommissioned, using production');
+        return 'production';
       }
       if (hostname.includes('h-andy.com') && !hostname.includes('stage')) {
         console.log('🟢 [API_CONFIG] Detected production from hostname:', hostname);
@@ -110,7 +134,7 @@ export const shouldUseProxy = (): boolean => {
 
 // 현재 환경의 API 설정 가져오기
 export const getApiConfig = (): ApiConfig => {
-  const env = getCurrentEnvironment();
+  const env = resolveEnvironment(getCurrentEnvironment());
   const config = API_CONFIG[env] || API_CONFIG.development;
 
   console.log('🔧 [API_CONFIG] Current environment:', env);

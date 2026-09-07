@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAlert } from '../common';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { webApiService } from '../../services/apiService';
+import { config } from '../../config/environment';
 
 interface PaymentTestProps {
   onGo: (path: string) => void;
@@ -159,7 +160,7 @@ export function PaymentTest({ onGo }: PaymentTestProps) {
 
       // API 기본 연결 테스트
       const token = await webApiService.auth.getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://15.165.5.64:3001'}/api/payment/config`, {
+      const response = await fetch(`${config.apiBaseUrl}/api/payment/config`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
 
@@ -318,7 +319,7 @@ export function PaymentTest({ onGo }: PaymentTestProps) {
               <span className="font-medium">현재 URL:</span> {window.location.href}
             </div>
             <div>
-              <span className="font-medium">API Base URL:</span> {import.meta.env.VITE_API_BASE_URL || 'http://15.165.5.64:3001'}
+              <span className="font-medium">API Base URL:</span> {config.apiBaseUrl}
             </div>
             <div>
               <span className="font-medium">Mock API:</span> {USE_MOCK_API ? '활성화' : '비활성화'}
