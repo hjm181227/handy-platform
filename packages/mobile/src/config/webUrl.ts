@@ -21,12 +21,9 @@ export const getWebURL = (): string => {
     return 'https://handy-web-production-lev8t6vpp-heobusys-projects.vercel.app';
   }
 
-  // 스테이지 환경: stage-handy.com
-  if (env === 'stage') {
-    return 'https://stage-handy.com';
-  }
-
   // 프로덕션 환경: h-andy.com
+  // (stage-handy.com 분기는 없앴다 — 스테이징 스택을 2026-09-03에 철거해
+  //  그 주소로 가면 API가 없는 껍데기만 뜬다)
   return 'https://h-andy.com';
 };
 

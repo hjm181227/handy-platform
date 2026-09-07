@@ -8,7 +8,11 @@ import { WebViewMessage } from '@handy-platform/shared';
 import { mobileApiService } from '../services/apiService';
 import { notificationService } from '../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_CONFIG } from '@handy-platform/shared/src/config/api';
+import {
+  API_CONFIG,
+  FALLBACK_API_CONFIG,
+  resolveEnvironment,
+} from '@handy-platform/shared/src/config/api';
 import { getAppEnvironment } from '../config/environment';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
@@ -427,7 +431,8 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
     const oauthUrl = interceptedUrl
       || (() => {
         const env = getAppEnvironment();
-        const apiBaseUrl = API_CONFIG[env]?.baseURL || API_CONFIG.stage.baseURL;
+        const apiBaseUrl =
+          API_CONFIG[resolveEnvironment(env)]?.baseURL || FALLBACK_API_CONFIG.baseURL;
         return `${apiBaseUrl}/api/auth/oauth/${provider}/login?source=handyapp`;
       })();
     const redirectUrl = 'handyapp://oauth-callback';
@@ -610,7 +615,8 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           const token = await AsyncStorage.getItem('@handy_platform:accessToken');
           const chatEnv = getAppEnvironment();
           await chatService.connect({
-            serverUrl: API_CONFIG[chatEnv]?.chatURL || API_CONFIG.stage.chatURL,
+            serverUrl:
+              API_CONFIG[resolveEnvironment(chatEnv)]?.chatURL || FALLBACK_API_CONFIG.chatURL,
             token: token || undefined,
           });
           result = { connected: true };

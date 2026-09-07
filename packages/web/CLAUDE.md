@@ -5,6 +5,12 @@
 
 React 웹 앱 (Vite) 및 Vercel 배포 관련 가이드입니다.
 
+> **스테이징은 철거됐다 (2026-09-03~04).** 비용 절감으로 `api.stage-handy.com`,
+> `chat.stage-handy.com`, 스테이징 배포 워크플로, `.env.stage`, `*:stage` npm
+> 스크립트를 모두 없앴다. 아래 문서에 남아 있는 스테이징 절차는 과거 기록이며
+> 그대로 따라 하면 죽은 호스트를 가리키게 된다. 현재 배포 경로는 **main 브랜치
+> 푸시 → `deploy-web-production.yml` → Vercel(www.h-andy.com)** 하나뿐이다.
+
 ## 웹 버전 실행
 
 ```bash

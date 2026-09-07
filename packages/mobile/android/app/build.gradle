@@ -138,8 +138,10 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            // 환경 변수에서 APP_ENV 읽기 (기본값: stage)
-            def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "stage"
+            // 환경 변수에서 APP_ENV 읽기 (기본값: production)
+            // 예전 기본값은 stage였는데, 스테이징 스택을 2026-09-03에 철거해
+            // 디버그 빌드가 죽은 주소를 보게 됐다.
+            def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "production"
             buildConfigField "String", "APP_ENV", "\"${appEnv}\""
         }
         release {
