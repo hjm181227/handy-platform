@@ -9,6 +9,12 @@ import { config } from '../../config/environment';
 import { webApiService } from '../../services/api';
 import { createImagePreview, revokeImagePreview } from '@handy-platform/shared/src/utils/imageUpload';
 import { deleteChatMessage } from './moderationService';
+import {
+  SESSION_EXPIRED_MESSAGE,
+  handleChatSessionExpired,
+  isSessionExpired,
+  throwIfSessionExpired,
+} from './sessionExpiry';
 import type { Message, UseChatReturn, ChatRoom } from './types';
 
 // 백엔드 채팅 서버 URL
@@ -120,6 +126,9 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           });
 
           if (!ensureResponse.ok) {
+            // 401은 서버 장애가 아니라 로그인 만료다. 아래 catch가 "채팅 서버에
+            // 연결할 수 없습니다"로 뭉뚱그리지 않도록 별도 에러로 구분한다.
+            throwIfSessionExpired(ensureResponse);
             throw new Error(`Failed to create/get chat room: ${ensureResponse.status}`);
           }
 
@@ -201,6 +210,9 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
           setError(null);
 
         } catch (connectError) {
+          // 세션 만료는 연결 실패로 강등하지 않고 바깥에서 재로그인으로 처리한다
+          if (isSessionExpired(connectError)) throw connectError;
+
           console.warn('[useChat] Backend connection failed:', connectError);
           useFallback.current = true;
           setIsDegraded(true);
@@ -211,6 +223,16 @@ export function useChat(roomId: string, token?: string, partnerUsername?: string
         }
 
       } catch (err) {
+        if (isSessionExpired(err)) {
+          console.warn('[useChat] Session expired — clearing token and moving to login');
+          setError(SESSION_EXPIRED_MESSAGE);
+          setIsConnected(false);
+          setIsDegraded(true);
+          setMessages([]);
+          handleChatSessionExpired();
+          return;
+        }
+
         console.error('[useChat] Initialization error:', err);
         setError(err instanceof Error ? err.message : '채팅을 초기화하는데 실패했습니다');
         useFallback.current = true;

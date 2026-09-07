@@ -4,6 +4,7 @@
 
 import { config } from '../../config/environment';
 import { chatFetch } from './chatHealth';
+import { SESSION_EXPIRED_MESSAGE, handleChatSessionExpired } from './sessionExpiry';
 
 const CHAT_API_URL = config.chatApiUrl;
 
@@ -55,6 +56,12 @@ async function send(
   try {
     const response = await chatFetch(`${CHAT_API_URL}${path}`, { ...init, headers });
     if (!response.ok) {
+      // 방을 열어둔 채로 토큰이 만료된 경우. 서버 본문("Invalid token")을 그대로
+      // 보여주는 대신 재로그인으로 안내한다.
+      if (response.status === 401) {
+        handleChatSessionExpired();
+        return { success: false, error: SESSION_EXPIRED_MESSAGE };
+      }
       return { success: false, error: await toError(response, fallbackError) };
     }
     return { success: true };
