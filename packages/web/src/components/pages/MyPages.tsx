@@ -1,3 +1,4 @@
+import { NailSizingSummary } from '../product/NailSizingSummary';
 import { useState, useEffect } from 'react';
 import { purchaseApiService } from '../../services/purchaseApiService';
 import { reviewService, userService, loyaltyService, orderService } from '../../services/apiService';
@@ -441,10 +442,9 @@ export function OrdersPage({ onGo }: { onGo: (to: string) => void }) {
                             <p className="text-sm font-medium text-gray-900 truncate">
                               {item.productName || '상품명'}
                             </p>
-                            <div className="flex items-center gap-2 text-xs text-muted">
-                              {item.shape && item.size && (
-                                <span>{item.shape} · {item.size}</span>
-                              )}
+                            <NailSizingSummary value={item.nailSizing} />
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                              {(item.shape || item.size) && <span>{[item.shape, item.size].filter(Boolean).join(' · ')}</span>}
                               <span>수량 {item.quantity}개</span>
                             </div>
                             <p className="text-sm text-gray-600">

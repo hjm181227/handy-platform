@@ -1,3 +1,4 @@
+import { NailSizingSummary } from '../../product/NailSizingSummary';
 import { useState } from 'react';
 import { SellerOrder, OrderStatus, CustomOrderDetail, SellerOrderDetail } from '@handy-platform/shared';
 import { webApiService } from '../../../services/apiService';
@@ -38,31 +39,8 @@ const SHIPPING_CARRIERS = [
 const validateTrackingNumber = (trackingNumber: string, carrierCode: string): { isValid: boolean; message: string } => {
   const cleaned = trackingNumber.replace(/[^0-9]/g, '');
 
-  switch (carrierCode) {
-    case 'hanjin':
-      if (cleaned.length !== 10 && cleaned.length !== 12) {
-        return { isValid: false, message: '한진택배 송장번호는 10자리 또는 12자리 숫자입니다.' };
-      }
-      break;
-    case 'cj':
-      if (cleaned.length !== 10 && cleaned.length !== 13) {
-        return { isValid: false, message: 'CJ대한통운 송장번호는 10자리 또는 13자리 숫자입니다.' };
-      }
-      break;
-    case 'lotte':
-      if (cleaned.length !== 11 && cleaned.length !== 13) {
-        return { isValid: false, message: '롯데택배 송장번호는 11자리 또는 13자리 숫자입니다.' };
-      }
-      break;
-    case 'logen':
-      if (cleaned.length !== 11 && cleaned.length !== 12) {
-        return { isValid: false, message: '로젠택배 송장번호는 11자리 또는 12자리 숫자입니다.' };
-      }
-      break;
-    default:
-      if (cleaned.length < 8 || cleaned.length > 15) {
-        return { isValid: false, message: '송장번호는 8-15자리 숫자여야 합니다.' };
-      }
+  if (!SHIPPING_CARRIERS.some(carrier => carrier.code === carrierCode) || !/^\d{8,15}$/.test(cleaned)) {
+    return { isValid: false, message: '택배사와 송장번호(숫자 8~15자리)를 확인해주세요.' };
   }
 
   return { isValid: true, message: '' };
@@ -176,7 +154,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
     try {
       setUpdating(true);
       const carrierInfo = SHIPPING_CARRIERS.find(c => c.code === selectedCarrier);
-      await onUpdateStatus(order.id, 'shipped', trackingNumber, carrierInfo ? { code: carrierInfo.code, name: carrierInfo.name } : undefined);
+      await onUpdateStatus(order.id, 'shipped', trackingNumber.replace(/[\s-]/g, ''), carrierInfo ? { code: carrierInfo.code, name: carrierInfo.name } : undefined);
       setShowShippingForm(false);
       setTrackingNumber('');
       setTrackingError('');
@@ -187,10 +165,11 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
     }
   };
 
-  const canConfirm = order.status === 'pending';
-  const canShip = order.status === 'processing';
-  const canStartProcessing = order.status === 'confirmed';
-  const canDeliver = order.status === 'shipped';
+  const paymentReady = order.paymentStatus === 'paid' && !['processing', 'failed'].includes(order.cancellation?.refundStatus || '');
+  const canConfirm = paymentReady && order.status === 'pending';
+  const canShip = paymentReady && ['processing', 'shipped'].includes(order.status);
+  const canStartProcessing = paymentReady && order.status === 'confirmed';
+  const canDeliver = paymentReady && order.status === 'shipped';
   const canCancel = ['pending', 'confirmed', 'processing'].includes(order.status);
 
   return (
@@ -309,6 +288,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                     <h5 className="font-semibold text-gray-900 text-base sm:text-lg mb-1 truncate">{productName}</h5>
 
                     {/* 상품 옵션 */}
+                    <NailSizingSummary value={item.nailSizing} required={item.requiresNailSizing !== false} />
                     {[item.shape, item.size, (item as any).sku].filter(Boolean).length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2">
                         {item.shape && (
@@ -393,7 +373,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
             {canShip && (
               <button
                 onClick={async () => {
-                  const confirmed = await onConfirm('이 주문의 배송 처리를 시작하시겠습니까?', {
+                  const confirmed = await onConfirm(order.status === 'shipped' ? '송장 정보를 수정하시겠습니까?' : '이 주문의 배송 처리를 시작하시겠습니까?', {
                     variant: 'info',
                     confirmLabel: '배송 처리',
                     cancelLabel: '취소'
@@ -405,7 +385,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
                 className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
               >
                 <span className="sm:hidden">배송</span>
-                <span className="hidden sm:inline">배송 처리</span>
+                <span className="hidden sm:inline">{order.status === 'shipped' ? '송장 수정' : '배송 처리'}</span>
               </button>
             )}
 
@@ -537,11 +517,7 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
             <div className="p-3 bg-white/70 rounded-lg mb-4">
               <p className="text-sm text-gray-600">
                 <span className="font-medium">💡 송장번호 형식 안내:</span>
-                {selectedCarrier === 'hanjin' && ' 한진택배는 10자리 또는 12자리 숫자'}
-                {selectedCarrier === 'cj' && ' CJ대한통운은 10자리 또는 13자리 숫자'}
-                {selectedCarrier === 'lotte' && ' 롯데택배는 11자리 또는 13자리 숫자'}
-                {selectedCarrier === 'logen' && ' 로젠택배는 11자리 또는 12자리 숫자'}
-                {!['hanjin', 'cj', 'lotte', 'logen'].includes(selectedCarrier) && ' 일반적으로 8-15자리 숫자'}
+                {' 발급받은 송장번호를 숫자 8~15자리로 입력해주세요. 택배사 조회 반영에는 시간이 걸릴 수 있습니다.'}
               </p>
             </div>
 

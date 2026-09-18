@@ -1,3 +1,4 @@
+import { NailSizingSummary } from '../product/NailSizingSummary';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '../common';
@@ -23,14 +24,11 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
       setLoading(true);
       setError(null);
 
-      console.log('📡 [OrderCompletePage] Fetching order:', orderId);
       const response = await webApiService.order.getOrder(orderId);
 
-      console.log('📡 [OrderCompletePage] Raw response:', response);
 
       // 서버 응답 구조: { success: true, order: { ... } }
       if (response.success && (response as any).order) {
-        console.log('✅ [OrderCompletePage] Order loaded successfully:', (response as any).order);
         setOrder((response as any).order);
       } else {
         console.error('❌ [OrderCompletePage] Invalid response structure:', response);
@@ -51,8 +49,7 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
   useEffect(() => {
     if (orderId) {
       loadOrder();
-      // 장바구니 비우기 (주문 완료 후)
-      webApiService.cart.clearCart().catch(console.error);
+
     }
   }, [orderId]);
 
@@ -158,9 +155,11 @@ export function OrderCompletePage({ onGo, orderId }: OrderCompletePageProps) {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium">{item.productName}</h3>
+                  <NailSizingSummary value={item.nailSizing} />
+                  {(item.shape || item.size) && <p className="text-sm text-gray-600 mt-1">{[item.shape, item.size].filter(Boolean).join(' · ')}</p>}
                   {item.options && Object.keys(item.options).length > 0 && (
                     <div className="text-sm text-gray-600 mt-1">
-                      {Object.entries(item.options).map(([key, value]) => (
+                      {Object.entries(item.options).filter(([key]) => key !== 'nailSizing').map(([key, value]) => (
                         <span key={key}>{key}: {value} </span>
                       ))}
                     </div>

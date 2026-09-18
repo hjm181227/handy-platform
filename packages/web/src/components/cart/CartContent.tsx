@@ -1,3 +1,4 @@
+import { NailSizingSummary } from '../product/NailSizingSummary';
 import { useState, useEffect, useRef } from 'react';
 import { Cart, CartItem, CartItemsBySeller, CartTotals, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
@@ -764,9 +765,10 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
               {/* 상품 정보 - 왼쪽 */}
               <div className="flex-1 min-w-0">
                 <h4 className="font-semibold text-xs sm:text-sm leading-tight line-clamp-2">{productName}</h4>
+                <NailSizingSummary value={item.options?.nailSizing} />
                 {item.options && (
                   <div className="mt-0.5 flex flex-wrap gap-0.5">
-                    {Object.entries(item.options).map(([key, value]) => {
+                    {Object.entries(item.options).filter(([key]) => key !== 'nailSizing').map(([key, value]) => {
                       const optionNames: Record<string, string> = {
                         'nailShape': '쉐입',
                         'nailLength': '길이',
@@ -953,6 +955,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
         </div>
         <button
           onClick={() => {
+            sessionStorage.removeItem('checkout_session');
             // 선택 주문: 일부만 선택했으면 선택 목록을 체크아웃에 전달 (서버가 필터링)
             if (!allSelected) {
               const payload = selectedItems.map(item => ({

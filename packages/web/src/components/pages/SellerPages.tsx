@@ -1071,7 +1071,7 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
             discountRate: product.discountRate !== null && product.discountRate !== undefined ? String(product.discountRate) : '',
 
             // 재고 및 처리 정보
-            stockQuantity: product.stockQuantity ? String(product.stockQuantity) : '100',
+            stockQuantity: String(product.stockQuantity ?? 0),
             processingDays: product.processingDays ? String(product.processingDays) : '3',
             status: product.status || 'active',
 
@@ -2002,6 +2002,16 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
               </div>
             )}
           </div>
+
+          {formData.fulfillmentMode === 'made_to_order' && formData.productType === 'original' && (
+            <div className="mt-6 rounded-lg border border-line p-4">
+              <label className="block text-sm font-medium" htmlFor="order-capacity">추가로 받을 수 있는 제작 수량</label>
+              <input id="order-capacity" type="number" min="0" step="1" required value={formData.stockQuantity}
+                onChange={event => setFormData({ ...formData, stockQuantity: event.target.value })}
+                className="mt-2 w-full rounded border border-line px-3 py-2" />
+              <p className="mt-2 text-xs text-muted">결제 진행 시 수량을 예약하고 주문 취소 시 복원합니다. 0이면 신규 접수가 중단됩니다. 추가 접수를 시작하려면 남은 제작 가능 수량을 입력해주세요.</p>
+            </div>
+          )}
 
           {/* 옵션·재고 매트릭스 (기성 재고 판매) */}
           {formData.fulfillmentMode === 'stocked' && (

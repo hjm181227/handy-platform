@@ -88,7 +88,7 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
       // 검색 타입에 따라 적절한 파라미터 설정
       if (appliedFilter.searchQuery.trim()) {
         if (appliedFilter.searchType === 'orderNumber') {
-          searchParams.orderNumber = appliedFilter.searchQuery;
+          searchParams.orderNumber = appliedFilter.searchQuery.trim();
         } else if (appliedFilter.searchType === 'productName') {
           searchParams.search = appliedFilter.searchQuery;
         }

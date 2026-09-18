@@ -344,6 +344,8 @@ export type ProductType = 'original' | 'custom';
 
 // 상품 인터페이스 (서버 API 스펙 완전 일치, UUID migration v1.1.0+)
 export interface Product {
+  shippingPolicy?: { baseShippingCost: number; freeShippingThreshold: number; jejuAdditionalCost: number; remoteAdditionalCost: number;
+    canShipToJeju: boolean; canShipToRemote: boolean; isActive: boolean; estimatedDeliveryDays: { min: number; max: number } };
   productUuid: string;            // UUID format (e87e4b2c-8f9a-4d3c-b2a1-9e8d7c6b5a43) - primary identifier
   productId?: string;             // Sequential ID ("1", "2", "3"...) - legacy compatibility
   /**
@@ -751,7 +753,18 @@ export type PaymentMethod =
   | 'bank_transfer'
   | 'cash_on_delivery';
 
+export interface OrderNailSizing {
+  unit: 'mm';
+  left: { thumb: number; index: number; middle: number; ring: number; little: number };
+  right: { thumb: number; index: number; middle: number; ring: number; little: number };
+  confirmedAt?: string;
+}
+
 export interface OrderItem {
+  nailSizing?: OrderNailSizing;
+  requiresNailSizing?: boolean;
+  shape?: string;
+  size?: string;
   productUuid: string;            // 상품 UUID
   productName: string;            // 상품명
   productImage?: string;          // 상품 이미지 URL
@@ -804,6 +817,8 @@ export interface CustomerOrder extends BaseOrder {
 
 // Seller Order Item Interface - 서버 OrderItemResponse 기반
 export interface SellerOrderItem {
+  nailSizing?: OrderNailSizing;
+  requiresNailSizing?: boolean;
   productUuid: string;
   shape?: string;
   size?: string;
@@ -825,6 +840,8 @@ export interface SellerOrderItem {
 
 // Seller Order Interface - 서버 SellerOrderResponse 기반 (통일된 필드명)
 export interface SellerOrder {
+  paymentStatus?: PaymentStatus;
+  cancellation?: { refundStatus?: string };
   id: string;              // orderUuid → id (CustomerOrder와 통일) - 필수 필드
   orderNumber: string;
   status: string;
@@ -839,6 +856,8 @@ export interface SellerOrder {
 
 // Seller Order Detail Interface - 서버 SellerOrderDetailData 기반
 export interface SellerOrderDetail {
+  paymentStatus?: PaymentStatus;
+  cancellation?: { refundStatus?: string; refundAmount?: number };
   id: string;
   orderNumber: string;
   status: string;
@@ -852,15 +871,7 @@ export interface SellerOrderDetail {
     date: string;
     note?: string;
   }>;
-  shippingAddress?: {
-    name?: string;                // 마스킹된 이름 "홍**"
-    street?: string;              // 마스킹된 주소
-    city?: string;
-    state?: string;
-    zipCode?: string;             // 마스킹된 우편번호 "06***"
-    country?: string;
-    phone?: string;               // 마스킹된 전화번호 "010-****-5678"
-  };
+  shippingAddress?: ShippingAddress;
   notes?: string;
 }
 

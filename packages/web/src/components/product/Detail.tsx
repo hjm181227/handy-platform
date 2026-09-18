@@ -1,3 +1,5 @@
+import { NailSizingEditor, emptyNailSizing } from './NailSizingEditor';
+import { parseNailSizing } from '../../utils/nailSizing';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService, buildProductUrlSlug } from '@handy-platform/shared';
@@ -66,6 +68,16 @@ export function Detail({
   const [activeTab, setActiveTab] = useState<string>("info");
   const [heroIdx, setHeroIdx] = useState(0);
 
+  const [nailSizing, setNailSizing] = useState(emptyNailSizing);
+  const [sizingConfirmed, setSizingConfirmed] = useState(false);
+  const sizingRequired = !!product && (product as any).fulfillmentMode !== 'stocked';
+  const checkSizing = () => {
+    if (!sizingRequired || (sizingConfirmed && parseNailSizing(nailSizing))) return true;
+    setCartMessage('양손 10개 손톱 사이즈를 입력하고 제작 사이즈 확인에 체크해주세요.');
+    document.getElementById('order-nail-sizing')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  };
+
   // 찜: 로컬 state가 아닌 전역 LikesContext 사용 (서버 연동 + 낙관적 업데이트)
   const { handleLike, isProductLiked } = useLikes();
   const liked = isProductLiked(id);
@@ -87,6 +99,8 @@ export function Detail({
         setError(null);
         const response = await productService.getProduct(id);
         setProduct(response.data);
+        setNailSizing(emptyNailSizing());
+        setSizingConfirmed(false);
       } catch (err: any) {
         setError(err.message || t('common:loadFailed'));
         console.error('Product fetch failed:', err);
@@ -134,8 +148,8 @@ export function Detail({
         setShape(getVariantOptionValue(initial, 'shape') || product.nailShape || "ROUND");
         setLength(getVariantOptionValue(initial, 'length') || product.nailLength || "SHORT");
       } else {
-        setShape(product.nailShape || "ROUND");
-        setLength(product.nailLength || "SHORT");
+        setShape(product.nailShape || "");
+        setLength(product.nailLength || "");
       }
     }
   }, [product]);
@@ -219,7 +233,9 @@ export function Detail({
       setAddingToCart(true);
       setCartMessage(null);
 
+      if (!checkSizing()) return;
       const options: Record<string, string> = {};
+      if (sizingRequired) options.nailSizing = JSON.stringify(parseNailSizing(nailSizing));
       if (shape) options.nailShape = shape;
       if (length) options.nailLength = length;
 
@@ -301,7 +317,9 @@ export function Detail({
 
     try {
       // ✅ 바로구매: 선택된 옵션으로 단일 상품을 checkout으로 전달
+      if (!checkSizing()) return;
       const options: Record<string, string> = {};
+      if (sizingRequired) options.nailSizing = JSON.stringify(parseNailSizing(nailSizing));
       if (shape) options.nailShape = shape;
       if (length) options.nailLength = length;
 
@@ -315,6 +333,7 @@ export function Detail({
       console.log('🛒 [buyNow] Navigating to direct checkout with item:', directItem);
 
       // ✅ CheckoutPage로 directItem 전달 (단일 객체, sessionStorage 사용)
+      sessionStorage.removeItem('checkout_session');
       sessionStorage.setItem('checkoutData', JSON.stringify({
         type: 'direct',
         directItem: directItem
@@ -354,8 +373,7 @@ export function Detail({
     const isWebView = typeof window !== 'undefined' && !!(window as any).ReactNativeWebView;
 
     if (!isWebView) {
-      // 웹 브라우저: 앱 안내 메시지
-      alert(t('product:detailPage.sizingAppPrompt'));
+      document.getElementById('order-nail-sizing')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -430,6 +448,11 @@ export function Detail({
   // stocked: 선택 조합이 구매 가능해야 함 / made_to_order: 기존 isInStock 그대로
   const canPurchase = isStocked ? !allSoldOut && !!selectedVariant?.isAvailable : p.isInStock;
   const unitPrice = isStocked && selectedVariant ? selectedVariant.finalPrice : salePrice;
+  const shippingPolicy = p.shippingPolicy;
+  const shippingText = !shippingPolicy ? '배송비는 주문 단계에서 확인' : !shippingPolicy.isActive || shippingPolicy.baseShippingCost === 0 ? '기본 배송비 무료'
+    : '기본 배송비 ' + money(shippingPolicy.baseShippingCost) + ' · ' + money(shippingPolicy.freeShippingThreshold) + ' 이상 기본 배송비 무료';
+  const shippingBadge = !shippingPolicy ? '배송비 확인' : !shippingPolicy.isActive || shippingPolicy.baseShippingCost === 0 || unitPrice * qty >= shippingPolicy.freeShippingThreshold
+    ? '기본 배송비 무료' : '배송비 ' + money(shippingPolicy.baseShippingCost);
 
   // 추가금 라벨 (예: +1,000원)
   const formatModifier = (mod?: number) => {
@@ -528,7 +551,7 @@ export function Detail({
               <table className="w-full text-left text-sm">
                 <tbody className="[&>tr>td]:py-2">
                   <tr><td className="w-40 text-gray-500">{t('product:detailPage.info.nailShape')}</td><td>{NAIL_SHAPE_NAME[p.nailShape] || p.nailShape}</td></tr>
-                  <tr><td className="text-gray-500">{t('product:detailPage.info.nailLength')}</td><td>{NAIL_LENGTH_NAME[p.nailLength] || p.nailLength}</td></tr>
+                  <tr><td className="text-gray-500">{t('product:detailPage.info.nailLength')}</td><td>{NAIL_LENGTH_NAME[p.nailLength] || p.nailLength || '디자인 기준'}</td></tr>
                   <tr><td className="text-gray-500">{t('common:lengthCustom')}</td><td>{p.nailOptions.lengthCustomizable ? t('common:available') : t('common:unavailable')}</td></tr>
                   <tr><td className="text-gray-500">{t('common:shapeCustom')}</td><td>{p.nailOptions.shapeCustomizable ? t('common:available') : t('common:unavailable')}</td></tr>
                   <tr><td className="text-gray-500">{t('common:designCustom')}</td><td>{p.nailOptions.designCustomizable ? t('common:available') : t('common:unavailable')}</td></tr>
@@ -761,15 +784,15 @@ export function Detail({
                 <div className="space-y-3 text-sm">
                   <div className="flex gap-3">
                     <span className="text-gray-500 w-20">{t('product:detailPage.shipping.fee')}</span>
-                    <span>{t('product:detailPage.shipping.freeShippingDesc')}</span>
+                    <span>{shippingText}</span>
                   </div>
                   <div className="flex gap-3">
                     <span className="text-gray-500 w-20">{t('product:detailPage.shipping.period')}</span>
-                    <span>{t('product:detailPage.shipping.processingTime')}</span>
+                    <span>{!isStocked ? `주문 후 제작 약 ${p.processingDays || 0}일 · ` : ''}{shippingPolicy ? `출고 후 배송 약 ${shippingPolicy.estimatedDeliveryDays.min}~${shippingPolicy.estimatedDeliveryDays.max}일` : '배송 기간은 주문 단계에서 확인'}</span>
                   </div>
                   <div className="flex gap-3">
                     <span className="text-gray-500 w-20">{t('product:detailPage.shipping.area')}</span>
-                    <span>{t('product:detailPage.shipping.areaDesc')}</span>
+                    <span>{shippingPolicy ? `일반 지역 / 제주 ${shippingPolicy.canShipToJeju ? `추가 ${money(shippingPolicy.jejuAdditionalCost)}` : '배송 불가'} / 도서산간 ${shippingPolicy.canShipToRemote ? `추가 ${money(shippingPolicy.remoteAdditionalCost)}` : '배송 불가'}` : '배송지 입력 후 확인'}</span>
                   </div>
                   <div className="flex gap-3">
                     <span className="text-gray-500 w-20">{t('product:detailPage.shipping.carrier')}</span>
@@ -873,7 +896,7 @@ export function Detail({
             {' · '}
             <span>{t('product:detail.reviewCount', { count: p.rating.count.toLocaleString() })}</span>
             {' · '}
-            <span>{t('product:detail.freeDelivery')}</span>
+            <span>{shippingBadge}</span>
           </div>
 
           {/* 가격 */}
@@ -1028,7 +1051,7 @@ export function Detail({
               ) : (
                 // 커스터마이징 불가능: 고정값만 텍스트로 표시
                 <div className="text-sm text-ink">
-                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength} <span className="text-muted">{t('product:detailPage.option.notEditable')}</span>
+                  {NAIL_LENGTH_NAME[p.nailLength] || p.nailLength || '디자인 기준'} <span className="text-muted">{t('product:detailPage.option.notEditable')}</span>
                 </div>
               )}
             </div>
@@ -1056,6 +1079,9 @@ export function Detail({
               )}
             </div>
           )}
+
+          {sizingRequired && <NailSizingEditor value={nailSizing} confirmed={sizingConfirmed} onConfirm={setSizingConfirmed}
+            onChange={value => { setNailSizing(value); setSizingConfirmed(false); }} />}
 
           {/* 주문 제작: 제작 소요일 안내 */}
           {!isStocked && (

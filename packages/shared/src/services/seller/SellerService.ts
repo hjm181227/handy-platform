@@ -197,6 +197,7 @@ export abstract class BaseSellerService extends BaseApiService {
 
   // 주문 관리 (멀티셀러 지원 - 서버 API 스펙 완전 일치)
   async getSellerOrders(filters: {
+    orderNumber?: string;
     page?: number;                  // 페이지 번호 (기본값: 1)
     limit?: number;                 // 페이지당 항목 수 (기본값: 20)
     status?: string[];              // 주문 상태별 필터링 (배열)
@@ -212,6 +213,7 @@ export abstract class BaseSellerService extends BaseApiService {
       limit: filters.limit || 20,
       status: filters.status || [],
       search: filters.search,
+      orderNumber: filters.orderNumber,
       sortBy: filters.sortBy || 'create-desc'
     };
 

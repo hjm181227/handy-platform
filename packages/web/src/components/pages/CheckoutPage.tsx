@@ -1,3 +1,4 @@
+import { NailSizingSummary } from '../product/NailSizingSummary';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Star, FileText, Pencil } from 'lucide-react';
@@ -858,7 +859,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                       )}
                       {item.options && Object.keys(item.options).length > 0 && (
                         <div className="text-sm text-gray-600 mt-1">
-                          {Object.entries(item.options).map(([key, value], index, array) => {
+                          {Object.entries(item.options).filter(([key]) => key !== 'nailSizing').map(([key, value], index, array) => {
                             const optionNames: Record<string, string> = {
                               'nailShape': '쉐입',
                               'nailLength': '길이',
@@ -886,6 +887,7 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
                           })}
                         </div>
                       )}
+                      <NailSizingSummary value={item.options?.nailSizing} />
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-gray-600">{t('order:payment.quantityUnit', { count: item?.quantity || 1 })}</span>
                         <span className="font-semibold">{money(item?.price || 0)}</span>

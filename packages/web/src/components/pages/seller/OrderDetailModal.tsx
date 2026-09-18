@@ -1,3 +1,4 @@
+import { NailSizingSummary } from '../../product/NailSizingSummary';
 import { SellerOrderDetail } from '@handy-platform/shared';
 
 interface OrderDetailModalProps {
@@ -125,6 +126,7 @@ export function OrderDetailModal({ isOpen, onClose, orderDetail, loading, error 
                       {/* 상품 정보 */}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 truncate">{item.productName || '상품명 없음'}</h4>
+                        <NailSizingSummary value={item.nailSizing} required={item.requiresNailSizing !== false} />
                         {/* 옵션 정보 */}
                         {(item.shape || item.size || (item as any).sku) && (
                           <div className="flex flex-wrap gap-2 mt-1">
@@ -163,36 +165,38 @@ export function OrderDetailModal({ isOpen, onClose, orderDetail, loading, error 
                     배송지 정보
                   </h3>
                   <div className="bg-surface rounded-lg p-4 space-y-2">
-                    {orderDetail.shippingAddress.name && (
+                    {orderDetail.shippingAddress.recipientName && (
                       <div className="flex items-start gap-3">
                         <span className="text-sm text-muted min-w-[60px]">수령인</span>
-                        <span className="text-sm font-medium text-gray-900">{orderDetail.shippingAddress.name}</span>
+                        <span className="text-sm font-medium text-gray-900">{orderDetail.shippingAddress.recipientName}</span>
                       </div>
                     )}
-                    {orderDetail.shippingAddress.phone && (
+                    {orderDetail.shippingAddress.recipientPhone && (
                       <div className="flex items-start gap-3">
                         <span className="text-sm text-muted min-w-[60px]">연락처</span>
-                        <span className="text-sm font-medium text-gray-900">{orderDetail.shippingAddress.phone}</span>
+                        <span className="text-sm font-medium text-gray-900">{orderDetail.shippingAddress.recipientPhone}</span>
                       </div>
                     )}
-                    {(orderDetail.shippingAddress.street || orderDetail.shippingAddress.city) && (
+                    {(orderDetail.shippingAddress.roadAddress || orderDetail.shippingAddress.detailAddress) && (
                       <div className="flex items-start gap-3">
                         <span className="text-sm text-muted min-w-[60px]">주소</span>
                         <span className="text-sm font-medium text-gray-900">
                           {[
-                            orderDetail.shippingAddress.zipCode && `(${orderDetail.shippingAddress.zipCode})`,
-                            orderDetail.shippingAddress.city,
-                            orderDetail.shippingAddress.state,
-                            orderDetail.shippingAddress.street
+                            orderDetail.shippingAddress.postcode && `(${orderDetail.shippingAddress.postcode})`,
+                            orderDetail.shippingAddress.roadAddress,
+                            orderDetail.shippingAddress.detailAddress
                           ].filter(Boolean).join(' ')}
                         </span>
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-muted mt-2">* 개인정보 보호를 위해 일부 정보가 마스킹 처리되어 있습니다.</p>
+                  <p className="text-xs text-muted mt-2">배송 정보는 이 주문의 제작·배송 업무에만 사용해주세요.</p>
                 </div>
               )}
 
+              {orderDetail.shippingAddress?.deliveryNote && <p className="text-sm">배송 요청: {orderDetail.shippingAddress.deliveryNote}</p>}
+              <p className="text-sm">결제 상태: {({ paid: '결제 완료', pending: '미결제', refunded: '환불 완료', failed: '결제 실패' } as Record<string, string>)[orderDetail.paymentStatus || ''] || '확인 필요'}</p>
+              {orderDetail.cancellation?.refundStatus && <p className="text-sm">환불 상태: {({pending:'접수',processing:'처리 중',completed:'완료',failed:'실패 · 재확인 필요'} as Record<string,string>)[orderDetail.cancellation.refundStatus] || orderDetail.cancellation.refundStatus}</p>}
               {/* 상태 변경 이력 */}
               {orderDetail.statusHistory && orderDetail.statusHistory.length > 0 && (
                 <div>
