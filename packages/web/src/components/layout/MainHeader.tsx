@@ -213,7 +213,7 @@ export function MainHeader({
           <div className="justify-self-start">
             <a href="/" onClick={(e)=>{e.preventDefault(); onGo("/");}} className="block">
               <img
-                src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+                src="/portfolio/handy-wordmark.png"
                 alt="Handy"
                 className="h-8 w-auto"
               />
@@ -517,7 +517,7 @@ export function MainHeader({
             className="block"
           >
             <img
-              src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+              src="/portfolio/handy-wordmark.png"
               alt="Handy"
               className="h-7 w-auto"
             />

@@ -14,7 +14,7 @@ interface LogoData {
 
 // 임시 로고 데이터 (나중에 DB에서 가져올 예정)
 const TEMP_LOGO_DATA: LogoData = {
-  imageUrl: 'https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png',
+  imageUrl: '/portfolio/handy-wordmark.png',
   text: 'HANDY',
   altText: 'Handy 로고'
 };

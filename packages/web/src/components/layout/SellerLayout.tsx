@@ -110,7 +110,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
                 className="block hover:opacity-80 transition-opacity"
               >
                 <img
-                  src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+                  src="/portfolio/handy-wordmark.png"
                   alt="Handy"
                   className="h-8 w-auto"
                 />
@@ -206,7 +206,7 @@ export function SellerLayout({ children, title, onGo }: SellerLayoutProps) {
               className="lg:hidden hover:opacity-80 transition-opacity"
             >
               <img
-                src="https://handy-images-stage.s3.ap-northeast-2.amazonaws.com/logo/logo-black.png"
+                src="/portfolio/handy-wordmark.png"
                 alt="Handy"
                 className="h-7 w-auto"
               />
