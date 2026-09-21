@@ -3,6 +3,8 @@ import { likesService } from '../services/apiService';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { useAuthModal } from './AuthModalContext';
+import { ANALYTICS_EVENTS } from '@handy-platform/shared';
+import { track } from '../services/analytics';
 
 export interface LikesContextType {
   /** 좋아요한 상품 UUID 목록 */
@@ -109,6 +111,7 @@ export const LikesProvider: React.FC<LikesProviderProps> = ({ children }) => {
         await likesService.unlike('product', productId);
       } else {
         await likesService.like('product', productId);
+        void track(ANALYTICS_EVENTS.PRODUCT_LIKED, { feature: 'wishlist', entry_source: 'product' });
       }
       // 성공 - 이미 낙관적 업데이트 완료
     } catch (error: any) {

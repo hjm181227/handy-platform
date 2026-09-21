@@ -4,6 +4,7 @@ import { webApiService, imageService } from '../../services/apiService';
 import { User } from '@handy-platform/shared';
 import { PageHeader } from '../layout/PageHeader';
 import { RefreshCw } from 'lucide-react';
+import { hasAnalyticsConsent, setAnalyticsConsent } from '../../services/analytics';
 
 // 정보 입력 항목 컴포넌트
 const InfoItem = ({
@@ -269,6 +270,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsConsent, setAnalyticsConsentState] = useState(hasAnalyticsConsent());
 
   // 닉네임 중복 체크 상태
   const [originalNickname, setOriginalNickname] = useState("");
@@ -760,6 +762,25 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <h3 className="font-medium">{t('support.privacyConsent')}</h3>
           </div>
           <div className="p-4">
+            <div className="flex items-center justify-between border-b pb-4 mb-4 gap-4">
+              <div>
+                <div className="text-sm font-medium">서비스 사용 통계</div>
+                <div className="text-xs text-gray-500 mt-1">상품 조회와 주문 단계 같은 익명화된 이용 기록을 서비스 개선에 사용합니다. 이름, 연락처, 주소, 자유 입력, 이미지, 결제수단은 수집하지 않습니다.</div>
+              </div>
+              <button
+                type="button"
+                aria-label="서비스 사용 통계 수집"
+                aria-pressed={analyticsConsent}
+                onClick={async () => {
+                  const enabled = !analyticsConsent;
+                  await setAnalyticsConsent(enabled);
+                  setAnalyticsConsentState(enabled);
+                }}
+                className={`w-12 h-6 shrink-0 rounded-full transition-colors ${analyticsConsent ? 'bg-brand' : 'bg-gray-300'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full transition-transform ${analyticsConsent ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
             <div className="flex items-center justify-between">
               <span className="text-sm">{t('support.marketingConsent')}</span>
               <button

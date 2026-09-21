@@ -10,7 +10,8 @@ import { IoMdStar } from 'react-icons/io';
 import { FaDollarSign, FaChartLine, FaClipboardList, FaBox, FaPlus, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import type { CreateProductRequest, UpdateProductRequest, NailCategories, NailLength, NailShape, NailOptions, ProductType, CustomOrderRequest, PrefillProductResponse } from '../../types';
-import { NAIL_SHAPE_NAME, NAIL_LENGTH_NAME } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME } from '@handy-platform/shared';
+import { track } from '../../services/analytics';
 
 // 생산 관리 컴포넌트 임포트
 import { ProductionSettings } from './seller/ProductionSettings';
@@ -1353,6 +1354,14 @@ export function SellerProductForm({ onGo, productUuid }: { onGo: (to: string) =>
 
       // 5. 성공 처리
       console.log(isEdit ? '상품 수정 성공:' : '상품 등록 성공:', response);
+      if (!isEdit) {
+        void track(ANALYTICS_EVENTS.SELLER_PRODUCT_CREATED, {
+          feature: 'seller_products',
+          entry_source: 'seller_product_form',
+          product_type: formData.productType,
+          fulfillment_mode: formData.fulfillmentMode,
+        });
+      }
       alert(isEdit ? t('productForm.editSuccess') : t('productForm.createSuccess'));
       onGo('/seller/products');
 

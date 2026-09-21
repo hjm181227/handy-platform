@@ -10,6 +10,7 @@ import '@fontsource/pretendard/700.css'
 import '@fontsource/pretendard/800.css'
 import App from './App'
 import './index.css'
+import { initializeAnalytics } from './services/analytics'
 
 // Sentry 에러 모니터링 초기화
 const sentryEnv = (import.meta as any).env?.VITE_ENVIRONMENT;
@@ -53,6 +54,8 @@ window.addEventListener('unhandledrejection', (event) => {
 // 카카오 SDK 초기화는 로그인 시점에 utils/kakaoSdk.ts의 initKakaoSdk()가 담당한다.
 // (여기서 사전 초기화하던 코드는 프로덕션 분기값이 'your_production_app_key'
 //  플레이스홀더였고, index.html이 이미 스테이징 키로 init해버려 무의미했다.)
+
+void initializeAnalytics();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

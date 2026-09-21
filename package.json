@@ -35,6 +35,7 @@
     "workspace:install": "npm install --workspaces",
     "workspace:clean": "npm run clean --workspaces --if-present",
     "bundle:build": "cd packages/mobile/android && ./gradlew bundleRelease",
+    "test:analytics": "node --test tests/analytics-safety.test.cjs",
     "ml:train": "cd packages/ml && python training/scripts/train.py",
     "ml:evaluate": "cd packages/ml && python training/scripts/evaluate.py",
     "ml:export": "cd packages/ml && python training/scripts/export.py",

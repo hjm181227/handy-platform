@@ -5,6 +5,7 @@ import { NativeScreenProvider } from './src/contexts/NativeScreenProvider';
 import HomeScreen from './src/screens/HomeScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { notificationService } from './src/services/notificationService';
+import { analyticsService } from './src/services/analyticsService';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -56,6 +57,9 @@ const App: React.FC = () => {
   const initializeApp = async () => {
     try {
       // 카메라·사진 권한은 실제 사용 시점(측정 화면, 사진 첨부)에 요청한다.
+
+      // 명시 동의 전에는 수집을 끈 상태로 Firebase Analytics를 초기화한다.
+      await analyticsService.initialize();
 
       // 푸시 알림 채널/핸들러 초기화 (콜드 스타트 알림 라우팅 포함)
       await notificationService.initialize();

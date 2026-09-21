@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from '@handy-platform/shared';
 import { webApiService } from '../services/apiService';
+import { resetAnalytics, setAnalyticsUser } from '../services/analytics';
 
 export interface AuthContextType {
   /** 현재 로그인한 사용자 */
@@ -109,6 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // 서버 로그아웃 + localStorage 정리
       await webApiService.logoutAndClearToken();
+      await resetAnalytics();
       setCurrentUser(null);
 
       // 다른 컴포넌트에 알림
@@ -121,6 +123,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setCurrentUser(null);
     }
   }, []);
+
+  useEffect(() => {
+    const userPlan = currentUser?.designToolAccess?.plan === 'pro' ? 'pro' : 'free';
+    void setAnalyticsUser(currentUser?.userUuid || null, userPlan);
+  }, [currentUser?.userUuid, currentUser?.designToolAccess?.plan]);
 
   /**
    * 역할 체크

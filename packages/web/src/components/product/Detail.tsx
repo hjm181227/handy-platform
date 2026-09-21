@@ -1,8 +1,8 @@
 import { NailSizingEditor, emptyNailSizing } from './NailSizingEditor';
 import { parseNailSizing } from '../../utils/nailSizing';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService, buildProductUrlSlug } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, Product, User, NAIL_SHAPE_NAME, NAIL_LENGTH_NAME, NAIL_SHAPES, NAIL_LENGTHS, DetailedReview, navigateService, buildProductUrlSlug } from '@handy-platform/shared';
 import { productService, cartService, reviewService } from '../../services/apiService';
 import { money } from '../../utils';
 import { CategoryDisplay } from './CategoryDisplay';
@@ -12,6 +12,7 @@ import { FaHeart, FaRegHeart, FaRegComments } from 'react-icons/fa';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { useLikes } from '../../hooks/useLikes';
 import ProductQA from './ProductQA';
+import { track } from '../../services/analytics';
 
 // stocked(기성 재고) 상품일 때 getProduct 응답 data에 추가로 내려오는 variant 타입
 // (shared Product 타입에는 아직 없어 로컬로 선언 — shared는 병렬 작업 중이라 수정 금지)
@@ -67,6 +68,7 @@ export function Detail({
   const [qty, setQty] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<string>("info");
   const [heroIdx, setHeroIdx] = useState(0);
+  const viewedProductRef = useRef<string | null>(null);
 
   const [nailSizing, setNailSizing] = useState(emptyNailSizing);
   const [sizingConfirmed, setSizingConfirmed] = useState(false);
@@ -99,6 +101,17 @@ export function Detail({
         setError(null);
         const response = await productService.getProduct(id);
         setProduct(response.data);
+        if (response.data?.productUuid && viewedProductRef.current !== response.data.productUuid) {
+          viewedProductRef.current = response.data.productUuid;
+          const entrySource = document.referrer
+            ? new URL(document.referrer, window.location.origin).origin === window.location.origin ? 'internal' : 'external'
+            : 'direct';
+          void track(ANALYTICS_EVENTS.PRODUCT_VIEWED, {
+            feature: 'catalog', entry_source: entrySource,
+            product_type: response.data.productType || 'original',
+            fulfillment_mode: (response.data as any).fulfillmentMode || 'made_to_order',
+          });
+        }
         setNailSizing(emptyNailSizing());
         setSizingConfirmed(false);
       } catch (err: any) {
@@ -246,6 +259,11 @@ export function Detail({
       });
 
       await cartService.addToCart(product.productUuid, qty, options);
+      void track(ANALYTICS_EVENTS.CART_ITEM_ADDED, {
+        feature: 'cart', entry_source: 'product', quantity: qty,
+        product_type: product.productType || 'original',
+        fulfillment_mode: (product as any).fulfillmentMode || 'made_to_order',
+      });
 
       setCartMessage('장바구니에 추가되었습니다!');
       // onAdd(product.id); // 중복 호출 방지 - API 호출은 이미 위에서 했으므로 콜백 제거

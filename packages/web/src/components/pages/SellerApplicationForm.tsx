@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   API_BASE_URL,
+  ANALYTICS_EVENTS,
   ImageUploadManager,
   SellerApplicationData,
   SellerApplicationStatus,
 } from '@handy-platform/shared';
 import { sellerApplicationService } from '../../services/apiService';
+import { track } from '../../services/analytics';
 
 interface Props {
   onGo: (to: string) => void;
@@ -59,6 +61,7 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const signupTrackedRef = useRef(false);
 
   const uploadManager = useMemo(() => new ImageUploadManager(
     (import.meta as any).env?.VITE_API_BASE_URL || API_BASE_URL,
@@ -73,6 +76,14 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
       try {
         const statusResponse = await sellerApplicationService.getMyApplicationStatus();
         setStatus(statusResponse.data);
+        if (!statusResponse.data?.exists && !signupTrackedRef.current) {
+          signupTrackedRef.current = true;
+          void track(ANALYTICS_EVENTS.SELLER_SIGNUP_STARTED, {
+            feature: 'seller_onboarding',
+            entry_source: 'seller_application',
+            seller_status: 'new',
+          });
+        }
         if (statusResponse.data?.exists) {
           const detailResponse = await sellerApplicationService.getMyApplication();
           if (detailResponse.data?.application) {
@@ -168,6 +179,11 @@ const SellerApplicationForm: React.FC<Props> = ({ onGo }) => {
       await sellerApplicationService.saveDraft(form);
       const response = await sellerApplicationService.submitSavedApplication();
       setStatus(response.data);
+      void track(ANALYTICS_EVENTS.SELLER_PROFILE_COMPLETED, {
+        feature: 'seller_onboarding',
+        entry_source: 'seller_application',
+        seller_status: 'pending',
+      });
       setMessage('입점 신청이 접수되었습니다. 검토 결과를 이 화면에서 확인할 수 있습니다.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {

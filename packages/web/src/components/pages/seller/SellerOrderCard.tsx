@@ -1,7 +1,8 @@
 import { NailSizingSummary } from '../../product/NailSizingSummary';
 import { useState } from 'react';
-import { SellerOrder, OrderStatus, CustomOrderDetail, SellerOrderDetail } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, SellerOrder, OrderStatus, CustomOrderDetail, SellerOrderDetail } from '@handy-platform/shared';
 import { webApiService } from '../../../services/apiService';
+import { track } from '../../../services/analytics';
 import { CustomOrderModal } from './CustomOrderModal';
 import { OrderDetailModal } from './OrderDetailModal';
 
@@ -110,6 +111,11 @@ export function SellerOrderCard({ order, isSelected, onToggleSelection, onUpdate
       const response = await webApiService.seller.getSellerOrderDetail(order.id);
       if (response.data) {
         setOrderDetail(response.data);
+        void track(ANALYTICS_EVENTS.SELLER_ORDER_OPENED, {
+          feature: 'seller_orders',
+          entry_source: 'seller_order_list',
+          order_status: order.status,
+        });
       } else {
         setOrderDetailError('주문 정보를 찾을 수 없습니다.');
       }

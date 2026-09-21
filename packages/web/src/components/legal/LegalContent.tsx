@@ -227,6 +227,12 @@ const PrivacyPolicyKo = () => (
       <p>실제 결제 수단(카드번호 등)은 Google/Apple이 직접 처리하며, 회사는 이를 저장하지 않습니다.</p>
       <p>구독 및 크레딧 거래 관련 기록은 전자상거래법에 따라 5년간 보관됩니다.</p>
     </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">제9조(서비스 이용 통계)</h4>
+      <p>이용자가 별도로 동의한 경우 회사는 서비스 개선과 오류 분석을 위해 Firebase Analytics(Google)를 이용하여 상품 조회·찜·장바구니·결제 단계 및 판매자 기능 이용 여부, 앱 환경, 내부 익명 식별자를 처리합니다.</p>
+      <p>통계 이벤트에는 이름, 이메일, 전화번호, 배송지, 자유 입력 내용, 손톱 사이즈, 업로드 이미지, 카드번호나 결제 인증정보를 포함하지 않습니다.</p>
+      <p>동의는 선택 사항이며 마이페이지 &gt; 설정의 ‘서비스 사용 통계’에서 언제든지 철회할 수 있습니다. 철회 후에는 새로운 통계 이벤트가 전송되지 않습니다.</p>
+    </section>
   </div>
 );
 
@@ -291,6 +297,12 @@ const PrivacyPolicyEn = () => (
       <p>Actual payment credentials (card numbers, etc.) are handled directly by Google/Apple and are not stored by the Company.</p>
       <p>Subscription and credit transaction records are retained for 5 years in accordance with the Act on Consumer Protection in Electronic Commerce.</p>
     </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">Article 9 (Service Usage Analytics)</h4>
+      <p>Only after optional consent, the Company uses Firebase Analytics (Google) to process product views, likes, cart and checkout steps, seller feature usage, app environment data, and an internal opaque identifier for service improvement and error analysis.</p>
+      <p>Analytics events do not include names, email addresses, phone numbers, shipping addresses, free-form text, nail measurements, uploaded images, card numbers, or payment credentials.</p>
+      <p>Consent may be withdrawn at any time under My Page &gt; Settings &gt; Service Usage Analytics. No new analytics events are sent after withdrawal.</p>
+    </section>
   </div>
 );
 
@@ -354,6 +366,12 @@ const PrivacyPolicyJa = () => (
       <p>当該情報はサブスクリプションサービスの提供、決済検証、返金処理、自動更新管理、クレジットの付与・差し引き・精算の目的でのみ使用されます。</p>
       <p>実際の決済手段（カード番号等）はGoogle/Appleが直接処理し、会社は保存しません。</p>
       <p>サブスクリプションおよびクレジット取引に関する記録は電子商取引法に基づき5年間保管されます。</p>
+    </section>
+    <section>
+      <h4 className="font-semibold text-gray-800 mb-2">第9条（サービス利用統計）</h4>
+      <p>利用者が任意で同意した場合に限り、会社はサービス改善およびエラー分析のため、Firebase Analytics（Google）を利用して商品閲覧・お気に入り・カート・決済段階、販売者機能の利用状況、アプリ環境情報、内部の匿名識別子を処理します。</p>
+      <p>統計イベントには、氏名、メールアドレス、電話番号、配送先、自由入力内容、爪のサイズ、アップロード画像、カード番号または決済認証情報を含めません。</p>
+      <p>同意は任意であり、マイページ &gt; 設定の「サービス利用統計」からいつでも撤回できます。撤回後は新しい統計イベントを送信しません。</p>
     </section>
   </div>
 );

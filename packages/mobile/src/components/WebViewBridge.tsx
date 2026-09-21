@@ -15,6 +15,7 @@ import {
 } from '@handy-platform/shared/src/config/api';
 import { getAppEnvironment } from '../config/environment';
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import { analyticsService } from '../services/analyticsService';
 
 interface WebViewBridgeProps {
   url: string;
@@ -96,6 +97,18 @@ const WebViewBridge = React.forwardRef<WebView, WebViewBridgeProps>((
           break;
         case 'LANGUAGE_CHANGED':
           // 웹 내부 i18n으로 충분하므로 무시. 네이티브 언어 동기화는 추후 구현.
+          break;
+        case 'ANALYTICS_EVENT':
+          await analyticsService.track(message.data?.event, message.data?.properties);
+          break;
+        case 'ANALYTICS_CONSENT':
+          await analyticsService.setConsent(message.data?.enabled === true);
+          break;
+        case 'ANALYTICS_USER':
+          await analyticsService.setUser(message.data?.opaqueUserId);
+          break;
+        case 'ANALYTICS_RESET':
+          await analyticsService.reset();
           break;
         case 'SAVE_IMAGE':
           await handleSaveImage(message.data);

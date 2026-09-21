@@ -945,6 +945,10 @@ export type WebViewMessageType =
   | 'NAVIGATE_BACK'             // 뒤로가기
   | 'CHAT_ROOM_STATE'           // 웹이 열고 있는 채팅방 ID (푸시 알림 억제용)
   | 'LANGUAGE_CHANGED'          // 웹 언어 변경 알림 (네이티브 동기화는 추후, 현재는 무시)
+  | 'ANALYTICS_EVENT'           // 개인정보를 제거한 제품 행동 이벤트
+  | 'ANALYTICS_CONSENT'         // 사용 통계 동의 변경
+  | 'ANALYTICS_USER'            // 불투명한 내부 사용자 ID 연결
+  | 'ANALYTICS_RESET'           // 로그아웃 시 분석 사용자 연결 해제
   | 'open-chat';                // 채팅 열기 (CHAT과 동일 처리)
 
 export interface WebViewMessage {

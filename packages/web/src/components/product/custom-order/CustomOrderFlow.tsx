@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { useCustomOrderFlow } from '../../../hooks/useCustomOrderFlow';
-import { NailShape, NailLength } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, NailShape, NailLength } from '@handy-platform/shared';
 import { getChatRoomPath } from '../../../lib/chat/orderChatService';
 import {
   ShapeStep,
@@ -10,6 +11,7 @@ import {
   ConfirmStep,
   CompleteStep,
 } from './steps';
+import { track } from '../../../services/analytics';
 
 interface CustomOrderFlowProps {
   productId: string;
@@ -18,6 +20,7 @@ interface CustomOrderFlowProps {
 }
 
 export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProps) {
+  const startedRef = useRef(false);
   const {
     currentStep,
     stepIndex,
@@ -41,6 +44,12 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
     submitOrder,
     refreshNailSize,
   } = useCustomOrderFlow(productId);
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    void track(ANALYTICS_EVENTS.CUSTOM_REQUEST_STARTED, { feature: 'custom_order', entry_source: 'product' });
+  }, []);
 
   // 뒤로가기 핸들러
   const handleBack = () => {
@@ -75,7 +84,9 @@ export function CustomOrderFlow({ productId, onBack, onGo }: CustomOrderFlowProp
   // 주문 제출
   const handleSubmit = async () => {
     const result = await submitOrder();
-    if (!result.success && result.error) {
+    if (result.success) {
+      void track(ANALYTICS_EVENTS.CUSTOM_REQUEST_SUBMITTED, { feature: 'custom_order', entry_source: 'product' });
+    } else if (result.error) {
       // 에러는 훅에서 처리됨
     }
   };
