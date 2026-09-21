@@ -2,7 +2,7 @@
 
 ## 적용 범위
 
-브랜치 `codex/product-analytics`에 웹과 React Native 앱의 Firebase Analytics 기반 이벤트 수집을 구현했다. 프로덕션 배포와 Firebase 콘솔 생성·변경은 하지 않았다.
+브랜치 `codex/product-analytics`에 웹과 React Native 앱의 Firebase Analytics 기반 이벤트 수집을 구현했다. 기존 Firebase 프로젝트의 플랫폼 앱과 연결했으며 프로덕션 배포는 하지 않았다.
 
 - 웹 브라우저: Firebase Web SDK
 - 모바일 앱: 웹뷰가 만든 동일 이벤트를 네이티브 브리지로 전달하고 React Native Firebase Analytics에서 기록
@@ -47,21 +47,28 @@
 
 개인정보처리방침 한국어·영어·일본어 본문에 선택적 Firebase Analytics 처리 항목과 철회 경로를 추가했다. Sentry Replay의 `maskAllText: true`, `blockAllMedia: true` 설정은 변경하지 않았다.
 
-## Firebase 콘솔과 배포 환경에서 해야 할 일
+## Firebase 콘솔 연결 현황과 남은 배포 작업
 
-1. Firebase 프로젝트에서 Google Analytics를 활성화한다.
-2. 웹 앱을 등록하고 아래 값을 프로덕션 배포 환경변수에 넣는다. 저장소나 브라우저 외부 문서에 실제 값을 적지 않는다.
+완료:
+
+- 기존 Firebase 프로젝트 `handy-1fb15`의 Android `com.handyapp`과 iOS
+  `com.hermosear.handy` 앱을 재사용하고 `Handy Web` 앱을 등록했다.
+- 공식 Android/iOS 설정 파일을 Git 추적 제외 경로에 저장했다.
+- 공식 Android 설정으로 debug APK를 빌드하고 생성된 `google_app_id`가
+  등록 앱과 일치하는 것을 확인했다.
+
+남은 작업:
+
+1. 아래 웹 앱 값을 프로덕션 배포 환경변수에 넣는다. 저장소나 브라우저 외부 문서에 실제 값을 적지 않는다.
    - `VITE_FIREBASE_API_KEY`
    - `VITE_FIREBASE_AUTH_DOMAIN`
    - `VITE_FIREBASE_PROJECT_ID`
    - `VITE_FIREBASE_APP_ID`
    - `VITE_FIREBASE_MEASUREMENT_ID`
    - `VITE_APP_VERSION`, `VITE_BUILD_NUMBER`
-3. Android 앱 `com.handyapp`을 등록하고 `google-services.json`을 `packages/mobile/android/app/`에 둔다. 이 파일은 Git에서 제외된다.
-4. iOS 앱 `com.hermosear.handy`를 등록하고 `GoogleService-Info.plist`를 `packages/mobile/ios/`에 둔 뒤 Xcode의 앱 타깃에 포함한다. 이 파일도 Git에서 제외된다.
-5. macOS에서 `cd packages/mobile/ios && pod install`을 실행해 `RNFBAnalytics`를 Pod lock과 워크스페이스에 반영하고 iOS 빌드를 확인한다.
-6. Firebase DebugView에서 동의 전 이벤트가 없고, 동의 후 표의 이벤트와 허용 속성만 표시되며, 철회 후 새 이벤트가 멈추는지 확인한다. Android 디버그 기기에서는 `adb shell setprop debug.firebase.analytics.app com.handyapp`을 사용할 수 있다.
-7. GA4 데이터 보존 기간, 내부 접근 권한, 데이터 공유 설정과 Google Signals/광고 개인화 기능을 회사 정책에 맞게 검토한다. 이 구현은 광고 동의를 보내지 않는다.
+2. macOS에서 `cd packages/mobile/ios && pod install`을 실행해 `RNFBAnalytics`를 Pod lock과 워크스페이스에 반영하고 iOS 빌드를 확인한다.
+3. Firebase DebugView에서 동의 전 이벤트가 없고, 동의 후 표의 이벤트와 허용 속성만 표시되며, 철회 후 새 이벤트가 멈추는지 확인한다. Android 디버그 기기에서는 `adb shell setprop debug.firebase.analytics.app com.handyapp`을 사용할 수 있다.
+4. GA4 데이터 보존 기간, 내부 접근 권한, 데이터 공유 설정과 Google Signals/광고 개인화 기능을 회사 정책에 맞게 검토한다. 이 구현은 광고 동의를 보내지 않는다.
 
 React Native Firebase의 opt-in 설정 방식은 [React Native Firebase Analytics 문서](https://rnfirebase.io/analytics/usage), 네이티브 수집 중지 방식은 [Firebase Analytics 수집 설정 문서](https://firebase.google.com/docs/analytics/android/configure-data-collection)를 기준으로 했다.
 
@@ -82,6 +89,8 @@ React Native Firebase의 opt-in 설정 방식은 [React Native Firebase Analytic
 - React Native 자동 연결 검사: Android와 iOS 모두 `@react-native-firebase/analytics` 감지
 - Firebase 모듈 버전: analytics/app/messaging 모두 `21.14.0`으로 일치
 - 모바일 전체 TypeScript 검사: 기존 파일의 타입 오류들 때문에 실패했으나 새 `analyticsService.ts`에는 오류가 보고되지 않음
-- 네이티브 실행 빌드: Firebase 설정 파일이 아직 없고 현재 환경이 Windows이므로 수행하지 않음
+- Android 네이티브 debug APK: 공식 Firebase 설정으로 517개 Gradle 작업 통과
+- Android 생성 리소스: 등록한 Firebase 앱과 `google_app_id` 일치 확인
+- iOS 네이티브 빌드: macOS에서 Pod 설치와 Xcode 빌드 검증 필요
 
 웹 번들에는 기존의 대형 청크 경고가 남아 있다. 의존성 감사 결과도 기존 트리에 15건(낮음 1, 보통 8, 높음 6)이 남아 있으며 강제 자동 수정은 적용하지 않았다.
