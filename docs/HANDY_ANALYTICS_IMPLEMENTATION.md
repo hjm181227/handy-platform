@@ -67,7 +67,7 @@
    - `VITE_FIREBASE_MEASUREMENT_ID`
    - `VITE_APP_VERSION`, `VITE_BUILD_NUMBER`
 2. macOS에서 `cd packages/mobile/ios && pod install`을 실행해 `RNFBAnalytics`를 Pod lock과 워크스페이스에 반영하고 iOS 빌드를 확인한다.
-3. Firebase DebugView에서 동의 전 이벤트가 없고, 동의 후 표의 이벤트와 허용 속성만 표시되며, 철회 후 새 이벤트가 멈추는지 확인한다. Android 디버그 기기에서는 `adb shell setprop debug.firebase.analytics.app com.handyapp`을 사용할 수 있다.
+3. iOS와 웹 DebugView에서 동의 전 이벤트가 없고, 동의 후 표의 이벤트와 허용 속성만 표시되며, 철회 후 새 이벤트가 멈추는지 확인한다. Android 검증은 아래와 같이 완료했다.
 4. GA4 데이터 보존 기간, 내부 접근 권한, 데이터 공유 설정과 Google Signals/광고 개인화 기능을 회사 정책에 맞게 검토한다. 이 구현은 광고 동의를 보내지 않는다.
 
 React Native Firebase의 opt-in 설정 방식은 [React Native Firebase Analytics 문서](https://rnfirebase.io/analytics/usage), 네이티브 수집 중지 방식은 [Firebase Analytics 수집 설정 문서](https://firebase.google.com/docs/analytics/android/configure-data-collection)를 기준으로 했다.
@@ -91,6 +91,10 @@ React Native Firebase의 opt-in 설정 방식은 [React Native Firebase Analytic
 - 모바일 전체 TypeScript 검사: 기존 파일의 타입 오류들 때문에 실패했으나 새 `analyticsService.ts`에는 오류가 보고되지 않음
 - Android 네이티브 debug APK: 공식 Firebase 설정으로 517개 Gradle 작업 통과
 - Android 생성 리소스: 등록한 Firebase 앱과 `google_app_id` 일치 확인
+- Android 런타임: 동의 전 `setAnalyticsCollectionEnabled(false)` 확인
+- Android 런타임: 동의 후 `product_viewed` 이벤트 기록·업로드 확인
+- Android 런타임: 동의 철회 후 브리지에 들어온 `product_liked` 이벤트가
+  Firebase에 기록되지 않는 것 확인
 - iOS 네이티브 빌드: macOS에서 Pod 설치와 Xcode 빌드 검증 필요
 
 웹 번들에는 기존의 대형 청크 경고가 남아 있다. 의존성 감사 결과도 기존 트리에 15건(낮음 1, 보통 8, 높음 6)이 남아 있으며 강제 자동 수정은 적용하지 않았다.
