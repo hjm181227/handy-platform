@@ -77,7 +77,7 @@ if (configuredWebKeys.length === webKeys.length) {
 
 if (args.has('--require-native-config')) {
   const androidConfig = path.join(root, 'packages/mobile/android/app/google-services.json');
-  const iosConfig = path.join(root, 'packages/mobile/ios/GoogleService-Info.plist');
+  const iosConfig = path.join(root, 'packages/mobile/ios/HandyTemp/GoogleService-Info.plist');
   if (!fs.existsSync(androidConfig)) fail('Android google-services.json is missing');
   if (!fs.existsSync(iosConfig)) fail('iOS GoogleService-Info.plist is missing');
 

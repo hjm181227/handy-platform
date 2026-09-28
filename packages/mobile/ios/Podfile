@@ -45,6 +45,14 @@ target 'HandyTemp' do
     )
 
     installer.pods_project.targets.each do |target|
+      # Xcode 27 rejects older resource bundle targets below iOS 15.
+      target.build_configurations.each do |build_config|
+        minimum = build_config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if minimum && Gem::Version.new(minimum) < Gem::Version.new(min_ios_version_supported)
+          build_config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
+        end
+      end
+
       # Fix fmt consteval issue with Xcode 26+
       if target.name == 'fmt'
         target.build_configurations.each do |config|
