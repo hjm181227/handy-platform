@@ -765,7 +765,7 @@ export function SettingsPage({ onGo }: { onGo: (to: string) => void }) {
             <div className="flex items-center justify-between border-b pb-4 mb-4 gap-4">
               <div>
                 <div className="text-sm font-medium">서비스 사용 통계</div>
-                <div className="text-xs text-gray-500 mt-1">상품 조회와 주문 단계 같은 익명화된 이용 기록을 서비스 개선에 사용합니다. 이름, 연락처, 주소, 자유 입력, 이미지, 결제수단은 수집하지 않습니다.</div>
+                <div className="text-xs text-gray-500 mt-1">선택 사항이며 기본값은 꺼짐입니다. 동의하면 상품 조회와 주문 단계 같은 이용 기록을 서비스 개선에 사용합니다. 이름, 연락처, 주소, 자유 입력, 이미지, 결제수단은 분석 이벤트에 포함하지 않습니다.</div>
               </div>
               <button
                 type="button"

@@ -1,7 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 필수 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 분석은 광고용 식별자를 사용하지 않는다. 의존 SDK가 선언해도 최종 매니페스트에서 제거한다. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
 
     <!-- 카메라 및 저장소 권한 (상품 사진 촬영, AR 측정) -->
     <uses-permission android:name="android.permission.CAMERA" />

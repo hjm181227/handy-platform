@@ -47,7 +47,7 @@ React Strict Mode나 네이티브 브리지 재전달로 화면 기반 이벤트
 - 상품 UUID, 주문 UUID, 판매자 UUID 등 원본 업무 식별자
 - 원본 API 응답 및 주문 객체
 
-로그인 사용자는 동의 후에만 내부 UUID를 Firebase 사용자 ID로 설정한다. 광고 저장소, 광고 사용자 데이터, 광고 개인화 동의는 항상 거부한다. 사용자는 `마이페이지 > 설정 > 서비스 사용 통계`에서 동의하거나 철회할 수 있다. 철회 즉시 새 이벤트 전송을 중단하고 Firebase 사용자 ID와 인메모리 중복 판정 상태를 제거한다.
+로그인 사용자는 동의 후에만 내부 UUID를 Firebase 사용자 ID로 설정한다. 웹과 모바일 모두 분석 기본값은 꺼짐이며, 광고 저장소, 광고 사용자 데이터, 광고 개인화 동의는 항상 거부한다. Android 최종 매니페스트에서는 광고 ID 권한도 제거한다. 사용자는 `마이페이지 > 설정 > 서비스 사용 통계`에서 동의하거나 철회할 수 있다. 철회 즉시 새 이벤트 전송을 중단하고 Firebase 사용자 ID와 인메모리 중복 판정 상태를 제거한다.
 
 개인정보처리방침 한국어·영어·일본어 본문에 선택적 Firebase Analytics 처리 항목과 철회 경로를 추가했다. Sentry Replay의 `maskAllText: true`, `blockAllMedia: true` 설정은 변경하지 않았다.
 
@@ -63,13 +63,14 @@ React Strict Mode나 네이티브 브리지 재전달로 화면 기반 이벤트
 
 남은 작업:
 
-1. 아래 웹 앱 값을 프로덕션 배포 환경변수에 넣는다. 저장소나 브라우저 외부 문서에 실제 값을 적지 않는다.
+1. 아래 웹 앱 값을 프로덕션 배포 환경변수에 넣는다. 저장소나 브라우저 외부 문서에 실제 값을 적지 않는다. Firebase 값 중 일부만 있거나 프로덕션 debug가 켜져 있으면 Vite 빌드가 실패하며, 분석을 켤 때 앱 버전과 빌드 번호도 필수다.
    - `VITE_FIREBASE_API_KEY`
    - `VITE_FIREBASE_AUTH_DOMAIN`
    - `VITE_FIREBASE_PROJECT_ID`
    - `VITE_FIREBASE_APP_ID`
    - `VITE_FIREBASE_MEASUREMENT_ID`
    - `VITE_APP_VERSION`, `VITE_BUILD_NUMBER`
+   - 배포 전 `npm run validate:analytics:release -- --require-web-analytics --require-native-config` 실행
 2. macOS에서 `cd packages/mobile/ios && pod install`을 실행해 `RNFBAnalytics`를 Pod lock과 워크스페이스에 반영하고 iOS 빌드를 확인한다.
 3. iOS와 웹 DebugView에서 동의 전 이벤트가 없고, 동의 후 표의 이벤트와 허용 속성만 표시되며, 철회 후 새 이벤트가 멈추는지 확인한다. Android 검증은 아래와 같이 완료했다.
 4. GA4 데이터 보존 기간, 내부 접근 권한, 데이터 공유 설정과 Google Signals/광고 개인화 기능을 회사 정책에 맞게 검토한다. 이 구현은 광고 동의를 보내지 않는다.
@@ -80,20 +81,24 @@ React Native Firebase의 opt-in 설정 방식은 [React Native Firebase Analytic
 
 출시 전 현재 앱의 전체 SDK와 실제 콘솔 설정을 기준으로 다시 확인한다. 이번 분석 기능으로 추가 검토할 가능성이 높은 항목은 다음과 같다.
 
-- Apple App Privacy: `Identifiers > User ID`, `Identifiers > Device ID`, `Usage Data > Product Interaction`, 필요하면 `Other Usage Data`; 목적은 Analytics, 타사 광고 추적은 사용하지 않음. [Apple 데이터 유형 정의](https://developer.apple.com/go/?id=info-1)와 [Firebase Apple 플랫폼 공개 안내](https://firebase.google.com/docs/ios/app-store-data-collection)를 함께 확인한다.
-- Google Play Data safety: `App activity > App interactions`, `Other actions`, `Device or other IDs`; 목적은 Analytics, 수집은 선택적이며 전송 중 암호화됨. Firebase를 서비스 제공자로 처리할 수 있는지는 실제 계약·설정에 맞춰 Play Console 문구를 결정한다. [Google Play Data safety 안내](https://support.google.com/googleplay/android-developer/answer/10787469)와 [Firebase Analytics 공개 안내](https://support.google.com/analytics/answer/11582702)를 확인한다.
+- Apple App Privacy에는 분석뿐 아니라 계정·주문·업로드·푸시·오류 진단 데이터 흐름도 함께 제출한다. 타사 광고 추적은 사용하지 않는다. [Apple 데이터 유형 정의](https://developer.apple.com/go/?id=info-1)와 [Firebase Apple 플랫폼 공개 안내](https://firebase.google.com/docs/ios/app-store-data-collection)를 함께 확인한다.
+- Google Play Data safety의 `Device or other IDs`는 분석은 선택 사항이지만 FCM 설치/푸시 식별자는 앱 기능에 필요하므로 전체 항목을 선택 사항으로만 표시하지 않는다. Firebase를 서비스 제공자로 처리할 수 있는지는 실제 계약·설정에 맞춰 결정한다. [Google Play Data safety 안내](https://support.google.com/googleplay/android-developer/answer/10787469)와 [Firebase Analytics 공개 안내](https://support.google.com/analytics/answer/11582702)를 확인한다.
 - 개인정보처리방침과 양 스토어 공개 내용은 서로 일치해야 한다.
+
+전체 입력 초안은 [HANDY_STORE_PRIVACY_SUBMISSION_DRAFT.md](./HANDY_STORE_PRIVACY_SUBMISSION_DRAFT.md), 플랫폼별 실기기 검증 절차는 [HANDY_ANALYTICS_DEBUGVIEW_RUNBOOK.md](./HANDY_ANALYTICS_DEBUGVIEW_RUNBOOK.md)를 따른다.
 
 ## 검증 결과
 
 - 공용 분석 스키마 빌드: 통과
 - 웹 TypeScript 검사: 통과
 - 웹 프로덕션 번들: 통과. Firebase 환경변수가 없는 상태에서도 빌드되며 분석 SDK는 수집을 시작하지 않음
-- 개인정보 경계·이벤트 등록·중복 억제·핵심 퍼널 연결·동의 게이트 테스트: 6개 통과
+- 개인정보 경계·이벤트 등록·중복 억제·핵심 퍼널 연결·동의 게이트·출시 기본값 테스트: 7개 통과
+- 출시 설정 검사: 네이티브 Firebase 앱 식별자와 기본 거부 설정 통과, 웹 분석 변수 미주입 상태를 비활성으로 판정
 - React Native 자동 연결 검사: Android와 iOS 모두 `@react-native-firebase/analytics` 감지
 - Firebase 모듈 버전: analytics/app/messaging 모두 `21.14.0`으로 일치
 - 모바일 전체 TypeScript 검사: 기존 파일의 타입 오류들 때문에 실패했으나 새 `analyticsService.ts`에는 오류가 보고되지 않음
 - Android 릴리스 JavaScript/Hermes 번들: 통과
+- Android Release 병합 매니페스트: 광고 ID 및 AdServices 광고 ID/기여 분석 권한 없음 확인
 - Android 네이티브 debug APK: 공식 Firebase 설정으로 517개 Gradle 작업 통과
 - Android 생성 리소스: 등록한 Firebase 앱과 `google_app_id` 일치 확인
 - Android 런타임: 동의 전 `setAnalyticsCollectionEnabled(false)` 확인

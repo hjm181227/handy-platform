@@ -3,12 +3,44 @@ import react from '@vitejs/plugin-react'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import path from 'path'
 
+const ANALYTICS_ENV_KEYS = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_APP_ID',
+  'VITE_FIREBASE_MEASUREMENT_ID',
+] as const
+
+function validateAnalyticsEnvironment(mode: string, env: Record<string, string>) {
+  if (mode !== 'production') return
+
+  const configured = ANALYTICS_ENV_KEYS.filter((key) => env[key]?.trim())
+  if (configured.length > 0 && configured.length < ANALYTICS_ENV_KEYS.length) {
+    const missing = ANALYTICS_ENV_KEYS.filter((key) => !env[key]?.trim())
+    throw new Error(`Incomplete Firebase Analytics configuration. Missing: ${missing.join(', ')}`)
+  }
+
+  if (env.VITE_ANALYTICS_DEBUG === 'true') {
+    throw new Error('VITE_ANALYTICS_DEBUG must be false in production builds.')
+  }
+
+  if (configured.length === ANALYTICS_ENV_KEYS.length) {
+    if (!env.VITE_APP_VERSION?.trim() || !env.VITE_BUILD_NUMBER?.trim()) {
+      throw new Error('VITE_APP_VERSION and VITE_BUILD_NUMBER are required when production analytics is enabled.')
+    }
+    if (!/^G-[A-Z0-9]+$/.test(env.VITE_FIREBASE_MEASUREMENT_ID)) {
+      throw new Error('VITE_FIREBASE_MEASUREMENT_ID must use the GA4 G-XXXXXXXX format.')
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // 환경변수 로드 (이 config 파일이 있는 디렉토리 = packages/web 기준)
   // process.cwd()를 쓰면 실행 위치(루트/packages/web)에 따라 경로가 달라져
   // CI(working-directory: packages/web)에서는 .env를 못 찾는다.
   const env = loadEnv(mode, __dirname, '')
+  validateAnalyticsEnvironment(mode, env)
 
   // Sentry 소스맵 업로드가 실제로 가능한 경우에만 소스맵을 생성한다.
   // 토큰이 없는데 소스맵만 만들면 업로드도, 업로드 후 삭제도 일어나지 않아

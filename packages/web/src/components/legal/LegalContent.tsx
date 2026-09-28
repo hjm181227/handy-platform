@@ -229,9 +229,11 @@ const PrivacyPolicyKo = () => (
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">제9조(서비스 이용 통계)</h4>
-      <p>이용자가 별도로 동의한 경우 회사는 서비스 개선과 오류 분석을 위해 Firebase Analytics(Google)를 이용하여 상품 조회·찜·장바구니·결제 단계 및 판매자 기능 이용 여부, 앱 환경, 내부 익명 식별자를 처리합니다.</p>
-      <p>통계 이벤트에는 이름, 이메일, 전화번호, 배송지, 자유 입력 내용, 손톱 사이즈, 업로드 이미지, 카드번호나 결제 인증정보를 포함하지 않습니다.</p>
-      <p>동의는 선택 사항이며 마이페이지 &gt; 설정의 ‘서비스 사용 통계’에서 언제든지 철회할 수 있습니다. 철회 후에는 새로운 통계 이벤트가 전송되지 않습니다.</p>
+      <p>웹과 모바일 앱의 서비스 이용 통계는 기본적으로 꺼져 있습니다. 이용자가 별도로 동의한 경우에만 회사는 서비스 개선과 품질 분석을 위해 Firebase Analytics(Google LLC)를 사용합니다.</p>
+      <p>처리 항목은 상품 조회·찜·장바구니·결제 단계·판매자 기능·디자인 도구 진입 기록, 이벤트 발생 시각, 앱·브라우저·운영체제 환경, Firebase 앱 설치 또는 브라우저 식별자, 로그인 이용자의 내부 계정 UUID입니다. UUID에는 이름이나 이메일 같은 직접 식별정보를 사용하지 않습니다.</p>
+      <p>분석 이벤트에는 이름, 이메일, 전화번호, 배송지, 자유 입력 내용, 손톱 사이즈, 업로드 이미지, 카드번호나 결제 인증정보를 포함하지 않습니다. 광고 식별자 수집, 광고 개인화 및 타사 광고 추적에는 사용하지 않습니다.</p>
+      <p>Google LLC는 회사의 분석 처리 수탁자로서 네트워크 전송 시 해당 정보를 국외의 Google 인프라에서 처리할 수 있습니다. 사용자·이벤트 단위 분석 데이터는 Firebase 콘솔에 설정된 기간에 따라 최대 14개월 보관하며, 법령상 보존 의무가 없는 경우 목적 달성 후 파기합니다.</p>
+      <p>동의는 선택 사항이고 동의하지 않아도 핵심 서비스를 이용할 수 있습니다. 마이페이지 &gt; 설정의 ‘서비스 사용 통계’에서 언제든지 철회할 수 있으며, 철회 후에는 새로운 분석 이벤트를 전송하지 않고 분석 사용자 ID를 제거합니다.</p>
     </section>
   </div>
 );
@@ -299,9 +301,11 @@ const PrivacyPolicyEn = () => (
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">Article 9 (Service Usage Analytics)</h4>
-      <p>Only after optional consent, the Company uses Firebase Analytics (Google) to process product views, likes, cart and checkout steps, seller feature usage, app environment data, and an internal opaque identifier for service improvement and error analysis.</p>
-      <p>Analytics events do not include names, email addresses, phone numbers, shipping addresses, free-form text, nail measurements, uploaded images, card numbers, or payment credentials.</p>
-      <p>Consent may be withdrawn at any time under My Page &gt; Settings &gt; Service Usage Analytics. No new analytics events are sent after withdrawal.</p>
+      <p>Service usage analytics are disabled by default on both the web service and mobile app. The Company uses Firebase Analytics (Google LLC) for service improvement and quality analysis only after the user gives separate optional consent.</p>
+      <p>The data processed includes product views, likes, cart and checkout steps, seller feature and design-tool entry events, event timestamps, app/browser/operating-system environment, a Firebase app-installation or browser identifier, and an internal account UUID for signed-in users. The UUID does not contain direct identifiers such as a name or email address.</p>
+      <p>Analytics events do not include names, email addresses, phone numbers, shipping addresses, free-form text, nail measurements, uploaded images, card numbers, or payment credentials. The data is not used to collect advertising identifiers, personalize advertising, or track users for third-party advertising.</p>
+      <p>Google LLC acts as the Company's analytics processor and may process the data on Google infrastructure outside Korea when it is transmitted over the network. User- and event-level analytics data is retained for up to 14 months according to the Firebase console setting and is deleted after the purpose is fulfilled unless retention is required by law.</p>
+      <p>Consent is optional, and declining it does not prevent use of core services. Consent may be withdrawn at any time under My Page &gt; Settings &gt; Service Usage Analytics. After withdrawal, no new analytics events are sent and the Analytics user ID is removed.</p>
     </section>
   </div>
 );
@@ -369,9 +373,11 @@ const PrivacyPolicyJa = () => (
     </section>
     <section>
       <h4 className="font-semibold text-gray-800 mb-2">第9条（サービス利用統計）</h4>
-      <p>利用者が任意で同意した場合に限り、会社はサービス改善およびエラー分析のため、Firebase Analytics（Google）を利用して商品閲覧・お気に入り・カート・決済段階、販売者機能の利用状況、アプリ環境情報、内部の匿名識別子を処理します。</p>
-      <p>統計イベントには、氏名、メールアドレス、電話番号、配送先、自由入力内容、爪のサイズ、アップロード画像、カード番号または決済認証情報を含めません。</p>
-      <p>同意は任意であり、マイページ &gt; 設定の「サービス利用統計」からいつでも撤回できます。撤回後は新しい統計イベントを送信しません。</p>
+      <p>ウェブサービスおよびモバイルアプリの利用統計は、初期状態では無効です。利用者が別途任意で同意した場合に限り、会社はサービス改善および品質分析のためにFirebase Analytics（Google LLC）を利用します。</p>
+      <p>処理項目は、商品閲覧・お気に入り・カート・決済段階・販売者機能・デザインツールへの移動履歴、イベント発生時刻、アプリ・ブラウザ・OS環境、Firebaseのアプリインストールまたはブラウザ識別子、ログイン利用者の内部アカウントUUIDです。UUIDには氏名やメールアドレスなどの直接識別情報を使用しません。</p>
+      <p>分析イベントには、氏名、メールアドレス、電話番号、配送先、自由入力内容、爪のサイズ、アップロード画像、カード番号または決済認証情報を含めません。広告識別子の収集、広告のパーソナライズ、第三者広告のためのトラッキングには使用しません。</p>
+      <p>Google LLCは会社の分析処理受託者として、ネットワーク送信時に韓国外のGoogleインフラで情報を処理する場合があります。ユーザーおよびイベント単位の分析データはFirebaseコンソールの設定に従い最大14か月保管し、法令上の保存義務がない場合は目的達成後に削除します。</p>
+      <p>同意は任意であり、同意しなくても主要サービスを利用できます。マイページ &gt; 設定の「サービス利用統計」からいつでも撤回でき、撤回後は新しい分析イベントを送信せず、分析ユーザーIDを削除します。</p>
     </section>
   </div>
 );

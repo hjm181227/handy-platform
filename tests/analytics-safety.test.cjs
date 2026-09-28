@@ -110,3 +110,36 @@ test('keeps web and native dispatch behind explicit consent checks', () => {
   assert.match(webSource, /if \(!enabled\) await target\?\.reset\(\);/);
   assert.match(nativeSource, /if \(!enabled\) await analytics\(\)\.setUserId\(null\);/);
 });
+
+test('keeps release analytics disabled by default and removes advertising IDs', () => {
+  const firebaseConfig = JSON.parse(fs.readFileSync(path.join(repoRoot, 'firebase.json'), 'utf8'))['react-native'];
+  const falseByDefault = [
+    'analytics_auto_collection_enabled',
+    'analytics_idfv_collection_enabled',
+    'google_analytics_adid_collection_enabled',
+    'google_analytics_ssaid_collection_enabled',
+    'google_analytics_automatic_screen_reporting_enabled',
+    'google_analytics_registration_with_ad_network_enabled',
+    'analytics_default_allow_analytics_storage',
+    'analytics_default_allow_ad_storage',
+    'analytics_default_allow_ad_user_data',
+    'analytics_default_allow_ad_personalization_signals',
+  ];
+
+  for (const key of falseByDefault) assert.equal(firebaseConfig[key], false, `${key} must default to false`);
+
+  const androidManifest = fs.readFileSync(
+    path.join(repoRoot, 'packages/mobile/android/app/src/main/AndroidManifest.xml'),
+    'utf8',
+  );
+  const viteConfig = fs.readFileSync(path.join(repoRoot, 'packages/web/vite.config.ts'), 'utf8');
+  for (const permission of [
+    'com.google.android.gms.permission.AD_ID',
+    'android.permission.ACCESS_ADSERVICES_AD_ID',
+    'android.permission.ACCESS_ADSERVICES_ATTRIBUTION',
+  ]) {
+    assert.match(androidManifest, new RegExp(`${permission.replaceAll('.', '\\.')}[^>]+tools:node="remove"`));
+  }
+  assert.match(viteConfig, /Incomplete Firebase Analytics configuration/);
+  assert.match(viteConfig, /VITE_ANALYTICS_DEBUG must be false in production builds/);
+});
