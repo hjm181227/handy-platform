@@ -111,8 +111,8 @@ android {
         applicationId "com.handyapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 26
-        versionName "1.9.9"
+        versionCode 27
+        versionName "1.9.10"
 
         // NDK ABI 필터 설정 (16KB 페이지 크기 지원)
         ndk {
@@ -149,6 +149,10 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // Google Play 네이티브 크래시 심볼화를 위한 업로드용 심볼 ZIP 생성
+            ndk {
+                debugSymbolLevel 'SYMBOL_TABLE'
+            }
 
             // 환경 변수에서 APP_ENV 읽기 (기본값: production)
             def appEnv = System.getenv("REACT_NATIVE_ENV") ?: "production"
