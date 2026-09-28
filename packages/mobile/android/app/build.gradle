@@ -173,7 +173,7 @@ configurations.all {
     resolutionStrategy {
         // react-native-inappbrowser-reborn pulls alpha version requiring compileSdk 36
         force 'androidx.browser:browser:1.8.0'
-        // Force androidx.core to versions compatible with compileSdk 35 and AGP 8.7.2
+        // Keep androidx.core on the stable line verified with compile/target SDK 36.
         force 'androidx.core:core:1.15.0'
         force 'androidx.core:core-ktx:1.15.0'
     }
