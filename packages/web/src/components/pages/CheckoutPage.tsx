@@ -9,16 +9,18 @@ import { money } from '../../utils';
 import { ShippingAddressForm } from '../common/ShippingAddressForm';
 import { TossPaymentWidget, TossPaymentWidgetRef } from '../payment/TossPaymentWidget';
 import { CouponSelector } from '../checkout/CouponSelector';
-import type {
-  CheckoutSession,
-  Order,
-  Product,
-  ShippingAddress,
-  ShippingDetails,
-  OrderStatus,
-  PaymentStatus,
-  PaymentMethod
+import {
+  ANALYTICS_EVENTS,
+  type CheckoutSession,
+  type Order,
+  type Product,
+  type ShippingAddress,
+  type ShippingDetails,
+  type OrderStatus,
+  type PaymentStatus,
+  type PaymentMethod
 } from '@handy-platform/shared';
+import { track } from '../../services/analytics';
 
 interface CheckoutPageProps {
   onGo: (path: string) => void;
@@ -72,6 +74,19 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
   const [processing, setProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);  // 결제 필수 동의 (전자상거래법)
   const hasLoadedRef = useRef(false);  // ✅ 중복 실행 방지용 ref
+  const checkoutTrackedRef = useRef(false);
+
+  useEffect(() => {
+    if (!cart || checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    const checkoutMode = new URLSearchParams(window.location.search).get('mode') || 'cart';
+    void track(ANALYTICS_EVENTS.CHECKOUT_VIEWED, {
+      feature: 'checkout',
+      entry_source: checkoutMode,
+      checkout_mode: checkoutMode,
+      item_count: cart.items.length,
+    });
+  }, [cart]);
 
   // 배송지 정보
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
@@ -749,6 +764,15 @@ export function CheckoutPage({ onGo }: CheckoutPageProps) {
       }
 
       const orderId = prepareResponse.data.orderId;
+
+      void track(ANALYTICS_EVENTS.PURCHASE_STARTED, {
+        feature: 'payment',
+        entry_source: 'checkout',
+        payment_provider: 'toss_payments',
+        currency: 'KRW',
+        value: order.finalPrice,
+        item_count: cart.items.length,
+      });
 
       // 2. 주문명 생성
       const orderName = cart.items.length > 1

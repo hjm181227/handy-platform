@@ -4,7 +4,8 @@ import { CheckCircle, XCircle, Package } from 'lucide-react';
 import { useAlert } from '../common';
 import { orderService } from '../../services/apiService';
 import { money } from '../../utils';
-import type { Order } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, type Order } from '@handy-platform/shared';
+import { track } from '../../services/analytics';
 
 interface PaymentSuccessProps {
   onGo: (path: string) => void;
@@ -98,6 +99,15 @@ export function PaymentSuccess({ onGo }: PaymentSuccessProps) {
           });
 
           setOrder(order);
+          void track(ANALYTICS_EVENTS.PURCHASE_COMPLETED, {
+            feature: 'payment',
+            entry_source: 'payment_callback',
+            payment_provider: 'toss_payments',
+            currency: 'KRW',
+            value: order.totalAmount || 0,
+            item_count: order.items?.length || 0,
+            order_status: order.status,
+          });
 
           // 견적서 체크아웃 캐시 정리
           const referrer = document.referrer || '';

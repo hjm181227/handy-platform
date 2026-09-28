@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { SellerLayout } from '../../layout/SellerLayout';
 import { webApiService } from '../../../services/apiService';
 import { useAlert } from '../../common';
-import { SellerOrder, OrderStatus } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, SellerOrder, OrderStatus } from '@handy-platform/shared';
 import { SellerOrderCard } from './SellerOrderCard';
+import { track } from '../../../services/analytics';
 
 interface OrderManagementProps {
   onGo: (path: string) => void;
@@ -214,6 +215,14 @@ export function OrderManagement({ onGo }: OrderManagementProps) {
 
       // 성공 시 재시도 카운터 리셋
       resetRetryCounter('주문 상태 변경');
+
+      if (status === 'delivered') {
+        void track(ANALYTICS_EVENTS.SELLER_ORDER_FULFILLED, {
+          feature: 'seller_orders',
+          entry_source: 'seller_order_management',
+          order_status: status,
+        });
+      }
 
       // 주문 목록 새로고침
       await loadOrders();

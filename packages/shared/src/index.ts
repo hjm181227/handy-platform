@@ -15,6 +15,7 @@ export * from './utils/urlSlug';
 export * from './utils/errorMessages';
 export * from './utils/uuidUtils';
 export * from './utils/nailConstants';
+export * from './analytics';
 
 
 // New Structured Services

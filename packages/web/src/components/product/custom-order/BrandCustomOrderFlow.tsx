@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { useBrandCustomOrderFlow } from '../../../hooks/useBrandCustomOrderFlow';
-import { NailShape, NailLength } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, NailShape, NailLength } from '@handy-platform/shared';
 import { getChatRoomPath } from '../../../lib/chat/orderChatService';
 import {
   ShapeStep,
@@ -10,6 +11,7 @@ import {
   ConfirmStep,
   CompleteStep,
 } from './steps';
+import { track } from '../../../services/analytics';
 
 interface BrandCustomOrderFlowProps {
   sellerUuid: string;
@@ -19,6 +21,7 @@ interface BrandCustomOrderFlowProps {
 }
 
 export function BrandCustomOrderFlow({ sellerUuid, brandName, onBack, onGo }: BrandCustomOrderFlowProps) {
+  const startedRef = useRef(false);
   const {
     currentStep,
     stepIndex,
@@ -41,6 +44,12 @@ export function BrandCustomOrderFlow({ sellerUuid, brandName, onBack, onGo }: Br
     submitOrder,
     refreshNailSize,
   } = useBrandCustomOrderFlow(sellerUuid, brandName);
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    void track(ANALYTICS_EVENTS.CUSTOM_REQUEST_STARTED, { feature: 'custom_order', entry_source: 'brand' });
+  }, []);
 
   const handleBack = () => {
     if (currentStep === 'shape') {
@@ -69,7 +78,9 @@ export function BrandCustomOrderFlow({ sellerUuid, brandName, onBack, onGo }: Br
 
   const handleSubmit = async () => {
     const result = await submitOrder();
-    if (!result.success && result.error) {
+    if (result.success) {
+      void track(ANALYTICS_EVENTS.CUSTOM_REQUEST_SUBMITTED, { feature: 'custom_order', entry_source: 'brand' });
+    } else if (result.error) {
       // 에러는 훅에서 처리됨
     }
   };
