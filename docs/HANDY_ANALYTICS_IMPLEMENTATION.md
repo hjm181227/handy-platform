@@ -17,6 +17,7 @@
 | `product_viewed` | 상품 상세 조회가 완료된 최초 1회 | 상품 유형, 제작 방식, 유입 경로 |
 | `product_liked` | 찜 추가 API 성공 | 기능, 유입 경로 |
 | `cart_item_added` | 장바구니 추가 API 성공 | 수량, 상품 유형, 제작 방식 |
+| `cart_viewed` | 장바구니 페이지 또는 열린 장바구니 패널 로드 | 진입 형태, 품목 수 |
 | `custom_request_started` | 상품/브랜드 주문제작 화면 진입 최초 1회 | 상품/브랜드 유입 구분 |
 | `custom_request_submitted` | 주문제작 요청 API 성공 | 상품/브랜드 유입 구분 |
 | `checkout_viewed` | 체크아웃 세션이 실제로 준비된 최초 1회 | 체크아웃 유형, 품목 수 |
@@ -27,6 +28,9 @@
 | `seller_product_created` | 신규 상품 등록 API 성공 | 상품 유형, 제작 방식 |
 | `seller_order_opened` | 판매자 주문 상세 API 성공 | 주문 상태 |
 | `seller_order_fulfilled` | 판매자가 주문을 배송 완료 상태로 변경한 API 성공 | 주문 상태 |
+| `design_tool_entered` | HandyStudio 소개 페이지에서 App Store 또는 Google Play 진입 | 스토어 구분 |
+
+React Strict Mode나 네이티브 브리지 재전달로 화면 기반 이벤트가 중복될 수 있어 상품 조회, 장바구니 조회, 체크아웃 조회, 결제 완료, 신규 판매자 신청 시작, 디자인 툴 진입은 동일 속성 기준 5초 동안 한 번만 기록한다. 장바구니 추가와 결제 시작 같은 사용자 행동 이벤트는 반복 행동을 보존하기 위해 중복 억제 대상에서 제외한다.
 
 ‘첫 문의 수신’과 ‘첫 주문 수신’은 브라우저 화면 진입만으로 판정하면 실제 수신 시점과 중복 여부를 보장할 수 없다. 서버에서 판매자별 최초 상태 전환을 원자적으로 판정한 뒤 이벤트를 발행하는 후속 작업으로 남긴다.
 
@@ -43,7 +47,7 @@
 - 상품 UUID, 주문 UUID, 판매자 UUID 등 원본 업무 식별자
 - 원본 API 응답 및 주문 객체
 
-로그인 사용자는 동의 후에만 내부 UUID를 Firebase 사용자 ID로 설정한다. 광고 저장소, 광고 사용자 데이터, 광고 개인화 동의는 항상 거부한다. 사용자는 `마이페이지 > 설정 > 서비스 사용 통계`에서 동의하거나 철회할 수 있다. 철회 즉시 새 이벤트 전송을 중단하고 Firebase 사용자 ID를 제거한다.
+로그인 사용자는 동의 후에만 내부 UUID를 Firebase 사용자 ID로 설정한다. 광고 저장소, 광고 사용자 데이터, 광고 개인화 동의는 항상 거부한다. 사용자는 `마이페이지 > 설정 > 서비스 사용 통계`에서 동의하거나 철회할 수 있다. 철회 즉시 새 이벤트 전송을 중단하고 Firebase 사용자 ID와 인메모리 중복 판정 상태를 제거한다.
 
 개인정보처리방침 한국어·영어·일본어 본문에 선택적 Firebase Analytics 처리 항목과 철회 경로를 추가했다. Sentry Replay의 `maskAllText: true`, `blockAllMedia: true` 설정은 변경하지 않았다.
 
@@ -85,10 +89,11 @@ React Native Firebase의 opt-in 설정 방식은 [React Native Firebase Analytic
 - 공용 분석 스키마 빌드: 통과
 - 웹 TypeScript 검사: 통과
 - 웹 프로덕션 번들: 통과. Firebase 환경변수가 없는 상태에서도 빌드되며 분석 SDK는 수집을 시작하지 않음
-- 개인정보 경계 단위 테스트: 3개 통과
+- 개인정보 경계·이벤트 등록·중복 억제·핵심 퍼널 연결·동의 게이트 테스트: 6개 통과
 - React Native 자동 연결 검사: Android와 iOS 모두 `@react-native-firebase/analytics` 감지
 - Firebase 모듈 버전: analytics/app/messaging 모두 `21.14.0`으로 일치
 - 모바일 전체 TypeScript 검사: 기존 파일의 타입 오류들 때문에 실패했으나 새 `analyticsService.ts`에는 오류가 보고되지 않음
+- Android 릴리스 JavaScript/Hermes 번들: 통과
 - Android 네이티브 debug APK: 공식 Firebase 설정으로 517개 Gradle 작업 통과
 - Android 생성 리소스: 등록한 Firebase 앱과 `google_app_id` 일치 확인
 - Android 런타임: 동의 전 `setAnalyticsCollectionEnabled(false)` 확인

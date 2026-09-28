@@ -10,6 +10,7 @@ import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
   isAnalyticsEventName,
   sanitizeAnalyticsProperties,
+  AnalyticsEventDeduper,
   type AnalyticsEventName,
   type AnalyticsProperties,
   type AnalyticsPropertyValue,
@@ -60,6 +61,7 @@ class FirebaseWebAnalyticsAdapter implements AnalyticsAdapter {
 }
 
 const debugAdapter = new DebugAnalyticsAdapter();
+const eventDeduper = new AnalyticsEventDeduper();
 let adapter: AnalyticsAdapter | null = null;
 let adapterPromise: Promise<AnalyticsAdapter | null> | null = null;
 let plan = 'free';
@@ -125,6 +127,7 @@ function commonProperties(properties?: AnalyticsProperties) {
 export async function track(event: AnalyticsEventName, properties?: AnalyticsProperties) {
   if (!isAnalyticsEventName(event) || !hasAnalyticsConsent()) return;
   const safe = commonProperties(properties);
+  if (!eventDeduper.shouldTrack(event, safe)) return;
   if (postNative('ANALYTICS_EVENT', { event, properties: safe })) return;
   await (await getAdapter())?.track(event, safe);
 }
@@ -138,15 +141,18 @@ export async function setAnalyticsUser(opaqueUserId: string | null, userPlan = '
 
 export async function setAnalyticsConsent(enabled: boolean) {
   localStorage.setItem(CONSENT_KEY, enabled ? 'granted' : 'denied');
+  eventDeduper.reset();
   const measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
   if (measurementId) (window as any)[`ga-disable-${measurementId}`] = !enabled;
   if (postNative('ANALYTICS_CONSENT', { enabled })) return;
   const target = enabled ? await getAdapter() : adapter;
   await target?.setConsent(enabled);
+  if (!enabled) await target?.reset();
 }
 
 export async function resetAnalytics() {
   plan = 'free';
+  eventDeduper.reset();
   if (postNative('ANALYTICS_RESET', {})) return;
   await adapter?.reset();
 }

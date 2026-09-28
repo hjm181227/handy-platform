@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, SUPPORTED_LANGUAGES, type SupportedLanguage } from '@handy-platform/shared';
+import { track } from '../../services/analytics';
 
 const STORE_LINKS = {
   appStore: 'https://apps.apple.com/us/app/handystudio-네일아트-디자인-툴/id6762440626?l=ko',
@@ -62,6 +63,12 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
   const lang = i18n.language?.substring(0, 2) || 'ko';
   const seo = SEO_DATA[lang] || SEO_DATA.ko;
   const pageUrl = `${BASE_URL}${PAGE_PATH}`;
+  const trackStoreEntry = (store: 'app_store' | 'google_play') => {
+    void track(ANALYTICS_EVENTS.DESIGN_TOOL_ENTERED, {
+      feature: 'design_tool',
+      entry_source: store,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -111,6 +118,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <a
                   href={STORE_LINKS.appStore}
+                  onClick={() => trackStoreEntry('app_store')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto justify-center"
@@ -120,6 +128,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
                 </a>
                 <a
                   href={STORE_LINKS.googlePlay}
+                  onClick={() => trackStoreEntry('google_play')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-gray-900 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center"
@@ -271,6 +280,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
                 href={STORE_LINKS.appStore}
+                onClick={() => trackStoreEntry('app_store')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto justify-center"
@@ -280,6 +290,7 @@ export function HandyStudioPage({ onGo }: HandyStudioPageProps) {
               </a>
               <a
                 href={STORE_LINKS.googlePlay}
+                onClick={() => trackStoreEntry('google_play')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-gray-900 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center"

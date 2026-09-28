@@ -3,6 +3,7 @@ import analytics from '@react-native-firebase/analytics';
 import {
   isAnalyticsEventName,
   sanitizeAnalyticsProperties,
+  AnalyticsEventDeduper,
   type AnalyticsEventName,
   type AnalyticsProperties,
 } from '@handy-platform/shared';
@@ -13,6 +14,7 @@ const CONSENT_KEY = '@handy_platform:analyticsConsent';
 class AnalyticsService {
   private enabled = false;
   private initialized = false;
+  private readonly eventDeduper = new AnalyticsEventDeduper();
 
   async initialize() {
     const stored = await AsyncStorage.getItem(CONSENT_KEY);
@@ -22,6 +24,7 @@ class AnalyticsService {
 
   async setConsent(enabled: boolean, persist = true) {
     this.enabled = enabled;
+    this.eventDeduper.reset();
     if (persist) await AsyncStorage.setItem(CONSENT_KEY, enabled ? 'granted' : 'denied');
     await analytics().setConsent({
       analytics_storage: enabled,
@@ -46,6 +49,7 @@ class AnalyticsService {
     delete safe.app_version;
     delete safe.build_number;
     delete safe.locale;
+    if (!this.eventDeduper.shouldTrack(event, safe)) return;
     await analytics().logEvent(event, safe);
   }
 
@@ -58,6 +62,7 @@ class AnalyticsService {
   }
 
   async reset() {
+    this.eventDeduper.reset();
     await analytics().setUserId(null);
     if (this.enabled) await analytics().resetAnalyticsData();
   }

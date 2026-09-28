@@ -1,7 +1,8 @@
 import { NailSizingSummary } from '../product/NailSizingSummary';
 import { useState, useEffect, useRef } from 'react';
-import { Cart, CartItem, CartItemsBySeller, CartTotals, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
+import { ANALYTICS_EVENTS, Cart, CartItem, CartItemsBySeller, CartTotals, CapacityWarning, RemovedItem, User } from '@handy-platform/shared';
 import { cartService } from '../../services/apiService';
+import { track } from '../../services/analytics';
 import { money } from '../../utils';
 import { ShoppingCart } from 'lucide-react';
 
@@ -96,6 +97,7 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   // 언마운트 시 아직 서버에 반영되지 않은 삭제를 flush하기 위한 참조
   const pendingRemovalRef = useRef<{ productId: string; options?: Record<string, string> } | null>(null);
+  const cartTrackedRef = useRef(false);
 
   // 선택 주문/삭제 관련 상태 — 기본은 전체 선택이므로 "선택 해제된 항목"만 추적한다
   const [deselectedKeys, setDeselectedKeys] = useState<Set<string>>(new Set());
@@ -141,6 +143,16 @@ export function CartContent({ mode, onClose, onBack, onCheckout, onCartUpdate, c
   useEffect(() => {
     loadCart();
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!cart || cartTrackedRef.current || (mode === 'drawer' && !isDrawerOpen)) return;
+    cartTrackedRef.current = true;
+    void track(ANALYTICS_EVENTS.CART_VIEWED, {
+      feature: 'cart',
+      entry_source: mode,
+      item_count: cart.totals?.itemCount || 0,
+    });
+  }, [cart, isDrawerOpen, mode]);
 
   // Drawer가 열릴 때 장바구니 갱신 (drawer 모드일 때만)
   useEffect(() => {
